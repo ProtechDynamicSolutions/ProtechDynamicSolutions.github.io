@@ -4,230 +4,610 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Protech Dynamic Solutions - AI & Process Automation</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Load Google Fonts: Inter and Playfair Display -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
-        body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(180deg,#0f172a,#1e293b,#334155)}
-        @keyframes gradient-shift{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
-        .hero-bg{background:linear-gradient(135deg,#0f172a,#1e293b,#334155);background-size:200%;animation:gradient-shift 15s ease infinite}
-        .hero-gradient-text{background:linear-gradient(135deg,#d4a574,#f4c791,#e8b67e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s ease-in-out infinite}
-        @keyframes shimmer{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
-        .title-underline{position:relative;padding-bottom:12px}
-        .title-underline::after{content:'';position:absolute;bottom:0;left:0;width:80px;height:4px;background:linear-gradient(90deg,#d4a574,#f4c791);border-radius:2px;box-shadow:0 2px 10px rgba(212,165,116,.4)}
-        .title-underline.text-center::after{left:50%;transform:translateX(-50%)}
-        .service-card{transition:all .4s cubic-bezier(.4,0,.2,1)}
-        .service-card:hover{transform:translateY(-8px) scale(1.02)}
-        .icon-glow{box-shadow:0 0 20px rgba(212,165,116,.3);transition:all .3s}
-        .service-card:hover .icon-glow{box-shadow:0 0 30px rgba(212,165,116,.6);transform:scale(1.1) rotate(5deg)}
-        .btn-primary{background:linear-gradient(135deg,#d4a574,#f4c791);box-shadow:0 10px 30px rgba(212,165,116,.3);transition:all .3s;position:relative;overflow:hidden}
-        .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:left .5s}
-        .btn-primary:hover::before{left:100%}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(212,165,116,.5)}
-        .glass-card{background:rgba(30,41,59,.6);backdrop-filter:blur(10px);border:1px solid rgba(212,165,116,.1)}
-        .tech-badge{transition:all .3s}
-        .tech-badge:hover{transform:scale(1.1);background:linear-gradient(135deg,#d4a574,#f4c791);color:#0f172a;box-shadow:0 5px 15px rgba(212,165,116,.4)}
-        .circuit-pattern{background-image:linear-gradient(90deg,rgba(212,165,116,.03) 1px,transparent 1px),linear-gradient(rgba(212,165,116,.03) 1px,transparent 1px);background-size:50px 50px}
-        input:focus,textarea:focus{box-shadow:0 0 0 3px rgba(212,165,116,.2)}
+        /* Base styling */
+        body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;background:#000}
+        .luxury-serif{font-family:'Playfair Display',serif}
+        
+        /* Ultra-Premium Gradient Background */
+        @keyframes aurora{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        .hero-bg{
+            background:linear-gradient(135deg,#0a0a0a 0%,#1a1410 25%,#0f0f0f 50%,#1a1410 75%,#0a0a0a 100%);
+            background-size:400% 400%;
+            animation:aurora 20s ease infinite;
+            position:relative
+        }
+        .hero-bg::before{
+            content:'';
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background:radial-gradient(circle at 20% 50%,rgba(212,165,116,0.08) 0%,transparent 50%),
+                       radial-gradient(circle at 80% 80%,rgba(244,199,145,0.06) 0%,transparent 50%);
+            pointer-events:none
+        }
+        
+        /* Luxury Gold Text Gradient */
+        .luxury-gold-text{
+            background:linear-gradient(135deg,#f4c791 0%,#d4a574 25%,#f9d9a8 50%,#d4a574 75%,#f4c791 100%);
+            background-size:200% auto;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:shine 4s linear infinite
+        }
+        @keyframes shine{to{background-position:200% center}}
+        
+        /* Premium Glass Morphism */
+        .ultra-glass{
+            background:rgba(15,15,15,0.4);
+            backdrop-filter:blur(40px) saturate(180%);
+            border:1px solid rgba(212,165,116,0.15);
+            box-shadow:0 8px 32px rgba(0,0,0,0.6),
+                       inset 0 1px 0 rgba(255,255,255,0.05),
+                       0 0 60px rgba(212,165,116,0.08)
+        }
+        
+        /* Floating Elements Animation */
+        @keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-20px)}}
+        .float-animation{animation:float 6s ease-in-out infinite}
+        
+        /* Premium Service Cards */
+        .luxury-card{
+            background:linear-gradient(135deg,rgba(20,20,20,0.9) 0%,rgba(26,20,16,0.8) 100%);
+            backdrop-filter:blur(20px);
+            border:1px solid rgba(212,165,116,0.2);
+            box-shadow:0 20px 60px rgba(0,0,0,0.8),
+                       inset 0 1px 0 rgba(255,255,255,0.03);
+            transition:all 0.5s cubic-bezier(0.4,0,0.2,1);
+            position:relative;
+            overflow:hidden
+        }
+        .luxury-card::before{
+            content:'';
+            position:absolute;
+            top:-50%;
+            left:-50%;
+            width:200%;
+            height:200%;
+            background:radial-gradient(circle,rgba(212,165,116,0.1) 0%,transparent 70%);
+            opacity:0;
+            transition:opacity 0.5s;
+            pointer-events:none
+        }
+        .luxury-card:hover::before{opacity:1}
+        .luxury-card:hover{
+            transform:translateY(-16px) scale(1.02);
+            border-color:rgba(212,165,116,0.5);
+            box-shadow:0 30px 90px rgba(212,165,116,0.3),
+                       0 0 80px rgba(212,165,116,0.2),
+                       inset 0 1px 0 rgba(255,255,255,0.1)
+        }
+        
+        /* Ultra Premium Button */
+        .ultra-btn{
+            background:linear-gradient(135deg,#d4a574 0%,#f4c791 50%,#d4a574 100%);
+            background-size:200% auto;
+            box-shadow:0 8px 30px rgba(212,165,116,0.4),
+                       0 0 40px rgba(212,165,116,0.2),
+                       inset 0 1px 0 rgba(255,255,255,0.3);
+            transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+            position:relative;
+            overflow:hidden;
+            font-weight:800;
+            letter-spacing:0.5px
+        }
+        .ultra-btn::before{
+            content:'';
+            position:absolute;
+            top:0;
+            left:-100%;
+            width:100%;
+            height:100%;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
+            transition:left 0.6s
+        }
+        .ultra-btn:hover{
+            transform:translateY(-4px) scale(1.05);
+            box-shadow:0 15px 50px rgba(212,165,116,0.6),
+                       0 0 60px rgba(212,165,116,0.4);
+            background-position:right center
+        }
+        .ultra-btn:hover::before{left:100%}
+        
+        /* Icon Glow Effect */
+        .icon-luxury{
+            background:linear-gradient(135deg,rgba(212,165,116,0.15),rgba(244,199,145,0.1));
+            box-shadow:0 0 30px rgba(212,165,116,0.3),
+                       inset 0 1px 0 rgba(255,255,255,0.1);
+            transition:all 0.4s cubic-bezier(0.4,0,0.2,1)
+        }
+        .luxury-card:hover .icon-luxury{
+            transform:scale(1.15) rotate(5deg);
+            box-shadow:0 0 50px rgba(212,165,116,0.6),
+                       0 0 80px rgba(212,165,116,0.4)
+        }
+        
+        /* Tech Badge Luxury */
+        .tech-luxury{
+            background:linear-gradient(135deg,rgba(30,30,30,0.8),rgba(40,35,30,0.6));
+            border:1px solid rgba(212,165,116,0.3);
+            box-shadow:0 4px 15px rgba(0,0,0,0.5);
+            transition:all 0.3s cubic-bezier(0.4,0,0.2,1)
+        }
+        .tech-luxury:hover{
+            background:linear-gradient(135deg,#d4a574,#f4c791);
+            color:#000;
+            transform:translateY(-4px) scale(1.08);
+            box-shadow:0 8px 30px rgba(212,165,116,0.5)
+        }
+        
+        /* Premium Title Underline */
+        .title-luxury{position:relative;padding-bottom:24px}
+        .title-luxury::after{
+            content:'';
+            position:absolute;
+            bottom:0;
+            left:50%;
+            transform:translateX(-50%);
+            width:120px;
+            height:4px;
+            background:linear-gradient(90deg,transparent,#d4a574,#f4c791,#d4a574,transparent);
+            box-shadow:0 0 20px rgba(212,165,116,0.6),0 4px 10px rgba(212,165,116,0.3)
+        }
+        
+        /* Animated Background Particles */
+        .particles{
+            position:absolute;
+            width:100%;
+            height:100%;
+            overflow:hidden;
+            top:0;
+            left:0;
+            pointer-events:none
+        }
+        .particle{
+            position:absolute;
+            width:2px;
+            height:2px;
+            background:#d4a574;
+            border-radius:50%;
+            box-shadow:0 0 10px rgba(212,165,116,0.8);
+            animation:particle-float 15s infinite
+        }
+        @keyframes particle-float{
+            0%{transform:translateY(100vh) translateX(0);opacity:0}
+            10%{opacity:1}
+            90%{opacity:1}
+            100%{transform:translateY(-100vh) translateX(100px);opacity:0}
+        }
+        .particle:nth-child(1){left:10%;animation-delay:0s;animation-duration:12s}
+        .particle:nth-child(2){left:30%;animation-delay:2s;animation-duration:15s}
+        .particle:nth-child(3){left:50%;animation-delay:4s;animation-duration:10s}
+        .particle:nth-child(4){left:70%;animation-delay:1s;animation-duration:14s}
+        .particle:nth-child(5){left:90%;animation-delay:3s;animation-duration:11s}
+        
+        /* Luxury Form Inputs */
+        .luxury-input{
+            background:rgba(20,20,20,0.6);
+            border:2px solid rgba(212,165,116,0.2);
+            transition:all 0.3s;
+            backdrop-filter:blur(10px)
+        }
+        .luxury-input:focus{
+            border-color:#d4a574;
+            box-shadow:0 0 0 4px rgba(212,165,116,0.15),
+                       0 8px 30px rgba(212,165,116,0.2);
+            background:rgba(30,30,30,0.8)
+        }
+        
+        /* Premium Navigation */
+        .nav-luxury{
+            background:rgba(10,10,10,0.85);
+            backdrop-filter:blur(30px) saturate(180%);
+            border-bottom:1px solid rgba(212,165,116,0.15);
+            box-shadow:0 4px 30px rgba(0,0,0,0.8),
+                       0 0 40px rgba(212,165,116,0.05)
+        }
+        
+        /* Responsive Logo Sizing */
+        .logo-container{display:flex;align-items:center;gap:12px}
+        .logo-img{transition:all 0.3s ease}
+        @media (max-width:768px){
+            .logo-full{display:none}
+            .logo-p{display:block;height:48px;width:48px}
+        }
+        @media (min-width:769px){
+            .logo-full{display:block;height:64px;width:auto;max-width:280px}
+            .logo-p{display:none}
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100">
-    <header class="bg-slate-900/70 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-800/50 shadow-xl">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <a href="#home" class="flex items-center gap-3 group">
-                    <!-- FIXED Logo Path -->
-                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Logo" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-110" onerror="this.onerror=null; this.src='https://placehold.co/48x48/0f172a/d4a574?text=PDS';">
-                    <div class="flex items-baseline">
-                        <span class="text-2xl font-extrabold text-white">Protech Dynamic Solutions</span>
-                        <span class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">.</span>
-                    </div>
+<body class="bg-black text-white">
+    <!-- Premium Navigation -->
+    <header class="nav-luxury sticky top-0 z-50">
+        <nav class="container mx-auto px-6 lg:px-12">
+            <div class="flex justify-between items-center h-24">
+                <a href="#home" class="logo-container group">
+                    <!-- P Logo for Mobile -->
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" 
+                         alt="Protech" 
+                         class="logo-p logo-img object-contain group-hover:scale-110"
+                         onerror="this.src='https://placehold.co/48x48/000/d4a574?text=P';">
+                    <!-- Full Logo for Desktop -->
+                    <img src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/blob/main/logo%20latest.png?raw=true" 
+                         alt="Protech Dynamic Solutions" 
+                         class="logo-full logo-img object-contain group-hover:scale-105"
+                         onerror="this.src='https://placehold.co/280x64/000/d4a574?text=Protech+Dynamic+Solutions';">
                 </a>
-                <div class="hidden md:flex md:items-center md:space-x-8">
-                    <a href="#home" class="text-slate-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all px-3 py-2 text-sm font-semibold">Home</a>
-                    <a href="#services" class="text-slate-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all px-3 py-2 text-sm font-semibold">Services</a>
-                    <a href="#about" class="text-slate-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all px-3 py-2 text-sm font-semibold">About</a>
-                    <a href="#contact" class="btn-primary inline-block text-slate-900 font-bold py-2.5 px-6 rounded-lg text-sm">Get in Touch</a>
+                <div class="hidden md:flex md:items-center md:space-x-10">
+                    <a href="#home" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide">HOME</a>
+                    <a href="#services" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide">SERVICES</a>
+                    <a href="#about" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide">ABOUT</a>
+                    <a href="#contact" class="ultra-btn text-black py-3 px-8 rounded-full text-sm uppercase tracking-wider">Get Started</a>
                 </div>
-                <button id="mobile-menu-button" class="flex md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md">
-                    <svg id="hamburger-icon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-                    <svg id="close-icon" class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="flex md:hidden p-2 text-gray-400 hover:text-white">
+                    <svg id="hamburger-icon" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                    <svg id="close-icon" class="hidden h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
         </nav>
+        <!-- Mobile Menu Dropdown -->
         <div class="hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="#home" class="mobile-menu-link text-slate-300 hover:bg-slate-700 block px-3 py-2 rounded-md">Home</a>
-                <a href="#services" class="mobile-menu-link text-slate-300 hover:bg-slate-700 block px-3 py-2 rounded-md">Services</a>
-                <a href="#about" class="mobile-menu-link text-slate-300 hover:bg-slate-700 block px-3 py-2 rounded-md">About</a>
-                <a href="#contact" class="mobile-menu-link bg-amber-500 text-slate-900 block px-3 py-2 rounded-md font-bold text-center">Get in Touch</a>
+            <div class="px-4 pt-2 pb-4 space-y-2 bg-black/95 backdrop-blur-xl border-t border-amber-400/10">
+                <a href="#home" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold">Home</a>
+                <a href="#services" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold">Services</a>
+                <a href="#about" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold">About</a>
+                <a href="#contact" class="mobile-menu-link ultra-btn block text-center text-black py-3 rounded-lg font-bold">Get Started</a>
             </div>
         </div>
     </header>
+
     <main>
-        <section id="home" class="relative pt-32 pb-40 md:pt-40 md:pb-48 overflow-hidden hero-bg circuit-pattern">
-            <div class="absolute top-20 left-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="grid md:grid-cols-2 gap-16 items-center">
-                    <div class="text-center md:text-left">
-                        <span class="inline-block text-transparent bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-bold uppercase tracking-widest text-sm mb-4">Protech Dynamic Solutions</span>
-                        <h1 class="mt-6 text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight">Transforming Complexity into <span class="hero-gradient-text block mt-2">Competitive Advantage</span></h1>
-                        <p class="mt-8 text-xl sm:text-2xl text-slate-300 max-w-2xl mx-auto md:mx-0 leading-relaxed font-light">We build bespoke software, automate critical processes, and harness AI to drive your project management and business operations forward.</p>
-                        <div class="mt-12 flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
-                            <a href="#services" class="btn-primary text-slate-900 font-bold py-4 px-8 rounded-xl text-lg text-center">Explore Our Services</a>
-                            <a href="#contact" class="glass-card text-white font-semibold py-4 px-8 rounded-xl text-lg text-center hover:bg-slate-700/60 border border-amber-400/20">Start Your Project</a>
+        <!-- Ultra Premium Hero Section -->
+        <section id="home" class="relative pt-40 pb-56 overflow-hidden hero-bg">
+            <div class="particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+            <!-- Background Glows -->
+            <div class="absolute top-20 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
+            
+            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+                <div class="grid lg:grid-cols-2 gap-20 items-center">
+                    <!-- Hero Text Content -->
+                    <div class="text-center lg:text-left">
+                        <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6 opacity-90">Protech Dynamic Solutions</span>
+                        <h1 class="mt-8 text-6xl sm:text-7xl lg:text-8xl font-black leading-tight luxury-serif">
+                            Transforming<br/>
+                            <span class="block mt-4 luxury-gold-text">Complexity</span>
+                            <span class="block mt-2 text-5xl sm:text-6xl lg:text-7xl">into Advantage</span>
+                        </h1>
+                        <p class="mt-12 text-xl sm:text-2xl text-gray-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
+                            Bespoke software, intelligent automation, and AI-powered solutions that elevate your business to unprecedented heights.
+                        </p>
+                        <!-- CTA Buttons -->
+                        <div class="mt-14 flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
+                            <a href="#services" class="ultra-btn text-black py-5 px-10 rounded-full text-base uppercase tracking-wider">Explore Excellence</a>
+                            <a href="#contact" class="ultra-glass text-white py-5 px-10 rounded-full text-base uppercase tracking-wider hover:border-amber-400/40 transition-all">Begin Your Journey</a>
                         </div>
                     </div>
-                    <div class="relative flex justify-center">
+                    <!-- Hero Image -->
+                    <div class="relative flex justify-center float-animation">
                         <div class="relative">
                             <div class="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-300/20 rounded-full blur-3xl"></div>
-                            <!-- FIXED Logo Path -->
-                            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ptk%20no%20bckrnd.png" alt="Protech Logo" class="relative w-full max-w-md sm:max-w-lg rounded-2xl shadow-2xl transition-transform duration-500 hover:scale-105" onerror="this.onerror=null; this.src='https://placehold.co/448x448/1e293b/d4a574?text=PDS+Logo';">
+                            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ptk%20no%20bckrnd.png" 
+                                 alt="Protech Excellence" 
+                                 class="relative w-full max-w-lg rounded-2xl transition-transform duration-700 hover:scale-105"
+                                 onerror="this.src='https://placehold.co/512x512/1a1410/d4a574?text=PDS';">
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <section id="services" class="py-24 sm:py-32 bg-slate-900 relative overflow-hidden circuit-pattern">
+
+        <!-- Premium Services Section -->
+        <section id="services" class="py-32 bg-black relative overflow-hidden">
             <div class="absolute top-0 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -translate-x-1/2"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="text-center max-w-4xl mx-auto">
-                    <span class="inline-block text-transparent bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-bold uppercase tracking-widest text-sm mb-4">What We Do</span>
-                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white title-underline text-center">Our Expertise</h2>
-                    <p class="mt-8 text-xl text-slate-300 leading-relaxed">We provide a full spectrum of technology solutions, from high-level project management to deep-code AI applications, all tailored to your unique business needs.</p>
+            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+                <!-- Section Header -->
+                <div class="text-center max-w-5xl mx-auto mb-24">
+                    <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Our Expertise</span>
+                    <h2 class="text-5xl sm:text-6xl lg:text-7xl font-black luxury-serif title-luxury">Premium Services</h2>
+                    <p class="mt-10 text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                        From visionary project management to cutting-edge AI applications, we deliver excellence in every dimension of technology.
+                    </p>
                 </div>
-                <div class="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m6 0h-6m6 0v7m-6-7v7m6-7h6l-3 3h-3v-3z"/></svg>
+                <!-- Service Cards Grid -->
+                <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-3 mt-20">
+                    <!-- Service Card 1 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">Project Management Software</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">Bespoke software solutions and expert consultancy to keep your projects on time, on budget, and fully transparent.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Project Management</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Bespoke software and consultancy that keeps projects transparent, on time, and within budget.</p>
                     </div>
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 5V3m0 18v-2M12 9v6m-3-3h6m-3-3a3 3 0 013 3v6a3 3 0 01-3 3h-6a3 3 0 01-3-3v-6a3 3 0 013-3h6z"/></svg>
+                    <!-- Service Card 2 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">AI & Machine Learning</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">Unlock predictive insights with advanced forecasting models, custom AI applications, and data-driven decision engines.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">AI & Machine Learning</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Predictive insights, custom AI applications, and intelligent decision engines that transform data into strategy.</p>
                     </div>
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <!-- Service Card 3 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">Process Automation</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">Eliminate manual data entry and repetitive tasks. We automate your workflows with digital forms, app integrations, and smart scripts.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Process Automation</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Eliminate manual workflows with intelligent automation, digital forms, and seamless integrations.</p>
                     </div>
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <!-- Service Card 4 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">Custom App Development</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">From internal tools to client-facing platforms, we design and build secure, scalable, and intuitive applications from the ground up.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Custom Applications</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Secure, scalable, and beautifully designed applications built from the ground up for your needs.</p>
                     </div>
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <!-- Service Card 5 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">Advanced Spreadsheet Automation</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">Transform your spreadsheets from static files into dynamic tools. We are highly skilled in Excel programming, macros, and automation.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Spreadsheet Excellence</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Transform static spreadsheets into dynamic powerhouses with advanced Excel programming and automation.</p>
                     </div>
-                    <div class="service-card glass-card p-10 rounded-2xl shadow-xl border border-slate-700/50 hover:border-amber-400/30">
-                        <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl flex items-center justify-center border-2 border-amber-400/50 icon-glow">
-                            <svg class="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    <!-- Service Card 6 -->
+                    <div class="luxury-card p-12 rounded-3xl">
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30">
+                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         </div>
-                        <h3 class="mt-8 text-2xl font-bold text-white">Programming & API Integration</h3>
-                        <p class="mt-4 text-slate-300 leading-relaxed">Expert coding in Python, HTML, and more. We build and integrate robust APIs to connect your systems and automate data flow.</p>
+                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">API Integration</h3>
+                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Expert development in Python, HTML, and robust API integration to connect and automate your systems.</p>
                     </div>
                 </div>
             </div>
         </section>
-        <section id="about" class="py-24 sm:py-32 bg-slate-800 overflow-hidden relative circuit-pattern">
+
+        <!-- Premium About Section -->
+        <section id="about" class="py-32 bg-gradient-to-b from-black to-zinc-900 relative overflow-hidden">
             <div class="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="grid md:grid-cols-2 gap-16 lg:gap-24 items-center">
+            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+                <div class="grid lg:grid-cols-2 gap-20 items-center">
+                    <!-- About Text Content -->
                     <div>
-                        <span class="inline-block text-transparent bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-bold uppercase tracking-widest text-sm mb-4">About Us</span>
-                        <h2 class="text-4xl sm:text-5xl font-black text-white title-underline">Irish-Based Experts in Digital Transformation</h2>
-                        <p class="mt-8 text-lg text-slate-300 leading-relaxed">Protech Dynamic Solutions is a premier Irish-based technology consultancy. Our mission is to demystify complex technology and make it work for you. We are not just programmers; we are partners in your success.</p>
-                        <p class="mt-6 text-lg text-slate-300 leading-relaxed">With deep, hands-on expertise in project management, process automation, and cutting-edge AI, we bridge the gap between your operational needs and your technological capabilities.</p>
+                        <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">About Us</span>
+                        <h2 class="text-5xl sm:text-6xl font-black luxury-serif title-luxury text-left">Irish Excellence in Digital Innovation</h2>
+                        <p class="mt-10 text-xl text-gray-400 leading-relaxed">
+                            Protech Dynamic Solutions is Ireland's premier technology consultancy. We don't just implement technology—we transform it into competitive advantage.
+                        </p>
+                        <p class="mt-6 text-xl text-gray-400 leading-relaxed">
+                            With unparalleled expertise in project management, process automation, and AI, we bridge the gap between your vision and technological reality.
+                        </p>
                     </div>
-                    <div class="glass-card p-10 rounded-2xl shadow-2xl border border-slate-700/50">
-                        <h3 class="text-2xl font-bold text-white text-center mb-8 bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">Technologies We Master</h3>
-                        <div class="flex flex-wrap justify-center gap-3">
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">Python</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">AI & Machine Learning</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">Excel (VBA)</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">HTML & CSS</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">JavaScript</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">API Integration</span>
-                            <span class="tech-badge bg-slate-700/80 text-amber-400 font-mono text-sm font-bold py-3 px-5 rounded-full border border-amber-400/20">Process Automation</span>
+                    <!-- Tech Stack / Philosophy Card -->
+                    <div class="ultra-glass p-12 rounded-3xl">
+                        <h3 class="text-3xl font-bold luxury-serif text-center mb-10 luxury-gold-text">Technologies We Master</h3>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="python">Python</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="ai">AI & ML</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="vba">Excel VBA</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="html">HTML & CSS</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="js">JavaScript</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="api">API Integration</span>
+                            <span class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="automation">Automation</span>
                         </div>
-                        
-                        <!-- [START] Methodology Text Block (Replaces image placeholder) -->
-                        <div class="mt-10 pt-8 border-t border-slate-700/50">
-                            <h4 class="text-xl font-bold text-white text-center mb-4 bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
-                                Our 'Smarter, Not Harder' Approach
+                        <div class="mt-12 pt-10 border-t border-amber-400/20">
+                            <h4 class="text-2xl font-bold luxury-serif text-center mb-6 luxury-gold-text">
+                                'Smarter, Not Harder' Philosophy
                             </h4>
-                            <p class="text-slate-300 leading-relaxed text-center">
-                                We believe in being <strong>money-wise</strong> by default. Our methodology isn't about throwing complex tech at a problem; it's about using AI to find the <em>smartest</em> path to a financial return. We find the high-cost, repetitive tasks and automate them, letting your team focus on high-value work. It's not just digital transformation; it's financial optimisation.
+                            <p class="text-gray-400 leading-relaxed text-center text-lg">
+                                We're <strong class="text-amber-400">money-wise</strong> by design. Using AI to identify the smartest path to ROI, we automate high-cost repetitive tasks, freeing your team for high-value strategic work. This isn't just transformation—it's <em class="text-amber-400">financial optimisation</em>.
                             </p>
                         </div>
-                        <!-- [END] Methodology Text Block -->
-
                     </div>
                 </div>
             </div>
         </section>
-        <section id="contact" class="py-24 sm:py-32 bg-slate-900 relative overflow-hidden circuit-pattern">
-            <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="text-center max-w-4xl mx-auto">
-                    <span class="inline-block text-transparent bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-bold uppercase tracking-widest text-sm mb-4">Get In Touch</span>
-                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white title-underline text-center">Let's Build Your Solution</h2>
-                    <p class="mt-8 text-xl text-slate-300 leading-relaxed">Ready to automate, optimise, and innovate? Get in touch for a free, no-obligation consultation to discuss your project.</p>
-                </div>
-                <div class="mt-16 max-w-2xl mx-auto">
-                    <form class="glass-card p-10 rounded-2xl shadow-2xl border border-slate-700/50 space-y-8">
-                        <div><label for="name" class="block text-sm font-bold text-slate-300 mb-3">Your Name</label><input type="text" id="name" required class="block w-full bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-white transition-all"></div>
-                        <div><label for="email" class="block text-sm font-bold text-slate-300 mb-3">Your Email</label><input type="email" id="email" required class="block w-full bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-white transition-all"></div>
-                        <div><label for="subject" class="block text-sm font-bold text-slate-300 mb-3">Subject</label><input type="text" id="subject" class="block w-full bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-white transition-all"></div>
-                        <div><label for="message" class="block text-sm font-bold text-slate-300 mb-3">Message</label><textarea id="message" rows="5" required class="block w-full bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-white transition-all"></textarea></div>
-                        <div class="text-center pt-4"><button type="submit" class="btn-primary w-full text-slate-900 font-bold py-4 px-8 rounded-xl text-lg">Send Message</button></div>
-                    </form>
+
+        <!-- NEW: Premium Modal for Tech Showcase -->
+        <div id="tech-modal" class="fixed inset-0 z-[100] h-full w-full hidden items-center justify-center bg-black/80 backdrop-blur-md">
+            <!-- Modal Content Box (for animation) -->
+            <div id="modal-content-box" class="relative w-full max-w-3xl p-4 transition-all duration-300 ease-in-out opacity-0 scale-95">
+                <!-- Modal Content -->
+                <div class="ultra-glass rounded-3xl p-8 sm:p-12 relative overflow-hidden border-amber-400/30">
+                    <!-- Close Button -->
+                    <button id="close-modal-btn" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-all hover:scale-125 z-10">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    
+                    <!-- Dynamic Content -->
+                    <h3 id="modal-title" class="text-3xl lg:text-4xl font-bold luxury-serif mb-6 luxury-gold-text">
+                        <!-- Dynamic Title -->
+                    </h3>
+                    <div id="modal-content" class="text-lg text-gray-300 leading-relaxed space-y-4">
+                        <!-- Dynamic Content -->
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
     </main>
-    <footer class="bg-slate-950 border-t border-slate-800/50 relative overflow-hidden">
-        <div class="absolute top-0 left-1/2 w-96 h-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent -translate-x-1/2"></div>
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-            <div class="flex justify-center mb-6">
-                <!-- FIXED Logo Path -->
-                <img src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/blob/main/logo%20latest.png?raw=true" alt="Protech Logo" class="h-16 w-16 object-contain opacity-80" onerror="this.onerror=null; this.src='https://placehold.co/64x64/0f172a/d4a574?text=PDS';">
+
+    <!-- Premium Footer -->
+    <footer class="bg-black border-t border-amber-400/10 relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 w-full h-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent -translate-x-1/2"></div>
+        <div class="container mx-auto px-6 lg:px-12 py-16 text-center">
+            <div class="flex justify-center mb-8">
+                <img src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/blob/main/logo%20latest.png?raw=true" 
+                     alt="Protech Logo" 
+                     class="h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+                     onerror="this.src='https://placehold.co/200x80/000/d4a574?text=Protech';">
             </div>
-            <p class="text-slate-400 text-lg font-semibold">&copy; 2025 Protech Dynamic Solutions. All rights reserved.</p>
-            <p class="mt-3 text-base text-transparent bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text font-medium">Bespoke Software & AI Solutions | Ireland</p>
+            <p class="text-gray-500 text-lg font-semibold mb-4">&copy; 2025 Protech Dynamic Solutions. All rights reserved.</p>
+            <p class="text-base luxury-gold-text font-medium">Bespoke Software & AI Solutions | Ireland</p>
         </div>
     </footer>
+
     <script>
-        const menuBtn=document.getElementById('mobile-menu-button');
-        const menu=document.getElementById('mobile-menu');
-        const hamburger=document.getElementById('hamburger-icon');
-        const close=document.getElementById('close-icon');
-        const links=document.querySelectorAll('.mobile-menu-link');
-        menuBtn.addEventListener('click',()=>{
+        // --- Mobile Menu Toggle Functionality ---
+        const menuBtn = document.getElementById('mobile-menu-button');
+        const menu = document.getElementById('mobile-menu');
+        const hamburger = document.getElementById('hamburger-icon');
+        const close = document.getElementById('close-icon');
+        const links = document.querySelectorAll('.mobile-menu-link');
+        
+        // Toggle menu visibility
+        menuBtn.addEventListener('click', () => {
             menu.classList.toggle('hidden');
             hamburger.classList.toggle('hidden');
             close.classList.toggle('hidden');
         });
-        links.forEach(link=>link.addEventListener('click',()=>{
-            if(!menu.classList.contains('hidden')){
+        
+        // Close menu when a link is clicked
+        links.forEach(link => link.addEventListener('click', () => {
+            if (!menu.classList.contains('hidden')) {
                 menu.classList.add('hidden');
                 hamburger.classList.remove('hidden');
                 close.classList.add('hidden');
             }
         }));
+        
+        // --- Smooth Scrolling for Anchor Links ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    // Scroll to the target element smoothly
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // --- NEW: Tech Modal Functionality ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('tech-modal');
+            const modalContentBox = document.getElementById('modal-content-box');
+            if (!modal || !modalContentBox) return;
+
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const badges = document.querySelectorAll('.tech-badge');
+            
+            // Define the content for each badge
+            const techContent = {
+                'python': {
+                    title: "Custom Python Solutions",
+                    content: `
+                        <p>We use Python to build powerful automation scripts, custom APIs, and intelligent data processing pipelines.</p>
+                        <p>Imagine a workflow that automatically reads your sales emails, extracts order details, and updates your database in real-time. That's the power we deliver.</p>
+                        <pre class="bg-black/50 border border-amber-400/20 rounded-lg p-4 text-sm text-amber-300 overflow-x-auto mt-4"><code>def process_orders(email_data):
+    for email in email_data:
+        if email.subject.startswith("NEW ORDER"):
+            order_details = parse_email_body(email.body)
+            api.update_database("orders", order_details)
+            print(f"Processed order {order_details['id']}")</code></pre>
+                    `
+                },
+                'ai': {
+                    title: "Intelligent AI & ML Models",
+                    content: `
+                        <p>We turn your data into your most valuable asset. We build custom AI models to unlock predictive power and automate complex decisions, such as:</p>
+                        <ul class="list-disc list-inside space-y-2 mt-4 text-gray-300">
+                            <li><strong>Sales Forecasting:</strong> Analyse past data to accurately predict future revenue streams.</li>
+                            <li><strong>Automated Categorisation:</strong> Instantly sort thousands of customer support tickets, emails, or products.</li>
+                            <li><strong>Insight Extraction:</strong> Discover hidden patterns and opportunities in your business data.</li>
+                        </ul>
+                    `
+                },
+                'vba': {
+                    title: "Advanced Excel & VBA",
+                    content: "<p>Transform your spreadsheets from static reports into dynamic dashboards. We automate complex calculations, generate reports with one click, and build custom user forms directly within Excel to streamline your financial and operational workflows.</p>"
+                },
+                'html': {
+                    title: "Bespoke Web & App Design",
+                    content: "<p>From stunning landing pages (like this one!) to complex web applications, we build secure, scalable, and beautifully designed digital experiences using HTML, CSS, and modern frameworks that perfectly match your brand's luxury feel.</p>"
+                },
+                'js': {
+                    title: "Interactive JavaScript",
+                    content: "<p>We use JavaScript to bring your applications to life. From interactive dashboards and real-time data visualisations to complex client-side logic, we build fast, responsive, and engaging user interfaces that captivate your users.</p>"
+                },
+                'api': {
+                    title: "Seamless API Integration",
+                    content: "<p>We connect all your systems. We build and integrate robust APIs to ensure your software (CRM, ERP, marketing tools) communicates flawlessly, automating data flow and eliminating data silos across your entire business.</p>"
+                },
+                'automation': {
+                    title: "End-to-End Process Automation",
+                    content: "<p>We identify and eliminate high-cost, repetitive manual tasks. Using digital forms, robotic process automation (RPA), and custom scripts, we free your team to focus on high-value strategic work instead of manual data entry.</p>"
+                }
+            };
+
+            // Function to open the modal
+            const openModal = (techKey) => {
+                const content = techContent[techKey];
+                if (!content || !modalTitle || !modalContent) return;
+
+                modalTitle.textContent = content.title;
+                modalContent.innerHTML = content.content;
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex'); // Make it a flex container
+                
+                // Animate in
+                requestAnimationFrame(() => {
+                    modalContentBox.classList.remove('opacity-0');
+                    modalContentBox.classList.remove('scale-95');
+                });
+            };
+
+            // Function to close the modal
+            const closeModal = () => {
+                modalContentBox.classList.add('opacity-0');
+                modalContentBox.classList.add('scale-95');
+                
+                // Wait for animation to finish before hiding
+                modalContentBox.addEventListener('transitionend', () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, { once: true });
+            };
+
+            // Add click listeners to all badges
+            badges.forEach(badge => {
+                badge.addEventListener('click', () => {
+                    const techKey = badge.getAttribute('data-tech');
+                    openModal(techKey);
+                });
+            });
+
+            // Add click listeners for closing
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                // Check if the click is on the backdrop itself (not the content box)
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        });
     </script>
 </body>
 </html>
+
+
