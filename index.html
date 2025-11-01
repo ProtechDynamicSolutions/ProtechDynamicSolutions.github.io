@@ -291,10 +291,10 @@
         }
     </style>
 </head>
-<body class="bg-black text-white overflow-x-hidden"> <!-- Added overflow-x-hidden to prevent horizontal scroll -->
+<body class="bg-black text-white"> <!-- MODIFIED: Removed overflow-x-hidden -->
     <!-- Premium Navigation -->
     <header class="nav-luxury sticky top-0 z-50">
-        <nav class="container mx-auto px-6 lg:px-12">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-12"> <!-- MODIFIED: Was px-6 -->
             <div class="flex justify-between items-center h-24">
                 <a href="#home" class="logo-container group">
                     <!-- P Logo for Mobile -->
@@ -332,7 +332,7 @@
         </div>
     </header>
 
-    <main>
+    <main class="overflow-x-hidden"> <!-- MODIFIED: Added overflow-x-hidden -->
         <!-- Ultra Premium Hero Section -->
         <section id="home" class="relative pt-40 pb-56 overflow-hidden hero-bg">
             <div class="particles">
@@ -346,14 +346,16 @@
             <div class="absolute top-20 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
             <div class="absolute bottom-20 right-10 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
             
-            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10"> <!-- MODIFIED: Was px-6 -->
                 <div class="grid lg:grid-cols-2 gap-20 items-center">
                     <div class="text-center lg:text-left hero-mobile-center">
                         <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6 opacity-90">Protech Dynamic Solutions</span>
-                        <h1 class="mt-8 text-6xl sm:text-7xl lg:text-8xl font-black leading-tight luxury-serif">
+                        <!-- MODIFIED: Changed base font size from text-6xl to text-5xl -->
+                        <h1 class="mt-8 text-5xl sm:text-7xl lg:text-8xl font-black leading-tight luxury-serif">
                             Transforming<br/>
                             <span class="block mt-4 luxury-gold-text">Complexity</span>
-                            <span class="block mt-2 text-5xl sm:text-6xl lg:text-7xl">into Advantage</span>
+                             <!-- MODIFIED: Changed base font size from text-5xl to text-4xl -->
+                            <span class="block mt-2 text-4xl sm:text-6xl lg:text-7xl">into Advantage</span>
                         </h1>
                         <p class="mt-12 text-xl sm:text-2xl text-gray-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
                             Bespoke software, intelligent automation, and AI-powered solutions that elevate your business to unprecedented heights.
@@ -380,7 +382,7 @@
         <!-- Premium Services Section -->
         <section id="services" class="py-32 bg-black relative overflow-hidden">
             <div class="absolute top-0 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -translate-x-12"></div>
-            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10"> <!-- MODIFIED: Was px-6 -->
                 <!-- Section Header -->
                 <div class="text-center max-w-5xl mx-auto mb-24">
                     <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Our Expertise</span>
@@ -446,7 +448,7 @@
         <!-- Premium About Section -->
         <section id="about" class="py-32 bg-gradient-to-b from-black to-zinc-900 relative overflow-hidden">
             <div class="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
-            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10"> <!-- MODIFIED: Was px-6 -->
                 <div class="grid lg:grid-cols-2 gap-20 items-center">
                     <!-- About Text Content -->
                     <div class="text-center lg:text-left hero-mobile-center">
@@ -514,7 +516,7 @@
                 <div class="particle"></div>
             </div>
             <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10"> <!-- MODIFIED: Was px-6 -->
                 <div class="text-center max-w-5xl mx-auto mb-20">
                     <span class="inline-block luxury--gold-text font-bold uppercase tracking-widest text-xs mb-6">Get In Touch</span>
                     <h2 class="text-5xl sm:text-6xl lg:text-7xl font-black luxury-serif title-luxury">Begin Your Transformation</h2>
@@ -547,7 +549,7 @@
     <!-- Premium Footer -->
     <footer class="bg-black border-t border-amber-400/10 relative overflow-hidden">
         <div class="absolute top-0 left-1/2 w-full h-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent -translate-x-1/2"></div>
-        <div class="container mx-auto px-6 lg:px-12 py-16 text-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-12 py-16 text-center"> <!-- MODIFIED: Was px-6 -->
             <div class="flex justify-center mb-8">
                 <img src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/blob/main/logo%20latest.png?raw=true" 
                      alt="Protech Logo" 
@@ -719,5 +721,7 @@
     </script>
 </body>
 </html>
+
+
 
 
