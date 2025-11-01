@@ -216,7 +216,7 @@
         }
         
         /* Responsive Logo Sizing */
-        .logo-container{display:flex;align-items:center;gap:12px}
+        .logo-container{display:flex;align-items:center;gap:12px;justify-content:center}
         .logo-img{transition:all 0.3s ease}
         @media (max-width:768px){
             .logo-full{display:none}
@@ -225,6 +225,69 @@
         @media (min-width:769px){
             .logo-full{display:block;height:64px;width:auto;max-width:280px}
             .logo-p{display:none}
+        }
+        
+        /* Mobile Centering & Responsive */
+        @media (max-width:768px){
+            .hero-mobile-center{text-align:center!important}
+            .mobile-center-flex{justify-content:center!important}
+            .mobile-full-width{width:100%}
+        }
+        
+        /* Advanced Gradient Mesh Background */
+        .gradient-mesh{
+            background:radial-gradient(at 10% 20%,rgba(212,165,116,0.12) 0px,transparent 50%),
+                       radial-gradient(at 90% 10%,rgba(244,199,145,0.08) 0px,transparent 50%),
+                       radial-gradient(at 50% 90%,rgba(212,165,116,0.1) 0px,transparent 50%),
+                       linear-gradient(135deg,#000000 0%,#0a0a0a 100%)
+        }
+        
+        /* Magnetic Hover Effect */
+        .magnetic-hover{
+            transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)
+        }
+        .magnetic-hover:hover{
+            transform:translateY(-8px) scale(1.03);
+            filter:brightness(1.1)
+        }
+        
+        /* Neural Network Animation */
+        @keyframes neural-pulse{
+            0%,100%{opacity:0.3;transform:scale(0.95)}
+            50%{opacity:0.8;transform:scale(1.05)}
+        }
+        .neural-glow{
+            animation:neural-pulse 3s ease-in-out infinite
+        }
+        
+        /* Holographic Effect */
+        .holographic{
+            background:linear-gradient(135deg,#d4a574 0%,#f4c791 25%,#fff 50%,#f4c791 75%,#d4a574 100%);
+            background-size:400% 400%;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:holographic-shift 8s ease infinite
+        }
+        @keyframes holographic-shift{
+            0%,100%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+        }
+        
+        /* 3D Card Transform */
+        .card-3d{
+            transform-style:preserve-3d;
+            perspective:1000px
+        }
+        .card-3d:hover{
+            transform:rotateY(5deg) rotateX(5deg)
+        }
+        
+        /* Cyber Grid */
+        .cyber-grid{
+            background-image:
+                linear-gradient(rgba(212,165,116,0.03) 1px,transparent 1px),
+                linear-gradient(90deg,rgba(212,165,116,0.03) 1px,transparent 1px);
+            background-size:50px 50px
         }
     </style>
 </head>
@@ -285,8 +348,7 @@
             
             <div class="container mx-auto px-6 lg:px-12 relative z-10">
                 <div class="grid lg:grid-cols-2 gap-20 items-center">
-                    <!-- Hero Text Content -->
-                    <div class="text-center lg:text-left">
+                    <div class="text-center lg:text-left hero-mobile-center">
                         <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6 opacity-90">Protech Dynamic Solutions</span>
                         <h1 class="mt-8 text-6xl sm:text-7xl lg:text-8xl font-black leading-tight luxury-serif">
                             Transforming<br/>
@@ -296,8 +358,7 @@
                         <p class="mt-12 text-xl sm:text-2xl text-gray-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
                             Bespoke software, intelligent automation, and AI-powered solutions that elevate your business to unprecedented heights.
                         </p>
-                        <!-- CTA Buttons -->
-                        <div class="mt-14 flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
+                        <div class="mt-14 flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mobile-center-flex">
                             <a href="#services" class="ultra-btn text-black py-5 px-10 rounded-full text-base uppercase tracking-wider">Explore Excellence</a>
                             <a href="#contact" class="ultra-glass text-white py-5 px-10 rounded-full text-base uppercase tracking-wider hover:border-amber-400/40 transition-all">Begin Your Journey</a>
                         </div>
@@ -444,6 +505,43 @@
                 </div>
             </div>
         </div>
+
+        <!-- Ultra Premium Contact Section with Embedded JotForm -->
+        <section id="contact" class="py-32 bg-black relative overflow-hidden">
+            <div class="particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+            <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="container mx-auto px-6 lg:px-12 relative z-10">
+                <div class="text-center max-w-5xl mx-auto mb-20">
+                    <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Get In Touch</span>
+                    <h2 class="text-5xl sm:text-6xl lg:text-7xl font-black luxury-serif title-luxury">Begin Your Transformation</h2>
+                    <p class="mt-10 text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                        Ready to automate, optimise, and innovate? Connect with us for a complimentary consultation to explore your project's potential.
+                    </p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="ultra-glass p-8 sm:p-12 rounded-3xl">
+                        <iframe
+                            id="JotFormIFrame-253023065536047"
+                            title="Contact Form"
+                            onload="window.parent.scrollTo(0,0)"
+                            allowtransparency="true"
+                            allow="geolocation; microphone; camera; fullscreen; payment"
+                            src="https://form.jotform.com/253023065536047"
+                            frameborder="0"
+                            style="min-width:100%;max-width:100%;height:600px;border:none;background:transparent;"
+                            scrolling="no"
+                        >
+                        </iframe>
+                        <script src='https://cdn.jotfor.ms/s/umd/latest/for-form-embed-handler.js'></script>
+                        <script>window.jotformEmbedHandler("iframe[id='JotFormIFrame-253023065536047']", "https://form.jotform.com/")</script>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Premium Footer -->
@@ -609,5 +707,7 @@
     </script>
 </body>
 </html>
+
+
 
 
