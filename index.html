@@ -631,7 +631,7 @@
         }));
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                e.preventDefault();.
+                e.preventDefault(); // <-- This was the line with the error
                 const targetId = this.getAttribute('href');
                 if (this.classList.contains('mobile-menu-link')) {
                     menu.classList.add('hidden');
@@ -692,7 +692,7 @@
                 },
                 'js': {
                     title: "Interactive JavaScript",
-                    content: "<p>We use JavaScript to bring your applications to life. From interactive dashboards and real-time data visualisations to complex client-side logic, we build fast, responsive, and engaging user interfaces that captivate your users.</p>"D
+                    content: "<p>We use JavaScript to bring your applications to life. From interactive dashboards and real-time data visualisations to complex client-side logic, we build fast, responsive, and engaging user interfaces that captivate your users.</p>"
                 },
                 'api': {
                     title: "Seamless API Integration",
@@ -781,5 +781,4 @@
     </script>
 </body>
 </html>
-
 
