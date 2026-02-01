@@ -1,0 +1,658 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  CheckCircle2, 
+  Circle, 
+  Fish, 
+  Sword, 
+  Shield, 
+  Zap, 
+  Clock, 
+  Calendar, 
+  Coins, 
+  Trophy,
+  Pizza,
+  Bomb,
+  PiggyBank,
+  ChevronRight,
+  Target,
+  Sparkles,
+  TreePine,
+  Gift,
+  Flame,
+  Star,
+  Heart,
+  Rocket,
+  Swords,
+  Hexagon
+} from 'lucide-react';
+
+const App = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Demo State (In-memory for the session)
+  const [fishFedToday, setFishFedToday] = useState(true);
+  const [vault, setVault] = useState({ total: 0, goal: 50 });
+  const [powerUpClaimed, setPowerUpClaimed] = useState(false);
+  const [particles, setParticles] = useState([]);
+  const [shakeVault, setShakeVault] = useState(false);
+  const [ninjaStars, setNinjaStars] = useState([]);
+  const [beyblades, setBeyblades] = useState([]);
+  const [minecraftBlocks, setMinecraftBlocks] = useState([]);
+  const [comboCount, setComboCount] = useState(0);
+  const [comboTimer, setComboTimer] = useState(null);
+  const [achievements, setAchievements] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [explosions, setExplosions] = useState([]);
+  const [lightning, setLightning] = useState([]);
+
+  // Quest template with the Garden mission
+  const initialChores = [
+    { id: 1, task: 'Clean Playroom', reward: 3, completed: false, emoji: '🎮' },
+    { id: 2, task: 'Clean Bedroom', reward: 2, completed: false, emoji: '🛏️' },
+    { id: 3, task: 'Clean Family Room', reward: 1, completed: false, emoji: '🛋️' },
+    { id: 4, task: 'Clean Garden', reward: 4, completed: false, emoji: '🌳' },
+  ];
+
+  const [maxChores, setMaxChores] = useState([...initialChores]);
+  const [ariChores, setAriChores] = useState([...initialChores]);
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Vibration helper
+  const vibrate = (pattern = [100]) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  };
+
+  // Play sound effects using Web Audio API
+  const playSound = (type) => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      switch(type) {
+        case 'complete':
+          oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.3);
+          break;
+        case 'vault':
+          oscillator.frequency.setValueAtTime(392, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(523.25, audioContext.currentTime + 0.1);
+          oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.4);
+          break;
+        case 'powerup':
+          oscillator.frequency.setValueAtTime(261.63, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(523.25, audioContext.currentTime + 0.1);
+          oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.5);
+          break;
+        case 'explosion':
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+          gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.3);
+          break;
+        case 'levelup':
+          oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1);
+          oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.2);
+          oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.3);
+          gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.6);
+          break;
+        default:
+          break;
+      }
+    } catch (e) {
+      console.warn("Audio Context blocked or unsupported.");
+    }
+  };
+
+  const createExplosions = (count = 5) => {
+    playSound('explosion');
+    vibrate([100, 50, 100, 50, 100]);
+    const newExplosions = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 60 + 40
+    }));
+    setExplosions(newExplosions);
+    setTimeout(() => setExplosions([]), 1000);
+  };
+
+  const createLightning = (count = 4) => {
+    const newLightning = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      delay: i * 100
+    }));
+    setLightning(newLightning);
+    setTimeout(() => setLightning([]), 1500);
+  };
+
+  const checkAchievements = () => {
+    const totalCompleted = [...maxChores, ...ariChores].filter(c => c.completed).length;
+    const newAchievements = [];
+    
+    if (totalCompleted === 4 && !achievements.includes('first_quest')) {
+      newAchievements.push({ id: 'first_quest', title: '🎯 First Quest!', desc: 'Completed 4 chores' });
+    }
+    if (totalCompleted === 8 && !achievements.includes('quest_master')) {
+      newAchievements.push({ id: 'quest_master', title: '👑 Quest Master!', desc: 'Completed ALL chores!' });
+      playSound('levelup');
+      createLightning(8);
+    }
+    if (vault.total >= 25 && !achievements.includes('half_way')) {
+      newAchievements.push({ id: 'half_way', title: '💰 Half Way There!', desc: 'Reached €25' });
+    }
+    if (vault.total >= vault.goal && !achievements.includes('goal_reached')) {
+      newAchievements.push({ id: 'goal_reached', title: '🏆 GOAL CRUSHED!', desc: 'Reached €50 goal!' });
+      playSound('levelup');
+      createExplosions(10);
+      createLightning(6);
+    }
+    
+    if (newAchievements.length > 0) {
+      setAchievements([...achievements, ...newAchievements.map(a => a.id)]);
+      // In place of browser alert, we use console or you could build a custom modal
+      console.log("Achievements Earned:", newAchievements);
+    }
+  };
+
+  const updateCombo = () => {
+    if (comboTimer) clearTimeout(comboTimer);
+    
+    const newCombo = comboCount + 1;
+    setComboCount(newCombo);
+    
+    if (newCombo === 3) {
+      playSound('powerup');
+      createLightning(3);
+    }
+    if (newCombo === 5) {
+      playSound('levelup');
+      createExplosions(5);
+      setShowLevelUp(true);
+      setTimeout(() => setShowLevelUp(false), 2000);
+    }
+    
+    const timer = setTimeout(() => {
+      setComboCount(0);
+    }, 3000);
+    setComboTimer(timer);
+  };
+
+  const createNinjaStars = (count = 8) => {
+    vibrate([50, 50, 50]);
+    const newStars = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 30 + 20,
+      rotation: Math.random() * 360,
+      speed: Math.random() * 3 + 2
+    }));
+    setNinjaStars(newStars);
+    setTimeout(() => setNinjaStars([]), 2000);
+  };
+
+  const createBeyblades = (count = 6) => {
+    vibrate([100, 50, 100]);
+    const newBeyblades = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 40 + 30,
+      rotation: Math.random() * 360
+    }));
+    setBeyblades(newBeyblades);
+    setTimeout(() => setBeyblades([]), 2500);
+  };
+
+  const createMinecraftBlocks = (count = 10) => {
+    vibrate([80, 40, 80, 40, 80]);
+    const blockTypes = ['🟫', '🟩', '🟦', '⬛', '🟨', '🟥'];
+    const newBlocks = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 30 + 25,
+      rotation: Math.random() * 45,
+      block: blockTypes[Math.floor(Math.random() * blockTypes.length)]
+    }));
+    setMinecraftBlocks(newBlocks);
+    setTimeout(() => setMinecraftBlocks([]), 2000);
+  };
+
+  const createParticles = (count = 15) => {
+    const newParticles = Array.from({ length: count }, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 20 + 10,
+      rotation: Math.random() * 360,
+      emoji: ['⭐', '💎', '🎉', '✨', '🏆', '💰', '🎊'][Math.floor(Math.random() * 7)]
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 2000);
+  };
+
+  const unleashUltimatePower = () => {
+    playSound('explosion');
+    setTimeout(() => playSound('levelup'), 200);
+    vibrate([200, 100, 200, 100, 300, 100, 200]);
+    createParticles(30);
+    setTimeout(() => createNinjaStars(12), 100);
+    setTimeout(() => createBeyblades(10), 200);
+    setTimeout(() => createMinecraftBlocks(15), 300);
+    setTimeout(() => createExplosions(8), 400);
+    setTimeout(() => createLightning(10), 500);
+    setShakeVault(true);
+    setTimeout(() => setShakeVault(false), 1000);
+    setShowLevelUp(true);
+    setTimeout(() => setShowLevelUp(false), 3000);
+  };
+
+  const toggleChore = (boy, id) => {
+    if (boy === 'Max') {
+      const chore = maxChores.find(c => c.id === id);
+      if (!chore.completed) {
+        playSound('complete');
+        createParticles(8);
+        createNinjaStars(5);
+        createMinecraftBlocks(6);
+        updateCombo();
+        setStreak(streak + 1);
+        setTimeout(checkAchievements, 100);
+      }
+      setMaxChores(maxChores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+    } else {
+      const chore = ariChores.find(c => c.id === id);
+      if (!chore.completed) {
+        playSound('complete');
+        createParticles(8);
+        createBeyblades(5);
+        createMinecraftBlocks(6);
+        updateCombo();
+        setStreak(streak + 1);
+        setTimeout(checkAchievements, 100);
+      }
+      setAriChores(ariChores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+    }
+  };
+
+  const depositToVault = (boy) => {
+    const chores = boy === 'Max' ? maxChores : ariChores;
+    const earned = chores.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0);
+    
+    if (earned === 0) return;
+
+    playSound('vault');
+    createParticles(20);
+    createBeyblades(8);
+    createNinjaStars(8);
+    createExplosions(3);
+    setShakeVault(true);
+    setTimeout(() => setShakeVault(false), 500);
+    setVault(prev => ({ ...prev, total: prev.total + earned }));
+    
+    if (boy === 'Max') {
+      setMaxChores(initialChores.map(c => ({ ...c })));
+    } else {
+      setAriChores(initialChores.map(c => ({ ...c })));
+    }
+    
+    setTimeout(checkAchievements, 200);
+  };
+
+  const claimPowerUp = () => {
+    if (powerUpClaimed) return;
+    playSound('powerup');
+    createParticles(25);
+    createMinecraftBlocks(12);
+    createNinjaStars(8);
+    createLightning(4);
+    setVault(prev => ({ ...prev, total: prev.total + 1 }));
+    setPowerUpClaimed(true);
+    setTimeout(checkAchievements, 100);
+  };
+
+  const totalXP = [...maxChores, ...ariChores].filter(c => c.completed).length + (powerUpClaimed ? 1 : 0);
+  const maxXP = maxChores.length + ariChores.length + 1;
+  const vaultProgress = Math.min((vault.total / vault.goal) * 100, 100);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white font-sans p-4 pb-12 selection:bg-green-500/30 relative overflow-hidden">
+      
+      {/* Dynamic Keyframes Injection */}
+      <style>
+        {`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+          }
+          .animate-shake {
+            animation: shake 0.5s;
+          }
+          @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+          }
+          .animate-wiggle {
+            animation: wiggle 0.5s ease-in-out infinite;
+          }
+          @keyframes spinStar {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.5); }
+            100% { transform: rotate(360deg) scale(1); }
+          }
+          @keyframes spinBeyblade {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes minecraftFall {
+            0% { 
+              transform: translateY(-100px) rotate(0deg) scale(0);
+              opacity: 1;
+            }
+            50% {
+              transform: translateY(0px) rotate(180deg) scale(1.2);
+              opacity: 1;
+            }
+            100% { 
+              transform: translateY(50px) rotate(360deg) scale(0.8);
+              opacity: 0.5;
+            }
+          }
+          @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+          @keyframes explode {
+            0% { 
+              transform: scale(0) rotate(0deg);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(2) rotate(180deg);
+              opacity: 1;
+            }
+            100% { 
+              transform: scale(4) rotate(360deg);
+              opacity: 0;
+            }
+          }
+          @keyframes lightning {
+            0% { opacity: 0; transform: scaleY(0); }
+            10% { opacity: 1; transform: scaleY(1); }
+            20% { opacity: 0; }
+            30% { opacity: 1; }
+            40% { opacity: 0; }
+            100% { opacity: 0; }
+          }
+        `}
+      </style>
+
+      {/* Animated Background Stars */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`
+            }}
+          >
+            <Star size={Math.random() * 8 + 4} className="text-yellow-300/30" />
+          </div>
+        ))}
+      </div>
+
+      {/* FX Elements Mapping */}
+      {particles.map(particle => (
+        <div key={particle.id} className="absolute pointer-events-none animate-ping z-50"
+          style={{ left: `${particle.x}%`, top: `${particle.y}%`, fontSize: `${particle.size}px`, transform: `rotate(${particle.rotation}deg)`, animationDuration: '1.5s' }}>
+          {particle.emoji}
+        </div>
+      ))}
+
+      {ninjaStars.map(star => (
+        <div key={star.id} className="absolute pointer-events-none z-50"
+          style={{ left: `${star.x}%`, top: `${star.y}%`, animation: `spinStar ${star.speed}s linear infinite, fadeOut 2s forwards` }}>
+          <Swords size={star.size} className="text-red-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]" style={{ transform: `rotate(${star.rotation}deg)` }} />
+        </div>
+      ))}
+
+      {beyblades.map(beyblade => (
+        <div key={beyblade.id} className="absolute pointer-events-none z-50"
+          style={{ left: `${beyblade.x}%`, top: `${beyblade.y}%`, animation: 'spinBeyblade 0.3s linear infinite, fadeOut 2.5s forwards' }}>
+          <Hexagon size={beyblade.size} className="text-blue-500 drop-shadow-[0_0_15px_rgba(0,100,255,0.9)]" style={{ transform: `rotate(${beyblade.rotation}deg)` }} />
+        </div>
+      ))}
+
+      {minecraftBlocks.map(block => (
+        <div key={block.id} className="absolute pointer-events-none z-50 animate-bounce"
+          style={{ left: `${block.x}%`, top: `${block.y}%`, fontSize: `${block.size}px`, transform: `rotate(${block.rotation}deg)`, animation: 'minecraftFall 2s forwards, fadeOut 2s forwards', filter: 'drop-shadow(0 0 8px rgba(0,255,0,0.6))' }}>
+          {block.block}
+        </div>
+      ))}
+
+      {explosions.map(explosion => (
+        <div key={explosion.id} className="absolute pointer-events-none z-50"
+          style={{ left: `${explosion.x}%`, top: `${explosion.y}%`, fontSize: `${explosion.size}px`, animation: 'explode 1s forwards' }}>
+          💥
+        </div>
+      ))}
+
+      {lightning.map(bolt => (
+        <div key={bolt.id} className="absolute pointer-events-none z-50 w-1 bg-yellow-300 shadow-[0_0_20px_rgba(255,255,0,0.9)]"
+          style={{ left: `${bolt.x}%`, top: 0, height: '100%', animation: 'lightning 0.2s forwards', animationDelay: `${bolt.delay}ms` }} />
+      ))}
+
+      {/* Combo UI */}
+      {comboCount > 0 && (
+        <div className="fixed top-1/4 right-8 z-50 animate-bounce">
+          <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-4 border-yellow-300 rounded-3xl px-8 py-6 shadow-[0_0_40px_rgba(255,0,0,0.8)]">
+            <div className="text-6xl font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">{comboCount}x</div>
+            <div className="text-sm font-black text-yellow-200 uppercase tracking-widest text-center mt-2">
+              {comboCount >= 5 ? '🔥 LEGENDARY!' : comboCount >= 3 ? '⚡ COMBO!' : '✨ STREAK!'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Level Up Banner */}
+      {showLevelUp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-8 border-yellow-300 rounded-[3rem] px-16 py-12 shadow-[0_0_80px_rgba(255,0,255,0.9)] animate-pulse">
+            <div className="text-8xl font-black text-white drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)] text-center mb-4">🏆 LEVEL UP! 🏆</div>
+            <div className="text-4xl font-black text-yellow-300 uppercase tracking-widest text-center">LEGENDARY WARRIOR!</div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="bg-gradient-to-r from-green-700 via-emerald-600 to-green-700 border-b-8 border-green-900 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+        <div className="text-center md:text-left relative z-10">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic flex items-center justify-center md:justify-start gap-4 drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]">
+            <Sword className="text-yellow-400 rotate-45 animate-bounce" size={48} />
+            <span className="bg-gradient-to-r from-yellow-300 via-yellow-100 to-yellow-300 bg-clip-text text-transparent">ADVENTURE HQ</span>
+            <Shield className="text-yellow-400 animate-pulse" size={48} />
+          </h1>
+          <p className="text-green-200 font-mono text-sm uppercase tracking-[0.4em] mt-2 flex items-center gap-2 justify-center md:justify-start">
+            <Zap size={16} className="text-yellow-300 animate-pulse" /> Max & Ari's Command Centre <Flame size={16} className="text-orange-400 animate-pulse" />
+          </p>
+        </div>
+        <div className="bg-black/50 p-6 rounded-2xl border-4 border-white/20 backdrop-blur-md shadow-2xl relative z-10">
+          <div className="flex items-center gap-2 text-cyan-400 justify-center font-mono text-3xl font-black drop-shadow-lg">
+            <Clock size={24} className="animate-spin" style={{ animationDuration: '3s' }} />
+            {currentTime.toLocaleTimeString('en-GB', { hour12: false })}
+          </div>
+          <div className="flex items-center gap-2 text-slate-300 text-xs justify-center uppercase tracking-widest mt-2 font-bold">
+            <Calendar size={14} /> {currentTime.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+        <div className="lg:col-span-4 space-y-8">
+          {/* Fish Mission */}
+          <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 border-4 border-blue-500 rounded-[2.5rem] p-8 shadow-[0_20px_60px_rgba(0,100,255,0.4)] relative overflow-hidden group hover:scale-105 transition-transform duration-300">
+            <div className="absolute -top-20 -right-20 opacity-20 group-hover:rotate-[360deg] transition-transform duration-[3s]"><Fish size={250} className="text-cyan-300" /></div>
+            <h2 className="text-3xl font-black mb-8 flex items-center gap-4 text-blue-100 drop-shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-2xl animate-pulse"><Fish className="text-white" size={32} /></div>
+              🐠 Fish Mission
+            </h2>
+            <div className={`p-6 rounded-3xl border-4 transition-all duration-500 ${fishFedToday ? 'bg-green-500/30 border-green-400' : 'bg-red-500/30 border-red-400 animate-pulse'}`}>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <span className="block text-sm font-black uppercase tracking-widest text-blue-200 mb-2">🎯 Status</span>
+                  <span className="text-2xl font-black uppercase italic">{fishFedToday ? '✅ Full & Strong!' : '🚨 HUNGRY!'}</span>
+                </div>
+                <button onClick={() => setFishFedToday(!fishFedToday)} className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all ${fishFedToday ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-slate-700 to-slate-900 rotate-12 animate-wiggle'}`}>
+                  {fishFedToday ? <CheckCircle2 size={36} /> : <Circle size={36} className="animate-pulse" />}
+                </button>
+              </div>
+              <div className="h-4 bg-black/60 rounded-full overflow-hidden border-2 border-white/20 shadow-inner">
+                <div className={`h-full transition-all duration-1000 ${fishFedToday ? 'w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400' : 'w-1/4 bg-gradient-to-r from-red-500 to-orange-500'}`} />
+              </div>
+            </div>
+          </section>
+
+          {/* Vault */}
+          <section className={`bg-gradient-to-br from-yellow-600 via-amber-600 to-yellow-700 border-4 border-yellow-400 rounded-[2.5rem] p-8 shadow-[0_20px_60px_rgba(255,215,0,0.4)] relative overflow-hidden transition-transform duration-300 ${shakeVault ? 'animate-shake' : ''}`}>
+            <h2 className="text-3xl font-black mb-8 flex items-center gap-4 text-yellow-50 drop-shadow-lg">
+              <div className="p-3 bg-white rounded-2xl shadow-2xl"><PiggyBank className="text-yellow-600" size={32} /></div>
+              🏦 Adventure Vault
+            </h2>
+            <div className="bg-black/40 rounded-3xl p-8 border-4 border-yellow-500/50 backdrop-blur-sm text-center">
+              <div className="text-7xl font-black text-white mb-3 font-mono">€{vault.total}</div>
+              <div className="text-sm font-black uppercase text-yellow-200 flex items-center gap-2 justify-center"><Target size={16} /> Goal: €{vault.goal}</div>
+              <div className="h-8 bg-black/60 rounded-full overflow-hidden border-4 border-yellow-400/50 shadow-inner relative mt-6">
+                <div className="h-full bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 transition-all duration-1000 ease-out" style={{ width: `${vaultProgress}%` }} />
+              </div>
+            </div>
+          </section>
+
+          {/* XP Tracker */}
+          <section className="bg-gradient-to-br from-purple-900 via-fuchsia-900 to-purple-900 border-4 border-purple-500 rounded-[2.5rem] p-8 shadow-[0_20px_60px_rgba(168,85,247,0.4)]">
+            <h2 className="text-3xl font-black mb-6 flex items-center gap-4 text-purple-100"><Zap className="text-yellow-300 animate-pulse" size={32} /> ⚡ XP Tracker</h2>
+            <div className="bg-black/40 rounded-3xl p-6 border-4 border-purple-500/50 text-center mb-4">
+              <div className="text-5xl font-black text-transparent bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text mb-2">{totalXP} / {maxXP}</div>
+              <div className="text-xs font-black uppercase tracking-widest text-purple-200">🎮 Quests Completed</div>
+              <div className="h-6 bg-black/60 rounded-full overflow-hidden border-4 border-purple-400/50 shadow-inner mt-4">
+                <div className="h-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 transition-all duration-1000" style={{ width: `${(totalXP / maxXP) * 100}%` }} />
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-400 rounded-2xl p-4 flex justify-between items-center">
+              <span className="text-sm font-black text-orange-200 uppercase flex items-center gap-2"><Flame className="text-orange-400 animate-pulse" /> Streak</span>
+              <span className="text-3xl font-black text-orange-300">{streak}🔥</span>
+            </div>
+          </section>
+        </div>
+
+        {/* Quest Cards */}
+        <div className="lg:col-span-8 space-y-8">
+          {[
+            { name: 'MAX', color: 'purple', icon: <Pizza />, chores: maxChores, boy: 'Max', initial: 'M' },
+            { name: 'ARI', color: 'orange', icon: <Bomb />, chores: ariChores, boy: 'Ari', initial: 'A' }
+          ].map(profile => (
+            <div key={profile.boy} className={`bg-gradient-to-br from-${profile.color}-900/40 to-${profile.color}-800/40 border-l-[16px] border-${profile.color}-500 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm`}>
+              <div className="flex items-center gap-4 mb-8">
+                <div className={`w-16 h-16 bg-gradient-to-br from-${profile.color}-600 to-${profile.color}-400 rounded-3xl flex items-center justify-center font-black text-3xl`}>{profile.initial}</div>
+                <div>
+                  <h3 className={`text-4xl font-black text-${profile.color}-100 italic`}>{profile.name}</h3>
+                  <span className={`text-xs uppercase font-black text-${profile.color}-300 flex items-center gap-2`}>{profile.icon} Warrior</span>
+                </div>
+              </div>
+              <div className="space-y-4 mb-10">
+                {profile.chores.map(chore => (
+                  <button key={chore.id} onClick={() => toggleChore(profile.boy, chore.id)} className={`w-full flex items-center justify-between p-5 rounded-3xl border-4 transition-all ${chore.completed ? 'bg-green-500/20 border-green-400 text-green-300' : 'bg-black/60 border-slate-700 text-white'}`}>
+                    <div className="flex items-center gap-5">
+                      {chore.completed ? <CheckCircle2 className="text-green-400" size={28} /> : <Circle className="text-slate-500" size={28} />}
+                      <span className="text-base font-black flex items-center gap-3"><span className="text-2xl">{chore.emoji}</span> {chore.task}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-black text-yellow-300 text-lg"><Coins size={18} /> €{chore.reward}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="pt-8 border-t-4 border-slate-800 flex flex-col gap-6">
+                <div className="flex justify-between items-center px-2">
+                  <span className="text-sm font-black uppercase text-slate-400">💰 Daily Earnings</span>
+                  <span className="text-4xl font-black text-yellow-300 font-mono">€{profile.chores.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0)}</span>
+                </div>
+                <button onClick={() => depositToVault(profile.boy)} disabled={profile.chores.every(c => !c.completed)} className={`w-full py-5 rounded-3xl font-black uppercase text-sm flex items-center justify-center gap-4 transition-all ${!profile.chores.every(c => !c.completed) ? 'bg-white text-black hover:bg-yellow-300' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}>
+                  <PiggyBank size={20} /> Move to Vault <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Daily Power-Up */}
+          <div className={`bg-gradient-to-r ${powerUpClaimed ? 'from-green-600 to-emerald-600 border-green-800' : 'from-red-600 to-orange-600 border-red-800'} rounded-[2.5rem] p-8 flex flex-col sm:flex-row items-center justify-between gap-8 border-b-8 transition-all hover:scale-[1.02] relative overflow-hidden shadow-2xl`}>
+             <div className="flex items-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-2xl">
+                {powerUpClaimed ? <Trophy className="text-green-600" size={40} /> : <Sparkles className="text-red-600 animate-spin" size={40} style={{ animationDuration: '2s' }} />}
+              </div>
+              <div>
+                <h4 className="text-3xl font-black uppercase italic">{powerUpClaimed ? '🎉 Complete!' : '🎁 Power-Up!'}</h4>
+                <p className="text-sm font-black opacity-90 uppercase tracking-widest">Organise Lego bin: €1</p>
+              </div>
+            </div>
+            <button onClick={claimPowerUp} disabled={powerUpClaimed} className={`py-4 px-8 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center gap-3 shadow-xl ${powerUpClaimed ? 'bg-green-500/40 text-green-200 cursor-not-allowed' : 'bg-yellow-400 text-black hover:bg-white'}`}>
+              {powerUpClaimed ? <><CheckCircle2 size={18} /> Loot Collected</> : <><Gift size={18} /> Claim €1 Reward</>}
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer className="mt-16 text-center">
+        <button onClick={unleashUltimatePower} className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-yellow-400 hover:to-red-600 px-12 py-6 rounded-[2rem] text-2xl font-black tracking-widest border-8 border-white/30 uppercase shadow-[0_20px_60px_rgba(255,0,255,0.6)] hover:scale-110 active:scale-95 flex items-center gap-4 mx-auto mb-10">
+           <Rocket className="animate-bounce" /> 🌟 ULTIMATE POWER! 🌟 <Flame className="animate-pulse" />
+        </button>
+        <div className="flex justify-center gap-4 flex-wrap opacity-40 hover:opacity-100 transition-all">
+          <button onClick={() => setPowerUpClaimed(false)} className="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-black uppercase border-2 border-white/10">🔄 Reset Bonus</button>
+          <span className="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-black uppercase border-2 border-white/10">#TNT_BLAST 💥</span>
+          <span className="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-black uppercase border-2 border-white/10">#PIZZA_POWER 🍕</span>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
+
