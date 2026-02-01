@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Firebase SDKs (Compat versions for easier global access) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -55,7 +55,7 @@
     <div id="loading-arena">
         <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
         <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
-        <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 10px; font-family: monospace;"></p>
+        <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 15px; font-family: monospace; max-width: 80%; text-align: center;"></p>
     </div>
 
     <div id="root"></div>
@@ -78,9 +78,11 @@
         const TrophyIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
         const ZapIcon = ({ className, fill = "none" }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>);
         const XIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>);
+        const EditIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>);
         const DownloadIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>);
         const CloudIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19a5.5 5.5 0 0 0 5.5-5.5c0-3.04-2.46-5.5-5.5-5.5-.32 0-.64.03-.96.08a8 8 0 1 0-14.54 4.04"/><path d="M12 12v9"/><path d="m15 18-3 3-3-3"/></svg>);
         const DiscIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>);
+        const HistoryIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>);
 
         // --- Beyblade Graphics ---
         const BlueDiamondIcon = ({ className, spinning }) => (
@@ -122,26 +124,31 @@
             const [db, setDb] = useState(null);
             const [logs, setLogs] = useState({});
             const [currentUser, setCurrentUser] = useState(null);
+            const [adminMode, setAdminMode] = useState(false);
             const [celebration, setCelebration] = useState(null);
             const [showThursdayPopup, setShowThursdayPopup] = useState(false);
             const [showReward, setShowReward] = useState(false);
             const [isSyncing, setIsSyncing] = useState(true);
+            const [showHistory, setShowHistory] = useState(false);
 
             // --- 1. Silent Initialisation ---
             useEffect(() => {
                 const initArena = async () => {
                     if (!window.firebase) {
-                        document.getElementById('error-log').innerText = "Firebase library not found. Checking Stadium...";
+                        document.getElementById('error-log').innerText = "FATAL: Stadium systems failed to load.";
                         return;
                     }
 
                     try {
-                        const app = firebase.initializeApp(firebaseConfig);
+                        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
                         const auth = firebase.auth();
                         const firestore = firebase.firestore();
                         setDb(firestore);
 
-                        await auth.signInAnonymously();
+                        await auth.signInAnonymously().catch(e => {
+                            document.getElementById('error-log').innerText = "ARENA LOCK: Enable 'Anonymous Sign-in' in Firebase Console. Error: " + e.message;
+                        });
+
                         auth.onAuthStateChanged(u => {
                             if (u) {
                                 setUser(u);
@@ -153,7 +160,7 @@
                             }
                         });
                     } catch (e) {
-                        document.getElementById('error-log').innerText = "Launch Error: " + e.message;
+                        document.getElementById('error-log').innerText = "Launch Failure: " + e.message;
                     }
                 };
                 initArena();
@@ -182,31 +189,36 @@
                 } catch (e) { console.error(e); }
             };
 
-            const toggleBrush = (userId, dateObj, slot) => {
+            const toggleBurst = (userId, dateObj, slot) => {
                 const key = `${userId}-${formatDateKey(dateObj)}-${slot}`;
                 const checked = !logs[key];
                 const updated = { ...logs, [key]: checked };
+                
                 setLogs(updated);
                 saveLog(updated);
 
                 if (checked) {
                     const now = new Date();
-                    const isThu = now.getDay() === 4 && now.getHours() >= 17;
+                    const isToday = formatDateKey(now) === formatDateKey(dateObj);
+                    const isThu = dateObj.getDay() === 4 && now.getHours() >= 17;
+                    
                     setCelebration(isThu ? 'thursday' : 'standard');
-                    if (isThu) setTimeout(() => setShowThursdayPopup(true), 1500);
+                    if (isThu && isToday) setTimeout(() => setShowThursdayPopup(true), 1500);
                     setTimeout(() => setCelebration(null), 3000);
                 }
             };
 
             const streakCount = useMemo(() => {
                 if (!currentUser) return 0;
-                let c = 0;
+                let count = 0;
+                const today = new Date();
                 for (let i = 0; i < 7; i++) {
-                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const d = new Date();
+                    d.setDate(today.getDate() - i);
                     const k = formatDateKey(d);
-                    if (logs[`${currentUser.id}-${k}-am`] || logs[`${currentUser.id}-${k}-pm`]) c++;
+                    if (logs[`${currentUser.id}-${k}-am`] || logs[`${currentUser.id}-${k}-pm`]) count++;
                 }
-                return c;
+                return count;
             }, [currentUser, logs]);
 
             if (!user) return null;
@@ -240,9 +252,9 @@
                     {showReward && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
                             <div className="bg-slate-800 rounded-2xl p-8 text-center border-y-8 border-yellow-500 shadow-2xl max-w-sm">
-                                <h2 className="text-5xl font-black text-white mb-4 italic">BURST FINISH!</h2>
+                                <h2 className="text-5xl font-black text-white mb-4 italic uppercase tracking-tighter">BURST FINISH!</h2>
                                 <div className="text-8xl my-8 animate-bounce">🏆🍫</div>
-                                <button onClick={() => setShowReward(false)} className="w-full bg-red-600 text-white font-black py-4 rounded-xl text-2xl border-b-4 border-red-800">CLAIM TROPHY</button>
+                                <button onClick={() => setShowReward(false)} className="w-full bg-red-600 text-white font-black py-4 rounded-xl text-2xl border-b-4 border-red-800 active:border-0 transition-all">CLAIM TROPHY</button>
                             </div>
                         </div>
                     )}
@@ -262,7 +274,7 @@
                                 return (
                                     <button key={user.id} onClick={() => setCurrentUser(user)} className={`relative w-44 h-44 rounded-full ${user.color} border-4 border-white/20 hover:scale-110 active:scale-95 transition-all shadow-2xl p-2`}>
                                         <BeyGraphic className="w-full h-full" spinning={false} />
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded text-[10px] font-bold uppercase text-white border border-white/10">{user.beyName}</div>
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded text-[10px] font-bold uppercase text-white border border-white/10 whitespace-nowrap">{user.beyName}</div>
                                     </button>
                                 );
                             })}
@@ -276,7 +288,7 @@
                                         <div className={`font-black text-2xl uppercase italic ${currentUser.text}`}>{currentUser.name}</div>
                                         <div className="text-[10px] text-gray-500 font-mono uppercase">Tournament Streak: {streakCount} Days</div>
                                     </div>
-                                    <div className="w-12 h-12 bg-slate-800 rounded-full p-1 border-2 border-white/10">
+                                    <div className={`w-14 h-14 rounded-full border-2 ${currentUser.borderColor} bg-slate-800 p-1`}>
                                         {(() => {
                                             const HeaderGraphic = currentUser.Graphic;
                                             return <HeaderGraphic className="w-full h-full" />;
@@ -285,13 +297,14 @@
                                 </div>
                             </div>
 
+                            {/* Main Stadium - Always active for current day */}
                             <div className="bg-gray-800/50 rounded-[3rem] p-8 border-4 border-gray-700 shadow-2xl relative mb-8">
                                 <div className="grid grid-cols-2 gap-6">
                                     {['am', 'pm'].map(slot => {
                                         const done = logs[`${currentUser.id}-${formatDateKey(new Date())}-${slot}`];
                                         const SlotGraphic = currentUser.Graphic;
                                         return (
-                                            <button key={slot} onClick={() => toggleBrush(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600 shadow-lg'}`}>
+                                            <button key={slot} onClick={() => toggleBurst(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600 shadow-lg'}`}>
                                                 {done ? (
                                                     <div className="flex flex-col items-center">
                                                         <SlotGraphic className="w-24 h-24 mb-2" spinning={true} />
@@ -309,43 +322,74 @@
                                 </div>
                             </div>
 
+                            {/* Tournament Bracket / History - Editable only in Referee mode */}
                             <div className="bg-black/40 rounded-xl p-6 border border-white/10 shadow-inner">
-                                <div className="flex justify-between items-center mb-4">
+                                <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Bracket</h3>
-                                    {(new Date().getDay() === 5 && streakCount >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => setShowHistory(!showHistory)} 
+                                            className={`px-3 py-1 text-[9px] font-black uppercase border border-white/10 rounded flex items-center gap-1 transition-all ${showHistory ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400'}`}
+                                        >
+                                            <HistoryIcon className="w-3 h-3" /> {showHistory ? 'Current Week' : 'Show 14 Days'}
+                                        </button>
+                                        {(new Date().getDay() === 5 && streakCount >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-3 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-7 gap-2">
-                                    {Array.from({ length: 7 }).map((_, i) => {
-                                        const d = new Date(); d.setDate(d.getDate() - (6 - i));
+                                
+                                <div className={`grid ${showHistory ? 'grid-cols-7 grid-rows-2' : 'grid-cols-7'} gap-3`}>
+                                    {Array.from({ length: showHistory ? 14 : 7 }).map((_, i) => {
+                                        const d = new Date(); 
+                                        const offset = (showHistory ? 13 : 6) - i;
+                                        d.setDate(d.getDate() - offset);
                                         const k = formatDateKey(d);
-                                        const comp = logs[`${currentUser.id}-${k}-am`] && logs[`${currentUser.id}-${k}-pm`];
+                                        const isAm = logs[`${currentUser.id}-${k}-am`];
+                                        const isPm = logs[`${currentUser.id}-${k}-pm`];
                                         const DayGraphic = currentUser.Graphic;
+                                        
                                         return (
                                             <div key={i} className="flex flex-col items-center gap-1">
                                                 <span className="text-[8px] uppercase font-bold text-gray-600">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
-                                                <div 
-                                                    onClick={() => toggleBrush(currentUser.id, d, 'am')} 
-                                                    className={`w-full aspect-square rounded border transition-all cursor-pointer ${comp ? 'bg-blue-600/50 border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-black/30 border-white/5'} flex items-center justify-center overflow-hidden active:scale-90`}
-                                                >
-                                                    {comp && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
+                                                <div className="w-full aspect-[2/3] flex flex-col gap-1">
+                                                    {/* AM Slot */}
+                                                    <div 
+                                                        onClick={() => adminMode && toggleBurst(currentUser.id, d, 'am')} 
+                                                        className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer active:scale-90' : 'cursor-default'} ${isAm ? 'bg-blue-500/40 border-blue-400 shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'bg-black/30 border-white/5'}`}
+                                                    >
+                                                        {isAm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
+                                                    </div>
+                                                    {/* PM Slot */}
+                                                    <div 
+                                                        onClick={() => adminMode && toggleBurst(currentUser.id, d, 'pm')} 
+                                                        className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer active:scale-90' : 'cursor-default'} ${isPm ? 'bg-red-500/40 border-red-400 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : 'bg-black/30 border-white/5'}`}
+                                                    >
+                                                        {isPm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
+                                                    </div>
                                                 </div>
+                                                <span className="text-[6px] text-gray-700 font-mono">{d.getDate()}/{d.getMonth()+1}</span>
                                             </div>
                                         );
                                     })}
                                 </div>
-                                <p className="text-[8px] text-gray-600 mt-4 text-center uppercase tracking-widest">Tap a day above to manually adjust battle status</p>
+                                {adminMode && <p className="text-[8px] text-yellow-400 mt-6 text-center uppercase tracking-widest italic font-bold animate-pulse">Referee Mode: Tap AM/PM cells to adjust history</p>}
                             </div>
                         </div>
                     )}
 
                     <footer className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-50">
-                        <div className="pointer-events-auto">
-                            <button onClick={() => {
-                                let csv = "Date,Blader,Time Slot,Result\n";
-                                Object.keys(logs).sort().forEach(k => { if (logs[k]) { const [u, d, s] = k.split('-'); csv += `${d},${USERS[u.toUpperCase()]?.name || u},${s.toUpperCase()},Burst\n`; } });
-                                const l = document.createElement("a"); l.href = encodeURI("data:text/csv;charset=utf-8," + csv); l.download = "battle_logs.csv"; l.click();
-                            }} className="flex items-center gap-2 px-6 py-2 bg-black/40 backdrop-blur-md text-gray-400 border border-white/10 hover:text-yellow-300 transition-all uppercase text-[9px] font-black tracking-widest shadow-xl">
-                                <DownloadIcon className="w-3 h-3" /> Export Battle Data
+                        <div className={`pointer-events-auto flex items-center gap-4 px-6 py-2 transition-all border-t border-white/10 backdrop-blur-md shadow-2xl ${adminMode ? 'bg-red-600 text-white' : 'bg-black/40 text-gray-500 translate-y-1/2 hover:translate-y-0'}`}>
+                            {adminMode && (
+                                <button onClick={() => {
+                                    let csv = "Date,Blader,Time Slot,Result\n";
+                                    Object.keys(logs).sort().forEach(k => { if (logs[k]) { const [u, d, s] = k.split('-'); csv += `${d},${USERS[u.toUpperCase()]?.name || u},${s.toUpperCase()},Burst\n`; } });
+                                    const l = document.createElement("a"); l.href = encodeURI("data:text/csv;charset=utf-8," + csv); l.download = "battle_logs.csv"; l.click();
+                                }} className="flex items-center gap-2 border-r border-red-400 pr-4 hover:text-yellow-300 transition-all uppercase text-[9px] font-black tracking-widest">
+                                    <DownloadIcon className="w-3 h-3" /> Export Excel
+                                </button>
+                            )}
+                            <button onClick={() => setAdminMode(!adminMode)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
+                                {adminMode ? <XIcon className="w-3 h-3" /> : <EditIcon className="w-3 h-3" />}
+                                {adminMode ? 'Exit Referee' : 'WBBA Referee'}
                             </button>
                         </div>
                     </footer>
@@ -358,6 +402,4 @@
     </script>
 </body>
 </html>
-
-
 
