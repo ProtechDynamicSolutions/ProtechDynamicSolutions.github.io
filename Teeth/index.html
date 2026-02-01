@@ -17,6 +17,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global bridge for Babel script
         window.FirebaseLib = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot, collection };
     </script>
 
@@ -45,9 +46,25 @@
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
         }
+
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #0f172a;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
+        <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
+    </div>
+
     <div id="root"></div>
 
     <script type="text/babel">
@@ -125,41 +142,64 @@
             const [showThursdayPopup, setShowThursdayPopup] = useState(false);
             const [logs, setLogs] = useState({});
             const [isSyncing, setIsSyncing] = useState(true);
+            const [configError, setConfigError] = useState(false);
 
-            // --- Background Ignition ---
+            // --- Robust Stadium Boot Sequence ---
             useEffect(() => {
-                const initFirebase = async () => {
-                    const checkInterval = setInterval(async () => {
-                        if (window.FirebaseLib && typeof __firebase_config !== 'undefined') {
-                            clearInterval(checkInterval);
+                const interval = setInterval(async () => {
+                    if (window.FirebaseLib) {
+                        clearInterval(interval);
+                        try {
                             const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseLib;
                             
-                            try {
-                                const config = JSON.parse(__firebase_config);
-                                const app = initializeApp(config);
-                                const auth = getAuth(app);
-                                const firestore = getFirestore(app);
-                                setDb(firestore);
-
-                                // Silent Background Login
-                                let cred;
-                                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                    cred = await signInWithCustomToken(auth, __initial_auth_token);
-                                } else {
-                                    cred = await signInAnonymously(auth);
+                            // Check for env-provided config or fallback for GitHub.io
+                            let config;
+                            if (typeof __firebase_config !== 'undefined') {
+                                config = JSON.parse(__firebase_config);
+                            } else {
+                                // If running on GitHub.io, you will need to replace this with your actual config
+                                // from the Firebase Console -> Project Settings
+                                config = {
+                                    apiKey: "", 
+                                    authDomain: "",
+                                    projectId: "",
+                                    storageBucket: "",
+                                    messagingSenderId: "",
+                                    appId: ""
+                                };
+                                if (!config.apiKey) {
+                                    setConfigError(true);
+                                    document.getElementById('loading-screen').style.display = 'none';
+                                    return;
                                 }
-                                setUser(cred.user);
-                                onAuthStateChanged(auth, u => { if(u) setUser(u); });
-                            } catch (e) {
-                                console.error("Sync Error", e);
                             }
+
+                            const app = initializeApp(config);
+                            const auth = getAuth(app);
+                            const firestore = getFirestore(app);
+                            setDb(firestore);
+
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+
+                            onAuthStateChanged(auth, u => {
+                                if (u) {
+                                    setUser(u);
+                                    document.getElementById('loading-screen').style.display = 'none';
+                                }
+                            });
+                        } catch (e) {
+                            console.error("Stadium Boot Error:", e);
                         }
-                    }, 50);
-                };
-                initFirebase();
+                    }
+                }, 100);
+                return () => clearInterval(interval);
             }, []);
 
-            // --- Real-time Cloud Sync ---
+            // --- Cloud Sync ---
             useEffect(() => {
                 if (!db || !user) return;
                 const { doc, onSnapshot } = window.FirebaseLib;
@@ -212,9 +252,22 @@
                 return c;
             }, [currentUser, logs]);
 
+            if (configError) return (
+                <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8">
+                    <div className="bg-slate-800 p-6 rounded-2xl border-4 border-red-500 max-w-md text-center">
+                        <h2 className="text-xl font-black text-white mb-4">ARENA CONFIGURATION NEEDED</h2>
+                        <p className="text-gray-400 text-sm mb-6">
+                            You are running this on a custom host. To save data, you must paste your Firebase Config into the <code className="bg-black px-1">index.html</code> file.
+                        </p>
+                        <p className="text-xs text-blue-400">Search for "config = {" in the code to add your keys!</p>
+                    </div>
+                </div>
+            );
+
+            if (!user) return null; // Loading screen covers this
+
             return (
                 <div className="min-h-screen relative overflow-x-hidden p-4 md:p-8 selection:bg-blue-500">
-                    {/* Background Grid */}
                     <div className="fixed inset-0 pointer-events-none opacity-20" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
                     
                     {celebration && (
@@ -306,7 +359,7 @@
 
                             <div className="bg-black/40 rounded-xl p-6 border border-white/10 shadow-inner">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Bracket</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Record</h3>
                                     {(new Date().getDay() === 5 && streakCount >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
                                 </div>
                                 <div className="grid grid-cols-7 gap-2">
@@ -345,7 +398,7 @@
                                     l.download = "battle_logs.csv";
                                     l.click();
                                 }} className="flex items-center gap-2 border-r border-red-400 pr-4 hover:text-yellow-300 transition-colors uppercase text-[9px] font-black tracking-widest">
-                                    <DownloadIcon className="w-3 h-3" /> CSV Export
+                                    <DownloadIcon className="w-3 h-3" /> Export
                                 </button>
                             )}
                             <button onClick={() => setAdminMode(!adminMode)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
