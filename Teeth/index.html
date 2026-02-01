@@ -11,15 +11,10 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global bridge for Babel script
-        window.FirebaseLib = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot };
-    </script>
+    <!-- Firebase SDKs (Compat versions for easier global access) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -60,10 +55,7 @@
     <div id="loading-arena">
         <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
         <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
-        <div id="timeout-msg" style="display: none; margin-top: 20px; text-align: center;">
-            <p style="color: #ef4444; font-size: 10px; margin-bottom: 10px;">Connection taking longer than usual...</p>
-            <button onclick="location.reload()" style="background: #1e40af; color: white; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">Retry Launch</button>
-        </div>
+        <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 10px; font-family: monospace;"></p>
     </div>
 
     <div id="root"></div>
@@ -71,11 +63,16 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // Failsafe timeout for loading screen
-        setTimeout(() => {
-            const msg = document.getElementById('timeout-msg');
-            if (msg) msg.style.display = 'block';
-        }, 7000);
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
+            authDomain: "teeth2-3f73e.firebaseapp.com",
+            projectId: "teeth2-3f73e",
+            storageBucket: "teeth2-3f73e.firebasestorage.app",
+            messagingSenderId: "245367626619",
+            appId: "1:245367626619:web:c496a86089539bdb5fbbde"
+        };
+        const appId = 'teeth2-3f73e';
 
         // --- Icons ---
         const StarIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>);
@@ -116,8 +113,8 @@
         );
 
         const USERS = {
-            MAX: { id: 'max', name: 'Max', color: 'bg-blue-600', text: 'text-blue-100', Graphic: BlueDiamondIcon, beyName: 'Blue Diamond' },
-            ARI: { id: 'ari', name: 'Ari', color: 'bg-red-600', text: 'text-red-100', Graphic: BellFireIcon, beyName: 'Bell Fire' }
+            MAX: { id: 'max', name: 'Max', color: 'bg-blue-600', borderColor: 'border-yellow-400', text: 'text-blue-100', Graphic: BlueDiamondIcon, beyName: 'Blue Diamond' },
+            ARI: { id: 'ari', name: 'Ari', color: 'bg-red-600', borderColor: 'border-stone-900', text: 'text-red-100', Graphic: BellFireIcon, beyName: 'Bell Fire' }
         };
 
         const formatDateKey = (date) => date.toISOString().split('T')[0];
@@ -133,61 +130,49 @@
             const [showReward, setShowReward] = useState(false);
             const [isSyncing, setIsSyncing] = useState(true);
 
-            // --- 1. ROBUST POLLING BOOT SEQUENCE ---
+            // --- 1. Silent Initialisation ---
             useEffect(() => {
-                const checkFirebase = setInterval(async () => {
-                    if (window.FirebaseLib) {
-                        clearInterval(checkFirebase);
-                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
-                        
-                        const config = {
-                            apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
-                            authDomain: "teeth2-3f73e.firebaseapp.com",
-                            projectId: "teeth2-3f73e",
-                            storageBucket: "teeth2-3f73e.firebasestorage.app",
-                            messagingSenderId: "245367626619",
-                            appId: "1:245367626619:web:c496a86089539bdb5fbbde"
-                        };
-
-                        try {
-                            const app = initializeApp(config);
-                            const auth = getAuth(app);
-                            const firestore = getFirestore(app);
-                            setDb(firestore);
-
-                            await signInAnonymously(auth);
-
-                            onAuthStateChanged(auth, u => {
-                                if (u) {
-                                    setUser(u);
-                                    const loader = document.getElementById('loading-arena');
-                                    if (loader) {
-                                        loader.style.opacity = '0';
-                                        setTimeout(() => loader.style.display = 'none', 500);
-                                    }
-                                }
-                            });
-                        } catch (e) {
-                            console.error("Arena Ignition Failed", e);
-                        }
+                const initArena = async () => {
+                    if (!window.firebase) {
+                        document.getElementById('error-log').innerText = "Firebase library not found. Checking Stadium...";
+                        return;
                     }
-                }, 100);
 
-                return () => clearInterval(checkFirebase);
+                    try {
+                        const app = firebase.initializeApp(firebaseConfig);
+                        const auth = firebase.auth();
+                        const firestore = firebase.firestore();
+                        setDb(firestore);
+
+                        await auth.signInAnonymously();
+                        auth.onAuthStateChanged(u => {
+                            if (u) {
+                                setUser(u);
+                                const loader = document.getElementById('loading-arena');
+                                if (loader) {
+                                    loader.style.opacity = '0';
+                                    setTimeout(() => loader.style.display = 'none', 500);
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        document.getElementById('error-log').innerText = "Launch Error: " + e.message;
+                    }
+                };
+                initArena();
             }, []);
 
-            // --- 2. CLOUD SYNC ---
+            // --- 2. Cloud Data Link ---
             useEffect(() => {
                 if (!db || !user) return;
-                const { doc, onSnapshot } = window.FirebaseLib;
-                const appId = 'teeth2-3f73e';
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'battle_logs');
+                // Correct Path: artifacts -> appId -> public -> data -> battle_logs -> global_doc
+                const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
 
-                const unsub = onSnapshot(docRef, snap => {
-                    if (snap.exists()) setLogs(snap.data());
+                const unsub = docRef.onSnapshot(snap => {
+                    if (snap.exists) setLogs(snap.data());
                     setIsSyncing(false);
                 }, (err) => {
-                    console.error("Sync Interrupted", err);
+                    console.error("Stadium Link Error", err);
                     setIsSyncing(false);
                 });
                 return () => unsub();
@@ -195,10 +180,9 @@
 
             const saveLog = async (updated) => {
                 if (!db || !user) return;
-                const { doc, setDoc } = window.FirebaseLib;
-                const appId = 'teeth2-3f73e';
+                const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
                 try {
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'battle_logs'), updated, { merge: true });
+                    await docRef.set(updated, { merge: true });
                 } catch (e) { console.error(e); }
             };
 
@@ -218,7 +202,7 @@
                 }
             };
 
-            const streak = useMemo(() => {
+            const streakCount = useMemo(() => {
                 if (!currentUser) return 0;
                 let c = 0;
                 for (let i = 0; i < 7; i++) {
@@ -232,13 +216,14 @@
             if (!user) return null;
 
             return (
-                <div className="min-h-screen relative overflow-x-hidden p-4 md:p-8 selection:bg-blue-500">
-                    <div className="fixed inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
+                <div className="min-h-screen relative overflow-x-hidden p-4 md:p-8">
+                    {/* Background Tech Grid */}
+                    <div className="fixed inset-0 pointer-events-none opacity-20" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
                     
                     {celebration && (
                         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
                             {Array.from({ length: 25 }).map((_, i) => (
-                                <div key={i} className="absolute bottom-0 animate-launch-up" style={{left: `${Math.random() * 100}%`, animationDuration: `${1 + Math.random() * 2}s`, opacity: 0}}>
+                                <div key={i} className="absolute bottom-0 animate-launch-up" style={{left: `${Math.random() * 100}%`, animationDuration: `${1 + Math.random() * 2}s`}}>
                                     {i % 3 === 0 ? <ZapIcon className="w-8 h-8 text-yellow-300" fill="currentColor" /> : <div className="text-2xl">🦷</div>}
                                 </div>
                             ))}
@@ -248,6 +233,7 @@
                     {showThursdayPopup && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                             <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-8 text-center border-4 border-yellow-400 shadow-2xl relative max-w-sm">
+                                <button onClick={() => setShowThursdayPopup(false)} className="absolute top-4 right-4 text-white/50 hover:text-white"><XIcon size={24} /></button>
                                 <h2 className="text-3xl font-black text-yellow-300 mb-2 uppercase italic">Hyper Flux!</h2>
                                 <div className="text-8xl mb-4 animate-pulse">⚡</div>
                                 <p className="text-lg font-bold text-white mb-6 uppercase tracking-tighter">Tomorrow is Friday!<br/>Ready for the reward?</p>
@@ -275,13 +261,16 @@
                     </header>
 
                     {!currentUser ? (
-                        <div className="flex flex-wrap justify-center gap-10 mt-12 animate-in fade-in duration-500">
-                            {Object.values(USERS).map(user => (
-                                <button key={user.id} onClick={() => setCurrentUser(user)} className={`relative w-44 h-44 rounded-full ${user.color} border-4 border-white/20 hover:scale-110 active:scale-95 transition-all shadow-2xl p-2`}>
-                                    <user.Graphic className="w-full h-full" spinning={false} />
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded text-[10px] font-bold uppercase text-white border border-white/10">{user.beyName}</div>
-                                </button>
-                            ))}
+                        <div className="flex flex-wrap justify-center gap-10 mt-12">
+                            {Object.values(USERS).map(user => {
+                                const BeyGraphic = user.Graphic;
+                                return (
+                                    <button key={user.id} onClick={() => setCurrentUser(user)} className={`relative w-44 h-44 rounded-full ${user.color} border-4 border-white/20 hover:scale-110 active:scale-95 transition-all shadow-2xl p-2`}>
+                                        <BeyGraphic className="w-full h-full" spinning={false} />
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded text-[10px] font-bold uppercase text-white border border-white/10">{user.beyName}</div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="max-w-2xl mx-auto">
@@ -290,10 +279,13 @@
                                 <div className="flex items-center gap-4 text-right">
                                     <div>
                                         <div className={`font-black text-2xl uppercase italic ${currentUser.text}`}>{currentUser.name}</div>
-                                        <div className="text-[10px] text-gray-500 font-mono uppercase">Tournament Streak: {streak} Days</div>
+                                        <div className="text-[10px] text-gray-500 font-mono uppercase">Tournament Streak: {streakCount} Days</div>
                                     </div>
                                     <div className="w-12 h-12 bg-slate-800 rounded-full p-1 border-2 border-white/10">
-                                        <currentUser.Graphic className="w-full h-full" />
+                                        {(() => {
+                                            const HeaderGraphic = currentUser.Graphic;
+                                            return <HeaderGraphic className="w-full h-full" />;
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -302,11 +294,12 @@
                                 <div className="grid grid-cols-2 gap-6">
                                     {['am', 'pm'].map(slot => {
                                         const done = logs[`${currentUser.id}-${formatDateKey(new Date())}-${slot}`];
+                                        const SlotGraphic = currentUser.Graphic;
                                         return (
-                                            <button key={slot} onClick={() => toggleBrush(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600'}`}>
+                                            <button key={slot} onClick={() => toggleBrush(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600 shadow-lg'}`}>
                                                 {done ? (
                                                     <div className="flex flex-col items-center">
-                                                        <currentUser.Graphic className="w-24 h-24 mb-2" spinning={true} />
+                                                        <SlotGraphic className="w-24 h-24 mb-2" spinning={true} />
                                                         <span className="font-black text-white uppercase italic tracking-tighter text-xl">BURST!</span>
                                                     </div>
                                                 ) : (
@@ -321,21 +314,22 @@
                                 </div>
                             </div>
 
-                            <div className="bg-black/40 rounded-xl p-6 border border-white/10">
+                            <div className="bg-black/40 rounded-xl p-6 border border-white/10 shadow-inner">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Record</h3>
-                                    {(new Date().getDay() === 5 && streak >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Bracket</h3>
+                                    {(new Date().getDay() === 5 && streakCount >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
                                 </div>
                                 <div className="grid grid-cols-7 gap-2">
                                     {Array.from({ length: 7 }).map((_, i) => {
                                         const d = new Date(); d.setDate(d.getDate() - (6 - i));
                                         const k = formatDateKey(d);
                                         const comp = logs[`${currentUser.id}-${k}-am`] && logs[`${currentUser.id}-${k}-pm`];
+                                        const DayGraphic = currentUser.Graphic;
                                         return (
                                             <div key={i} className="flex flex-col items-center gap-1">
                                                 <span className="text-[8px] uppercase font-bold text-gray-600">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
                                                 <div onClick={() => adminMode && toggleBrush(currentUser.id, d, 'am')} className={`w-full aspect-square rounded border ${comp ? 'bg-blue-600/50 border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-black/30 border-white/5'} flex items-center justify-center overflow-hidden`}>
-                                                    {comp && <currentUser.Graphic className="w-full h-full p-0.5" spinning={true} />}
+                                                    {comp && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
                                                 </div>
                                             </div>
                                         );
