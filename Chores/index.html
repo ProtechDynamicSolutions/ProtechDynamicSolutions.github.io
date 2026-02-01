@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adventure HQ - Max & Ari</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom Keyframes for the Epic Animations */
+        /* Magical Animation Keyframes */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -55,21 +54,49 @@
             0% { opacity: 0; transform: scaleY(0); }
             10% { opacity: 1; transform: scaleY(1); }
             20% { opacity: 0; }
-            30% { opacity: 1; }
-            40% { opacity: 0; }
             100% { opacity: 0; }
         }
 
-        /* Prevent scrolling during explosions if desired, but standard behavior is fine */
-        body { margin: 0; background-color: #020617; }
+        body { margin: 0; background-color: #020617; color: white; font-family: sans-serif; overflow-x: hidden; }
+        
+        #loader {
+            position: fixed; inset: 0; background: #020617; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s;
+        }
+
+        .debug-panel {
+            position: fixed; bottom: 10px; left: 10px; font-family: monospace;
+            font-size: 10px; background: rgba(0,0,0,0.9); padding: 8px;
+            border-radius: 8px; border: 1px solid #444; z-index: 10000;
+            max-width: 280px; pointer-events: none; color: #aaa;
+        }
     </style>
 </head>
 <body>
+    <div id="loader">
+        <div class="text-center p-8">
+            <div id="loader-spinner" class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-400 mb-6"></div>
+            <div id="loader-text" class="text-yellow-400 font-black tracking-widest uppercase text-xl animate-pulse">Initialising Adventure HQ...</div>
+        </div>
+    </div>
+
+    <div id="debug" class="debug-panel">Status: Waking the Elves...</div>
+    
     <div id="root"></div>
 
-    <!-- React, ReactDOM, and Lucide Icons via ESM.sh (No build step required) -->
     <script type="module">
-        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        const debug = (msg) => {
+            console.log(`[AdventureHQ] ${msg}`);
+            const el = document.getElementById('debug');
+            if (el) el.innerText = `Status: ${msg}`;
+        };
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        import React, { useState, useEffect, useCallback } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             CheckCircle2, Circle, Fish, Sword, Shield, Zap, Clock, Calendar, 
@@ -77,398 +104,452 @@
             Sparkles, TreePine, Gift, Flame, Star, Heart, Rocket, Swords, Hexagon 
         } from 'https://esm.sh/lucide-react@0.284.0';
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyAb2XwRcOmR7xppmwHEWGQEo6yzkNiJjR4",
+            authDomain: "chores2-1ddb5.firebaseapp.com",
+            projectId: "chores2-1ddb5",
+            storageBucket: "chores2-1ddb5.firebasestorage.app",
+            messagingSenderId: "311715173428",
+            appId: "1:311715173428:web:0ffd7017be058310276661"
+        };
+        const appId = "chores2-1ddb5";
+
         const App = () => {
+            const [user, setUser] = useState(null);
             const [currentTime, setCurrentTime] = useState(new Date());
+            const [cloudStatus, setCloudStatus] = useState("connecting");
+            
+            // App State (Persisted)
             const [fishFedToday, setFishFedToday] = useState(true);
             const [vault, setVault] = useState({ total: 0, goal: 50 });
             const [powerUpClaimed, setPowerUpClaimed] = useState(false);
-            const [particles, setParticles] = useState([]);
-            const [shakeVault, setShakeVault] = useState(false);
-            const [ninjaStars, setNinjaStars] = useState([]);
-            const [beyblades, setBeyblades] = useState([]);
-            const [minecraftBlocks, setMinecraftBlocks] = useState([]);
-            const [comboCount, setComboCount] = useState(0);
-            const [comboTimer, setComboTimer] = useState(null);
-            const [achievements, setAchievements] = useState([]);
             const [streak, setStreak] = useState(0);
-            const [showLevelUp, setShowLevelUp] = useState(false);
-            const [explosions, setExplosions] = useState([]);
-            const [lightning, setLightning] = useState([]);
-
-            const initialChores = [
+            const [achievements, setAchievements] = useState([]);
+            const [level, setLevel] = useState(1);
+            
+            const choreTemplate = [
                 { id: 1, task: 'Clean Playroom', reward: 3, completed: false, emoji: '🎮' },
                 { id: 2, task: 'Clean Bedroom', reward: 2, completed: false, emoji: '🛏️' },
                 { id: 3, task: 'Clean Family Room', reward: 1, completed: false, emoji: '🛋️' },
                 { id: 4, task: 'Clean Garden', reward: 4, completed: false, emoji: '🌳' },
             ];
 
-            const [maxChores, setMaxChores] = useState([...initialChores]);
-            const [ariChores, setAriChores] = useState([...initialChores]);
+            const [maxChores, setMaxChores] = useState([...choreTemplate]);
+            const [ariChores, setAriChores] = useState([...choreTemplate]);
 
-            useEffect(() => {
-                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-                return () => clearInterval(timer);
-            }, []);
+            // Detailed Visual FX State (Local Only)
+            const [particles, setParticles] = useState([]);
+            const [ninjaStars, setNinjaStars] = useState([]);
+            const [beyblades, setBeyblades] = useState([]);
+            const [minecraftBlocks, setMinecraftBlocks] = useState([]);
+            const [explosions, setExplosions] = useState([]);
+            const [lightning, setLightning] = useState([]);
+            const [comboCount, setComboCount] = useState(0);
+            const [comboTimer, setComboTimer] = useState(null);
+            const [shakeVault, setShakeVault] = useState(false);
+            const [showLevelUp, setShowLevelUp] = useState(false);
 
-            const vibrate = (pattern = [100]) => {
-                if (navigator.vibrate) navigator.vibrate(pattern);
+            const colorMap = {
+                purple: { border: 'border-purple-500', text: 'text-purple-400', bg: 'bg-purple-900/40', btn: 'hover:shadow-purple-500/50', icon: 'text-purple-300' },
+                orange: { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-900/40', btn: 'hover:shadow-orange-500/50', icon: 'text-orange-300' }
             };
 
+            const hideLoader = () => {
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 800);
+                }
+            };
+
+            // 1. Initialise & Sync
+            useEffect(() => {
+                debug("Booting Command Centre...");
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                signInAnonymously(auth).catch(() => {
+                    debug("Signal weak. Using local magic.");
+                    setCloudStatus("offline");
+                    hideLoader();
+                });
+
+                onAuthStateChanged(auth, (u) => {
+                    if (u) {
+                        debug("User Authenticated.");
+                        setUser(u);
+                    }
+                });
+
+                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+                return () => { clearInterval(timer); };
+            }, []);
+
+            // 2. Real-time Cloud Sync (Fixed 2-segment path)
+            useEffect(() => {
+                if (!user) return;
+                const db = getFirestore();
+                const sharedDoc = doc(db, 'artifacts', appId);
+                
+                const unsubscribe = onSnapshot(sharedDoc, (snapshot) => {
+                    setCloudStatus("online");
+                    hideLoader();
+
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data.fishFedToday !== undefined) setFishFedToday(data.fishFedToday);
+                        if (data.vault) setVault(data.vault);
+                        if (data.powerUpClaimed !== undefined) setPowerUpClaimed(data.powerUpClaimed);
+                        if (data.streak !== undefined) setStreak(data.streak);
+                        if (data.level !== undefined) setLevel(data.level);
+                        if (data.achievements) setAchievements(data.achievements);
+                        if (data.maxChores) setMaxChores(data.maxChores);
+                        if (data.ariChores) setAriChores(data.ariChores);
+                        debug("Cloud Sync Success.");
+                    }
+                }, (err) => {
+                    debug("Sync Error: " + err.message);
+                    setCloudStatus("offline");
+                    hideLoader();
+                });
+
+                return () => unsubscribe();
+            }, [user]);
+
+            // 3. Save Function
+            const save = useCallback(async (updates) => {
+                // Optimistic Local Updates
+                if (updates.fishFedToday !== undefined) setFishFedToday(updates.fishFedToday);
+                if (updates.vault) setVault(updates.vault);
+                if (updates.maxChores) setMaxChores(updates.maxChores);
+                if (updates.ariChores) setAriChores(updates.ariChores);
+                if (updates.powerUpClaimed !== undefined) setPowerUpClaimed(updates.powerUpClaimed);
+                if (updates.streak !== undefined) setStreak(updates.streak);
+                if (updates.level !== undefined) setLevel(updates.level);
+                if (updates.achievements) setAchievements(updates.achievements);
+
+                if (user && cloudStatus === "online") {
+                    try {
+                        const db = getFirestore();
+                        const sharedDoc = doc(db, 'artifacts', appId);
+                        await setDoc(sharedDoc, updates, { merge: true });
+                    } catch (e) { debug("Cloud Save Failed."); }
+                }
+            }, [user, cloudStatus]);
+
+            // Magical Audio Logic
             const playSound = (type) => {
                 try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.connect(g); g.connect(ctx.destination);
                     
                     switch(type) {
                         case 'complete':
-                            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
-                            oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.1);
-                            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                            oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.3);
+                            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1);
+                            g.gain.setValueAtTime(0.3, ctx.currentTime);
+                            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                            osc.start(); osc.stop(ctx.currentTime + 0.3);
                             break;
                         case 'vault':
-                            oscillator.frequency.setValueAtTime(392, audioContext.currentTime);
-                            oscillator.frequency.exponentialRampToValueAtTime(523.25, audioContext.currentTime + 0.1);
-                            oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.2);
-                            gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                            oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.4);
+                            osc.frequency.setValueAtTime(392, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(523.25, ctx.currentTime + 0.1);
+                            osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.2);
+                            g.gain.setValueAtTime(0.4, ctx.currentTime);
+                            osc.start(); osc.stop(ctx.currentTime + 0.4);
                             break;
                         case 'powerup':
-                            oscillator.frequency.setValueAtTime(261.63, audioContext.currentTime);
-                            oscillator.frequency.exponentialRampToValueAtTime(523.25, audioContext.currentTime + 0.1);
-                            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.2);
-                            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                            oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.5);
+                            osc.frequency.setValueAtTime(261.63, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.2);
+                            g.gain.setValueAtTime(0.5, ctx.currentTime);
+                            osc.start(); osc.stop(ctx.currentTime + 0.5);
                             break;
                         case 'explosion':
-                            oscillator.type = 'sawtooth';
-                            oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
-                            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
-                            gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                            oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.3);
-                            break;
-                        case 'levelup':
-                            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
-                            oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1);
-                            oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.2);
-                            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.3);
-                            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-                            oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.6);
+                            osc.type = 'sawtooth';
+                            osc.frequency.setValueAtTime(100, ctx.currentTime);
+                            g.gain.setValueAtTime(0.6, ctx.currentTime);
+                            osc.start(); osc.stop(ctx.currentTime + 0.3);
                             break;
                     }
-                } catch (e) { console.warn("Audio Context blocked."); }
+                } catch(e) {}
+            };
+
+            // Detailed FX Generators
+            const createParticles = (count = 15) => {
+                const p = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
+                    size: Math.random() * 20 + 10, rotation: Math.random() * 360,
+                    emoji: ['⭐', '💎', '🎉', '✨', '🏆', '💰'][Math.floor(Math.random() * 6)]
+                }));
+                setParticles(p);
+                setTimeout(() => setParticles([]), 2000);
+            };
+
+            const createNinjaStars = (count = 8) => {
+                const ns = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
+                    size: Math.random() * 30 + 20, rotation: Math.random() * 360, speed: Math.random() * 3 + 2
+                }));
+                setNinjaStars(ns);
+                setTimeout(() => setNinjaStars([]), 2000);
+            };
+
+            const createBeyblades = (count = 6) => {
+                const bb = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
+                    size: Math.random() * 40 + 30, rotation: Math.random() * 360
+                }));
+                setBeyblades(bb);
+                setTimeout(() => setBeyblades([]), 2500);
+            };
+
+            const createMinecraftBlocks = (count = 10) => {
+                const blocks = ['🟫', '🟩', '🟦', '⬛', '🟨', '🟥'];
+                const mb = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
+                    size: Math.random() * 30 + 25, block: blocks[Math.floor(Math.random() * blocks.length)]
+                }));
+                setMinecraftBlocks(mb);
+                setTimeout(() => setMinecraftBlocks([]), 2000);
             };
 
             const createExplosions = (count = 5) => {
                 playSound('explosion');
-                vibrate([100, 50, 100, 50, 100]);
-                const newExplosions = Array.from({ length: count }, (_, i) => ({
+                const ex = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 60 + 40
                 }));
-                setExplosions(newExplosions);
+                setExplosions(ex);
                 setTimeout(() => setExplosions([]), 1000);
             };
 
             const createLightning = (count = 4) => {
-                const newLightning = Array.from({ length: count }, (_, i) => ({
-                    id: Date.now() + i, x: Math.random() * 100, delay: i * 100
+                const lt = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i, x: Math.random() * 100, delay: i * 150
                 }));
-                setLightning(newLightning);
+                setLightning(lt);
                 setTimeout(() => setLightning([]), 1500);
             };
 
-            const checkAchievements = () => {
-                const totalCompleted = [...maxChores, ...ariChores].filter(c => c.completed).length;
-                const newAchievements = [];
-                if (totalCompleted === 4 && !achievements.includes('first_quest')) {
-                    newAchievements.push({ id: 'first_quest', title: '🎯 First Quest!', desc: 'Completed 4 chores' });
-                }
-                if (totalCompleted === 8 && !achievements.includes('quest_master')) {
-                    newAchievements.push({ id: 'quest_master', title: '👑 Quest Master!', desc: 'Completed ALL chores!' });
-                    playSound('levelup');
-                    createLightning(8);
-                }
-                if (vault.total >= 25 && !achievements.includes('half_way')) {
-                    newAchievements.push({ id: 'half_way', title: '💰 Half Way There!', desc: 'Reached €25' });
-                }
-                if (vault.total >= vault.goal && !achievements.includes('goal_reached')) {
-                    newAchievements.push({ id: 'goal_reached', title: '🏆 GOAL CRUSHED!', desc: 'Reached €50 goal!' });
-                    playSound('levelup');
-                    createExplosions(10);
-                    createLightning(6);
-                }
-                if (newAchievements.length > 0) {
-                    setAchievements([...achievements, ...newAchievements.map(a => a.id)]);
-                    console.log("Achievements Earned:", newAchievements);
-                }
-            };
-
+            // Gameplay Mechanics
             const updateCombo = () => {
                 if (comboTimer) clearTimeout(comboTimer);
                 const newCombo = comboCount + 1;
                 setComboCount(newCombo);
                 if (newCombo === 3) { playSound('powerup'); createLightning(3); }
                 if (newCombo === 5) {
-                    playSound('levelup'); createExplosions(5); setShowLevelUp(true);
-                    setTimeout(() => setShowLevelUp(false), 2000);
+                    playSound('complete'); createExplosions(5); setShowLevelUp(true);
+                    setTimeout(() => setShowLevelUp(false), 3000);
                 }
                 const timer = setTimeout(() => setComboCount(0), 3000);
                 setComboTimer(timer);
             };
 
-            const createNinjaStars = (count = 8) => {
-                vibrate([50, 50, 50]);
-                const newStars = Array.from({ length: count }, (_, i) => ({
-                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
-                    size: Math.random() * 30 + 20, rotation: Math.random() * 360, speed: Math.random() * 3 + 2
-                }));
-                setNinjaStars(newStars);
-                setTimeout(() => setNinjaStars([]), 2000);
-            };
-
-            const createBeyblades = (count = 6) => {
-                vibrate([100, 50, 100]);
-                const newBeyblades = Array.from({ length: count }, (_, i) => ({
-                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
-                    size: Math.random() * 40 + 30, rotation: Math.random() * 360
-                }));
-                setBeyblades(newBeyblades);
-                setTimeout(() => setBeyblades([]), 2500);
-            };
-
-            const createMinecraftBlocks = (count = 10) => {
-                vibrate([80, 40, 80, 40, 80]);
-                const blockTypes = ['🟫', '🟩', '🟦', '⬛', '🟨', '🟥'];
-                const newBlocks = Array.from({ length: count }, (_, i) => ({
-                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
-                    size: Math.random() * 30 + 25, rotation: Math.random() * 45, block: blockTypes[Math.floor(Math.random() * blockTypes.length)]
-                }));
-                setMinecraftBlocks(newBlocks);
-                setTimeout(() => setMinecraftBlocks([]), 2000);
-            };
-
-            const createParticles = (count = 15) => {
-                const newParticles = Array.from({ length: count }, (_, i) => ({
-                    id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
-                    size: Math.random() * 20 + 10, rotation: Math.random() * 360,
-                    emoji: ['⭐', '💎', '🎉', '✨', '🏆', '💰', '🎊'][Math.floor(Math.random() * 7)]
-                }));
-                setParticles(newParticles);
-                setTimeout(() => setParticles([]), 2000);
-            };
-
-            const unleashUltimatePower = () => {
-                playSound('explosion');
-                setTimeout(() => playSound('levelup'), 200);
-                vibrate([200, 100, 200, 100, 300, 100, 200]);
-                createParticles(30);
-                setTimeout(() => createNinjaStars(12), 100);
-                setTimeout(() => createBeyblades(10), 200);
-                setTimeout(() => createMinecraftBlocks(15), 300);
-                setTimeout(() => createExplosions(8), 400);
-                setTimeout(() => createLightning(10), 500);
-                setShakeVault(true);
-                setTimeout(() => setShakeVault(false), 1000);
-                setShowLevelUp(true);
-                setTimeout(() => setShowLevelUp(false), 3000);
+            const checkAchievements = () => {
+                const totalCompleted = [...maxChores, ...ariChores].filter(c => c.completed).length;
+                const newIds = [];
+                if (totalCompleted === 4 && !achievements.includes('first_quest')) newIds.push('first_quest');
+                if (totalCompleted === 8 && !achievements.includes('quest_master')) {
+                    newIds.push('quest_master');
+                    playSound('complete'); createLightning(8);
+                }
+                if (vault.total >= 25 && !achievements.includes('half_way')) newIds.push('half_way');
+                if (vault.total >= vault.goal && !achievements.includes('goal_reached')) {
+                    newIds.push('goal_reached');
+                    playSound('complete'); createExplosions(10);
+                }
+                if (newIds.length > 0) save({ achievements: [...achievements, ...newIds] });
             };
 
             const toggleChore = (boy, id) => {
-                if (boy === 'Max') {
-                    const chore = maxChores.find(c => c.id === id);
-                    if (!chore.completed) {
-                        playSound('complete'); createParticles(8); createNinjaStars(5);
-                        createMinecraftBlocks(6); updateCombo(); setStreak(streak + 1);
-                        setTimeout(checkAchievements, 100);
-                    }
-                    setMaxChores(maxChores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+                const list = boy === 'Max' ? maxChores : ariChores;
+                const chore = list.find(c => c.id === id);
+                const updated = list.map(c => c.id === id ? { ...c, completed: !c.completed } : c);
+                
+                if (!chore.completed) {
+                    playSound('complete');
+                    createParticles(12);
+                    if (boy === 'Max') createNinjaStars(6); else createBeyblades(6);
+                    createMinecraftBlocks(8);
+                    updateCombo();
+                    save({ [boy === 'Max' ? 'maxChores' : 'ariChores']: updated, streak: streak + 1 });
                 } else {
-                    const chore = ariChores.find(c => c.id === id);
-                    if (!chore.completed) {
-                        playSound('complete'); createParticles(8); createBeyblades(5);
-                        createMinecraftBlocks(6); updateCombo(); setStreak(streak + 1);
-                        setTimeout(checkAchievements, 100);
-                    }
-                    setAriChores(ariChores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+                    save({ [boy === 'Max' ? 'maxChores' : 'ariChores']: updated });
                 }
+                setTimeout(checkAchievements, 200);
             };
 
-            const depositToVault = (boy) => {
-                const chores = boy === 'Max' ? maxChores : ariChores;
-                const earned = chores.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0);
+            const bankEarnings = (boy) => {
+                const list = boy === 'Max' ? maxChores : ariChores;
+                const earned = list.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0);
                 if (earned === 0) return;
-                playSound('vault'); createParticles(20); createBeyblades(8); createNinjaStars(8);
-                createExplosions(3); setShakeVault(true);
-                setTimeout(() => setShakeVault(false), 500);
-                setVault(prev => ({ ...prev, total: prev.total + earned }));
-                if (boy === 'Max') setMaxChores(initialChores.map(c => ({ ...c })));
-                else setAriChores(initialChores.map(c => ({ ...c })));
+                
+                playSound('vault');
+                createExplosions(4);
+                createNinjaStars(8);
+                createBeyblades(8);
+                setShakeVault(true);
+                setTimeout(() => setShakeVault(false), 600);
+                
+                save({
+                    vault: { ...vault, total: vault.total + earned },
+                    [boy === 'Max' ? 'maxChores' : 'ariChores']: choreTemplate.map(c => ({ ...c }))
+                });
                 setTimeout(checkAchievements, 200);
             };
 
             const claimPowerUp = () => {
                 if (powerUpClaimed) return;
-                playSound('powerup'); createParticles(25); createMinecraftBlocks(12);
-                createNinjaStars(8); createLightning(4);
-                setVault(prev => ({ ...prev, total: prev.total + 1 }));
-                setPowerUpClaimed(true);
-                setTimeout(checkAchievements, 100);
+                playSound('powerup');
+                createExplosions(4);
+                createMinecraftBlocks(12);
+                createLightning(5);
+                save({
+                    powerUpClaimed: true,
+                    vault: { ...vault, total: vault.total + 1 }
+                });
             };
 
-            const totalXP = [...maxChores, ...ariChores].filter(c => c.completed).length + (powerUpClaimed ? 1 : 0);
-            const maxXP = maxChores.length + ariChores.length + 1;
-            const vaultProgress = Math.min((vault.total / vault.goal) * 100, 100);
+            const unleashUltimatePower = () => {
+                playSound('explosion');
+                createParticles(30);
+                createNinjaStars(12);
+                createBeyblades(12);
+                createMinecraftBlocks(20);
+                createExplosions(10);
+                createLightning(10);
+                setShowLevelUp(true);
+                setTimeout(() => setShowLevelUp(false), 3000);
+            };
 
-            return React.createElement('div', { className: "min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white font-sans p-4 pb-12 selection:bg-green-500/30 relative overflow-hidden" },
-                // Background Stars
-                React.createElement('div', { className: "absolute inset-0 overflow-hidden pointer-events-none" },
-                    [...Array(30)].map((_, i) => React.createElement(Star, { 
-                        key: i, size: Math.random() * 8 + 4, className: "absolute animate-pulse text-yellow-300/30",
-                        style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 3}s` }
-                    }))
+            const vaultProgress = Math.min((vault.total / vault.goal) * 100, 100);
+            const totalXP = [...maxChores, ...ariChores].filter(c => c.completed).length + (powerUpClaimed ? 1 : 0);
+            const maxXP = (choreTemplate.length * 2) + 1;
+
+            return React.createElement('div', { className: "min-h-screen bg-slate-950 p-4 pb-12 relative overflow-hidden" },
+                // FX Layers
+                React.createElement('div', { className: "absolute inset-0 opacity-20 pointer-events-none" },
+                    [...Array(20)].map((_, i) => React.createElement(Star, { key: i, size: 4, className: "absolute animate-pulse text-yellow-300", style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` } }))
                 ),
-                
-                // Visual FX
-                particles.map(p => React.createElement('div', { key: p.id, className: "absolute pointer-events-none animate-ping z-50", style: { left: `${p.x}%`, top: `${p.y}%`, fontSize: `${p.size}px`, transform: `rotate(${p.rotation}deg)` } }, p.emoji)),
-                ninjaStars.map(s => React.createElement('div', { key: s.id, className: "absolute pointer-events-none z-50", style: { left: `${s.x}%`, top: `${s.y}%`, animation: `spinStar ${s.speed}s linear infinite, fadeOut 2s forwards` } }, React.createElement(Swords, { size: s.size, className: "text-red-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]" }))),
-                beyblades.map(b => React.createElement('div', { key: b.id, className: "absolute pointer-events-none z-50", style: { left: `${b.x}%`, top: `${b.y}%`, animation: 'spinBeyblade 0.3s linear infinite, fadeOut 2.5s forwards' } }, React.createElement(Hexagon, { size: b.size, className: "text-blue-500 drop-shadow-[0_0_15px_rgba(0,100,255,0.9)]" }))),
+                particles.map(p => React.createElement('div', { key: p.id, className: "absolute pointer-events-none animate-ping z-50", style: { left: `${p.x}%`, top: `${p.y}%`, fontSize: `${p.size}px` } }, p.emoji)),
+                ninjaStars.map(s => React.createElement('div', { key: s.id, className: "absolute pointer-events-none z-50", style: { left: `${s.x}%`, top: `${s.y}%`, animation: `spinStar ${s.speed}s linear infinite, fadeOut 2s forwards` } }, React.createElement(Swords, { size: s.size, className: "text-red-500 shadow-[0_0_15px_red]" }))),
+                beyblades.map(b => React.createElement('div', { key: b.id, className: "absolute pointer-events-none z-50", style: { left: `${b.x}%`, top: `${b.y}%`, animation: 'spinBeyblade 0.3s linear infinite, fadeOut 2.5s forwards' } }, React.createElement(Hexagon, { size: b.size, className: "text-blue-500 shadow-[0_0_15px_blue]" }))),
                 minecraftBlocks.map(m => React.createElement('div', { key: m.id, className: "absolute pointer-events-none z-50 animate-bounce text-2xl", style: { left: `${m.x}%`, top: `${m.y}%`, animation: 'minecraftFall 2s forwards, fadeOut 2s forwards' } }, m.block)),
                 explosions.map(e => React.createElement('div', { key: e.id, className: "absolute pointer-events-none z-50", style: { left: `${e.x}%`, top: `${e.y}%`, fontSize: `${e.size}px`, animation: 'explode 1s forwards' } }, '💥')),
-                lightning.map(l => React.createElement('div', { key: l.id, className: "absolute pointer-events-none z-50 w-1 bg-yellow-300 shadow-[0_0_20px_rgba(255,255,0,0.9)]", style: { left: `${l.x}%`, top: 0, height: '100%', animation: 'lightning 0.2s forwards', animationDelay: `${l.delay}ms` } })),
+                lightning.map(l => React.createElement('div', { key: l.id, className: "absolute pointer-events-none z-50 w-1 bg-yellow-300 shadow-[0_0_20px_yellow]", style: { left: `${l.x}%`, top: 0, height: '100%', animation: 'lightning 0.2s forwards', animationDelay: `${l.delay}ms` } })),
 
-                // UI Elements
+                // Special Overlays
                 comboCount > 0 && React.createElement('div', { className: "fixed top-1/4 right-8 z-50 animate-bounce" },
-                    React.createElement('div', { className: "bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-4 border-yellow-300 rounded-3xl px-8 py-6 shadow-2xl" },
+                    React.createElement('div', { className: "bg-gradient-to-r from-orange-500 to-pink-500 border-4 border-yellow-300 rounded-3xl px-8 py-6 shadow-2xl" },
                         React.createElement('div', { className: "text-6xl font-black" }, `${comboCount}x`),
-                        React.createElement('div', { className: "text-xs font-black uppercase text-center" }, comboCount >= 5 ? '🔥 LEGENDARY!' : '⚡ COMBO!')
+                        React.createElement('div', { className: "text-xs font-black uppercase text-center mt-2" }, comboCount >= 5 ? '🔥 LEGENDARY!' : '⚡ COMBO!')
                     )
                 ),
-
                 showLevelUp && React.createElement('div', { className: "fixed inset-0 z-50 flex items-center justify-center pointer-events-none" },
-                    React.createElement('div', { className: "bg-gradient-to-r from-purple-600 to-red-600 border-8 border-yellow-300 rounded-[3rem] px-16 py-12 shadow-2xl animate-pulse" },
-                        React.createElement('div', { className: "text-6xl font-black text-center" }, "🏆 LEVEL UP! 🏆")
+                    React.createElement('div', { className: "bg-gradient-to-r from-purple-600 to-red-600 border-8 border-yellow-300 rounded-[3rem] px-16 py-12 shadow-2xl animate-pulse text-center" },
+                        React.createElement('div', { className: "text-6xl font-black mb-4" }, "🏆 LEVEL UP! 🏆"),
+                        React.createElement('div', { className: "text-2xl font-black uppercase" }, "LEGENDARY WARRIOR!")
                     )
                 ),
 
                 // Header
-                React.createElement('header', { className: "bg-gradient-to-r from-green-700 via-emerald-600 to-green-700 border-b-8 border-green-900 p-8 rounded-3xl shadow-2xl mb-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden" },
-                    React.createElement('div', { className: "relative z-10" },
-                        React.createElement('h1', { className: "text-5xl font-black italic flex items-center gap-4 drop-shadow-lg" },
-                            React.createElement(Sword, { className: "text-yellow-400 rotate-45 animate-bounce" }),
-                            React.createElement('span', { className: "bg-gradient-to-r from-yellow-300 via-white to-yellow-300 bg-clip-text text-transparent" }, "ADVENTURE HQ"),
-                            React.createElement(Shield, { className: "text-yellow-400 animate-pulse" })
+                React.createElement('header', { className: "bg-gradient-to-r from-green-800 via-emerald-700 to-green-800 p-8 rounded-[2.5rem] shadow-2xl mb-8 flex flex-col md:flex-row justify-between items-center border-b-8 border-green-950" },
+                    React.createElement('div', null,
+                        React.createElement('h1', { className: "text-5xl font-black italic flex items-center gap-4 drop-shadow-2xl" },
+                            React.createElement(Sword, { className: "text-yellow-400 rotate-45 animate-bounce" }), "ADVENTURE HQ"
                         ),
-                        React.createElement('p', { className: "text-green-200 font-mono text-xs uppercase tracking-widest mt-2" }, "Max & Ari's Command Centre")
+                        React.createElement('p', { className: "text-green-100 text-[10px] uppercase tracking-[0.4em] font-black mt-2" }, "Max & Ari's Command Centre")
                     ),
-                    React.createElement('div', { className: "bg-black/50 p-6 rounded-2xl border-4 border-white/20 backdrop-blur-md relative z-10" },
+                    React.createElement('div', { className: "bg-black/50 p-5 rounded-3xl border-2 border-white/20 backdrop-blur-md text-center shadow-inner" },
                         React.createElement('div', { className: "text-cyan-400 font-mono text-3xl font-black" }, currentTime.toLocaleTimeString('en-GB')),
-                        React.createElement('div', { className: "text-slate-300 text-xs uppercase font-bold mt-1" }, currentTime.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }))
+                        React.createElement('div', { className: "text-slate-400 text-xs uppercase font-black mt-1" }, currentTime.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }))
                     )
                 ),
 
-                // Main Content
-                React.createElement('main', { className: "max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10" },
-                    // Left Column
+                // Main Content Grid
+                React.createElement('main', { className: "max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8" },
+                    // Left Stats
                     React.createElement('div', { className: "lg:col-span-4 space-y-8" },
-                        // Fish Mission
-                        React.createElement('section', { className: "bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 border-4 border-blue-500 rounded-[2.5rem] p-8 shadow-2xl group transition-transform hover:scale-105" },
-                            React.createElement('h2', { className: "text-3xl font-black mb-8 flex items-center gap-4" }, React.createElement(Fish, { className: "text-cyan-300" }), "🐠 Fish Mission"),
-                            React.createElement('div', { className: `p-6 rounded-3xl border-4 transition-all ${fishFedToday ? 'bg-green-500/30 border-green-400' : 'bg-red-500/30 border-red-400 animate-pulse'}` },
+                        React.createElement('section', { className: "bg-blue-900/40 border-4 border-blue-500 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group" },
+                            React.createElement('h2', { className: "text-2xl font-black mb-6 flex items-center gap-4" }, React.createElement(Fish, { className: "text-cyan-300" }), "🐠 Fish Mission"),
+                            React.createElement('div', { className: `p-6 rounded-3xl border-4 transition-all duration-500 ${fishFedToday ? 'bg-green-500/20 border-green-500' : 'bg-red-500/20 border-red-500 animate-pulse'}` },
                                 React.createElement('div', { className: "flex justify-between items-center" },
-                                    React.createElement('div', null,
-                                        React.createElement('span', { className: "block text-xs font-black uppercase text-blue-200" }, "🎯 Status"),
-                                        React.createElement('span', { className: "text-2xl font-black italic" }, fishFedToday ? '✅ Full!' : '🚨 HUNGRY!')
-                                    ),
-                                    React.createElement('button', { onClick: () => setFishFedToday(!fishFedToday), className: `w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${fishFedToday ? 'bg-green-500' : 'bg-slate-700 animate-wiggle'}` },
-                                        fishFedToday ? React.createElement(CheckCircle2, { size: 32 }) : React.createElement(Circle, { size: 32 })
+                                    React.createElement('span', { className: "text-xl font-black italic" }, fishFedToday ? '✅ FED' : '🚨 HUNGRY'),
+                                    React.createElement('button', { onClick: () => save({ fishFedToday: !fishFedToday }), className: "w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center border-4 border-white/10 active:scale-90 shadow-xl" },
+                                        fishFedToday ? React.createElement(CheckCircle2, { size: 30 }) : React.createElement(Circle, { size: 30 })
                                     )
                                 )
                             )
                         ),
-                        // Vault
-                        React.createElement('section', { className: `bg-gradient-to-br from-yellow-600 via-amber-600 to-yellow-700 border-4 border-yellow-400 rounded-[2.5rem] p-8 shadow-2xl ${shakeVault ? 'animate-shake' : ''}` },
-                            React.createElement('h2', { className: "text-3xl font-black mb-8 flex items-center gap-4" }, React.createElement(PiggyBank, { className: "text-yellow-100" }), "🏦 Adventure Vault"),
-                            React.createElement('div', { className: "bg-black/40 rounded-3xl p-8 border-4 border-yellow-500/50 text-center" },
-                                React.createElement('div', { className: "text-7xl font-black text-white font-mono" }, `€${vault.total}`),
-                                React.createElement('div', { className: "text-sm font-black uppercase text-yellow-200 mt-2" }, `Goal: €${vault.goal}`),
-                                React.createElement('div', { className: "h-6 bg-black/60 rounded-full overflow-hidden border-2 border-yellow-400/50 mt-6" },
+                        React.createElement('section', { className: `bg-yellow-600/40 border-4 border-yellow-500 rounded-[2.5rem] p-8 shadow-2xl ${shakeVault ? 'animate-shake' : ''}` },
+                            React.createElement('h2', { className: "text-2xl font-black mb-6 flex items-center gap-4" }, React.createElement(PiggyBank), "🏦 Adventure Vault"),
+                            React.createElement('div', { className: "bg-black/40 rounded-3xl p-8 text-center border-4 border-yellow-500/30 shadow-inner" },
+                                React.createElement('div', { className: "text-7xl font-black font-mono tracking-tighter" }, `€${vault.total}`),
+                                React.createElement('div', { className: "h-6 bg-slate-800 rounded-full mt-8 overflow-hidden border-2 border-white/10" },
                                     React.createElement('div', { className: "h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-1000", style: { width: `${vaultProgress}%` } })
                                 )
                             )
                         ),
-                        // XP
-                        React.createElement('section', { className: "bg-gradient-to-br from-purple-900 to-fuchsia-900 border-4 border-purple-500 rounded-[2.5rem] p-8" },
-                            React.createElement('h2', { className: "text-3xl font-black mb-6 flex items-center gap-4" }, React.createElement(Zap, { className: "text-yellow-300 animate-pulse" }), "⚡ XP Tracker"),
-                            React.createElement('div', { className: "bg-black/40 rounded-3xl p-6 border-4 border-purple-500/50 text-center" },
-                                React.createElement('div', { className: "text-5xl font-black bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent" }, `${totalXP} / ${maxXP}`),
-                                React.createElement('div', { className: "h-4 bg-black/60 rounded-full mt-4" },
-                                    React.createElement('div', { className: "h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all", style: { width: `${(totalXP / maxXP) * 100}%` } })
+                        React.createElement('section', { className: "bg-purple-900/40 border-4 border-purple-500 rounded-[2.5rem] p-8 shadow-2xl" },
+                            React.createElement('h2', { className: "text-2xl font-black mb-6 flex items-center gap-4 text-purple-100" }, React.createElement(Zap, { className: "text-yellow-300 animate-pulse" }), "⚡ XP Tracker"),
+                            React.createElement('div', { className: "bg-black/40 rounded-3xl p-6 text-center border-4 border-purple-500/30" },
+                                React.createElement('div', { className: "text-5xl font-black mb-2" }, `${totalXP} / ${maxXP}`),
+                                React.createElement('div', { className: "h-4 bg-slate-800 rounded-full mt-4 overflow-hidden" },
+                                    React.createElement('div', { className: "h-full bg-gradient-to-r from-purple-500 to-pink-500", style: { width: `${(totalXP / maxXP) * 100}%` } })
                                 )
+                            ),
+                            React.createElement('div', { className: "flex justify-between items-center mt-6 font-black text-orange-400" },
+                                React.createElement('span', null, "🔥 STREAK"),
+                                React.createElement('span', { className: "text-2xl" }, `${streak} DAYS`)
                             )
                         )
                     ),
 
-                    // Right Column (Quest Cards)
+                    // Right Quests
                     React.createElement('div', { className: "lg:col-span-8 space-y-8" },
                         [
-                            { boy: 'Max', color: 'purple', chores: maxChores, icon: Pizza },
-                            { boy: 'Ari', color: 'orange', chores: ariChores, icon: Bomb }
-                        ].map(p => React.createElement('div', { key: p.boy, className: `bg-gradient-to-br from-${p.color}-900/40 to-${p.color}-800/40 border-l-[16px] border-${p.color}-500 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm` },
-                            React.createElement('div', { className: "flex items-center gap-4 mb-8" },
-                                React.createElement('div', { className: `w-14 h-14 bg-${p.color}-600 rounded-2xl flex items-center justify-center text-3xl font-black` }, p.boy[0]),
-                                React.createElement('h3', { className: "text-4xl font-black italic" }, p.boy.toUpperCase())
+                            { boy: 'Max', chores: maxChores, color: 'purple', icon: Pizza },
+                            { boy: 'Ari', chores: ariChores, color: 'orange', icon: Bomb }
+                        ].map(p => React.createElement('div', { key: p.boy, className: `${colorMap[p.color].bg} border-l-[16px] ${colorMap[p.color].border} rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm` },
+                            React.createElement('div', { className: "flex justify-between items-center mb-8" },
+                                React.createElement('h3', { className: `text-3xl font-black ${colorMap[p.color].text} italic` }, p.boy.toUpperCase()),
+                                React.createElement('div', { className: "text-yellow-400 font-black text-xl" }, `€${p.chores.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0)} READY`)
                             ),
-                            React.createElement('div', { className: "space-y-4 mb-10" },
-                                p.chores.map(c => React.createElement('button', { key: c.id, onClick: () => toggleChore(p.boy, c.id), className: `w-full flex items-center justify-between p-5 rounded-3xl border-4 transition-all ${c.completed ? 'bg-green-500/20 border-green-400 text-green-300' : 'bg-black/60 border-slate-700 text-white'}` },
-                                    React.createElement('div', { className: "flex items-center gap-4" },
-                                        c.completed ? React.createElement(CheckCircle2, { className: "text-green-400" }) : React.createElement(Circle, { className: "text-slate-500" }),
-                                        React.createElement('span', { className: "text-lg font-black" }, `${c.emoji} ${c.task}`)
+                            React.createElement('div', { className: "space-y-3 mb-10" },
+                                p.chores.map(c => React.createElement('button', { key: c.id, onClick: () => toggleChore(p.boy, c.id), className: `w-full flex items-center justify-between p-5 rounded-3xl border-4 transition-all active:scale-95 ${c.completed ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-black/40 border-slate-700 hover:border-slate-500'}` },
+                                    React.createElement('div', { className: "flex items-center gap-5" },
+                                        c.completed ? React.createElement(CheckCircle2, { size: 24 }) : React.createElement(Circle, { size: 24 }),
+                                        React.createElement('span', { className: "text-lg font-black flex items-center gap-2" }, React.createElement('span', { className: "text-2xl" }, c.emoji), c.task)
                                     ),
-                                    React.createElement('div', { className: "flex items-center gap-2 text-yellow-300 font-black" }, React.createElement(Coins, { size: 18 }), `€${c.reward}`)
+                                    React.createElement('span', { className: "text-yellow-400 font-black text-xl" }, `€${c.reward}`)
                                 ))
                             ),
-                            React.createElement('button', { onClick: () => depositToVault(p.boy), disabled: p.chores.every(c => !c.completed), className: `w-full py-5 rounded-3xl font-black uppercase shadow-2xl transition-all ${!p.chores.every(c => !c.completed) ? 'bg-white text-black hover:bg-yellow-300' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}` },
-                                React.createElement('span', { className: "flex items-center justify-center gap-3" }, React.createElement(PiggyBank), "Move to Vault")
+                            React.createElement('button', { onClick: () => bankEarnings(p.boy), disabled: p.chores.every(c => !c.completed), className: `w-full py-5 rounded-3xl font-black uppercase text-sm tracking-widest shadow-2xl transition-all ${!p.chores.every(c => !c.completed) ? 'bg-white text-black hover:bg-yellow-300' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}` },
+                                "Bank Earnings 💰"
                             )
                         )),
 
-                        // Bonus Mission
-                        React.createElement('div', { className: `bg-gradient-to-r ${powerUpClaimed ? 'from-green-600 to-emerald-600' : 'from-red-600 to-orange-600'} rounded-[2.5rem] p-8 flex flex-col sm:flex-row items-center justify-between border-b-8 shadow-2xl` },
+                        // Power-Up Mission
+                        React.createElement('div', { className: `bg-gradient-to-r ${powerUpClaimed ? 'from-green-600 to-emerald-600' : 'from-red-600 to-orange-600'} rounded-[2.5rem] p-8 flex items-center justify-between border-b-8 shadow-2xl transition-all` },
                             React.createElement('div', { className: "flex items-center gap-6" },
-                                React.createElement('div', { className: "w-16 h-16 bg-white rounded-2xl flex items-center justify-center" }, powerUpClaimed ? React.createElement(Trophy, { className: "text-green-600" }) : React.createElement(Sparkles, { className: "text-red-600 animate-spin" })),
+                                React.createElement(Gift, { size: 40, className: "animate-bounce" }),
                                 React.createElement('div', null,
-                                    React.createElement('h4', { className: "text-2xl font-black italic" }, powerUpClaimed ? 'Mission Complete!' : 'Daily Power-Up!'),
-                                    React.createElement('p', { className: "text-xs font-black uppercase opacity-90" }, "Organise Lego bin: €1")
+                                    React.createElement('h4', { className: "text-2xl font-black italic" }, "Daily Power-Up!"),
+                                    React.createElement('p', { className: "text-sm font-black opacity-90 uppercase tracking-widest" }, "Organise Lego bin for a bonus €1")
                                 )
                             ),
-                            React.createElement('button', { onClick: claimPowerUp, disabled: powerUpClaimed, className: `py-4 px-8 rounded-2xl font-black uppercase text-xs shadow-xl transition-all ${powerUpClaimed ? 'bg-green-500/40 text-green-200' : 'bg-yellow-400 text-black hover:bg-white'}` },
-                                powerUpClaimed ? "Loot Collected" : "Claim €1 Reward"
+                            React.createElement('button', { onClick: claimPowerUp, disabled: powerUpClaimed, className: `py-4 px-8 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl transition-all ${powerUpClaimed ? 'bg-black/20 text-slate-400' : 'bg-yellow-400 text-black hover:bg-white hover:scale-110'}` },
+                                powerUpClaimed ? "LOOTED" : "CLAIM €1"
                             )
                         )
                     )
                 ),
 
-                // Footer
+                // Ultimate Power
                 React.createElement('footer', { className: "mt-16 text-center" },
-                    React.createElement('button', { onClick: unleashUltimatePower, className: "bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-yellow-400 hover:to-red-600 px-12 py-6 rounded-[2.5rem] text-2xl font-black border-8 border-white/30 shadow-[0_20px_60px_rgba(255,0,255,0.4)] transition-all hover:scale-110 active:scale-95 mx-auto flex items-center gap-4 mb-8" },
-                        React.createElement(Rocket, { className: "animate-bounce" }), "🌟 ULTIMATE POWER! 🌟", React.createElement(Flame, { className: "animate-pulse" })
-                    ),
-                    React.createElement('div', { className: "flex justify-center gap-4 flex-wrap opacity-40 hover:opacity-100 transition-all" },
-                        React.createElement('button', { onClick: () => { setPowerUpClaimed(false); setVault({total: 0, goal: 50}); }, className: "bg-slate-800 px-6 py-3 rounded-2xl text-xs font-black uppercase border-2 border-white/10" }, "🔄 FULL RESET"),
-                        React.createElement('span', { className: "bg-slate-800 px-6 py-3 rounded-2xl text-xs font-black uppercase border-2 border-white/10" }, "#PIZZA_POWER 🍕")
+                    React.createElement('button', { onClick: unleashUltimatePower, className: "bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 px-12 py-6 rounded-[2.5rem] text-2xl font-black shadow-[0_20px_50px_rgba(255,0,255,0.4)] border-8 border-white/20 hover:scale-110 active:scale-90 transition-all mb-8" },
+                        "🌟 ULTIMATE POWER! 🌟"
                     )
                 )
             );
