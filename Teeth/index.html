@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beyblade Tooth Battle Tracker</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -20,42 +18,18 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-fast { animation: spin 0.2s linear infinite; }
         .animate-spin-slow { animation: spin 3s linear infinite; }
-        
-        @keyframes launchUp {
-            0% { transform: translateY(100vh) scale(0.5); opacity: 1; }
-            100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
-        }
-        .animate-launch-up {
-            animation: launchUp 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
+        @keyframes launchUp { 0% { transform: translateY(100vh) scale(0.5); opacity: 1; } 100% { transform: translateY(-20vh) scale(1.5); opacity: 0; } }
+        .animate-launch-up { animation: launchUp 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            margin: 0;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
-        }
-
-        #loading-arena {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #0f172a;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
+        body { background-color: #0f172a; color: #f8fafc; margin: 0; font-family: ui-sans-serif, system-ui; -webkit-tap-highlight-color: transparent; }
+        #loading-arena { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0f172a; z-index: 9999; transition: opacity 0.5s ease; }
     </style>
 </head>
 <body>
     <div id="loading-arena">
         <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
         <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
-        <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 15px; font-family: monospace; max-width: 80%; text-align: center;"></p>
+        <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 15px; font-family: monospace; text-align: center;"></p>
     </div>
 
     <div id="root"></div>
@@ -63,7 +37,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- Firebase Configuration ---
+        // --- PASTE YOUR FIREBASE CONFIG HERE ---
         const firebaseConfig = {
             apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
             authDomain: "teeth2-3f73e.firebaseapp.com",
@@ -84,7 +58,6 @@
         const DiscIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>);
         const HistoryIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>);
 
-        // --- Beyblade Graphics ---
         const BlueDiamondIcon = ({ className, spinning }) => (
             <svg viewBox="0 0 100 100" className={`${className} ${spinning ? 'animate-spin-fast' : ''}`}>
                 <defs>
@@ -131,24 +104,15 @@
             const [isSyncing, setIsSyncing] = useState(true);
             const [showHistory, setShowHistory] = useState(false);
 
-            // --- 1. Silent Initialisation ---
             useEffect(() => {
                 const initArena = async () => {
-                    if (!window.firebase) {
-                        document.getElementById('error-log').innerText = "FATAL: Stadium systems failed to load.";
-                        return;
-                    }
-
+                    if (!window.firebase) return;
                     try {
                         const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
                         const auth = firebase.auth();
                         const firestore = firebase.firestore();
                         setDb(firestore);
-
-                        await auth.signInAnonymously().catch(e => {
-                            document.getElementById('error-log').innerText = "ARENA LOCK: Enable 'Anonymous Sign-in' in Firebase Console. Error: " + e.message;
-                        });
-
+                        await auth.signInAnonymously();
                         auth.onAuthStateChanged(u => {
                             if (u) {
                                 setUser(u);
@@ -166,62 +130,65 @@
                 initArena();
             }, []);
 
-            // --- 2. Cloud Data Link ---
             useEffect(() => {
                 if (!db || !user) return;
                 const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
-
                 const unsub = docRef.onSnapshot(snap => {
                     if (snap.exists) setLogs(snap.data());
                     setIsSyncing(false);
-                }, (err) => {
-                    console.error("Stadium Link Error", err);
-                    setIsSyncing(false);
-                });
+                }, (err) => setIsSyncing(false));
                 return () => unsub();
             }, [db, user]);
 
             const saveLog = async (updated) => {
                 if (!db || !user) return;
                 const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
-                try {
-                    await docRef.set(updated, { merge: true });
-                } catch (e) { console.error(e); }
+                try { await docRef.set(updated, { merge: true }); } catch (e) { console.error(e); }
             };
 
             const toggleBurst = (userId, dateObj, slot) => {
                 const key = `${userId}-${formatDateKey(dateObj)}-${slot}`;
                 const checked = !logs[key];
                 const updated = { ...logs, [key]: checked };
-                
                 setLogs(updated);
                 saveLog(updated);
 
                 if (checked) {
                     const now = new Date();
                     const isToday = formatDateKey(now) === formatDateKey(dateObj);
-                    const isThu = dateObj.getDay() === 4 && now.getHours() >= 17;
+                    // Reward Hype Check: Thursday Evening
+                    const isThuHype = dateObj.getDay() === 4 && now.getHours() >= 17;
                     
-                    setCelebration(isThu ? 'thursday' : 'standard');
-                    if (isThu && isToday) setTimeout(() => setShowThursdayPopup(true), 1500);
+                    setCelebration(isThuHype ? 'thursday' : 'standard');
+                    if (isThuHype && isToday && slot === 'pm') {
+                        setTimeout(() => setShowThursdayPopup(true), 1200);
+                    }
                     setTimeout(() => setCelebration(null), 3000);
                 }
             };
 
-            const streakCount = useMemo(() => {
-                if (!currentUser) return 0;
-                let count = 0;
+            const stats = useMemo(() => {
+                if (!currentUser) return { streak: 0, fullPerfect: false };
+                let streak = 0;
+                let perfectDays = 0;
                 const today = new Date();
                 for (let i = 0; i < 7; i++) {
-                    const d = new Date();
-                    d.setDate(today.getDate() - i);
+                    const d = new Date(); d.setDate(today.getDate() - i);
                     const k = formatDateKey(d);
-                    if (logs[`${currentUser.id}-${k}-am`] || logs[`${currentUser.id}-${k}-pm`]) count++;
+                    const am = logs[`${currentUser.id}-${k}-am`];
+                    const pm = logs[`${currentUser.id}-${k}-pm`];
+                    if (am || pm) streak++;
+                    if (am && pm) perfectDays++;
                 }
-                return count;
+                return { streak, perfectDays, fullPerfect: perfectDays >= 7 };
             }, [currentUser, logs]);
 
             if (!user) return null;
+
+            const isFriday = new Date().getDay() === 5;
+            // Reward is ready if it's Friday AND they have a high streak,
+            // OR if it's Thursday night and they've just finished their PM brush.
+            const rewardReadyToClaim = isFriday && stats.streak >= 6;
 
             return (
                 <div className="min-h-screen relative overflow-x-hidden p-4 md:p-8">
@@ -229,9 +196,9 @@
                     
                     {celebration && (
                         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
-                            {Array.from({ length: 25 }).map((_, i) => (
+                            {Array.from({ length: 30 }).map((_, i) => (
                                 <div key={i} className="absolute bottom-0 animate-launch-up" style={{left: `${Math.random() * 100}%`, animationDuration: `${1 + Math.random() * 2}s`}}>
-                                    {i % 3 === 0 ? <ZapIcon className="w-8 h-8 text-yellow-300" fill="currentColor" /> : <div className="text-2xl">🦷</div>}
+                                    {celebration === 'thursday' ? <div className="text-3xl animate-spin-slow">🍕</div> : (i % 3 === 0 ? <ZapIcon className="w-8 h-8 text-yellow-300" fill="currentColor" /> : <div className="text-2xl">🦷</div>)}
                                 </div>
                             ))}
                         </div>
@@ -241,20 +208,22 @@
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                             <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-8 text-center border-4 border-yellow-400 shadow-2xl relative max-w-sm">
                                 <button onClick={() => setShowThursdayPopup(false)} className="absolute top-4 right-4 text-white/50 hover:text-white"><XIcon size={24} /></button>
-                                <h2 className="text-3xl font-black text-yellow-300 mb-2 uppercase italic">Hyper Flux!</h2>
-                                <div className="text-8xl mb-4 animate-pulse">⚡</div>
-                                <p className="text-lg font-bold text-white mb-6 uppercase tracking-tighter">Tomorrow is Friday!<br/>Ready for the reward?</p>
-                                <button onClick={() => setShowThursdayPopup(false)} className="bg-yellow-500 text-black font-black py-3 px-8 skew-x-[-10deg]">LET IT RIP!</button>
+                                <h2 className="text-3xl font-black text-yellow-300 mb-2 uppercase italic tracking-tighter">MISSION COMPLETE!</h2>
+                                <div className="text-8xl mb-4 animate-bounce">🍕🍫</div>
+                                <p className="text-lg font-bold text-white mb-6 uppercase tracking-tighter leading-tight">Last battle of Thursday finished!<br/><span className="text-yellow-400">Friday Reward Unlocked!</span></p>
+                                <button onClick={() => setShowThursdayPopup(false)} className="bg-yellow-500 text-black font-black py-3 px-8 skew-x-[-10deg] shadow-[5px_5px_0px_#1e3a8a]">AWESOME!</button>
                             </div>
                         </div>
                     )}
 
                     {showReward && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-                            <div className="bg-slate-800 rounded-2xl p-8 text-center border-y-8 border-yellow-500 shadow-2xl max-w-sm">
+                            <div className="bg-slate-800 rounded-2xl p-8 text-center border-y-8 border-yellow-500 shadow-2xl max-w-sm relative overflow-hidden">
+                                {stats.fullPerfect && <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 animate-pulse"></div>}
                                 <h2 className="text-5xl font-black text-white mb-4 italic uppercase tracking-tighter">BURST FINISH!</h2>
                                 <div className="text-8xl my-8 animate-bounce">🏆🍫</div>
-                                <button onClick={() => setShowReward(false)} className="w-full bg-red-600 text-white font-black py-4 rounded-xl text-2xl border-b-4 border-red-800 active:border-0 transition-all">CLAIM TROPHY</button>
+                                {stats.fullPerfect && <p className="text-yellow-400 font-black text-xs uppercase tracking-[0.3em] mb-4">✨ 2x Brush Daily Bonus Active! ✨</p>}
+                                <button onClick={() => setShowReward(false)} className="w-full bg-red-600 text-white font-black py-4 rounded-xl text-2xl border-b-4 border-red-800 active:border-0 transition-all">CLAIM REWARD</button>
                             </div>
                         </div>
                     )}
@@ -268,7 +237,7 @@
                     </header>
 
                     {!currentUser ? (
-                        <div className="flex flex-wrap justify-center gap-10 mt-12">
+                        <div className="flex flex-wrap justify-center gap-10 mt-12 animate-in fade-in duration-500">
                             {Object.values(USERS).map(user => {
                                 const BeyGraphic = user.Graphic;
                                 return (
@@ -286,18 +255,14 @@
                                 <div className="flex items-center gap-4 text-right">
                                     <div>
                                         <div className={`font-black text-2xl uppercase italic ${currentUser.text}`}>{currentUser.name}</div>
-                                        <div className="text-[10px] text-gray-500 font-mono uppercase">Tournament Streak: {streakCount} Days</div>
+                                        <div className="text-[10px] text-gray-500 font-mono uppercase tracking-tighter">Perfect Battles: {stats.perfectDays}/7</div>
                                     </div>
-                                    <div className={`w-14 h-14 rounded-full border-2 ${currentUser.borderColor} bg-slate-800 p-1`}>
-                                        {(() => {
-                                            const HeaderGraphic = currentUser.Graphic;
-                                            return <HeaderGraphic className="w-full h-full" />;
-                                        })()}
+                                    <div className="w-12 h-12 bg-slate-800 rounded-full p-1 border-2 border-white/10">
+                                        {(() => { const HeaderGraphic = currentUser.Graphic; return <HeaderGraphic className="w-full h-full" />; })()}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Main Stadium - Always active for current day */}
                             <div className="bg-gray-800/50 rounded-[3rem] p-8 border-4 border-gray-700 shadow-2xl relative mb-8">
                                 <div className="grid grid-cols-2 gap-6">
                                     {['am', 'pm'].map(slot => {
@@ -322,56 +287,37 @@
                                 </div>
                             </div>
 
-                            {/* Tournament Bracket / History - Editable only in Referee mode */}
                             <div className="bg-black/40 rounded-xl p-6 border border-white/10 shadow-inner">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Bracket</h3>
                                     <div className="flex gap-2">
-                                        <button 
-                                            onClick={() => setShowHistory(!showHistory)} 
-                                            className={`px-3 py-1 text-[9px] font-black uppercase border border-white/10 rounded flex items-center gap-1 transition-all ${showHistory ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400'}`}
-                                        >
+                                        <button onClick={() => setShowHistory(!showHistory)} className={`px-3 py-1 text-[9px] font-black uppercase border border-white/10 rounded flex items-center gap-1 transition-all ${showHistory ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400'}`}>
                                             <HistoryIcon className="w-3 h-3" /> {showHistory ? 'Current Week' : 'Show 14 Days'}
                                         </button>
-                                        {(new Date().getDay() === 5 && streakCount >= 6) && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-3 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg]">Claim Prize!</button>}
+                                        {rewardReadyToClaim && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg] border-b-2 border-yellow-700">Claim Reward!</button>}
                                     </div>
                                 </div>
-                                
                                 <div className={`grid ${showHistory ? 'grid-cols-7 grid-rows-2' : 'grid-cols-7'} gap-3`}>
                                     {Array.from({ length: showHistory ? 14 : 7 }).map((_, i) => {
-                                        const d = new Date(); 
-                                        const offset = (showHistory ? 13 : 6) - i;
-                                        d.setDate(d.getDate() - offset);
-                                        const k = formatDateKey(d);
-                                        const isAm = logs[`${currentUser.id}-${k}-am`];
-                                        const isPm = logs[`${currentUser.id}-${k}-pm`];
+                                        const d = new Date(); const offset = (showHistory ? 13 : 6) - i; d.setDate(d.getDate() - offset);
+                                        const k = formatDateKey(d); const isAm = logs[`${currentUser.id}-${k}-am`]; const isPm = logs[`${currentUser.id}-${k}-pm`];
                                         const DayGraphic = currentUser.Graphic;
-                                        
                                         return (
                                             <div key={i} className="flex flex-col items-center gap-1">
                                                 <span className="text-[8px] uppercase font-bold text-gray-600">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
                                                 <div className="w-full aspect-[2/3] flex flex-col gap-1">
-                                                    {/* AM Slot */}
-                                                    <div 
-                                                        onClick={() => adminMode && toggleBurst(currentUser.id, d, 'am')} 
-                                                        className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer active:scale-90' : 'cursor-default'} ${isAm ? 'bg-blue-500/40 border-blue-400 shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'bg-black/30 border-white/5'}`}
-                                                    >
+                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'am')} className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer' : 'cursor-default'} ${isAm ? 'bg-blue-500/40 border-blue-400 shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'bg-black/30 border-white/5'}`}>
                                                         {isAm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
                                                     </div>
-                                                    {/* PM Slot */}
-                                                    <div 
-                                                        onClick={() => adminMode && toggleBurst(currentUser.id, d, 'pm')} 
-                                                        className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer active:scale-90' : 'cursor-default'} ${isPm ? 'bg-red-500/40 border-red-400 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : 'bg-black/30 border-white/5'}`}
-                                                    >
+                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'pm')} className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer' : 'cursor-default'} ${isPm ? 'bg-red-500/40 border-red-400 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : 'bg-black/30 border-white/5'}`}>
                                                         {isPm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
                                                     </div>
                                                 </div>
-                                                <span className="text-[6px] text-gray-700 font-mono">{d.getDate()}/{d.getMonth()+1}</span>
                                             </div>
                                         );
                                     })}
                                 </div>
-                                {adminMode && <p className="text-[8px] text-yellow-400 mt-6 text-center uppercase tracking-widest italic font-bold animate-pulse">Referee Mode: Tap AM/PM cells to adjust history</p>}
+                                {adminMode && <p className="text-[8px] text-yellow-400 mt-6 text-center uppercase tracking-widest italic font-bold animate-pulse">Referee Mode Active: Adjust history above</p>}
                             </div>
                         </div>
                     )}
