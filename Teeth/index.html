@@ -14,11 +14,11 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global bridge for Babel script
-        window.FirebaseLib = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot, collection };
+        window.FirebaseLib = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot };
     </script>
 
     <style>
@@ -28,7 +28,6 @@
         
         @keyframes launchUp {
             0% { transform: translateY(100vh) scale(0.5); opacity: 1; }
-            50% { opacity: 1; }
             100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
         }
         .animate-launch-up {
@@ -61,12 +60,22 @@
     <div id="loading-arena">
         <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
         <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
+        <div id="timeout-msg" style="display: none; margin-top: 20px; text-align: center;">
+            <p style="color: #ef4444; font-size: 10px; margin-bottom: 10px;">Connection taking longer than usual...</p>
+            <button onclick="location.reload()" style="background: #1e40af; color: white; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">Retry Launch</button>
+        </div>
     </div>
 
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
+
+        // Failsafe timeout for loading screen
+        setTimeout(() => {
+            const msg = document.getElementById('timeout-msg');
+            if (msg) msg.style.display = 'block';
+        }, 7000);
 
         // --- Icons ---
         const StarIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>);
@@ -124,45 +133,47 @@
             const [showReward, setShowReward] = useState(false);
             const [isSyncing, setIsSyncing] = useState(true);
 
-            // --- 1. BOOT SEQUENCE WITH PROVIDED CONFIG ---
+            // --- 1. ROBUST POLLING BOOT SEQUENCE ---
             useEffect(() => {
-                const boot = async () => {
-                    if (!window.FirebaseLib) return;
-                    const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
-                    
-                    const config = {
-                        apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
-                        authDomain: "teeth2-3f73e.firebaseapp.com",
-                        projectId: "teeth2-3f73e",
-                        storageBucket: "teeth2-3f73e.firebasestorage.app",
-                        messagingSenderId: "245367626619",
-                        appId: "1:245367626619:web:c496a86089539bdb5fbbde"
-                    };
+                const checkFirebase = setInterval(async () => {
+                    if (window.FirebaseLib) {
+                        clearInterval(checkFirebase);
+                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
+                        
+                        const config = {
+                            apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
+                            authDomain: "teeth2-3f73e.firebaseapp.com",
+                            projectId: "teeth2-3f73e",
+                            storageBucket: "teeth2-3f73e.firebasestorage.app",
+                            messagingSenderId: "245367626619",
+                            appId: "1:245367626619:web:c496a86089539bdb5fbbde"
+                        };
 
-                    try {
-                        const app = initializeApp(config);
-                        const auth = getAuth(app);
-                        const firestore = getFirestore(app);
-                        setDb(firestore);
+                        try {
+                            const app = initializeApp(config);
+                            const auth = getAuth(app);
+                            const firestore = getFirestore(app);
+                            setDb(firestore);
 
-                        // Silent anonymous login
-                        await signInAnonymously(auth);
+                            await signInAnonymously(auth);
 
-                        onAuthStateChanged(auth, u => {
-                            if (u) {
-                                setUser(u);
-                                const loader = document.getElementById('loading-arena');
-                                if (loader) {
-                                    loader.style.opacity = '0';
-                                    setTimeout(() => loader.style.display = 'none', 500);
+                            onAuthStateChanged(auth, u => {
+                                if (u) {
+                                    setUser(u);
+                                    const loader = document.getElementById('loading-arena');
+                                    if (loader) {
+                                        loader.style.opacity = '0';
+                                        setTimeout(() => loader.style.display = 'none', 500);
+                                    }
                                 }
-                            }
-                        });
-                    } catch (e) {
-                        console.error("Battle Arena Ignition Failed", e);
+                            });
+                        } catch (e) {
+                            console.error("Arena Ignition Failed", e);
+                        }
                     }
-                };
-                boot();
+                }, 100);
+
+                return () => clearInterval(checkFirebase);
             }, []);
 
             // --- 2. CLOUD SYNC ---
@@ -176,7 +187,7 @@
                     if (snap.exists()) setLogs(snap.data());
                     setIsSyncing(false);
                 }, (err) => {
-                    console.error("Cloud Link Interrupted", err);
+                    console.error("Sync Interrupted", err);
                     setIsSyncing(false);
                 });
                 return () => unsub();
@@ -292,7 +303,7 @@
                                     {['am', 'pm'].map(slot => {
                                         const done = logs[`${currentUser.id}-${formatDateKey(new Date())}-${slot}`];
                                         return (
-                                            <button key={slot} onClick={() => toggleBrush(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 to-red-500 border-yellow-200' : 'bg-gray-700 border-gray-600'}`}>
+                                            <button key={slot} onClick={() => toggleBrush(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600'}`}>
                                                 {done ? (
                                                     <div className="flex flex-col items-center">
                                                         <currentUser.Graphic className="w-24 h-24 mb-2" spinning={true} />
