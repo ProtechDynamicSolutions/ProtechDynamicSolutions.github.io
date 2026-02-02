@@ -56,7 +56,7 @@
             CheckCircle2, Circle, Fish, Sword, Shield, Zap, Clock, Calendar, 
             Coins, Trophy, Pizza, Bomb, PiggyBank, ChevronRight, Target, 
             Sparkles, TreePine, Gift, Flame, Star, Heart, Rocket, Swords, Hexagon,
-            Dog, Bone, Droplets, Stethoscope, ArrowRight
+            Dog, Bone, Droplets, Stethoscope, ArrowRight, Timer
         } from 'https://esm.sh/lucide-react@0.284.0';
 
         // --- MAIN APP CONFIG (Adventure HQ) ---
@@ -108,8 +108,9 @@
             
             // New State Objects
             const [fishState, setFishState] = useState({ lastFed: 0 });
-            // Dog state now tracks daily counts: { monty: 0, liath: 0, lastReset: 'YYYY-MM-DD' }
-            const [dogState, setDogState] = useState({ monty: 0, liath: 0, lastReset: '' });
+            // Dog state default structure - timestamps start at 0
+            const defaultDogState = { monty: 0, liath: 0, lastReset: '', montyLastFed: 0, liathLastFed: 0 };
+            const [dogState, setDogState] = useState(defaultDogState);
             
             const [powerUpClaimed, setPowerUpClaimed] = useState(false);
             const [streak, setStreak] = useState(0);
@@ -183,11 +184,26 @@
                         // Handle Dog State Migration/Update
                         if (data.dogState) {
                             const today = new Date().toISOString().split('T')[0];
-                            if (data.dogState.lastReset !== today) {
-                                // Reset logic if day changed (handled here for local view, update saved later)
-                                setDogState({ monty: 0, liath: 0, lastReset: today });
+                            const loadedState = data.dogState;
+                            
+                            // 1. Check if day changed
+                            if (loadedState.lastReset !== today) {
+                                // Day changed: Reset all counts and timestamps
+                                setDogState({
+                                    monty: 0,
+                                    liath: 0,
+                                    lastReset: today,
+                                    montyLastFed: 0,
+                                    liathLastFed: 0
+                                });
                             } else {
-                                setDogState(data.dogState);
+                                // Same day: Merge loaded state ON TOP of default state
+                                // This ensures if 'montyLastFed' is missing in DB (old data), 
+                                // it defaults to 0 instead of being undefined
+                                setDogState({
+                                    ...defaultDogState, // Fallbacks
+                                    ...loadedState      // Cloud Data
+                                });
                             }
                         }
 
@@ -373,6 +389,10 @@
 
             // --- Updated Pet Logic ---
             const feedFish = (who) => {
+                // If fed within last 18 hours, block (though button should be disabled)
+                const hoursSinceFed = (Date.now() - fishState.lastFed) / (1000 * 60 * 60);
+                if (hoursSinceFed < 18) return; 
+
                 const now = Date.now();
                 playSound('bubbles'); createParticles(20);
                 const reward = 0.50;
@@ -392,15 +412,32 @@
                 // Ensure we are working with today's state
                 const today = new Date().toISOString().split('T')[0];
                 const newState = { ...dogState };
+                
+                // Safety check for reset or initialization
                 if (newState.lastReset !== today) {
                     newState.monty = 0; newState.liath = 0; newState.lastReset = today;
+                    newState.montyLastFed = 0; newState.liathLastFed = 0;
                 }
+                
                 newState[key] += 1;
+                newState[`${key}LastFed`] = Date.now(); // Store timestamp
 
                 const updates = { dogState: newState };
                 if (who === 'Max') updates.maxVault = { ...maxVault, total: maxVault.total + reward };
                 else updates.ariVault = { ...ariVault, total: ariVault.total + reward };
                 save(updates);
+            };
+
+            // --- Helper: Get Last Fed Label ---
+            const getLastFedLabel = (timestamp) => {
+                // Ensure timestamp is a valid number and not 0
+                if (!timestamp || timestamp === 0) return '';
+                const date = new Date(timestamp);
+                const today = new Date();
+                const isToday = date.toDateString() === today.toDateString();
+                const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                
+                return isToday ? `Today @ ${timeStr}` : `Yesterday @ ${timeStr}`;
             };
 
             // --- TOOTH CHECK LOGIC ---
@@ -544,12 +581,15 @@
                                     isFishFedToday ? React.createElement(React.Fragment, null, "Fed ", React.createElement(CheckCircle2, { size: 12 })) : "Hungry!"
                                 )
                             ),
-                            React.createElement('p', { className: "text-xs text-blue-300 mb-4 opacity-70 font-bold" }, 
-                                isFishFedToday ? "Fish are full! No food needed tomorrow." : "Needs feeding every 2nd day."
+                            React.createElement('p', { className: "text-xs text-blue-300 mb-2 opacity-70 font-bold" }, 
+                                isFishFedToday ? "Fish are full! No food needed." : "Needs feeding every 2nd day."
+                            ),
+                             isFishFedToday && React.createElement('p', { className: "text-[10px] text-green-400 font-mono font-bold mb-4 flex items-center gap-1" },
+                                React.createElement(Timer, { size: 10 }), `Last: ${getLastFedLabel(fishState.lastFed)}`
                             ),
                             React.createElement('div', { className: "flex gap-2" },
-                                React.createElement('button', { onClick: () => feedFish('Max'), className: "flex-1 bg-purple-700 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
-                                React.createElement('button', { onClick: () => feedFish('Ari'), className: "flex-1 bg-orange-700 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
+                                React.createElement('button', { disabled: isFishFedToday, onClick: () => feedFish('Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
+                                React.createElement('button', { disabled: isFishFedToday, onClick: () => feedFish('Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
                             )
                         ),
                         // Monty
@@ -558,7 +598,10 @@
                                 React.createElement('div', { className: "text-xl font-black text-slate-200" }, "Monty"),
                                 React.createElement('div', { className: "text-[10px] font-black uppercase bg-slate-700 px-2 py-1 rounded" }, `${dogState.monty}/2 Fed`)
                             ),
-                            React.createElement('div', { className: "flex gap-2" },
+                            dogState.monty > 0 && React.createElement('p', { className: "text-[10px] text-green-400 font-mono font-bold mb-4 flex items-center gap-1" },
+                                React.createElement(Timer, { size: 10 }), `Last: ${getLastFedLabel(dogState.montyLastFed)}`
+                            ),
+                            React.createElement('div', { className: `flex gap-2 ${dogState.monty === 0 ? 'mt-8' : ''}` },
                                 React.createElement('button', { disabled: dogState.monty >= 2, onClick: () => feedDog('Monty', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
                                 React.createElement('button', { disabled: dogState.monty >= 2, onClick: () => feedDog('Monty', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
                             )
@@ -569,7 +612,10 @@
                                 React.createElement('div', { className: "text-xl font-black text-slate-200" }, "Liath"),
                                 React.createElement('div', { className: "text-[10px] font-black uppercase bg-slate-700 px-2 py-1 rounded" }, `${dogState.liath}/2 Fed`)
                             ),
-                            React.createElement('div', { className: "flex gap-2" },
+                            dogState.liath > 0 && React.createElement('p', { className: "text-[10px] text-green-400 font-mono font-bold mb-4 flex items-center gap-1" },
+                                React.createElement(Timer, { size: 10 }), `Last: ${getLastFedLabel(dogState.liathLastFed)}`
+                            ),
+                            React.createElement('div', { className: `flex gap-2 ${dogState.liath === 0 ? 'mt-8' : ''}` },
                                 React.createElement('button', { disabled: dogState.liath >= 2, onClick: () => feedDog('Liath', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
                                 React.createElement('button', { disabled: dogState.liath >= 2, onClick: () => feedDog('Liath', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
                             )
@@ -659,5 +705,3 @@
     </script>
 </body>
 </html>
-
-
