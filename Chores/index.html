@@ -6,79 +6,23 @@
     <title>Adventure HQ - Max & Ari</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Magical Animation Keyframes */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .animate-shake { animation: shake 0.5s; }
-        
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-10deg); }
-            75% { transform: rotate(10deg); }
-        }
+        @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
         .animate-wiggle { animation: wiggle 0.5s ease-in-out infinite; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .animate-float { animation: float 3s ease-in-out infinite; }
-
-        @keyframes spinStar {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.5); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-        
-        @keyframes spinBeyblade {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes minecraftFall {
-            0% { transform: translateY(-100px) rotate(0deg) scale(0); opacity: 1; }
-            50% { transform: translateY(0px) rotate(180deg) scale(1.2); opacity: 1; }
-            100% { transform: translateY(50px) rotate(360deg) scale(0.8); opacity: 0.5; }
-        }
-        
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-        
-        @keyframes explode {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            50% { transform: scale(2) rotate(180deg); opacity: 1; }
-            100% { transform: scale(4) rotate(360deg); opacity: 0; }
-        }
-        
-        @keyframes lightning {
-            0% { opacity: 0; transform: scaleY(0); }
-            10% { opacity: 1; transform: scaleY(1); }
-            20% { opacity: 0; }
-            100% { opacity: 0; }
-        }
+        @keyframes spinStar { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.5); } 100% { transform: rotate(360deg) scale(1); } }
+        @keyframes spinBeyblade { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes minecraftFall { 0% { transform: translateY(-100px) rotate(0deg) scale(0); opacity: 1; } 50% { transform: translateY(0px) rotate(180deg) scale(1.2); opacity: 1; } 100% { transform: translateY(50px) rotate(360deg) scale(0.8); opacity: 0.5; } }
+        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes explode { 0% { transform: scale(0) rotate(0deg); opacity: 1; } 50% { transform: scale(2) rotate(180deg); opacity: 1; } 100% { transform: scale(4) rotate(360deg); opacity: 0; } }
+        @keyframes lightning { 0% { opacity: 0; transform: scaleY(0); } 10% { opacity: 1; transform: scaleY(1); } 20% { opacity: 0; } 100% { opacity: 0; } }
 
         body { margin: 0; background-color: #020617; color: white; font-family: sans-serif; overflow-x: hidden; }
         
-        #loader {
-            position: fixed; inset: 0; background: #020617; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.8s;
-        }
-
-        .debug-panel {
-            position: fixed; bottom: 10px; left: 10px; font-family: monospace;
-            font-size: 10px; background: rgba(0,0,0,0.9); padding: 8px;
-            border-radius: 8px; border: 1px solid #444; z-index: 10000;
-            max-width: 280px; pointer-events: none; color: #aaa;
-        }
-        
-        /* Custom scrollbar for chores list */
+        #loader { position: fixed; inset: 0; background: #020617; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s; }
+        .debug-panel { position: fixed; bottom: 10px; left: 10px; font-family: monospace; font-size: 10px; background: rgba(0,0,0,0.9); padding: 8px; border-radius: 8px; border: 1px solid #444; z-index: 10000; max-width: 280px; pointer-events: none; color: #aaa; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -93,7 +37,6 @@
     </div>
 
     <div id="debug" class="debug-panel">Status: Waking the Elves...</div>
-    
     <div id="root"></div>
 
     <script type="module">
@@ -105,7 +48,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         import React, { useState, useEffect, useCallback } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
@@ -113,11 +56,12 @@
             CheckCircle2, Circle, Fish, Sword, Shield, Zap, Clock, Calendar, 
             Coins, Trophy, Pizza, Bomb, PiggyBank, ChevronRight, Target, 
             Sparkles, TreePine, Gift, Flame, Star, Heart, Rocket, Swords, Hexagon,
-            Dog, Bone, Droplets
+            Dog, Bone, Droplets, Stethoscope, ArrowRight
         } from 'https://esm.sh/lucide-react@0.284.0';
 
+        // --- MAIN APP CONFIG (Adventure HQ) ---
         const firebaseConfig = {
-            apiKey: "", // Left empty as per instructions, injected by environment
+            apiKey: "AIzaSyAb2XwRcOmR7xppmwHEWGQEo6yzkNiJjR4",
             authDomain: "chores2-1ddb5.firebaseapp.com",
             projectId: "chores2-1ddb5",
             storageBucket: "chores2-1ddb5.firebasestorage.app",
@@ -126,25 +70,55 @@
         };
         const appId = "chores2-1ddb5";
 
+        // --- SECONDARY APP CONFIG (Tooth Tracker) ---
+        const teethConfig = {
+            apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
+            authDomain: "teeth2-3f73e.firebaseapp.com",
+            projectId: "teeth2-3f73e",
+            storageBucket: "teeth2-3f73e.firebasestorage.app",
+            messagingSenderId: "245367626619",
+            appId: "1:245367626619:web:c496a86089539bdb5fbbde"
+        };
+        const teethAppId = "teeth2-3f73e";
+
+        // Initialize Main App
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Initialize Secondary App (Teeth)
+        // We name it "teethApp" to avoid conflict
+        let teethDb;
+        try {
+            const teethApp = initializeApp(teethConfig, "teethApp");
+            teethDb = getFirestore(teethApp);
+            debug("Connected to Teeth Network.");
+        } catch(e) {
+            debug("Teeth Network Error: " + e.message);
+        }
+
         const App = () => {
             const [user, setUser] = useState(null);
             const [currentTime, setCurrentTime] = useState(new Date());
             const [cloudStatus, setCloudStatus] = useState("connecting");
             
-            // App State (Persisted)
-            // Splitting vaults as requested
+            // App State
             const [maxVault, setMaxVault] = useState({ total: 0, goal: 20 });
             const [ariVault, setAriVault] = useState({ total: 0, goal: 20 });
             
-            // New Pet Logic
-            const [fishState, setFishState] = useState({ lastFed: 0 }); // Timestamp
-            const [dogState, setDogState] = useState({ montyFedToday: false, liathFedToday: false });
-
+            // New State Objects
+            const [fishState, setFishState] = useState({ lastFed: 0 });
+            // Dog state now tracks daily counts: { monty: 0, liath: 0, lastReset: 'YYYY-MM-DD' }
+            const [dogState, setDogState] = useState({ monty: 0, liath: 0, lastReset: '' });
+            
             const [powerUpClaimed, setPowerUpClaimed] = useState(false);
             const [streak, setStreak] = useState(0);
             const [achievements, setAchievements] = useState([]);
-            const [level, setLevel] = useState(1);
             
+            // Inspection State
+            const [inspecting, setInspecting] = useState(false);
+            const [inspectionResult, setInspectionResult] = useState(null);
+
             const choreTemplate = [
                 { id: 1, task: 'Clean Playroom', reward: 3, completed: false, emoji: '🎮' },
                 { id: 2, task: 'Clean Bedroom', reward: 2, completed: false, emoji: '🛏️' },
@@ -183,22 +157,12 @@
             // 1. Initialise & Sync
             useEffect(() => {
                 debug("Booting Command Centre...");
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                
-                signInAnonymously(auth).catch(() => {
-                    debug("Signal weak. Using local magic.");
+                signInAnonymously(auth).catch((e) => {
+                    debug("Auth failed: " + e.message);
                     setCloudStatus("offline");
                     hideLoader();
                 });
-
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        debug("User Authenticated.");
-                        setUser(u);
-                    }
-                });
-
+                onAuthStateChanged(auth, (u) => { if (u) { debug("User Authenticated."); setUser(u); } });
                 const timer = setInterval(() => setCurrentTime(new Date()), 1000);
                 return () => { clearInterval(timer); };
             }, []);
@@ -206,39 +170,39 @@
             // 2. Real-time Cloud Sync
             useEffect(() => {
                 if (!user) return;
-                const db = getFirestore();
                 const sharedDoc = doc(db, 'artifacts', appId);
-                
                 const unsubscribe = onSnapshot(sharedDoc, (snapshot) => {
                     setCloudStatus("online");
                     hideLoader();
-
                     if (snapshot.exists()) {
                         const data = snapshot.data();
-                        
-                        // Handle Legacy Single Vault migration if needed, otherwise split
                         if (data.maxVault) setMaxVault(data.maxVault);
-                        else if (data.vault) setMaxVault({ total: data.vault.total, goal: 20 }); // Migration backup
-
                         if (data.ariVault) setAriVault(data.ariVault);
-
                         if (data.fishState) setFishState(data.fishState);
-                        if (data.dogState) setDogState(data.dogState);
                         
+                        // Handle Dog State Migration/Update
+                        if (data.dogState) {
+                            const today = new Date().toISOString().split('T')[0];
+                            if (data.dogState.lastReset !== today) {
+                                // Reset logic if day changed (handled here for local view, update saved later)
+                                setDogState({ monty: 0, liath: 0, lastReset: today });
+                            } else {
+                                setDogState(data.dogState);
+                            }
+                        }
+
                         if (data.powerUpClaimed !== undefined) setPowerUpClaimed(data.powerUpClaimed);
                         if (data.streak !== undefined) setStreak(data.streak);
-                        if (data.level !== undefined) setLevel(data.level);
                         if (data.achievements) setAchievements(data.achievements);
                         if (data.maxChores) setMaxChores(data.maxChores);
                         if (data.ariChores) setAriChores(data.ariChores);
                         debug("Cloud Sync Success.");
-                    }
+                    } else hideLoader();
                 }, (err) => {
                     debug("Sync Error: " + err.message);
                     setCloudStatus("offline");
                     hideLoader();
                 });
-
                 return () => unsubscribe();
             }, [user]);
 
@@ -252,13 +216,9 @@
                 if (updates.maxChores) setMaxChores(updates.maxChores);
                 if (updates.ariChores) setAriChores(updates.ariChores);
                 if (updates.powerUpClaimed !== undefined) setPowerUpClaimed(updates.powerUpClaimed);
-                if (updates.streak !== undefined) setStreak(updates.streak);
-                if (updates.level !== undefined) setLevel(updates.level);
-                if (updates.achievements) setAchievements(updates.achievements);
 
                 if (user && cloudStatus === "online") {
                     try {
-                        const db = getFirestore();
                         const sharedDoc = doc(db, 'artifacts', appId);
                         await setDoc(sharedDoc, updates, { merge: true });
                     } catch (e) { debug("Cloud Save Failed."); }
@@ -272,276 +232,250 @@
                     const osc = ctx.createOscillator();
                     const g = ctx.createGain();
                     osc.connect(g); g.connect(ctx.destination);
+                    const now = ctx.currentTime;
                     
                     switch(type) {
                         case 'complete':
-                            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1);
-                            g.gain.setValueAtTime(0.3, ctx.currentTime);
-                            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-                            osc.start(); osc.stop(ctx.currentTime + 0.3);
+                            osc.frequency.setValueAtTime(523.25, now);
+                            osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.1);
+                            g.gain.setValueAtTime(0.3, now);
+                            g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                            osc.start(); osc.stop(now + 0.3);
                             break;
                         case 'vault':
-                            osc.frequency.setValueAtTime(392, ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(523.25, ctx.currentTime + 0.1);
-                            osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.2);
-                            g.gain.setValueAtTime(0.4, ctx.currentTime);
-                            osc.start(); osc.stop(ctx.currentTime + 0.4);
+                            osc.frequency.setValueAtTime(392, now);
+                            osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.2);
+                            g.gain.setValueAtTime(0.4, now);
+                            osc.start(); osc.stop(now + 0.4);
                             break;
                         case 'powerup':
-                            osc.frequency.setValueAtTime(261.63, ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.2);
-                            g.gain.setValueAtTime(0.5, ctx.currentTime);
-                            osc.start(); osc.stop(ctx.currentTime + 0.5);
+                            osc.frequency.setValueAtTime(261.63, now);
+                            osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.2);
+                            g.gain.setValueAtTime(0.5, now);
+                            osc.start(); osc.stop(now + 0.5);
                             break;
                         case 'explosion':
                             osc.type = 'sawtooth';
-                            osc.frequency.setValueAtTime(100, ctx.currentTime);
-                            g.gain.setValueAtTime(0.6, ctx.currentTime);
-                            osc.start(); osc.stop(ctx.currentTime + 0.3);
+                            osc.frequency.setValueAtTime(100, now);
+                            g.gain.setValueAtTime(0.6, now);
+                            osc.start(); osc.stop(now + 0.3);
                             break;
                         case 'bubbles':
                             osc.type = 'sine';
-                            const now = ctx.currentTime;
-                            // Create a bubble loop effect
                             osc.frequency.setValueAtTime(400, now);
                             osc.frequency.linearRampToValueAtTime(800, now + 0.1);
                             g.gain.setValueAtTime(0.5, now);
                             g.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
                             osc.start(); osc.stop(now + 0.2);
-                            
-                            // Second bubble
-                            const osc2 = ctx.createOscillator();
-                            const g2 = ctx.createGain();
-                            osc2.connect(g2); g2.connect(ctx.destination);
-                            osc2.frequency.setValueAtTime(300, now + 0.1);
-                            osc2.frequency.linearRampToValueAtTime(600, now + 0.2);
-                            g2.gain.setValueAtTime(0.5, now + 0.1);
-                            g2.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-                            osc2.start(now + 0.1); osc2.stop(now + 0.3);
                             break;
                         case 'bark':
                             osc.type = 'sawtooth';
-                            osc.frequency.setValueAtTime(150, ctx.currentTime);
-                            osc.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.1);
-                            g.gain.setValueAtTime(0.8, ctx.currentTime);
-                            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-                            osc.start(); osc.stop(ctx.currentTime + 0.2);
+                            osc.frequency.setValueAtTime(150, now);
+                            osc.frequency.linearRampToValueAtTime(80, now + 0.1);
+                            g.gain.setValueAtTime(0.8, now);
+                            g.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                            osc.start(); osc.stop(now + 0.2);
                             break;
                     }
                 } catch(e) {}
             };
 
-            // Detailed FX Generators (Particles, etc.)
-            // ... (Reusing existing FX functions for brevity, they are solid)
+            // FX Generators (unchanged)
             const createParticles = (count = 15) => {
                 const p = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
                     size: Math.random() * 20 + 10, rotation: Math.random() * 360,
                     emoji: ['⭐', '💎', '🎉', '✨', '🏆', '💰'][Math.floor(Math.random() * 6)]
                 }));
-                setParticles(p);
-                setTimeout(() => setParticles([]), 2000);
+                setParticles(p); setTimeout(() => setParticles([]), 2000);
             };
-
             const createNinjaStars = (count = 8) => {
                 const ns = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
                     size: Math.random() * 30 + 20, rotation: Math.random() * 360, speed: Math.random() * 3 + 2
                 }));
-                setNinjaStars(ns);
-                setTimeout(() => setNinjaStars([]), 2000);
+                setNinjaStars(ns); setTimeout(() => setNinjaStars([]), 2000);
             };
-
             const createBeyblades = (count = 6) => {
                 const bb = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
                     size: Math.random() * 40 + 30, rotation: Math.random() * 360
                 }));
-                setBeyblades(bb);
-                setTimeout(() => setBeyblades([]), 2500);
+                setBeyblades(bb); setTimeout(() => setBeyblades([]), 2500);
             };
-
             const createMinecraftBlocks = (count = 10) => {
                 const blocks = ['🟫', '🟩', '🟦', '⬛', '🟨', '🟥'];
                 const mb = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100,
                     size: Math.random() * 30 + 25, block: blocks[Math.floor(Math.random() * blocks.length)]
                 }));
-                setMinecraftBlocks(mb);
-                setTimeout(() => setMinecraftBlocks([]), 2000);
+                setMinecraftBlocks(mb); setTimeout(() => setMinecraftBlocks([]), 2000);
             };
-
             const createExplosions = (count = 5) => {
                 playSound('explosion');
                 const ex = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 60 + 40
                 }));
-                setExplosions(ex);
-                setTimeout(() => setExplosions([]), 1000);
+                setExplosions(ex); setTimeout(() => setExplosions([]), 1000);
             };
-
             const createLightning = (count = 4) => {
                 const lt = Array.from({ length: count }, (_, i) => ({
                     id: Date.now() + i, x: Math.random() * 100, delay: i * 150
                 }));
-                setLightning(lt);
-                setTimeout(() => setLightning([]), 1500);
+                setLightning(lt); setTimeout(() => setLightning([]), 1500);
             };
 
-            // Gameplay Mechanics
+            // Interactions
             const updateCombo = () => {
                 if (comboTimer) clearTimeout(comboTimer);
                 const newCombo = comboCount + 1;
                 setComboCount(newCombo);
                 if (newCombo === 3) { playSound('powerup'); createLightning(3); }
-                if (newCombo === 5) {
-                    playSound('complete'); createExplosions(5); setShowLevelUp(true);
-                    setTimeout(() => setShowLevelUp(false), 3000);
-                }
+                if (newCombo === 5) { playSound('complete'); createExplosions(5); setShowLevelUp(true); setTimeout(() => setShowLevelUp(false), 3000); }
                 const timer = setTimeout(() => setComboCount(0), 3000);
                 setComboTimer(timer);
-            };
-
-            const checkAchievements = () => {
-                const totalCompleted = [...maxChores, ...ariChores].filter(c => c.completed).length;
-                const newIds = [];
-                if (totalCompleted === 4 && !achievements.includes('first_quest')) newIds.push('first_quest');
-                if (totalCompleted === 8 && !achievements.includes('quest_master')) {
-                    newIds.push('quest_master');
-                    playSound('complete'); createLightning(8);
-                }
-                if ((maxVault.total + ariVault.total) >= 20 && !achievements.includes('half_way')) newIds.push('half_way');
-                
-                if (newIds.length > 0) save({ achievements: [...achievements, ...newIds] });
             };
 
             const toggleChore = (boy, id) => {
                 const list = boy === 'Max' ? maxChores : ariChores;
                 const chore = list.find(c => c.id === id);
                 const updated = list.map(c => c.id === id ? { ...c, completed: !c.completed } : c);
-                
                 if (!chore.completed) {
-                    playSound('complete');
-                    createParticles(12);
+                    playSound('complete'); createParticles(12);
                     if (boy === 'Max') createNinjaStars(6); else createBeyblades(6);
-                    createMinecraftBlocks(8);
-                    updateCombo();
+                    createMinecraftBlocks(8); updateCombo();
                     save({ [boy === 'Max' ? 'maxChores' : 'ariChores']: updated, streak: streak + 1 });
                 } else {
                     save({ [boy === 'Max' ? 'maxChores' : 'ariChores']: updated });
                 }
-                setTimeout(checkAchievements, 200);
             };
 
             const bankEarnings = (boy) => {
                 const list = boy === 'Max' ? maxChores : ariChores;
                 const earned = list.reduce((acc, c) => c.completed ? acc + c.reward : acc, 0);
                 if (earned === 0) return;
-                
-                playSound('vault');
-                createExplosions(4);
+                playSound('vault'); createExplosions(4);
                 if (boy === 'Max') createNinjaStars(8); else createBeyblades(8);
-                
                 const vaultToUpdate = boy === 'Max' ? maxVault : ariVault;
-                const setVaultFn = boy === 'Max' ? setMaxVault : setAriVault;
                 const setShakeFn = (val) => setShakeVault(prev => ({ ...prev, [boy.toLowerCase()]: val }));
-
-                setShakeFn(true);
-                setTimeout(() => setShakeFn(false), 600);
-                
+                setShakeFn(true); setTimeout(() => setShakeFn(false), 600);
                 save({
                     [boy === 'Max' ? 'maxVault' : 'ariVault']: { ...vaultToUpdate, total: vaultToUpdate.total + earned },
                     [boy === 'Max' ? 'maxChores' : 'ariChores']: choreTemplate.map(c => ({ ...c }))
                 });
-                setTimeout(checkAchievements, 200);
             };
 
             const claimPowerUp = () => {
                 if (powerUpClaimed) return;
-                playSound('powerup');
-                createExplosions(4);
-                save({
-                    powerUpClaimed: true,
-                    // Splitting the power up dollar? Or generic? Let's give them 50c each to keep fairness
-                    maxVault: { ...maxVault, total: maxVault.total + 0.5 },
-                    ariVault: { ...ariVault, total: ariVault.total + 0.5 }
-                });
+                playSound('powerup'); createExplosions(4);
+                save({ powerUpClaimed: true, maxVault: { ...maxVault, total: maxVault.total + 0.5 }, ariVault: { ...ariVault, total: ariVault.total + 0.5 } });
             };
 
-            // Pet Logic
+            // --- Updated Pet Logic ---
             const feedFish = (who) => {
                 const now = Date.now();
-                // Check if fed in last 24 hours (86400000 ms)
-                // Actually user said "every second day", so let's allow feeding if > 24 hours have passed for points
-                // but visual indicator shows fed.
-                
-                playSound('bubbles');
-                createParticles(20);
-                
+                playSound('bubbles'); createParticles(20);
                 const reward = 0.50;
-                const updates = {
-                    fishState: { lastFed: now }
-                };
-                
-                if (who === 'Max') {
-                    updates.maxVault = { ...maxVault, total: maxVault.total + reward };
-                } else {
-                    updates.ariVault = { ...ariVault, total: ariVault.total + reward };
-                }
+                const updates = { fishState: { lastFed: now } };
+                if (who === 'Max') updates.maxVault = { ...maxVault, total: maxVault.total + reward };
+                else updates.ariVault = { ...ariVault, total: ariVault.total + reward };
                 save(updates);
             };
 
             const feedDog = (dogName, who) => {
-                if ((dogName === 'Monty' && dogState.montyFedToday) || (dogName === 'Liath' && dogState.liathFedToday)) return;
-                
-                playSound('bark');
-                createMinecraftBlocks(10);
-                
+                const key = dogName === 'Monty' ? 'monty' : 'liath';
+                if (dogState[key] >= 2) return; // Cap at 2 feeds
+
+                playSound('bark'); createMinecraftBlocks(10);
                 const reward = 0.50;
-                const updates = {
-                    dogState: { 
-                        ...dogState, 
-                        [dogName === 'Monty' ? 'montyFedToday' : 'liathFedToday']: true 
-                    }
-                };
                 
-                if (who === 'Max') {
-                    updates.maxVault = { ...maxVault, total: maxVault.total + reward };
-                } else {
-                    updates.ariVault = { ...ariVault, total: ariVault.total + reward };
+                // Ensure we are working with today's state
+                const today = new Date().toISOString().split('T')[0];
+                const newState = { ...dogState };
+                if (newState.lastReset !== today) {
+                    newState.monty = 0; newState.liath = 0; newState.lastReset = today;
                 }
+                newState[key] += 1;
+
+                const updates = { dogState: newState };
+                if (who === 'Max') updates.maxVault = { ...maxVault, total: maxVault.total + reward };
+                else updates.ariVault = { ...ariVault, total: ariVault.total + reward };
                 save(updates);
             };
 
-            const unleashUltimatePower = () => {
-                playSound('explosion');
-                createParticles(30);
-                createNinjaStars(12);
-                createBeyblades(12);
-                createMinecraftBlocks(20);
-                createExplosions(10);
-                createLightning(10);
-                setShowLevelUp(true);
-                setTimeout(() => setShowLevelUp(false), 3000);
+            // --- TOOTH CHECK LOGIC ---
+            const runToothInspection = async () => {
+                if (!teethDb) return;
+                setInspecting(true);
+                setInspectionResult(null);
+                
+                try {
+                    // Fetch the global doc from the other app
+                    const docRef = doc(teethDb, `artifacts/${teethAppId}/public/data/battle_logs/global_doc`);
+                    const snap = await getDoc(docRef);
+                    
+                    if (snap.exists()) {
+                        const logs = snap.data();
+                        const results = { max: { hits: 0, doubles: 0, reward: 0 }, ari: { hits: 0, doubles: 0, reward: 0 } };
+                        const today = new Date();
+                        
+                        // Check last 7 days
+                        for(let i=0; i<7; i++) {
+                            const d = new Date(); d.setDate(today.getDate() - i);
+                            const dateKey = d.toISOString().split('T')[0];
+                            
+                            ['max', 'ari'].forEach(boy => {
+                                const am = logs[`${boy}-${dateKey}-am`];
+                                const pm = logs[`${boy}-${dateKey}-pm`];
+                                if (am || pm) results[boy].hits++;
+                                if (am && pm) results[boy].doubles++;
+                            });
+                        }
+
+                        // Calc Rewards
+                        ['max', 'ari'].forEach(boy => {
+                            if (results[boy].doubles >= 7) results[boy].reward = 3;
+                            else if (results[boy].hits >= 7) results[boy].reward = 1;
+                        });
+
+                        setInspectionResult(results);
+
+                        // Auto Deposit if Reward > 0
+                        const updates = {};
+                        let newMax = maxVault.total;
+                        let newAri = ariVault.total;
+
+                        if (results.max.reward > 0) { newMax += results.max.reward; playSound('powerup'); }
+                        if (results.ari.reward > 0) { newAri += results.ari.reward; playSound('powerup'); }
+
+                        if (results.max.reward > 0 || results.ari.reward > 0) {
+                             createExplosions(10);
+                             updates.maxVault = { ...maxVault, total: newMax };
+                             updates.ariVault = { ...ariVault, total: newAri };
+                             save(updates);
+                        }
+                    }
+                } catch(e) {
+                    console.error(e);
+                } finally {
+                    setInspecting(false);
+                }
             };
 
-            // Calc percentages
+            const unleashUltimatePower = () => {
+                playSound('explosion'); createParticles(30); createNinjaStars(12); createBeyblades(12); createMinecraftBlocks(20); createExplosions(10); createLightning(10); setShowLevelUp(true); setTimeout(() => setShowLevelUp(false), 3000);
+            };
+
             const maxProgress = Math.min((maxVault.total / maxVault.goal) * 100, 100);
             const ariProgress = Math.min((ariVault.total / ariVault.goal) * 100, 100);
             
-            // Fish Status Logic
+            // Fish Status: If fed within last 18 hours (today essentially), it's fed.
             const hoursSinceFed = (Date.now() - fishState.lastFed) / (1000 * 60 * 60);
-            const isFishHungry = hoursSinceFed > 36; // Approx 1.5 days
-            
-            const totalXP = [...maxChores, ...ariChores].filter(c => c.completed).length;
-            const maxXP = (choreTemplate.length * 2);
+            const isFishFedToday = hoursSinceFed < 18;
 
             return React.createElement('div', { className: "min-h-screen bg-slate-950 p-4 pb-24 relative overflow-hidden" },
-                // FX Layers
-                React.createElement('div', { className: "absolute inset-0 opacity-20 pointer-events-none" },
-                    [...Array(20)].map((_, i) => React.createElement(Star, { key: i, size: 4, className: "absolute animate-pulse text-yellow-300", style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` } }))
-                ),
+                // ... FX Layers (Standard) ...
+                React.createElement('div', { className: "absolute inset-0 opacity-20 pointer-events-none" }, [...Array(20)].map((_, i) => React.createElement(Star, { key: i, size: 4, className: "absolute animate-pulse text-yellow-300", style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` } }))),
                 particles.map(p => React.createElement('div', { key: p.id, className: "absolute pointer-events-none animate-ping z-50", style: { left: `${p.x}%`, top: `${p.y}%`, fontSize: `${p.size}px` } }, p.emoji)),
                 ninjaStars.map(s => React.createElement('div', { key: s.id, className: "absolute pointer-events-none z-50", style: { left: `${s.x}%`, top: `${s.y}%`, animation: `spinStar ${s.speed}s linear infinite, fadeOut 2s forwards` } }, React.createElement(Swords, { size: s.size, className: "text-red-500 shadow-[0_0_15px_red]" }))),
                 beyblades.map(b => React.createElement('div', { key: b.id, className: "absolute pointer-events-none z-50", style: { left: `${b.x}%`, top: `${b.y}%`, animation: 'spinBeyblade 0.3s linear infinite, fadeOut 2.5s forwards' } }, React.createElement(Hexagon, { size: b.size, className: "text-blue-500 shadow-[0_0_15px_blue]" }))),
@@ -549,7 +483,6 @@
                 explosions.map(e => React.createElement('div', { key: e.id, className: "absolute pointer-events-none z-50", style: { left: `${e.x}%`, top: `${e.y}%`, fontSize: `${e.size}px`, animation: 'explode 1s forwards' } }, '💥')),
                 lightning.map(l => React.createElement('div', { key: l.id, className: "absolute pointer-events-none z-50 w-1 bg-yellow-300 shadow-[0_0_20px_yellow]", style: { left: `${l.x}%`, top: 0, height: '100%', animation: 'lightning 0.2s forwards', animationDelay: `${l.delay}ms` } })),
 
-                // Special Overlays
                 comboCount > 0 && React.createElement('div', { className: "fixed top-1/4 right-8 z-50 animate-bounce" },
                     React.createElement('div', { className: "bg-gradient-to-r from-orange-500 to-pink-500 border-4 border-yellow-300 rounded-3xl px-8 py-6 shadow-2xl" },
                         React.createElement('div', { className: "text-6xl font-black" }, `${comboCount}x`),
@@ -557,7 +490,6 @@
                     )
                 ),
 
-                // Header
                 React.createElement('header', { className: "bg-gradient-to-r from-green-800 via-emerald-700 to-green-800 p-8 rounded-[2.5rem] shadow-2xl mb-8 flex flex-col md:flex-row justify-between items-center border-b-8 border-green-950" },
                     React.createElement('div', null,
                         React.createElement('h1', { className: "text-4xl md:text-5xl font-black italic flex items-center gap-4 drop-shadow-2xl" },
@@ -571,9 +503,8 @@
                     )
                 ),
 
-                // Vaults Section (Split)
+                // Vaults
                 React.createElement('section', { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" },
-                    // Max Vault
                     React.createElement('div', { className: `bg-purple-900/40 border-4 border-purple-500 rounded-[2.5rem] p-6 shadow-2xl relative ${shakeVault.max ? 'animate-shake' : ''}` },
                          React.createElement('div', { className: "absolute -top-4 -left-4 bg-purple-600 text-white font-black px-4 py-2 rounded-xl rotate-[-5deg] border-2 border-white" }, "MAX"),
                          React.createElement('div', { className: "flex justify-between items-end mb-2" },
@@ -584,7 +515,6 @@
                             React.createElement('div', { className: "h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-1000", style: { width: `${maxProgress}%` } })
                          )
                     ),
-                    // Ari Vault
                     React.createElement('div', { className: `bg-orange-900/40 border-4 border-orange-500 rounded-[2.5rem] p-6 shadow-2xl relative ${shakeVault.ari ? 'animate-shake' : ''}` },
                          React.createElement('div', { className: "absolute -top-4 -right-4 bg-orange-600 text-white font-black px-4 py-2 rounded-xl rotate-[5deg] border-2 border-white" }, "ARI"),
                          React.createElement('div', { className: "flex justify-between items-end mb-2" },
@@ -597,7 +527,7 @@
                     )
                 ),
 
-                // Creature Comforts (Shared Tasks)
+                // Creature Comforts
                 React.createElement('section', { className: "bg-blue-900/30 border-4 border-blue-400 rounded-[2.5rem] p-8 shadow-2xl mb-8 relative overflow-hidden" },
                     React.createElement('div', { className: "absolute top-0 right-0 p-4 opacity-20" }, React.createElement(Heart, { size: 100, className: "text-blue-300" })),
                     React.createElement('h2', { className: "text-2xl font-black mb-6 flex items-center gap-3 text-blue-100 uppercase tracking-wider" }, 
@@ -605,15 +535,18 @@
                     ),
                     
                     React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-6" },
-                        // Fish Card
-                        React.createElement('div', { className: "bg-black/40 rounded-3xl p-5 border-2 border-blue-500/30 backdrop-blur-sm" },
+                        // Fish
+                        React.createElement('div', { className: "bg-black/40 rounded-3xl p-5 border-2 border-blue-500/30 backdrop-blur-sm relative overflow-hidden" },
+                             isFishFedToday && React.createElement(CheckCircle2, { size: 80, className: "absolute -right-4 -bottom-4 text-green-500/20" }),
                             React.createElement('div', { className: "flex justify-between items-start mb-4" },
                                 React.createElement('div', { className: "text-xl font-black text-blue-200" }, "The Fish"),
-                                React.createElement('div', { className: `text-[10px] font-black uppercase px-2 py-1 rounded ${isFishHungry ? 'bg-red-500 animate-pulse' : 'bg-green-500'}` }, 
-                                    isFishHungry ? "Hungry!" : "Full"
+                                React.createElement('div', { className: `text-[10px] font-black uppercase px-2 py-1 rounded flex items-center gap-1 ${!isFishFedToday ? 'bg-red-500 animate-pulse' : 'bg-green-500'}` }, 
+                                    isFishFedToday ? React.createElement(React.Fragment, null, "Fed ", React.createElement(CheckCircle2, { size: 12 })) : "Hungry!"
                                 )
                             ),
-                            React.createElement('p', { className: "text-xs text-blue-300 mb-4 opacity-70" }, "Needs feeding every 2nd day."),
+                            React.createElement('p', { className: "text-xs text-blue-300 mb-4 opacity-70 font-bold" }, 
+                                isFishFedToday ? "Fish are full! No food needed tomorrow." : "Needs feeding every 2nd day."
+                            ),
                             React.createElement('div', { className: "flex gap-2" },
                                 React.createElement('button', { onClick: () => feedFish('Max'), className: "flex-1 bg-purple-700 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
                                 React.createElement('button', { onClick: () => feedFish('Ari'), className: "flex-1 bg-orange-700 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
@@ -623,29 +556,29 @@
                         React.createElement('div', { className: "bg-black/40 rounded-3xl p-5 border-2 border-slate-500/30 backdrop-blur-sm" },
                             React.createElement('div', { className: "flex justify-between items-start mb-4" },
                                 React.createElement('div', { className: "text-xl font-black text-slate-200" }, "Monty"),
-                                dogState.montyFedToday && React.createElement(CheckCircle2, { className: "text-green-500" })
+                                React.createElement('div', { className: "text-[10px] font-black uppercase bg-slate-700 px-2 py-1 rounded" }, `${dogState.monty}/2 Fed`)
                             ),
                             React.createElement('div', { className: "flex gap-2" },
-                                React.createElement('button', { disabled: dogState.montyFedToday, onClick: () => feedDog('Monty', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
-                                React.createElement('button', { disabled: dogState.montyFedToday, onClick: () => feedDog('Monty', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
+                                React.createElement('button', { disabled: dogState.monty >= 2, onClick: () => feedDog('Monty', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
+                                React.createElement('button', { disabled: dogState.monty >= 2, onClick: () => feedDog('Monty', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
                             )
                         ),
                         // Liath
                         React.createElement('div', { className: "bg-black/40 rounded-3xl p-5 border-2 border-slate-500/30 backdrop-blur-sm" },
                             React.createElement('div', { className: "flex justify-between items-start mb-4" },
                                 React.createElement('div', { className: "text-xl font-black text-slate-200" }, "Liath"),
-                                dogState.liathFedToday && React.createElement(CheckCircle2, { className: "text-green-500" })
+                                React.createElement('div', { className: "text-[10px] font-black uppercase bg-slate-700 px-2 py-1 rounded" }, `${dogState.liath}/2 Fed`)
                             ),
                             React.createElement('div', { className: "flex gap-2" },
-                                React.createElement('button', { disabled: dogState.liathFedToday, onClick: () => feedDog('Liath', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
-                                React.createElement('button', { disabled: dogState.liathFedToday, onClick: () => feedDog('Liath', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
+                                React.createElement('button', { disabled: dogState.liath >= 2, onClick: () => feedDog('Liath', 'Max'), className: "flex-1 bg-purple-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-purple-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Max"),
+                                React.createElement('button', { disabled: dogState.liath >= 2, onClick: () => feedDog('Liath', 'Ari'), className: "flex-1 bg-orange-700 disabled:bg-slate-800 disabled:opacity-50 hover:bg-orange-600 py-2 rounded-xl text-xs font-black uppercase transition-colors" }, "+50c Ari")
                             )
                         )
                     )
                 ),
 
                 // Main Quests
-                React.createElement('main', { className: "grid grid-cols-1 lg:grid-cols-2 gap-8" },
+                React.createElement('main', { className: "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8" },
                     [
                         { boy: 'Max', chores: maxChores, color: 'purple', icon: Pizza, vault: maxVault },
                         { boy: 'Ari', chores: ariChores, color: 'orange', icon: Bomb, vault: ariVault }
@@ -668,10 +601,38 @@
                         )
                     ))
                 ),
+                
+                // --- TOOTH CHECK SECTION ---
+                React.createElement('section', { className: "bg-slate-900 border-4 border-slate-700 rounded-[2.5rem] p-6 shadow-2xl mb-8" },
+                     React.createElement('div', { className: "flex flex-col md:flex-row items-center justify-between gap-6" },
+                        React.createElement('div', { className: "flex items-center gap-4" },
+                            React.createElement('div', { className: "w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center animate-pulse" }, React.createElement(Stethoscope, { size: 24 })),
+                            React.createElement('div', null,
+                                React.createElement('h3', { className: "text-xl font-black uppercase italic" }, "Tooth Fairy Inspection"),
+                                React.createElement('p', { className: "text-xs text-slate-400" }, "Check 7-day record: €1 for 1x/day, €3 for 2x/day!")
+                            )
+                        ),
+                        React.createElement('button', { onClick: runToothInspection, disabled: inspecting, className: "bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-8 rounded-2xl uppercase tracking-widest flex items-center gap-2 shadow-xl active:scale-95 transition-all disabled:opacity-50" },
+                            inspecting ? React.createElement(React.Fragment, null, React.createElement(Stethoscope, { className: "animate-spin" }), " Inspecting...") : "Run Inspection"
+                        )
+                     ),
+                     inspectionResult && React.createElement('div', { className: "mt-6 grid grid-cols-2 gap-4" },
+                         React.createElement('div', { className: "bg-purple-900/50 p-4 rounded-xl border border-purple-500/30" },
+                             React.createElement('div', { className: "font-black text-purple-300 uppercase mb-1" }, "Max"),
+                             React.createElement('div', { className: "text-xs text-slate-400" }, `7-Day Hits: ${inspectionResult.max.hits}`),
+                             React.createElement('div', { className: "text-xs text-slate-400" }, `7-Day Doubles: ${inspectionResult.max.doubles}`),
+                             React.createElement('div', { className: "text-xl text-yellow-400 font-black mt-2" }, `+ €${inspectionResult.max.reward}`)
+                         ),
+                         React.createElement('div', { className: "bg-orange-900/50 p-4 rounded-xl border border-orange-500/30" },
+                             React.createElement('div', { className: "font-black text-orange-300 uppercase mb-1" }, "Ari"),
+                             React.createElement('div', { className: "text-xs text-slate-400" }, `7-Day Hits: ${inspectionResult.ari.hits}`),
+                             React.createElement('div', { className: "text-xs text-slate-400" }, `7-Day Doubles: ${inspectionResult.ari.doubles}`),
+                             React.createElement('div', { className: "text-xl text-yellow-400 font-black mt-2" }, `+ €${inspectionResult.ari.reward}`)
+                         )
+                     )
+                ),
 
-                // Footer Actions
                 React.createElement('footer', { className: "mt-12 space-y-6" },
-                    // Power-Up Mission
                     React.createElement('div', { className: `bg-gradient-to-r ${powerUpClaimed ? 'from-green-600 to-emerald-600' : 'from-red-600 to-orange-600'} rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between border-b-8 shadow-2xl transition-all gap-4` },
                         React.createElement('div', { className: "flex items-center gap-6" },
                             React.createElement(Gift, { size: 40, className: "animate-bounce" }),
@@ -684,7 +645,6 @@
                             powerUpClaimed ? "LOOTED" : "CLAIM BONUS"
                         )
                     ),
-
                     React.createElement('div', { className: "text-center" },
                          React.createElement('button', { onClick: unleashUltimatePower, className: "text-slate-600 text-xs font-black hover:text-white transition-colors uppercase tracking-widest" },
                             "🌟 Summon Magic 🌟"
@@ -699,4 +659,5 @@
     </script>
 </body>
 </html>
+
 
