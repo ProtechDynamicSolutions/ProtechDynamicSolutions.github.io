@@ -151,7 +151,7 @@
             };
 
             useEffect(() => {
-                debug("Waking Elves...");
+                debug("Running...");
                 const safety = setTimeout(() => hideLoader(), 5000);
                 signInAnonymously(auth).catch(() => { setCloudStatus("offline"); hideLoader(); });
                 onAuthStateChanged(auth, (u) => { if (u) setUser(u); else hideLoader(); });
