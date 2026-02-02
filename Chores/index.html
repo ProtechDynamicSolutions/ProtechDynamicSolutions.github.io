@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adventure HQ - Max & Ari</title>
+    <!-- The Magic Broom Icon for the App -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧹</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
@@ -18,6 +20,12 @@
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes explode { 0% { transform: scale(0) rotate(0deg); opacity: 1; } 50% { transform: scale(2) rotate(180deg); opacity: 1; } 100% { transform: scale(4) rotate(360deg); opacity: 0; } }
         @keyframes lightning { 0% { opacity: 0; transform: scaleY(0); } 10% { opacity: 1; transform: scaleY(1); } 20% { opacity: 0; } 100% { opacity: 0; } }
+        
+        @keyframes introSpin {
+            0% { transform: rotate(-180deg) scale(0); opacity: 0; }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+        .animate-intro-spin { animation: introSpin 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
         body { margin: 0; background-color: #020617; color: white; font-family: sans-serif; overflow-x: hidden; }
         
@@ -319,7 +327,10 @@
                 particles.map(p => React.createElement('div', { key: p.id, className: "absolute pointer-events-none animate-ping z-50 text-2xl", style: { left: `${p.x}%`, top: `${p.y}%` } }, p.emoji)),
 
                 React.createElement('header', { className: "bg-gradient-to-r from-emerald-800 to-emerald-900 p-8 rounded-[3rem] shadow-2xl mb-12 flex flex-col items-center border-b-8 border-emerald-950 text-center" },
-                    React.createElement(Shield, { size: 64, className: "text-yellow-400 mb-6 animate-float" }),
+                    React.createElement('div', { className: "relative mb-6 animate-intro-spin" },
+                        React.createElement(Shield, { size: 80, className: "text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" }),
+                        React.createElement(Sword, { size: 36, className: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-emerald-950 rotate-45" })
+                    ),
                     React.createElement('h1', { className: "text-5xl md:text-6xl font-black italic tracking-tighter drop-shadow-lg uppercase" }, "Adventure HQ"),
                     React.createElement('p', { className: "text-emerald-300 text-xs font-black uppercase tracking-[0.4em] mt-2 opacity-80" }, "Max & Ari's Command Centre"),
                     React.createElement('div', { className: "mt-6 px-8 py-3 bg-black/40 rounded-full border border-white/10 backdrop-blur-md" },
@@ -385,8 +396,8 @@
                 React.createElement('section', { className: `rounded-[3rem] p-10 border-4 transition-all duration-500 shadow-2xl mb-12 ${isWeekend ? 'bg-indigo-900/40 border-indigo-400' : 'bg-slate-900/30 border-slate-800'}` },
                     React.createElement('div', { className: "flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left" },
                         React.createElement('div', { className: "flex flex-col md:flex-row items-center gap-6" },
-                            React.createElement('div', { className: `w-20 h-20 rounded-3xl flex items-center justify-center ${isWeekend ? 'bg-indigo-500 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.5)]' : 'bg-slate-800'}` }, 
-                                React.createElement(Stethoscope, { size: 40, className: isWeekend ? 'text-white' : 'text-slate-600' })
+                            React.createElement('div', { className: `w-20 h-20 rounded-3xl flex items-center justify-center text-4xl shadow-lg transition-all ${isWeekend ? 'bg-white scale-110 animate-wiggle' : 'bg-slate-800 grayscale'}` }, 
+                                "🦷"
                             ),
                             React.createElement('div', null,
                                 React.createElement('h3', { className: `text-3xl font-black uppercase italic mb-1 ${isWeekend ? 'text-white' : 'text-slate-500'}` }, "Tooth Fairy Inspection"),
@@ -437,9 +448,7 @@
                     ))
                 ),
 
-                // BONUS QUESTS (LEGO & CHESS)
                 React.createElement('footer', { className: "mt-12 grid grid-cols-1 md:grid-cols-2 gap-6" },
-                    // Lego Bonus
                     React.createElement('div', { className: `bg-gradient-to-r ${powerUpClaimed ? 'from-green-600 to-emerald-600' : 'from-amber-500 to-orange-600'} rounded-[3rem] p-8 flex flex-col items-center border-b-8 border-black/30 shadow-2xl gap-6` },
                         React.createElement('div', { className: "flex flex-col items-center text-center" },
                             React.createElement('div', { className: "p-4 bg-white/20 rounded-[2rem] shadow-inner mb-4" }, React.createElement(Box, { size: 40, className: "animate-bounce" })),
@@ -450,7 +459,6 @@
                             powerUpClaimed ? "COMPLETE" : "CLAIM BONUS"
                         )
                     ),
-                    // Chess Bonus
                     React.createElement('div', { className: `bg-gradient-to-r ${chessBonusClaimed ? 'from-green-600 to-emerald-600' : 'from-blue-500 to-indigo-600'} rounded-[3rem] p-8 flex flex-col items-center border-b-8 border-black/30 shadow-2xl gap-6` },
                         React.createElement('div', { className: "flex flex-col items-center text-center" },
                             React.createElement('div', { className: "p-4 bg-white/20 rounded-[2rem] shadow-inner mb-4" }, React.createElement(Trophy, { size: 40, className: "animate-float" })),
