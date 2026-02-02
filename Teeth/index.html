@@ -3,41 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beyblade Tooth Battle Tracker</title>
+    <title>Tooth Battle HQ</title>
+    <!-- Tooth Favicon for the Browser App -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦷</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Compat versions for maximum reliability) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin-fast { animation: spin 0.2s linear infinite; }
-        .animate-spin-slow { animation: spin 3s linear infinite; }
-        @keyframes launchUp { 0% { transform: translateY(100vh) scale(0.5); opacity: 1; } 100% { transform: translateY(-20vh) scale(1.5); opacity: 0; } }
-        .animate-launch-up { animation: launchUp 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.5s; }
+        @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+        .animate-wiggle { animation: wiggle 0.5s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        @keyframes spin-fast { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-fast { animation: spin-fast 0.4s linear infinite; }
+        @keyframes launch-up { 0% { transform: translateY(100vh) scale(0.5); opacity: 1; } 100% { transform: translateY(-20vh) scale(1.5); opacity: 0; } }
+        .animate-launch-up { animation: launch-up 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes introSpin {
+            0% { transform: rotate(-180deg) scale(0); opacity: 0; }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+        .animate-intro-spin { animation: introSpin 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-        body { background-color: #0f172a; color: #f8fafc; margin: 0; font-family: ui-sans-serif, system-ui; -webkit-tap-highlight-color: transparent; }
-        #loading-arena { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0f172a; z-index: 9999; transition: opacity 0.5s ease; }
+        body { background-color: #020617; color: white; margin: 0; font-family: sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        #loading-arena { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #020617; z-index: 9999; transition: opacity 0.5s ease; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     </style>
 </head>
 <body>
+    <!-- Technical Loader -->
     <div id="loading-arena">
-        <div style="width: 50px; height: 50px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
-        <p style="margin-top: 20px; font-weight: 900; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;">Initialising Stadium...</p>
+        <div style="width: 60px; height: 60px; border: 4px solid #22d3ee; border-top-color: transparent; border-radius: 50%;" class="animate-spin-fast"></div>
+        <p style="margin-top: 24px; font-weight: 900; color: #22d3ee; text-transform: uppercase; letter-spacing: 0.2em; font-size: 14px;" class="animate-pulse">Connecting to Arena...</p>
         <p id="error-log" style="color: #ef4444; font-size: 10px; margin-top: 15px; font-family: monospace; text-align: center;"></p>
     </div>
 
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
-        // --- PASTE YOUR FIREBASE CONFIG HERE ---
         const firebaseConfig = {
             apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
             authDomain: "teeth2-3f73e.firebaseapp.com",
@@ -56,8 +73,10 @@
         const DownloadIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>);
         const CloudIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19a5.5 5.5 0 0 0 5.5-5.5c0-3.04-2.46-5.5-5.5-5.5-.32 0-.64.03-.96.08a8 8 0 1 0-14.54 4.04"/><path d="M12 12v9"/><path d="m15 18-3 3-3-3"/></svg>);
         const DiscIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>);
-        const HistoryIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>);
+        const ChevronLeftIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>);
+        const ShieldIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>);
 
+        // --- Bey Graphics ---
         const BlueDiamondIcon = ({ className, spinning }) => (
             <svg viewBox="0 0 100 100" className={`${className} ${spinning ? 'animate-spin-fast' : ''}`}>
                 <defs>
@@ -66,8 +85,6 @@
                 </defs>
                 <path d="M50 2 L65 15 L85 10 L80 30 L98 50 L80 70 L85 90 L65 85 L50 98 L35 85 L15 90 L20 70 L2 50 L20 30 L15 10 L35 15 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="2" opacity="0.9"/>
                 <circle cx="50" cy="50" r="32" fill="#dc2626" stroke="#991b1b" strokeWidth="2" />
-                <path d="M20 35 L35 35 L30 65 L20 65 Z" fill="url(#silverGrad)" stroke="#4b5563" strokeWidth="1" />
-                <path d="M80 35 L65 35 L70 65 L80 65 Z" fill="url(#silverGrad)" stroke="#4b5563" strokeWidth="1" />
                 <path d="M50 25 L65 40 L50 75 L35 40 Z" fill="url(#goldGrad)" stroke="#b45309" strokeWidth="1" />
                 <circle cx="50" cy="45" r="6" fill="#1e3a8a" stroke="#60a5fa" strokeWidth="2" />
             </svg>
@@ -86,8 +103,8 @@
         );
 
         const USERS = {
-            MAX: { id: 'max', name: 'Max', color: 'bg-blue-600', borderColor: 'border-yellow-400', text: 'text-blue-100', Graphic: BlueDiamondIcon, beyName: 'Blue Diamond' },
-            ARI: { id: 'ari', name: 'Ari', color: 'bg-red-600', borderColor: 'border-stone-900', text: 'text-red-100', Graphic: BellFireIcon, beyName: 'Bell Fire' }
+            MAX: { id: 'max', name: 'Max', color: 'bg-blue-600', text: 'text-blue-100', Graphic: BlueDiamondIcon, beyName: 'Blue Diamond' },
+            ARI: { id: 'ari', name: 'Ari', color: 'bg-red-600', text: 'text-red-100', Graphic: BellFireIcon, beyName: 'Bell Fire' }
         };
 
         const formatDateKey = (date) => date.toISOString().split('T')[0];
@@ -104,31 +121,37 @@
             const [isSyncing, setIsSyncing] = useState(true);
             const [showHistory, setShowHistory] = useState(false);
 
+            const hideLoader = useCallback(() => {
+                const loader = document.getElementById('loading-arena');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }, []);
+
             useEffect(() => {
                 const initArena = async () => {
                     if (!window.firebase) return;
                     try {
-                        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-                        const auth = firebase.auth();
-                        const firestore = firebase.firestore();
+                        const fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+                        const auth = fbApp.auth();
+                        const firestore = fbApp.firestore();
                         setDb(firestore);
                         await auth.signInAnonymously();
                         auth.onAuthStateChanged(u => {
                             if (u) {
                                 setUser(u);
-                                const loader = document.getElementById('loading-arena');
-                                if (loader) {
-                                    loader.style.opacity = '0';
-                                    setTimeout(() => loader.style.display = 'none', 500);
-                                }
                             }
                         });
                     } catch (e) {
-                        document.getElementById('error-log').innerText = "Launch Failure: " + e.message;
+                        document.getElementById('error-log').innerText = "System Failure: " + e.message;
                     }
                 };
                 initArena();
-            }, []);
+                // Safety timer for loader
+                const safety = setTimeout(() => hideLoader(), 5000);
+                return () => clearTimeout(safety);
+            }, [hideLoader]);
 
             useEffect(() => {
                 if (!db || !user) return;
@@ -136,9 +159,13 @@
                 const unsub = docRef.onSnapshot(snap => {
                     if (snap.exists) setLogs(snap.data());
                     setIsSyncing(false);
-                }, (err) => setIsSyncing(false));
+                    hideLoader();
+                }, (err) => {
+                    setIsSyncing(false);
+                    hideLoader();
+                });
                 return () => unsub();
-            }, [db, user]);
+            }, [db, user, hideLoader]);
 
             const saveLog = async (updated) => {
                 if (!db || !user) return;
@@ -156,7 +183,6 @@
                 if (checked) {
                     const now = new Date();
                     const isToday = formatDateKey(now) === formatDateKey(dateObj);
-                    // Reward Hype Check: Thursday Evening
                     const isThuHype = dateObj.getDay() === 4 && now.getHours() >= 17;
                     
                     setCelebration(isThuHype ? 'thursday' : 'standard');
@@ -168,9 +194,8 @@
             };
 
             const stats = useMemo(() => {
-                if (!currentUser) return { streak: 0, fullPerfect: false };
-                let streak = 0;
-                let perfectDays = 0;
+                if (!currentUser) return { streak: 0, perfectDays: 0, fullPerfect: false };
+                let streak = 0; let perfectDays = 0;
                 const today = new Date();
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(); d.setDate(today.getDate() - i);
@@ -186,99 +211,89 @@
             if (!user) return null;
 
             const isFriday = new Date().getDay() === 5;
-            // Reward is ready if it's Friday AND they have a high streak,
-            // OR if it's Thursday night and they've just finished their PM brush.
             const rewardReadyToClaim = isFriday && stats.streak >= 6;
 
             return (
-                <div className="min-h-screen relative overflow-x-hidden p-4 md:p-8">
-                    <div className="fixed inset-0 pointer-events-none opacity-20" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
+                <div className="min-h-screen relative p-4 md:p-8 flex flex-col items-center">
+                    <div className="fixed inset-0 pointer-events-none opacity-10" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
                     
                     {celebration && (
                         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
                             {Array.from({ length: 30 }).map((_, i) => (
                                 <div key={i} className="absolute bottom-0 animate-launch-up" style={{left: `${Math.random() * 100}%`, animationDuration: `${1 + Math.random() * 2}s`}}>
-                                    {celebration === 'thursday' ? <div className="text-3xl animate-spin-slow">🍕</div> : (i % 3 === 0 ? <ZapIcon className="w-8 h-8 text-yellow-300" fill="currentColor" /> : <div className="text-2xl">🦷</div>)}
+                                    {celebration === 'thursday' ? "🍕" : "🦷"}
                                 </div>
                             ))}
                         </div>
                     )}
 
                     {showThursdayPopup && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                            <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-8 text-center border-4 border-yellow-400 shadow-2xl relative max-w-sm">
-                                <button onClick={() => setShowThursdayPopup(false)} className="absolute top-4 right-4 text-white/50 hover:text-white"><XIcon size={24} /></button>
-                                <h2 className="text-3xl font-black text-yellow-300 mb-2 uppercase italic tracking-tighter">MISSION COMPLETE!</h2>
-                                <div className="text-8xl mb-4 animate-bounce">🍕🍫</div>
-                                <p className="text-lg font-bold text-white mb-6 uppercase tracking-tighter leading-tight">Last battle of Thursday finished!<br/><span className="text-yellow-400">Friday Reward Unlocked!</span></p>
-                                <button onClick={() => setShowThursdayPopup(false)} className="bg-yellow-500 text-black font-black py-3 px-8 skew-x-[-10deg] shadow-[5px_5px_0px_#1e3a8a]">AWESOME!</button>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+                            <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-[3rem] p-10 text-center border-4 border-yellow-400 shadow-2xl relative max-w-sm">
+                                <h2 className="text-4xl font-black text-yellow-300 mb-4 italic tracking-tighter uppercase">BATTLE COMPLETE!</h2>
+                                <div className="text-8xl mb-6 animate-bounce text-center">🍕</div>
+                                <p className="text-lg font-black text-white mb-8 uppercase tracking-tighter leading-tight">Last battle of Thursday finished!<br/><span className="text-yellow-400 font-bold">Friday Reward Unlocked!</span></p>
+                                <button onClick={() => setShowThursdayPopup(false)} className="bg-yellow-500 text-black font-black py-4 px-10 rounded-2xl shadow-[5px_5px_0px_#1e3a8a] active:translate-y-1 transition-all">AWESOME!</button>
                             </div>
                         </div>
                     )}
 
-                    {showReward && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-                            <div className="bg-slate-800 rounded-2xl p-8 text-center border-y-8 border-yellow-500 shadow-2xl max-w-sm relative overflow-hidden">
-                                {stats.fullPerfect && <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 animate-pulse"></div>}
-                                <h2 className="text-5xl font-black text-white mb-4 italic uppercase tracking-tighter">BURST FINISH!</h2>
-                                <div className="text-8xl my-8 animate-bounce">🏆🍫</div>
-                                {stats.fullPerfect && <p className="text-yellow-400 font-black text-xs uppercase tracking-[0.3em] mb-4">✨ 2x Brush Daily Bonus Active! ✨</p>}
-                                <button onClick={() => setShowReward(false)} className="w-full bg-red-600 text-white font-black py-4 rounded-xl text-2xl border-b-4 border-red-800 active:border-0 transition-all">CLAIM REWARD</button>
-                            </div>
+                    <header className="w-full max-w-2xl bg-gradient-to-r from-emerald-800 to-emerald-900 p-10 rounded-[3rem] shadow-2xl mb-12 flex flex-col items-center border-b-8 border-emerald-950 text-center relative overflow-hidden">
+                        <div className="relative mb-6 animate-intro-spin">
+                            <ShieldIcon className="w-20 h-20 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">🦷</span>
                         </div>
-                    )}
-
-                    <header className="text-center mb-10">
-                        <div className="flex justify-center mb-2">
-                             {isSyncing ? <span className="text-[10px] text-yellow-500 animate-pulse uppercase font-mono tracking-widest">Linking Stadium...</span> : <div className="flex items-center gap-1 text-[10px] text-green-500 uppercase font-mono tracking-widest"><CloudIcon className="w-3 h-3" /> Stadium Linked</div>}
+                        <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter drop-shadow-lg uppercase">Tooth Battle Stadium</h1>
+                        <p className="text-emerald-300 text-xs font-black uppercase tracking-[0.4em] mt-2 opacity-80">Max & Ari's Command Centre</p>
+                        <div className="mt-6 px-8 py-3 bg-black/40 rounded-full border border-white/10 backdrop-blur-md flex items-center gap-3">
+                            {isSyncing ? <ZapIcon className="text-yellow-500 animate-pulse w-4 h-4" fill="currentColor" /> : <CloudIcon className="text-cyan-400 w-4 h-4" />}
+                            <span className="text-xs font-black uppercase tracking-widest text-slate-300">{isSyncing ? "Connecting..." : "Arena Synchronised"}</span>
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-white italic uppercase tracking-tighter transform -skew-x-6">BEYBLADE BURST</h1>
-                        <h2 className="text-xl font-bold text-red-500 uppercase tracking-[0.4em] mt-2">Tooth Battle</h2>
                     </header>
 
                     {!currentUser ? (
-                        <div className="flex flex-wrap justify-center gap-10 mt-12 animate-in fade-in duration-500">
-                            {Object.values(USERS).map(user => {
-                                const BeyGraphic = user.Graphic;
-                                return (
-                                    <button key={user.id} onClick={() => setCurrentUser(user)} className={`relative w-44 h-44 rounded-full ${user.color} border-4 border-white/20 hover:scale-110 active:scale-95 transition-all shadow-2xl p-2`}>
-                                        <BeyGraphic className="w-full h-full" spinning={false} />
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded text-[10px] font-bold uppercase text-white border border-white/10 whitespace-nowrap">{user.beyName}</div>
-                                    </button>
-                                );
-                            })}
+                        <div className="flex flex-wrap justify-center gap-12 mt-4 animate-in fade-in duration-700">
+                            {Object.values(USERS).map(u => (
+                                <button key={u.id} onClick={() => setCurrentUser(u)} className="group relative flex flex-col items-center">
+                                    <div className={`w-48 h-48 rounded-full ${u.color} border-8 border-white/10 group-hover:border-white/40 transition-all group-hover:scale-110 shadow-2xl p-6 flex items-center justify-center overflow-hidden`}>
+                                        <u.Graphic className="w-full h-full" spinning={false} />
+                                    </div>
+                                    <div className="mt-4 bg-black/60 px-8 py-3 rounded-2xl border border-white/10 text-sm font-black uppercase italic tracking-widest text-white group-hover:bg-white group-hover:text-black transition-colors uppercase">{u.beyName}</div>
+                                </button>
+                            ))}
                         </div>
                     ) : (
-                        <div className="max-w-2xl mx-auto">
-                            <div className="flex items-center justify-between mb-8 bg-slate-900/80 p-4 rounded-xl border border-white/10 shadow-lg">
-                                <button onClick={() => setCurrentUser(null)} className="text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:text-white transition-colors">← Eject</button>
-                                <div className="flex items-center gap-4 text-right">
-                                    <div>
-                                        <div className={`font-black text-2xl uppercase italic ${currentUser.text}`}>{currentUser.name}</div>
-                                        <div className="text-[10px] text-gray-500 font-mono uppercase tracking-tighter">Perfect Battles: {stats.perfectDays}/7</div>
+                        <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                            <div className="flex items-center justify-between bg-slate-900/80 p-6 rounded-[2.5rem] border-4 border-white/5 shadow-2xl backdrop-blur-md">
+                                <button onClick={() => setCurrentUser(null)} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors">
+                                    <ChevronLeftIcon className="w-6 h-6" /><span className="text-xs font-black uppercase tracking-widest">Eject</span>
+                                </button>
+                                <div className="flex items-center gap-5">
+                                    <div className="text-right">
+                                        <div className={`text-3xl font-black italic uppercase ${currentUser.text}`}>{currentUser.name}</div>
+                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Perfect Battles: {stats.perfectDays}/7</div>
                                     </div>
-                                    <div className="w-12 h-12 bg-slate-800 rounded-full p-1 border-2 border-white/10">
-                                        {(() => { const HeaderGraphic = currentUser.Graphic; return <HeaderGraphic className="w-full h-full" />; })()}
+                                    <div className={`w-14 h-14 ${currentUser.color} rounded-full border-2 border-white/20 p-2 shadow-inner`}>
+                                        <currentUser.Graphic className="w-full h-full" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-800/50 rounded-[3rem] p-8 border-4 border-gray-700 shadow-2xl relative mb-8">
-                                <div className="grid grid-cols-2 gap-6">
+                            <div className="bg-slate-900 border-4 border-slate-800 rounded-[3rem] p-10 shadow-2xl">
+                                <div className="grid grid-cols-2 gap-8 text-center">
                                     {['am', 'pm'].map(slot => {
                                         const done = logs[`${currentUser.id}-${formatDateKey(new Date())}-${slot}`];
-                                        const SlotGraphic = currentUser.Graphic;
                                         return (
-                                            <button key={slot} onClick={() => toggleBurst(currentUser.id, new Date(), slot)} className={`relative h-44 md:h-48 rounded-full border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 ${done ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)]' : 'bg-gray-700 border-gray-600 shadow-lg'}`}>
+                                            <button key={slot} onClick={() => toggleBurst(currentUser.id, new Date(), slot)} className={`relative h-56 rounded-[2.5rem] border-8 transition-all flex flex-col items-center justify-center overflow-hidden active:scale-95 group ${done ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-200 shadow-[0_0_40px_rgba(250,204,21,0.4)]' : 'bg-slate-800 border-slate-700'}`}>
                                                 {done ? (
-                                                    <div className="flex flex-col items-center">
-                                                        <SlotGraphic className="w-24 h-24 mb-2" spinning={true} />
-                                                        <span className="font-black text-white uppercase italic tracking-tighter text-xl">BURST!</span>
+                                                    <div className="flex flex-col items-center gap-4">
+                                                        <currentUser.Graphic className="w-28 h-28" spinning={true} />
+                                                        <span className="font-black text-white text-3xl italic uppercase drop-shadow-lg">BURST!</span>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex flex-col items-center text-gray-500">
-                                                        <span className="font-black uppercase text-[10px] tracking-widest mb-2">{slot} Launch</span>
-                                                        <DiscIcon className="w-10 h-10" />
+                                                    <div className="flex flex-col items-center text-slate-600 gap-4">
+                                                        <span className="text-xs font-black uppercase tracking-[0.3em]">{slot} Launch</span>
+                                                        <DiscIcon className="w-16 h-16 opacity-40" />
                                                     </div>
                                                 )}
                                             </button>
@@ -287,55 +302,55 @@
                                 </div>
                             </div>
 
-                            <div className="bg-black/40 rounded-xl p-6 border border-white/10 shadow-inner">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><TrophyIcon className="w-4 h-4 text-yellow-500"/> Tournament Bracket</h3>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setShowHistory(!showHistory)} className={`px-3 py-1 text-[9px] font-black uppercase border border-white/10 rounded flex items-center gap-1 transition-all ${showHistory ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400'}`}>
-                                            <HistoryIcon className="w-3 h-3" /> {showHistory ? 'Current Week' : 'Show 14 Days'}
+                            <div className="bg-black/40 rounded-[2.5rem] p-8 border-4 border-white/5 shadow-inner">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 flex items-center gap-3">
+                                        <TrophyIcon className="text-yellow-500 w-4 h-4" /> Arena Bracket
+                                    </h3>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setShowHistory(!showHistory)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showHistory ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 border border-white/5'}`}>
+                                            History
                                         </button>
-                                        {rewardReadyToClaim && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-1 font-black text-[10px] uppercase animate-bounce shadow-lg skew-x-[-10deg] border-b-2 border-yellow-700">Claim Reward!</button>}
+                                        {rewardReadyToClaim && <button onClick={() => setShowReward(true)} className="bg-yellow-500 text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase shadow-lg animate-bounce">Claim Reward!</button>}
                                     </div>
                                 </div>
-                                <div className={`grid ${showHistory ? 'grid-cols-7 grid-rows-2' : 'grid-cols-7'} gap-3`}>
+                                <div className={`grid ${showHistory ? 'grid-cols-7 grid-rows-2' : 'grid-cols-7'} gap-4`}>
                                     {Array.from({ length: showHistory ? 14 : 7 }).map((_, i) => {
                                         const d = new Date(); const offset = (showHistory ? 13 : 6) - i; d.setDate(d.getDate() - offset);
                                         const k = formatDateKey(d); const isAm = logs[`${currentUser.id}-${k}-am`]; const isPm = logs[`${currentUser.id}-${k}-pm`];
-                                        const DayGraphic = currentUser.Graphic;
                                         return (
-                                            <div key={i} className="flex flex-col items-center gap-1">
-                                                <span className="text-[8px] uppercase font-bold text-gray-600">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
-                                                <div className="w-full aspect-[2/3] flex flex-col gap-1">
-                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'am')} className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer' : 'cursor-default'} ${isAm ? 'bg-blue-500/40 border-blue-400 shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'bg-black/30 border-white/5'}`}>
-                                                        {isAm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
+                                            <div key={i} className="flex flex-col items-center gap-2">
+                                                <span className="text-[9px] font-black uppercase text-slate-600">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
+                                                <div className="w-full space-y-2">
+                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'am')} className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center p-1 ${isAm ? 'bg-blue-500/40 border-blue-400' : 'bg-black/20 border-white/5'}`}>
+                                                        {isAm && <currentUser.Graphic spinning={true} className="w-full h-full" />}
                                                     </div>
-                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'pm')} className={`flex-1 rounded border transition-all flex items-center justify-center overflow-hidden ${adminMode ? 'cursor-pointer' : 'cursor-default'} ${isPm ? 'bg-red-500/40 border-red-400 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : 'bg-black/30 border-white/5'}`}>
-                                                        {isPm && <DayGraphic className="w-full h-full p-0.5" spinning={true} />}
+                                                    <div onClick={() => adminMode && toggleBurst(currentUser.id, d, 'pm')} className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center p-1 ${isPm ? 'bg-red-500/40 border-red-400' : 'bg-black/20 border-white/5'}`}>
+                                                        {isPm && <currentUser.Graphic spinning={true} className="w-full h-full" />}
                                                     </div>
                                                 </div>
                                             </div>
                                         );
                                     })}
                                 </div>
-                                {adminMode && <p className="text-[8px] text-yellow-400 mt-6 text-center uppercase tracking-widest italic font-bold animate-pulse">Referee Mode Active: Adjust history above</p>}
                             </div>
                         </div>
                     )}
 
-                    <footer className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-50">
-                        <div className={`pointer-events-auto flex items-center gap-4 px-6 py-2 transition-all border-t border-white/10 backdrop-blur-md shadow-2xl ${adminMode ? 'bg-red-600 text-white' : 'bg-black/40 text-gray-500 translate-y-1/2 hover:translate-y-0'}`}>
+                    <footer className="fixed bottom-0 left-0 w-full p-6 flex justify-center z-50 pointer-events-none">
+                        <div className={`pointer-events-auto flex items-center gap-6 px-10 py-3 rounded-full border-2 transition-all backdrop-blur-xl shadow-2xl ${adminMode ? 'bg-red-600 border-red-400 text-white' : 'bg-black/80 border-white/10 text-slate-500 opacity-40 hover:opacity-100 translate-y-4 hover:translate-y-0'}`}>
                             {adminMode && (
                                 <button onClick={() => {
                                     let csv = "Date,Blader,Time Slot,Result\n";
                                     Object.keys(logs).sort().forEach(k => { if (logs[k]) { const [u, d, s] = k.split('-'); csv += `${d},${USERS[u.toUpperCase()]?.name || u},${s.toUpperCase()},Burst\n`; } });
                                     const l = document.createElement("a"); l.href = encodeURI("data:text/csv;charset=utf-8," + csv); l.download = "battle_logs.csv"; l.click();
-                                }} className="flex items-center gap-2 border-r border-red-400 pr-4 hover:text-yellow-300 transition-all uppercase text-[9px] font-black tracking-widest">
-                                    <DownloadIcon className="w-3 h-3" /> Export Excel
+                                }} className="flex items-center gap-2 pr-6 border-r border-white/20 hover:text-yellow-400 transition-colors uppercase text-[10px] font-black tracking-widest">
+                                    <DownloadIcon className="w-4 h-4" /> Export
                                 </button>
                             )}
-                            <button onClick={() => setAdminMode(!adminMode)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
-                                {adminMode ? <XIcon className="w-3 h-3" /> : <EditIcon className="w-3 h-3" />}
-                                {adminMode ? 'Exit Referee' : 'WBBA Referee'}
+                            <button onClick={() => setAdminMode(!adminMode)} className="flex items-center gap-2 hover:text-white transition-colors">
+                                {adminMode ? <XIcon className="w-4 h-4" /> : <EditIcon className="w-4 h-4" />}
+                                <span className="text-[10px] font-black uppercase tracking-widest">{adminMode ? 'Exit System' : 'System Access'}</span>
                             </button>
                         </div>
                     </footer>
