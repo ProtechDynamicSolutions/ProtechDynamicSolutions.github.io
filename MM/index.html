@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tractor Tooth Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAfaqcsllmoAcfAVlEHaDq0x337e_Jpz_I",
+            authDomain: "micksheehan-cf86e.firebaseapp.com",
+            projectId: "micksheehan-cf86e",
+            storageBucket: "micksheehan-cf86e.firebasestorage.app",
+            messagingSenderId: "533248084266",
+            appId: "1:533248084266:web:d299483231e17f6e66b653"
+        };
+
+        // Initialize Firebase
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            
+            // Make available to React
+            window.db = db;
+            window.auth = auth;
+            window.firebaseFunctions = { signInAnonymously, onAuthStateChanged, doc, setDoc, onSnapshot, getDoc };
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+        }
+    </script>
+
+    <style>
+        /* John Deere Brand Colors */
+        :root {
+            --jd-green: #367C2B;
+            --jd-yellow: #FFDE00;
+            --mud: #8B4513;
+        }
+
+        body { 
+            background: linear-gradient(to bottom, #87CEEB 0%, #e8f5e9 50%, #8B7355 100%);
+            margin: 0; 
+            font-family: 'Roboto', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        .font-brand { font-family: 'Black Ops One', system-ui; }
+
+        /* Enhanced Tractor Animation */
+        @keyframes driveRight {
+            0% { transform: translateX(-150px) scale(1); }
+            100% { transform: translateX(120vw) scale(1); }
+        }
+        
+        @keyframes driveLeft {
+            0% { transform: translateX(120vw) scaleX(-1); }
+            100% { transform: translateX(-150px) scaleX(-1); }
+        }
+
+        @keyframes wheelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes puff {
+            0% { opacity: 0; transform: scale(0.5) translateY(0); }
+            50% { opacity: 0.8; transform: scale(1.5) translateY(-20px); }
+            100% { opacity: 0; transform: scale(2) translateY(-40px); }
+        }
+
+        @keyframes dustCloud {
+            0% { opacity: 0.6; transform: scale(0.3) translateX(0); }
+            100% { opacity: 0; transform: scale(1.5) translateX(-50px); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+        }
+
+        /* Flying Teeth Animation */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: translateX(-15px) rotate(-10deg); }
+            50% { transform: translateX(15px) rotate(10deg); }
+        }
+
+        .tractor-drive-right { animation: driveRight 4s ease-in-out forwards; }
+        .tractor-drive-left { animation: driveLeft 4s ease-in-out forwards; }
+        .wheel-spin { animation: wheelSpin 0.5s linear infinite; }
+        .smoke-puff { animation: puff 1.2s ease-out forwards; }
+        .dust-cloud { animation: dustCloud 1s ease-out forwards; }
+        .sparkle-pop { animation: sparkle 0.8s ease-out forwards; }
+        
+        /* Enhanced Mud Splatter */
+        .mud-splatter {
+            background-image: 
+                radial-gradient(circle at 20% 30%, #6B4423 8%, transparent 8%),
+                radial-gradient(circle at 60% 70%, #8B4513 12%, transparent 12%),
+                radial-gradient(circle at 80% 20%, #6B4423 6%, transparent 6%),
+                radial-gradient(circle at 40% 80%, #8B4513 10%, transparent 10%),
+                radial-gradient(circle at 10% 60%, #6B4423 7%, transparent 7%),
+                radial-gradient(circle at 90% 50%, #8B4513 9%, transparent 9%),
+                radial-gradient(circle at 30% 40%, #6B4423 5%, transparent 5%);
+            background-size: 100% 100%;
+            opacity: 0.6;
+        }
+
+        .shimmer {
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.8) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes floatCloud {
+            0% { transform: translateX(-10%) translateY(0); }
+            50% { transform: translateX(0%) translateY(-5px); }
+            100% { transform: translateX(-10%) translateY(0); }
+        }
+
+        .cloud { animation: floatCloud 20s ease-in-out infinite; }
+
+        .glow {
+            box-shadow: 0 0 20px rgba(54, 124, 43, 0.5),
+                        0 0 40px rgba(54, 124, 43, 0.3),
+                        inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .tread-marks {
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 5px,
+                rgba(54, 124, 43, 0.15) 5px,
+                rgba(54, 124, 43, 0.15) 8px
+            );
+        }
+
+        .grass-texture {
+            background-image: 
+                linear-gradient(90deg, transparent 90%, rgba(76, 175, 80, 0.3) 90%),
+                linear-gradient(180deg, transparent 85%, rgba(56, 142, 60, 0.3) 85%);
+            background-size: 10px 10px, 10px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- AUDIO ENGINE ---
+        const SoundEngine = {
+            ctx: null,
+            init: function() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') { this.ctx.resume(); }
+            },
+            playStartUp: function() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass'; filter.frequency.value = 300;
+                osc.type = 'triangle'; 
+                osc.frequency.setValueAtTime(30, t); osc.frequency.linearRampToValueAtTime(70, t + 0.5); osc.frequency.linearRampToValueAtTime(45, t + 1.0);
+                const lfo = this.ctx.createOscillator(); const lfoGain = this.ctx.createGain();
+                lfo.type = 'sine'; lfo.frequency.value = 10; lfoGain.gain.value = 200;
+                lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.25, t + 0.1); gain.gain.exponentialRampToValueAtTime(0.01, t + 1.2);
+                osc.start(t); lfo.start(t); osc.stop(t + 1.2); lfo.stop(t + 1.2);
+            },
+            playDriveBy: function() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass'; filter.frequency.value = 250;
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, t); osc.frequency.linearRampToValueAtTime(80, t + 1.5); osc.frequency.linearRampToValueAtTime(40, t + 3.5);
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.2, t + 0.5); gain.gain.setValueAtTime(0.2, t + 2.5); gain.gain.linearRampToValueAtTime(0, t + 4.0);
+                osc.start(t); osc.stop(t + 4.0);
+            },
+            playHonk: function() {
+                this.init();
+                const t = this.ctx.currentTime;
+                [261.63, 329.63].forEach((freq) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.value = freq;
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.15, t + 0.05); gain.gain.linearRampToValueAtTime(0, t + 0.15); gain.gain.linearRampToValueAtTime(0.15, t + 0.25); gain.gain.linearRampToValueAtTime(0, t + 0.4);
+                    osc.start(t); osc.stop(t + 0.5);
+                });
+            }
+        };
+
+        // --- ICONS ---
+        const TractorIcon = ({ className, color, showWheels }) => (
+            <svg viewBox="0 0 120 70" className={className}>
+                <ellipse cx="50" cy="68" rx="40" ry="4" fill="#00000020" />
+                <g className={showWheels ? "wheel-spin" : ""} style={{ transformOrigin: "22px 52px" }}>
+                    <circle cx="22" cy="52" r="16" fill="#1a1a1a" />
+                    <circle cx="22" cy="52" r="14" fill="#2d2d2d" stroke="#1a1a1a" strokeWidth="1" />
+                    <path d="M 22 36 L 22 42" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M 22 62 L 22 68" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="22" cy="52" r="6" fill="#FFDE00" />
+                </g>
+                <g className={showWheels ? "wheel-spin" : ""} style={{ transformOrigin: "88px 56px" }}>
+                    <circle cx="88" cy="56" r="11" fill="#1a1a1a" />
+                    <circle cx="88" cy="56" r="9" fill="#2d2d2d" stroke="#1a1a1a" strokeWidth="1" />
+                    <path d="M 88 45 L 88 49" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M 88 63 L 88 67" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="88" cy="56" r="4" fill="#FFDE00" />
+                </g>
+                <rect x="18" y="48" width="35" height="8" className={color} rx="2" />
+                <path d="M 18 48 L 18 28 L 24 24 L 48 24 L 52 28 L 52 48 Z" className={color} stroke="#2a5e22" strokeWidth="2" />
+                <path d="M 22 28 L 22 32 L 48 32 L 48 28 L 46 26 L 24 26 Z" fill="#87CEEB" stroke="#333" strokeWidth="1.5" opacity="0.8" />
+                <path d="M 52 48 L 52 38 L 56 36 L 90 42 L 92 46 L 88 56 L 80 56 Z" className={color} stroke="#2a5e22" strokeWidth="2" />
+                <rect x="85" y="20" width="6" height="18" fill="#333" rx="1" />
+                <circle cx="92" cy="44" r="3" fill="#FFE57F" stroke="#333" strokeWidth="1" />
+                <path d="M 14 50 Q 10 52 14 54 L 18 54 L 18 50 Z" fill="#2a5e22" opacity="0.6" />
+            </svg>
+        );
+
+        const ToothIcon = ({ className }) => (
+            <svg viewBox="0 0 512 512" className={className}>
+                <path d="M416 192c0-88.4-55.6-160-128-160-52.6 0-97.8 38.6-118.7 92.5C148.4 70.6 103.2 32 50.6 32 22.7 32 0 54.7 0 82.6c0 15 5.9 29.4 16.6 40 10.7 10.6 25 16.6 40 16.6 1.6 0 3.2-.1 4.8-.2 3.8 54.8 24 105.5 57.6 146.4 15.6 19 33.6 35.8 53.6 50.4 14.8 10.8 28 23.5 39.4 37.8 17.6 22 43.5 34.6 71.6 34.6 28.1 0 54-12.7 71.6-34.6 11.4-14.3 24.6-27 39.4-37.8 20-14.6 38-31.4 53.6-50.4 46.2-56.1 71.8-127.3 71.8-199.8z" fill="white" stroke="#367C2B" strokeWidth="10"/>
+                <path d="M350 150 L360 130 L370 150 L390 160 L370 170 L360 190 L350 170 L330 160 Z" fill="#FFDE00"/>
+            </svg>
+        );
+
+        const BarnIcon = ({ className }) => (
+            <svg viewBox="0 0 100 100" className={className}>
+                <ellipse cx="50" cy="92" rx="35" ry="3" fill="#00000020" />
+                <path d="M 15 90 L 15 45 L 50 15 L 85 45 L 85 90 Z" fill="#DC2626" stroke="#991B1B" strokeWidth="2" />
+                <rect x="35" y="60" width="30" height="30" fill="#7C2D12" stroke="#451A03" strokeWidth="2" />
+                <path d="M 38 63 L 47 87" stroke="#92400E" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M 47 63 L 38 87" stroke="#92400E" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="50" cy="40" r="8" fill="#FCD34D" stroke="#92400E" strokeWidth="1.5" />
+            </svg>
+        );
+
+        const SparkleIcon = ({ className, delay = 0 }) => (
+            <svg viewBox="0 0 24 24" className={className} style={{ animationDelay: `${delay}s` }}>
+                <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" fill="currentColor" />
+            </svg>
+        );
+
+        const CloudIcon = ({ className, style }) => (
+            <svg viewBox="0 0 200 100" className={className} style={style}>
+                <ellipse cx="60" cy="60" rx="40" ry="30" fill="white" opacity="0.8" />
+                <ellipse cx="100" cy="50" rx="50" ry="35" fill="white" opacity="0.8" />
+                <ellipse cx="140" cy="60" rx="35" ry="25" fill="white" opacity="0.8" />
+            </svg>
+        );
+
+        const VolumeIcon = ({ muted, onClick }) => (
+            <button onClick={onClick} className="w-8 h-8 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+                {muted ? "🔇" : "🔊"}
+            </button>
+        );
+
+        // --- APP DATA ---
+        const USERS = {
+            MICHAEL: { id: 'michael', name: 'Mikey', tractorColor: 'fill-[#367C2B]', accent: 'bg-[#367C2B]', tractorType: 'The Green Machine' },
+            MORGAN: { id: 'morgan', name: 'Morgan', tractorColor: 'fill-yellow-500', accent: 'bg-yellow-500', tractorType: 'The Dirt Destroyer' }
+        };
+
+        // --- MAIN APP ---
+        function App() {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [logs, setLogs] = useState({});
+            const [activeTractors, setActiveTractors] = useState([]);
+            const [sparkles, setSparkles] = useState([]);
+            const [floatingTeeth, setFloatingTeeth] = useState([]); 
+            const [isMuted, setIsMuted] = useState(false);
+            const [user, setUser] = useState(null); // Firebase User
+
+            // --- FIREBASE SYNC ---
+            useEffect(() => {
+                if (window.firebaseFunctions && window.auth) {
+                    const { signInAnonymously, onAuthStateChanged } = window.firebaseFunctions;
+                    
+                    signInAnonymously(window.auth).catch(console.error);
+
+                    const unsubscribe = onAuthStateChanged(window.auth, (u) => {
+                        if (u) setUser(u);
+                    });
+                    return () => unsubscribe();
+                }
+            }, []);
+
+            useEffect(() => {
+                if (user && window.firebaseFunctions && window.db) {
+                    const { onSnapshot, doc } = window.firebaseFunctions;
+                    // Standard path for a user's logs
+                    const logsRef = doc(window.db, 'users', user.uid, 'tooth_tracker', 'main_log');
+
+                    const unsubscribe = onSnapshot(logsRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            setLogs(docSnap.data());
+                        }
+                    });
+                    return () => unsubscribe();
+                }
+            }, [user]);
+
+            // --- LOGIC ---
+            const getDateKey = (offset = 0) => {
+                const d = new Date();
+                d.setDate(d.getDate() - offset);
+                return d.toISOString().split('T')[0];
+            };
+
+            const getStats = (userId) => {
+                let streak = 0;
+                for (let i = 0; i < 30; i++) {
+                    const key = getDateKey(i);
+                    if (logs[`${userId}-${key}-am`] && logs[`${userId}-${key}-pm`]) streak++;
+                    else break;
+                }
+                return streak;
+            };
+
+            const toggleTooth = (userId, dateKey, slot) => {
+                const key = `${userId}-${dateKey}-${slot}`;
+                const isDone = !!logs[key];
+                
+                // Optimistic UI update
+                const newLogs = { ...logs, [key]: !isDone };
+                setLogs(newLogs);
+
+                // Save to Cloud
+                if (user && window.firebaseFunctions && window.db) {
+                    const { setDoc, doc } = window.firebaseFunctions;
+                    const logsRef = doc(window.db, 'users', user.uid, 'tooth_tracker', 'main_log');
+                    setDoc(logsRef, { [key]: !isDone }, { merge: true }).catch(console.error);
+                }
+
+                // If cleaning (not undoing), trigger fun stuff
+                if (!isDone) {
+                    spawnTractor();
+                    spawnSparkles();
+                    if (!isMuted) SoundEngine.playDriveBy();
+                    
+                    // Delay flying teeth to match tractor wake (1.5s delay)
+                    setTimeout(() => {
+                        spawnFloatingTeeth();
+                    }, 1500); 
+                }
+            };
+
+            const spawnTractor = () => {
+                const id = Date.now();
+                const direction = Math.random() > 0.5 ? 'right' : 'left';
+                setActiveTractors(prev => [...prev, { id, direction }]);
+                setTimeout(() => setActiveTractors(prev => prev.filter(t => t.id !== id)), 4000);
+            };
+
+            const spawnSparkles = () => {
+                const newSparkles = Array.from({ length: 8 }, (_, i) => ({
+                    id: Date.now() + i,
+                    x: Math.random() * 100, y: Math.random() * 100,
+                    delay: Math.random() * 0.5
+                }));
+                setSparkles(newSparkles);
+                setTimeout(() => setSparkles([]), 1000);
+            };
+
+            const spawnFloatingTeeth = () => {
+                const count = 12;
+                const newTeeth = Array.from({ length: count }, (_, i) => ({
+                    id: Date.now() + i,
+                    left: 5 + Math.random() * 90, 
+                    delay: Math.random() * 0.8,    
+                    size: 30 + Math.random() * 30, 
+                }));
+                setFloatingTeeth(prev => [...prev, ...newTeeth]);
+                setTimeout(() => {
+                    setFloatingTeeth(prev => prev.filter(t => !newTeeth.find(nt => nt.id === t.id)));
+                }, 5000);
+            };
+
+            // --- LAYERS ---
+            const TractorLayer = () => (
+                <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+                    {activeTractors.map(tractor => (
+                        <div key={tractor.id} className={`absolute bottom-4 ${tractor.direction === 'right' ? 'tractor-drive-right' : 'tractor-drive-left'}`} style={{ left: 0 }}>
+                            <TractorIcon className="w-32 h-32" color={currentUser?.tractorColor || 'fill-[#367C2B]'} showWheels={true} />
+                            <div className="absolute bottom-2 left-4 w-8 h-8 bg-amber-700 rounded-full opacity-0 dust-cloud" style={{ animationDelay: '0s' }}></div>
+                            <div className="absolute bottom-2 left-4 w-8 h-8 bg-amber-700 rounded-full opacity-0 dust-cloud" style={{ animationDelay: '0.3s' }}></div>
+                            <div className="absolute top-0 right-6 w-6 h-6 bg-gray-400 rounded-full opacity-0 smoke-puff" style={{ animationDelay: '0.1s' }}></div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            const FlyingTeethLayer = () => (
+                <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+                    {floatingTeeth.map(tooth => (
+                        <div key={tooth.id} className="absolute"
+                            style={{
+                                left: `${tooth.left}%`,
+                                bottom: '-60px',
+                                animation: `floatUp 4s ease-in forwards ${tooth.delay}s`
+                            }}
+                        >
+                            <div style={{ animation: 'wiggle 2s ease-in-out infinite alternate' }}>
+                                <ToothIcon className="drop-shadow-lg" style={{ width: `${tooth.size}px`, height: `${tooth.size}px` }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            // --- RENDER ---
+            if (!currentUser) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+                        <div className="absolute top-4 right-4 z-50"><VolumeIcon muted={isMuted} onClick={() => setIsMuted(!isMuted)} /></div>
+                        <CloudIcon className="cloud absolute top-10 left-10 w-48 opacity-60" style={{ animationDelay: '0s' }} />
+                        <CloudIcon className="cloud absolute top-32 right-20 w-64 opacity-50" style={{ animationDelay: '2s' }} />
+                        
+                        <div className="max-w-2xl w-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-8 border-[#FFDE00] relative">
+                            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
+                                <BarnIcon className="w-32 h-32 drop-shadow-xl" />
+                            </div>
+                            <h1 className="font-brand text-4xl md:text-5xl text-center text-[#367C2B] mb-4 mt-8 drop-shadow-lg uppercase tracking-wider">
+                                Tractor Tooth Tracker
+                            </h1>
+                            <p className="text-center text-gray-600 font-bold mb-12 text-lg">🚜 Choose Your Driver! 🦷</p>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {Object.values(USERS).map(u => (
+                                    <button key={u.id} onClick={() => { setCurrentUser(u); if(!isMuted) SoundEngine.playStartUp(); }} className="group bg-gradient-to-br from-white to-gray-50 hover:from-[#FFDE00]/20 hover:to-[#FFDE00]/10 p-8 rounded-2xl border-4 border-gray-200 hover:border-[#FFDE00] transition-all duration-300 flex flex-col items-center transform hover:scale-105 hover:shadow-2xl">
+                                        <div className={`w-36 h-36 rounded-full ${u.accent} flex items-center justify-center mb-6 border-4 border-[#FFDE00] shadow-lg group-hover:shadow-2xl transition-all relative overflow-hidden`}>
+                                            <div className="absolute inset-0 shimmer"></div>
+                                            <TractorIcon className="w-28 h-28 relative z-10" color="fill-white" />
+                                        </div>
+                                        <span className="text-3xl font-black text-gray-800 uppercase mb-2">{u.name}</span>
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{u.tractorType}</span>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-[#367C2B] opacity-50 text-xs font-mono uppercase">
+                                {user ? "Syncing to Cloud ☁️" : "Connecting..."}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen relative overflow-hidden">
+                    <CloudIcon className="cloud absolute top-20 left-10 w-40 opacity-40" style={{ animationDelay: '0s' }} />
+                    <CloudIcon className="cloud absolute top-40 right-16 w-48 opacity-30" style={{ animationDelay: '3s' }} />
+                    <TractorLayer />
+                    <FlyingTeethLayer />
+                    
+                    <header className="bg-gradient-to-r from-[#367C2B] to-[#2a5e22] text-white p-4 shadow-2xl sticky top-0 z-40 border-b-4 border-[#FFDE00]">
+                        <div className="max-w-md mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-white border-3 border-[#FFDE00] flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform" onClick={() => !isMuted && SoundEngine.playHonk()}>
+                                    <TractorIcon className="w-10 h-10" color={currentUser.tractorColor} />
+                                </div>
+                                <div>
+                                    <h2 className="font-brand text-2xl uppercase leading-none drop-shadow-md">{currentUser.name}</h2>
+                                    <p className="text-xs text-[#FFDE00] font-bold uppercase tracking-widest flex items-center gap-1">🔥 Streak: {getStats(currentUser.id)} Days</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <VolumeIcon muted={isMuted} onClick={() => setIsMuted(!isMuted)} />
+                                <button onClick={() => setCurrentUser(null)} className="bg-[#2a5e22] hover:bg-[#1f4619] text-white text-xs font-bold py-2 px-4 rounded-lg border-2 border-[#FFDE00] uppercase tracking-wider shadow-lg hover:shadow-xl transition-all transform hover:scale-105">Switch</button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-md mx-auto p-4 pb-24">
+                        <div className="bg-white/95 backdrop-blur rounded-2xl p-6 shadow-2xl border-t-8 border-[#367C2B] mb-6 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FFDE00] to-transparent"></div>
+                            <h3 className="text-center text-gray-500 font-bold uppercase text-sm tracking-widest mb-6 flex items-center justify-center gap-2">
+                                <span className="h-[2px] bg-gradient-to-r from-transparent to-gray-300 w-12"></span>🌾 Today's Fields 🌾<span className="h-[2px] bg-gradient-to-l from-transparent to-gray-300 w-12"></span>
+                            </h3>
+                            <div className="grid grid-cols-2 gap-6">
+                                {['am', 'pm'].map(slot => {
+                                    const key = getDateKey(0);
+                                    const isDone = logs[`${currentUser.id}-${key}-${slot}`];
+                                    return (
+                                        <button key={slot} onClick={() => toggleTooth(currentUser.id, key, slot)} className={`relative aspect-square rounded-2xl border-4 transition-all duration-500 group overflow-hidden transform hover:scale-105 ${isDone ? 'bg-gradient-to-br from-white to-green-50 border-[#367C2B] shadow-xl glow' : 'bg-gradient-to-br from-[#fefce8] to-[#fef3c7] border-[#8B4513] shadow-lg hover:shadow-xl'}`}>
+                                            {isDone && sparkles.map(sparkle => (
+                                                <SparkleIcon key={sparkle.id} className="absolute text-yellow-400 w-4 h-4 sparkle-pop" style={{ left: `${sparkle.x}%`, top: `${sparkle.y}%` }} delay={sparkle.delay} />
+                                            ))}
+                                            {!isDone && <div className="absolute inset-0 mud-splatter"></div>}
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                                                {isDone ? (
+                                                    <>
+                                                        <div className="text-6xl mb-2 animate-bounce">🦷</div>
+                                                        <span className="text-[#367C2B] font-black text-2xl uppercase font-brand drop-shadow-sm">Clean!</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="text-6xl opacity-60 mb-2">🦷</div>
+                                                        <span className="text-[#8B4513] font-black text-lg uppercase tracking-tight drop-shadow-sm">Scrub Mud</span>
+                                                    </>
+                                                )}
+                                                <span className="absolute bottom-3 text-[11px] font-bold uppercase tracking-widest opacity-60 bg-white/50 px-2 py-1 rounded">{slot === 'am' ? '🌅 Morning' : '🌙 Evening'}</span>
+                                            </div>
+                                            {isDone && <div className="absolute inset-0 tread-marks"></div>}
+                                            {isDone && <div className="absolute inset-0 shimmer opacity-30"></div>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-[#367C2B]/10 to-[#367C2B]/5 backdrop-blur rounded-2xl p-6 border-2 border-[#367C2B]/20 shadow-xl">
+                             <h3 className="text-[#367C2B] font-bold uppercase text-sm tracking-widest mb-4 flex items-center gap-2"><BarnIcon className="w-6 h-6" /> <span>Past Harvests</span></h3>
+                             <div className="grid grid-cols-7 gap-3">
+                                {Array.from({length: 7}).map((_, i) => {
+                                    const dateKey = getDateKey(6 - i);
+                                    const isAm = logs[`${currentUser.id}-${dateKey}-am`];
+                                    const isPm = logs[`${currentUser.id}-${dateKey}-pm`];
+                                    const dayName = new Date(dateKey).toLocaleDateString('en-GB', {weekday:'narrow'});
+                                    const isToday = i === 6;
+                                    return (
+                                        <div key={i} className="flex flex-col items-center gap-1">
+                                            <span className={`text-[10px] font-bold uppercase mb-1 ${isToday ? 'text-[#367C2B]' : 'text-gray-500'}`}>{dayName}</span>
+                                            <div className="w-full flex flex-col gap-1">
+                                                <div onClick={() => toggleTooth(currentUser.id, dateKey, 'am')} className={`h-10 w-full rounded-md flex items-center justify-center cursor-pointer transition-all duration-300 border-2 ${isAm ? 'bg-gradient-to-br from-[#367C2B] to-[#2a5e22] border-[#FFDE00] shadow-lg' : 'bg-gray-200 border-gray-300 hover:bg-gray-300'}`}>
+                                                    {isAm && <div className="w-1.5 h-5 bg-[#FFDE00] transform rotate-12 shadow-sm"></div>}
+                                                </div>
+                                                <div onClick={() => toggleTooth(currentUser.id, dateKey, 'pm')} className={`h-10 w-full rounded-md flex items-center justify-center cursor-pointer transition-all duration-300 border-2 ${isPm ? 'bg-gradient-to-br from-[#367C2B] to-[#2a5e22] border-[#FFDE00] shadow-lg' : 'bg-gray-200 border-gray-300 hover:bg-gray-300'}`}>
+                                                     {isPm && <div className="w-1.5 h-5 bg-[#FFDE00] transform rotate-12 shadow-sm"></div>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                             </div>
+                        </div>
+                    </main>
+                    <div className="fixed bottom-0 left-0 w-full z-30">
+                        <div className="h-2 bg-gradient-to-b from-[#4CAF50] to-[#388E3C] grass-texture"></div>
+                        <div className="h-6 bg-gradient-to-b from-[#5D4037] to-[#3E2723] border-t-2 border-[#3E2723]"></div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+
