@@ -6,10 +6,13 @@
     <title>Kavanagh Crane Hire - Capacity Guide</title>
     <link rel="icon" href="https://kavanaghcranehire.ie/wp-content/uploads/2024/07/quick-quote-chevron-colors-bg.svg">
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
+    <!-- Import Map -->
     <script type="importmap">
     {
         "imports": {
@@ -20,6 +23,7 @@
     }
     </script>
 
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
@@ -58,13 +62,9 @@
 
         /**
          * DATA MATRIX
-         * Derived strictly from the provided CSV file.
          */
-        
-        // The column headers (Radius in meters) from the CSV
         const RADIUS_COLS = [7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54];
 
-        // The rows (Weight in tonnes) and their corresponding crane values for each radius column
         const LOAD_CHART_MATRIX = [
             { w: 0.5, cranes: ["20t","20t","20t","20t","20t","20t","20t","20t","20t","20t","25t","25t","35t","35t","50t","50t","70t","70t","80t","80t","80t","90t","120t","120t","120t","120t"] },
             { w: 1,   cranes: ["20t","20t","20t","20t","20t","20t","20t","20t","25t","25t","35t","35t","50t","50t","60t","70t","70t","70t","80t","80t","90t","100t","120t","120t","120t","120t"] },
@@ -109,27 +109,32 @@
             { w: 40,  cranes: ["100t","100t","120t","160t","160t","225t","250t","300t","300t","400t","400t","400t","400t","400t","500t","500t","500t","800t","800t", null, null, null, null, null, null, null] },
         ];
 
-        // Database of detailed crane info to map the CSV strings to display data
+        // Defines the strict order of crane size. If 50t is needed, anything in this list AFTER 50t is also a valid alternative.
+        const CRANE_ORDER = [
+            "20t", "25t", "35t", "50t", "60t", "70t", "80t", "90t", "100t", 
+            "120t", "130t", "160t", "200t", "225t", "250t", "300t", "400t", "500t", "800t"
+        ];
+
         const CRANE_DATABASE = {
-            "20t": { id: "20t", name: "20t City Crane", type: "City Class", image: "https://placehold.co/100x100/eab308/18181b?text=20t", maxCap: 20 },
-            "25t": { id: "25t", name: "25t City Crane", type: "City Class", image: "https://placehold.co/100x100/eab308/18181b?text=25t", maxCap: 25 },
-            "35t": { id: "35t", name: "35t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=35t", maxCap: 35 },
-            "50t": { id: "50t", name: "50t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=50t", maxCap: 50 },
-            "60t": { id: "60t", name: "60t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=60t", maxCap: 60 },
-            "70t": { id: "70t", name: "70t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=70t", maxCap: 70 },
-            "80t": { id: "80t", name: "80t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=80t", maxCap: 80 },
-            "90t": { id: "90t", name: "90t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=90t", maxCap: 90 },
-            "100t": { id: "100t", name: "100t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=100t", maxCap: 100 },
-            "120t": { id: "120t", name: "120t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=120t", maxCap: 120 },
-            "130t": { id: "130t", name: "130t Grove", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=130t", maxCap: 130 },
-            "160t": { id: "160t", name: "160t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=160t", maxCap: 160 },
-            "200t": { id: "200t", name: "200t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=200t", maxCap: 200 },
-            "225t": { id: "225t", name: "225t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=225t", maxCap: 225 },
-            "250t": { id: "250t", name: "250t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=250t", maxCap: 250 },
-            "300t": { id: "300t", name: "300t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=300t", maxCap: 300 },
-            "400t": { id: "400t", name: "400t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=400t", maxCap: 400 },
-            "500t": { id: "500t", name: "500t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=500t", maxCap: 500 },
-            "800t": { id: "800t", name: "800t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=800t", maxCap: 800 },
+            "20t": { id: "20t", name: "20t City Crane", type: "City Class", image: "https://placehold.co/100x100/eab308/18181b?text=20t" },
+            "25t": { id: "25t", name: "25t City Crane", type: "City Class", image: "https://placehold.co/100x100/eab308/18181b?text=25t" },
+            "35t": { id: "35t", name: "35t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=35t" },
+            "50t": { id: "50t", name: "50t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=50t" },
+            "60t": { id: "60t", name: "60t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=60t" },
+            "70t": { id: "70t", name: "70t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=70t" },
+            "80t": { id: "80t", name: "80t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=80t" },
+            "90t": { id: "90t", name: "90t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=90t" },
+            "100t": { id: "100t", name: "100t All Terrain", type: "All Terrain", image: "https://placehold.co/100x100/eab308/18181b?text=100t" },
+            "120t": { id: "120t", name: "120t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=120t" },
+            "130t": { id: "130t", name: "130t Grove", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=130t" },
+            "160t": { id: "160t", name: "160t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=160t" },
+            "200t": { id: "200t", name: "200t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=200t" },
+            "225t": { id: "225t", name: "225t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=225t" },
+            "250t": { id: "250t", name: "250t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=250t" },
+            "300t": { id: "300t", name: "300t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=300t" },
+            "400t": { id: "400t", name: "400t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=400t" },
+            "500t": { id: "500t", name: "500t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=500t" },
+            "800t": { id: "800t", name: "800t Heavy Duty", type: "Heavy Duty", image: "https://placehold.co/100x100/eab308/18181b?text=800t" },
         };
 
         // --- Custom Background Component ---
@@ -163,6 +168,7 @@
         const CraneVisualizer = ({ radius, weight }) => {
           const mountRef = useRef(null);
           const sceneRef = useRef(null);
+          const reqRef = useRef(null);
           const [isThreeLoaded, setIsThreeLoaded] = useState(false);
 
           useEffect(() => {
@@ -179,6 +185,22 @@
               if (document.body.contains(script)) {
                 document.body.removeChild(script);
               }
+            };
+          }, []);
+
+          // Cleanup function to prevent multiple canvases/contexts
+          useEffect(() => {
+            return () => {
+                if (reqRef.current) cancelAnimationFrame(reqRef.current);
+                if (mountRef.current && sceneRef.current) {
+                    const canvas = mountRef.current.querySelector('canvas');
+                    if (canvas) mountRef.current.removeChild(canvas);
+                    if (sceneRef.current.renderer) {
+                        sceneRef.current.renderer.dispose();
+                        sceneRef.current.renderer.forceContextLoss();
+                    }
+                    sceneRef.current = null;
+                }
             };
           }, []);
 
@@ -203,6 +225,7 @@
               renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
               mountRef.current.appendChild(renderer.domElement);
 
+              // Resize handler
               const handleResize = () => {
                 if (!mountRef.current) return;
                 const newW = mountRef.current.clientWidth;
@@ -359,7 +382,7 @@
               };
 
               const animate = () => {
-                requestAnimationFrame(animate);
+                reqRef.current = requestAnimationFrame(animate);
                 renderer.render(scene, camera);
               };
               animate();
@@ -557,7 +580,11 @@
 
                 <div className="flex justify-between text-[10px] font-medium text-zinc-400 mb-4 bg-black/20 p-2 rounded-lg border border-white/5">
                   <span>Requirement: <strong>{crane.id} Class</strong></span>
-                  <span className="text-yellow-500">Certified for {userWeight}t @ {userRadius}m</span>
+                  {isRecommended ? (
+                    <span className="text-yellow-500">Certified for {userWeight}t @ {userRadius}m</span>
+                  ) : (
+                    <span className="text-zinc-500">Larger Alternative</span>
+                  )}
                 </div>
 
                 <button className={`w-full py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 ${
@@ -598,9 +625,7 @@
               return;
             }
 
-            // 1. Find the Radius Column Index (Header)
-            // We need the smallest radius in the list that is >= user input
-            // The list is: [7, 8, 9, 10, 12, 14, 16...]
+            // 1. Find the Radius Column Index
             let colIndex = -1;
             for (let i = 0; i < RADIUS_COLS.length; i++) {
                 if (RADIUS_COLS[i] >= r) {
@@ -610,41 +635,45 @@
             }
 
             if (colIndex === -1) {
-                // Radius exceeded max (54m)
                 setResults([]);
                 setIsCalculated(true);
                 return;
             }
 
             // 2. Find the Weight Row
-            // We need the smallest row weight that is >= user input
             const matchedRow = LOAD_CHART_MATRIX.find(row => row.w >= w);
 
             if (!matchedRow) {
-                // Weight exceeded max (40t)
                 setResults([]);
                 setIsCalculated(true);
                 return;
             }
 
             // 3. Get the value from the intersection cell
-            const craneId = matchedRow.cranes[colIndex];
+            const recommendedCraneId = matchedRow.cranes[colIndex];
 
-            if (!craneId) {
-                // Cell is null (e.g., bottom right of chart)
+            if (!recommendedCraneId) {
                 setResults([]);
                 setIsCalculated(true);
                 return;
             }
 
-            // 4. Map the ID (e.g. "50t") to the crane details object
-            const craneDetails = CRANE_DATABASE[craneId];
+            // 4. Find all cranes from this size UP to the max size, LIMITING to 4
+            const startingIndex = CRANE_ORDER.indexOf(recommendedCraneId);
+            
+            if (startingIndex !== -1) {
+                // Slice the array from the recommended crane to the end (limit to 4 items)
+                const suitableCraneIds = CRANE_ORDER.slice(startingIndex, startingIndex + 4);
+                
+                // Map these IDs to actual crane objects
+                const validCranes = suitableCraneIds
+                    .map(id => CRANE_DATABASE[id])
+                    .filter(Boolean); 
 
-            if (craneDetails) {
-                setResults([craneDetails]);
+                setResults(validCranes);
                 setIsCalculated(true);
             } else {
-                setResults([]); // Should not happen if DB is complete
+                setResults([]);
                 setIsCalculated(true);
             }
           };
@@ -771,8 +800,8 @@
                           <div className="space-y-6">
                             <div className="flex items-center justify-between">
                               <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                                 Recommended Crane
-                                 {results.length > 0 && <span className="px-2 py-0.5 bg-[#00CCFF]/10 text-[#00CCFF] text-[10px] font-bold rounded-full border border-[#00CCFF]/20">Found</span>}
+                                 Recommended Cranes
+                                 {results.length > 0 && <span className="px-2 py-0.5 bg-[#00CCFF]/10 text-[#00CCFF] text-[10px] font-bold rounded-full border border-[#00CCFF]/20">{results.length} Found</span>}
                               </h3>
                             </div>
 
@@ -786,6 +815,16 @@
                                     isRecommended={true} 
                                   />
                                 </div>
+                                {results.slice(1).map((crane, idx) => (
+                                  <div key={crane.id} className="animate-in slide-in-from-bottom-4 duration-500 h-full" style={{ animationDelay: `${idx * 100}ms` }}>
+                                    <ResultCard 
+                                      crane={crane} 
+                                      userWeight={parseFloat(weight)} 
+                                      userRadius={parseFloat(radius)} 
+                                      isRecommended={false} 
+                                    />
+                                  </div>
+                                ))}
                               </div>
                             ) : (
                               <div className="flex flex-col items-center justify-center text-center p-8 bg-red-500/5 backdrop-blur-md border border-red-500/20 rounded-2xl">
