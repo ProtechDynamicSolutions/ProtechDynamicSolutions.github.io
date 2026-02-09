@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kavanagh Crane Hire - Quote Tool</title>
+    <link rel="icon" href="https://kavanaghcranehire.ie/wp-content/uploads/2024/07/quick-quote-chevron-colors-bg.svg" type="image/svg+xml">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,10 +18,7 @@
         "imports": {
             "react": "https://esm.sh/react@18.2.0",
             "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-            "lucide-react": "https://esm.sh/lucide-react@0.292.0",
-            "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
-            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
         }
     }
     </script>
@@ -36,14 +34,15 @@
                     colors: {
                         'brand-yellow': '#fecb00',
                         'brand-black': '#1a1a1a',
+                        'kavanagh-blue': '#00CCFF',
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out',
                     },
                     keyframes: {
                         fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
                         }
                     }
                 }
@@ -52,7 +51,6 @@
     </script>
 
     <style>
-        /* Clean Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f4f4f5; }
         ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
@@ -62,7 +60,7 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(228, 228, 231, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
         
         select {
@@ -71,10 +69,8 @@
             background-repeat: no-repeat;
             background-size: 1.5em 1.5em;
             padding-right: 2.5rem;
-            -webkit-print-color-adjust: exact;
         }
         
-        /* Slider Styling */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -85,7 +81,6 @@
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
             width: 18px;
             height: 18px;
             border-radius: 50%;
@@ -93,14 +88,8 @@
             cursor: pointer;
             transition: background .15s ease-in-out;
         }
-        input[type=range]::-webkit-slider-thumb:hover {
-            background: #eab308;
-        }
-
-        body {
-            background-color: #f8fafc;
-            color: #1e293b;
-        }
+        input[type=range]::-webkit-slider-thumb:hover { background: #eab308; }
+        body { background-color: #f8fafc; color: #1e293b; }
     </style>
 </head>
 <body>
@@ -111,76 +100,40 @@
         import { createRoot } from 'react-dom/client';
         import { 
             FileText, Share, Calendar, MapPin, User, Truck, Phone, 
-            Clipboard, Euro, FileBadge, ShieldCheck, Map, HardHat, Clock, Mail, AlertTriangle, FileCheck, Users, Briefcase
+            Euro, ShieldCheck, Map, HardHat, Clock, Mail, AlertTriangle, 
+            FileCheck, Users, Briefcase, TruckIcon, BedDouble, CalendarClock, 
+            Settings, Minus, Plus, X, Box, CloudLightning, RefreshCw
         } from 'lucide-react';
-        
-        // Safe imports for Firebase
-        import { initializeApp } from "firebase/app";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "firebase/auth";
-        import { getFirestore, doc, getDoc, runTransaction } from "firebase/firestore";
 
-        // --- ERROR BOUNDARY ---
-        class ErrorBoundary extends Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false, error: null };
-            }
-
-            static getDerivedStateFromError(error) {
-                return { hasError: true, error };
-            }
-
-            componentDidCatch(error, errorInfo) {
-                console.error("React Error:", error, errorInfo);
-            }
-
-            render() {
-                if (this.state.hasError) {
-                    return (
-                        <div className="flex items-center justify-center min-h-screen bg-slate-50 p-8">
-                            <div className="bg-white p-6 rounded-xl shadow-lg border border-red-100 max-w-md w-full text-center">
-                                <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                                    <AlertTriangle className="text-red-500" />
-                                </div>
-                                <h2 className="text-lg font-bold text-slate-900 mb-2">Something went wrong</h2>
-                                <p className="text-sm text-slate-500 mb-4 font-mono text-xs text-left bg-slate-50 p-3 rounded">
-                                    {this.state.error && this.state.error.toString()}
-                                </p>
-                                <button onClick={() => window.location.reload()} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold">
-                                    Reload App
-                                </button>
-                            </div>
-                        </div>
-                    );
-                }
-                return this.props.children;
-            }
-        }
-
-        // --- FIREBASE INIT (SAFE) ---
-        let auth = null;
-        let db = null;
-        let appId = 'default-app-id';
-        let firebaseAvailable = false;
-
-        try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                firebaseAvailable = true;
-            } else {
-                console.warn("Firebase config missing. Running in offline mode.");
-            }
-        } catch (e) {
-            console.warn("Firebase init failed. Running in offline mode.", e);
-        }
-
-        const ADVISERS = [
-            { name: "Seán O'Herlihy", initials: "SOH", phone: "083 470 0338" }
+        const ADVISERS_DATA = [
+            { name: "Seán O'Herlihy", phone: "083 470 0338", email: "sean.oherlihy@kchcranes.ie" },
+            { name: "James Dunne", phone: "087 814 1484", email: "james.dunne@kchcranes.ie" }
         ];
+
+        const getInitials = (name) => {
+            const parts = name.split(/[ ']/).filter(Boolean);
+            return parts.map(p => p[0]).join('').toUpperCase();
+        };
+
+        const ADVISERS = ADVISERS_DATA.map(a => ({
+            ...a,
+            initials: getInitials(a.name)
+        }));
+
+        const CRANE_RATES = {
+            40: 75, 50: 90, 60: 95, 80: 110, 90: 120, 100: 135,
+            110: 145, 130: 185, 150: 200, 220: 285, 230: 300,
+            300: 350, 450: 500, 500: 550
+        };
+
+        const getRateForCrane = (craneString) => {
+            const match = craneString.match(/\((\d+)t\)/);
+            if (!match) return 75; 
+            const tons = parseInt(match[1]);
+            if (tons <= 40) return 75;
+            if (CRANE_RATES[tons]) return CRANE_RATES[tons];
+            return 75;
+        };
 
         const CRANE_LIST = [
             {
@@ -206,6 +159,22 @@
             }
         ];
 
+        const formatNumber = (num) => {
+            return num.toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // --- ERROR BOUNDARY ---
+        class ErrorBoundary extends Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            render() {
+                if (this.state.hasError) {
+                    return <div className="p-8 text-center"><h2 className="text-red-500 font-bold">Something went wrong</h2><button onClick={() => window.location.reload()} className="mt-4 bg-black text-white px-4 py-2 rounded">Reload</button></div>;
+                }
+                return this.props.children;
+            }
+        }
+
         const InputGroup = ({ label, icon: Icon, children }) => (
             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-yellow-400 transition-all group hover:border-slate-300">
                 <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest group-focus-within:text-yellow-600 transition-colors">
@@ -216,119 +185,113 @@
         );
 
         const TextInput = ({ ...props }) => (
-            <input 
-                {...props}
-                className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder-slate-400 text-sm"
-            />
+            <input {...props} className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder-slate-400 text-sm" />
         );
 
+        const Stepper = ({ label, value, onChange, step = 1, min = 0 }) => {
+            const handleDec = () => onChange(Math.max(min, parseFloat(value) - step));
+            const handleInc = () => onChange(parseFloat(value) + step);
+            return (
+                <div className="flex flex-col bg-white rounded-lg border border-slate-200 p-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 block text-center">{label}</span>
+                    <div className="flex items-center justify-between gap-2">
+                        <button type="button" onClick={handleDec} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-yellow-100 flex items-center justify-center"><Minus size={14}/></button>
+                        <span className="font-bold text-slate-900 text-lg w-10 text-center">{value}</span>
+                        <button type="button" onClick={handleInc} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-yellow-100 flex items-center justify-center"><Plus size={14}/></button>
+                    </div>
+                </div>
+            );
+        };
+
         function AppContent() {
-            const [user, setUser] = useState(null);
             const [isGenerating, setIsGenerating] = useState(false);
             const [statusMsg, setStatusMsg] = useState('');
-            const [count, setCount] = useState(null);
+            const [quoteRef, setQuoteRef] = useState('Checking...');
+            const [showNotesModal, setShowNotesModal] = useState(false);
+
+            const initialRate = getRateForCrane('Demag AC50-1 (50t)');
 
             const [formData, setFormData] = useState({
                 adviserName: ADVISERS[0].name,
                 adviserInitials: ADVISERS[0].initials,
+                adviserEmail: ADVISERS[0].email,
+                adviserPhone: ADVISERS[0].phone,
                 clientName: '',
                 clientEmail: '',
                 date: new Date().toISOString().split('T')[0],
                 craneType: 'Demag AC50-1 (50t)',
-                price: '',
-                minHours: '8',
+                mobHours: 1.0,
+                demobHours: 1.0,
+                siteHours: 8.0,
+                hourlyRate: initialRate,
+                overtimeRate: initialRate + 35, 
                 addVat: false, 
-                jobDetails: '',
                 siteAddress: 'Cork',
-                contactName: '',
                 contactNumber: '',
-                
-                // Extras
                 liftPlanRequired: false,
-                liftPlanCost: '',
+                liftPlanCost: 150.00,
                 liftPlanIncluded: false,
-
+                spreaderBars: true,
+                spreaderCost: 200.00,
+                accommodation: true,
+                accommodationCost: 150.00,
+                weekendCharge: true,
+                weekendCost: 35.00,
                 apRequired: false,
                 apCount: 1,
-                apCost: '',
+                apCost: 75.00,
                 apIncluded: false,
-
                 banksmanRequired: false,
                 banksmanCount: 1,
-                banksmanCost: '',
-                banksmanIncluded: false
+                banksmanCost: 50.00,
+                banksmanIncluded: false,
+                ballastRequired: false,
+                ballastCost: 600.00,
+                otherItemsRequired: false,
+                otherItemsDesc: '',
+                otherItemsCost: ''
             });
 
-            const offlineRef = React.useMemo(() => Math.floor(Math.random() * 9000) + 1000, []);
-            
-            const quoteRef = count 
-                ? `${formData.adviserInitials}-${count.toString().padStart(5, '0')}` 
-                : `${formData.adviserInitials}-${offlineRef} (Offline)`;
+            const totalMinHours = parseFloat(formData.mobHours) + parseFloat(formData.demobHours) + parseFloat(formData.siteHours);
 
+            // --- 1. GENERATE JOB NUMBER (TIMESTAMP BASED) ---
+            // Format: INITIALS-YYMMDDHHMM (Date backwards + Time)
+            const fetchNextQuoteNumber = async (initials) => {
+                const now = new Date();
+                const yy = now.getFullYear().toString().slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                
+                return `${initials}-${yy}${mm}${dd}${hh}${min}`;
+            };
+
+            // --- USE EFFECT: Fetch Number on Mount & Change ---
             useEffect(() => {
-                const initAuth = async () => {
-                    if (!firebaseAvailable || !auth) return;
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (err) {
-                        console.warn("Auth error (Running Offline):", err);
-                    }
+                let mounted = true;
+                const getNum = async () => {
+                    const num = await fetchNextQuoteNumber(formData.adviserInitials);
+                    if (mounted) setQuoteRef(num);
                 };
-                initAuth();
+                getNum();
+                return () => { mounted = false; };
+            }, [formData.adviserInitials]);
 
-                if (firebaseAvailable && auth) {
-                    const unsubscribe = onAuthStateChanged(auth, (u) => {
-                        setUser(u);
-                        if (u) fetchCounter();
-                    });
-                    return () => unsubscribe();
-                }
-            }, []);
-
-            const fetchCounter = async () => {
-                if (!db) return;
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'counters');
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        setCount(docSnap.data().jobCount + 1);
-                    } else {
-                        setCount(1);
-                    }
-                } catch (err) {
-                    console.warn("Error fetching counter (Offline mode):", err);
-                    setCount(null); 
-                }
-            };
-
-            const incrementCounter = async () => {
-                if (!db || !user) return; // Don't try if offline
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'counters');
-                    await runTransaction(db, async (transaction) => {
-                        const sfDoc = await transaction.get(docRef);
-                        if (!sfDoc.exists()) {
-                            transaction.set(docRef, { jobCount: 1 });
-                        } else {
-                            const newCount = sfDoc.data().jobCount + 1;
-                            transaction.update(docRef, { jobCount: newCount });
-                        }
-                    });
-                    fetchCounter();
-                } catch (e) {
-                    console.warn("Counter increment failed", e);
-                }
-            };
 
             const handleChange = (e) => {
                 const { name, value, type, checked } = e.target;
-                setFormData(prev => ({ 
-                    ...prev, 
-                    [name]: type === 'checkbox' ? checked : value 
+                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+            };
+
+            const handleCraneChange = (e) => {
+                const newCrane = e.target.value;
+                const newRate = getRateForCrane(newCrane);
+                setFormData(prev => ({
+                    ...prev,
+                    craneType: newCrane,
+                    hourlyRate: newRate,
+                    overtimeRate: newRate + 35
                 }));
             };
 
@@ -337,534 +300,379 @@
                 setFormData(prev => ({
                     ...prev,
                     adviserName: selected.name,
-                    adviserInitials: selected.initials
+                    adviserInitials: selected.initials,
+                    adviserEmail: selected.email,
+                    adviserPhone: selected.phone
                 }));
             };
+
+            const updateHours = (field, newVal) => setFormData(prev => ({ ...prev, [field]: newVal }));
 
             const getBase64ImageFromURL = (url) => {
                 return new Promise((resolve) => {
                     const img = new Image();
                     img.setAttribute("crossOrigin", "anonymous");
                     img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0);
-                        resolve(canvas.toDataURL("image/png"));
+                        const c = document.createElement("canvas");
+                        c.width = img.width; c.height = img.height;
+                        resolve(c.getContext("2d").drawImage(img, 0, 0) || c.toDataURL("image/png"));
                     };
-                    img.onerror = () => {
-                        console.warn("Image load failed (CORS?):", url);
-                        resolve(null);
-                    };
+                    img.onerror = () => resolve(null);
                     img.src = url;
                 });
             };
 
-            const generatePDF = async () => {
-                if (!window.jspdf) {
-                    setStatusMsg("PDF Library not ready. Please wait.");
-                    return;
-                }
+            const handleGenerate = async () => {
+                if (!window.jspdf) return;
                 setIsGenerating(true);
-                setStatusMsg('Generating Quote...');
+
+                // Use the ref we already fetched, or fetch fresh if needed
+                let uniqueRef = quoteRef;
+                if (!uniqueRef || uniqueRef.includes('Loading') || uniqueRef.includes('ERR')) {
+                     uniqueRef = await fetchNextQuoteNumber(formData.adviserInitials);
+                     setQuoteRef(uniqueRef);
+                }
+
+                // 2. Calculate Total for PDF
+                const hourlyRateVal = parseFloat(formData.hourlyRate || 0);
+                let subTotal = totalMinHours * hourlyRateVal;
+                
+                if (formData.liftPlanRequired && !formData.liftPlanIncluded) subTotal += parseFloat(formData.liftPlanCost);
+                if (formData.apRequired && !formData.apIncluded) subTotal += (parseFloat(formData.apCost || 0) * parseInt(formData.apCount));
+                if (formData.banksmanRequired && !formData.banksmanIncluded) subTotal += (parseFloat(formData.banksmanCost || 0) * parseInt(formData.banksmanCount));
+                if (formData.ballastRequired) subTotal += (parseFloat(formData.ballastCost || 0) * 2);
+                if (formData.otherItemsRequired) subTotal += parseFloat(formData.otherItemsCost || 0);
+                
+                // EXCLUDED from Quote Total: Spreader Bars & Accommodation (Notes only)
+
+                const vatAmount = formData.addVat ? (subTotal * 0.23) : 0;
+                const grandTotal = subTotal + vatAmount;
+
+                // 3. Generate PDF
+                await generatePDF(uniqueRef, grandTotal, subTotal, vatAmount);
+            };
+
+            const generatePDF = async (uniqueRef, grandTotal, subTotal, vatAmount) => {
+                setStatusMsg('Generating PDF...');
 
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    
-                    // Constants
-                    const yellow = [254, 203, 0]; // Brand Yellow
-                    const black = [26, 26, 26];   // Brand Black
-                    const grey = [74, 74, 74];    // Text Grey
+                    const yellow = [254, 203, 0]; 
+                    const black = [26, 26, 26]; 
+                    const grey = [74, 74, 74]; 
                     const lightGrey = [245, 245, 245];
 
-                    // Use Raw GitHub User Content Links to avoid Blob/CORS issues
-                    const headerBgUrl = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavCranes.jpg";
-                    const craneUrl = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/ltm-1650-8.1.jpg";
-                    const logo50Url = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/Kav50.png";
-                    const kavLogoUrl = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavLogo.png";
-                    const isoUrl = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavISO.png";
-
                     const [headerBg, craneImg, logo50, isoImg, kavLogo] = await Promise.all([
-                        getBase64ImageFromURL(headerBgUrl),
-                        getBase64ImageFromURL(craneUrl),
-                        getBase64ImageFromURL(logo50Url),
-                        getBase64ImageFromURL(isoUrl),
-                        getBase64ImageFromURL(kavLogoUrl)
+                        getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavCranes.jpg"),
+                        getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/ltm-1650-8.1.jpg"),
+                        getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/Kav50.png"),
+                        getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Kavanagh/KavISO.png"),
+                        getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavLogo.png")
                     ]);
 
-                    // Helper for Footer
-                    const drawFooter = (pageNum) => {
-                        const footerY = 265;
+                    const drawFooter = () => {
+                        const fY = 270; 
                         doc.setFillColor(...black);
-                        doc.rect(0, footerY, 210, 32, 'F');
-                        
+                        doc.rect(0, fY, 210, 27, 'F');
                         doc.setTextColor(...yellow);
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(10);
-                        doc.text("THE CERTIFICATION PROCESS", 20, footerY + 10);
-                        
+                        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+                        doc.text("THE CERTIFICATION PROCESS", 20, fY + 8);
                         doc.setTextColor(200, 200, 200);
-                        doc.setFont("helvetica", "normal");
-                        doc.setFontSize(7);
-                        const footerTxt = "We partnered with Amtivo (formerly Certification Europe) for their strong industry reputation and INAB-accreditation. Working with a consultant, we aligned our systems with ISO 9001, ISO 14001, and ISO 45001 standards.";
-                        doc.text(doc.splitTextToSize(footerTxt, 110), 20, footerY + 16);
-
-                        // ISO Logos
-                        if (isoImg) {
-                            // Scale down if needed, fit in approx 60x20 box
-                            doc.addImage(isoImg, 'PNG', 135, footerY + 5, 60, 22);
-                        }
+                        doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+                        doc.text(doc.splitTextToSize("We partnered with Amtivo (formerly Certification Europe) for their strong industry reputation and INAB-accreditation. Working with a consultant, we aligned our systems with ISO 9001, ISO 14001, and ISO 45001 standards.", 110), 20, fY + 14);
+                        if (isoImg) doc.addImage(isoImg, 'PNG', 135, fY + 5, 55, 20);
                     };
 
-                    // Helper for Sidebar - Contact
                     const drawSidebarContact = (sY, sideX) => {
-                        doc.setTextColor(...black);
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(10);
+                        doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(10);
                         doc.text("CONTACT US", sideX + 25, sY, { align: "center" });
                         sY += 8;
-                        
-                        // Contact Person
-                        doc.setTextColor(...grey);
                         doc.setFontSize(9);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("Contact Seán O'Herlihy", sideX + 25, sY, { align: "center" });
-                        sY += 8;
-
-                        doc.setFont("helvetica", "bold");
-                        doc.text("Mobile:", sideX + 25, sY, { align: "center" });
-                        doc.setFont("helvetica", "normal");
+                        doc.text("Sales Rep", sideX + 25, sY, { align: "center" });
                         sY += 5;
-                        doc.text(ADVISERS[0].phone, sideX + 25, sY, { align: "center" });
+                        doc.setTextColor(...grey); doc.setFontSize(10); doc.setFont("helvetica", "normal"); 
+                        doc.text(formData.adviserName, sideX + 25, sY, { align: "center" });
+                        sY += 8;
+                        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+                        doc.text("Mobile:", sideX + 25, sY, { align: "center" });
+                        doc.setFont("helvetica", "normal"); sY += 5;
+                        doc.text(formData.adviserPhone, sideX + 25, sY, { align: "center" });
                         sY += 8;
                         doc.setFont("helvetica", "bold");
                         doc.text("Email:", sideX + 25, sY, { align: "center" });
-                        doc.setFont("helvetica", "normal");
-                        sY += 5;
-                        doc.text("sean@kavanaghcranehire.ie", sideX + 25, sY, { align: "center" });
+                        doc.setFont("helvetica", "normal"); sY += 5;
+                        doc.text(formData.adviserEmail, sideX + 25, sY, { align: "center" }); 
                         return sY;
                     }
 
-                    // ================= PAGE 1: PROPOSAL & PHOTOS =================
-                    
-                    // --- HERO HEADER ---
-                    // Changed Height from 60 to 50 to reduce stretching
-                    if (headerBg) {
-                        doc.addImage(headerBg, 'JPEG', 0, 0, 210, 50);
-                    }
-                    
-                    // Yellow Overlay with transparency
-                    doc.setGState(new doc.GState({ opacity: 0.9 }));
-                    doc.setFillColor(...yellow);
-                    doc.rect(0, 0, 210, 50, 'F');
-                    doc.setGState(new doc.GState({ opacity: 1.0 }));
+                    // PAGE 1
+                    if (headerBg) doc.addImage(headerBg, 'JPEG', 0, 0, 210, 50);
+                    doc.setGState(new doc.GState({ opacity: 0.9 })); doc.setFillColor(...yellow); doc.rect(0, 0, 210, 50, 'F'); doc.setGState(new doc.GState({ opacity: 1.0 }));
+                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 15, 10, 60, 20); 
 
-                    // Header Logo
-                    if (kavLogo) {
-                        doc.addImage(kavLogo, 'PNG', 15, 10, 60, 20); 
-                    } else {
-                        // Fallback Text
-                        doc.setTextColor(...black);
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(32); 
-                        doc.text("KAVANAGH", 15, 25);
-                        doc.setFontSize(12);
-                        doc.text("CRANE HIRE LTD.", 15, 32);
-                    }
+                    doc.setTextColor(...black); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                    doc.text(`Quote Ref: ${uniqueRef}`, 190, 25, { align: "right" });
 
-                    // Quote Reference Box
-                    const cleanRef = count ? quoteRef : `${formData.adviserInitials}-${offlineRef}`;
-
-                    // Match Page 2 Style
-                    doc.setTextColor(...black); 
-                    doc.setFontSize(10);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(`Quote Ref: ${cleanRef}`, 190, 25, { align: "right" });
-
-                    // Slogan Bar
-                    doc.setFillColor(...black);
-                    doc.rect(0, 50, 210, 10, 'F');
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(9);
-                    doc.setFont("helvetica", "italic");
+                    doc.setFillColor(...black); doc.rect(0, 50, 210, 10, 'F');
+                    doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont("times", "italic");
                     doc.text("Elevating Excellence Since 1973 - Where Commitment Meets Capability!", 105, 56, { align: "center" });
-
-                    // --- PROPOSAL TEXT ---
-                    let y = 75;
-                    const mainX = 20; 
-                    const fullW = 170;
-
-                    doc.setTextColor(...black);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(14);
-                    doc.text("PROPOSAL", mainX, y);
-                    doc.setDrawColor(...yellow);
-                    doc.setLineWidth(1);
-                    doc.line(mainX, y+2, mainX+30, y+2);
-                    y += 10;
-
-                    doc.setTextColor(...grey);
                     doc.setFont("helvetica", "normal");
-                    doc.setFontSize(10);
-                    
-                    const para1 = `Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.`;
-                    const para2 = `Proudly supplying Crane Hire in Dublin & Cork with expert crane hire and specialized heavy lift engineering solutions across a range of industries. Backed by years of experience and investment, our strategically located depots ensure fast, efficient, and reliable service for projects of all sizes.`;
-                    const para3 = `As a family-run business, we prioritise safety, dependability, and exceptional customer service from consultation to project completion. Our diverse crane fleet—ranging from compact city cranes to powerful 700-tonne all-terrain cranes—is meticulously maintained and operated by certified professionals, ready to handle even the most complex lifting equipment challenges.`;
 
-                    const fullIntro = `${para1}\n\n${para2}\n\n${para3}`;
-                    const introLines = doc.splitTextToSize(fullIntro, fullW);
-                    doc.text(introLines, mainX, y);
-                    y += (introLines.length * 5) + 10;
+                    let y = 75; const mainX = 20; const fullW = 170;
+                    doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+                    doc.text("PROPOSAL", mainX, y);
+                    doc.setDrawColor(...yellow); doc.setLineWidth(1); doc.line(mainX, y+2, mainX+30, y+2); y += 10;
 
-                    // --- LARGE HERO CRANE PHOTO ---
-                    if (craneImg) {
-                        const imgW = 170;
-                        const imgH = 80; 
-                        const xPos = (210 - imgW) / 2;
-                        
-                        if (y + imgH > 260) {
-                            doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
-                        } else {
-                            doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
-                        }
-                    }
+                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+                    const intro = doc.splitTextToSize("Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.\n\nProudly supplying Crane Hire in Dublin & Cork with expert crane hire and specialized heavy lift engineering solutions across a range of industries. Backed by years of experience and investment, our strategically located depots ensure fast, efficient, and reliable service for projects of all sizes.", fullW);
+                    doc.text(intro, mainX, y); y += (intro.length * 5) + 10;
 
-                    // --- SAFETY FOOTER (PAGE 1) ---
-                    drawFooter(1);
+                    if (craneImg) doc.addImage(craneImg, 'JPEG', (210 - 170)/2, y, 170, 80);
+                    drawFooter();
 
-                    // ================= PAGE 2: DETAILS =================
+                    // PAGE 2
                     doc.addPage();
+                    doc.setFillColor(...yellow); doc.rect(0, 0, 210, 25, 'F'); 
+                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 2, 45, 15);
+                    doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+                    doc.text(`Quote Ref: ${uniqueRef}`, 190, 15, { align: "right" });
 
-                    // Simple Header for Page 2
-                    doc.setFillColor(...yellow);
-                    doc.rect(0, 0, 210, 25, 'F'); 
-                    
-                    if (kavLogo) {
-                        doc.addImage(kavLogo, 'PNG', 20, 2, 45, 15);
+                    // SPACER: Moved content HIGHER to 40 (was 55)
+                    let sY = 40; 
+                    const sideX = 140; 
+                    if (logo50) { 
+                        doc.addImage(logo50, 'PNG', sideX + 5, sY, 40, 32); 
+                        sY += 40; 
                     }
-                    
-                    doc.setTextColor(...black);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(10);
-                    doc.text(`Quote Ref: ${cleanRef}`, 190, 15, { align: "right" });
-                    
-                    y = 40; 
-                    const sideX = 140; // Sidebar start
+                    doc.setDrawColor(200, 200, 200); doc.line(sideX, sY, sideX+50, sY); sY += 10;
+                    doc.text("LOCATIONS", sideX + 25, sY, { align: "center" }); sY += 8;
+                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+                    ["Dublin", "Cork", "Wexford", "Waterford", "Carlow"].forEach(l => { doc.text(l, sideX + 25, sY, { align: "center" }); sY += 5; });
+                    sY += 10; doc.setDrawColor(200, 200, 200); doc.line(sideX, sY, sideX+50, sY); sY += 10;
+                    sY = drawSidebarContact(sY, sideX);
+
+                    y = 40; // SPACER: Moved HIGHER to 40
                     const contentW = 110;
+                    doc.setFontSize(14); doc.setTextColor(...black); doc.text("JOB SPECIFICATION", mainX, y); y += 6;
 
-                    // --- LEFT COL: SPEC ---
-                    doc.setFontSize(14);
-                    doc.text("JOB SPECIFICATION", mainX, y);
-                    y += 6;
+                    // BOX HEIGHT CALCULATION
+                    // Increased base height (was 70) to allow more breathing room
+                    let boxHeight = 85; 
+                    if (formData.liftPlanRequired) boxHeight += 6; 
+                    if (formData.apRequired) boxHeight += 6;
+                    if (formData.banksmanRequired) boxHeight += 6;
+                    if (formData.ballastRequired) boxHeight += 6;
+                    // REMOVED Spreader/Accommodation from box height calculation as they are notes only
+                    
+                    let otherItemsHeight = 0;
+                    if (formData.otherItemsRequired) {
+                         const dText = formData.otherItemsDesc || "Additional Item";
+                         const dLines = doc.splitTextToSize(dText, 55); 
+                         otherItemsHeight = Math.max(6, dLines.length * 4 + 4);
+                         boxHeight += otherItemsHeight;
+                    }
 
-                    // --- DYNAMIC BOX HEIGHT CALCULATION ---
-                    let boxHeight = 90; // Base height
-                    if (formData.liftPlanRequired) boxHeight += 12;
-                    if (formData.apRequired) boxHeight += 12;
-                    if (formData.banksmanRequired) boxHeight += 12;
-                    if (formData.addVat) boxHeight += 24; // Extra space for VAT rows
+                    if (formData.addVat) boxHeight += 24;
 
-                    doc.setFillColor(...lightGrey);
-                    doc.setDrawColor(...yellow);
-                    doc.setLineWidth(1.5); 
-                    doc.rect(mainX, y, contentW, boxHeight, 'F'); 
-                    doc.line(mainX, y, mainX, y+boxHeight); 
+                    doc.setFillColor(...lightGrey); doc.setDrawColor(...yellow); doc.setLineWidth(1.5); 
+                    doc.rect(mainX, y, contentW, boxHeight, 'F'); doc.line(mainX, y, mainX, y+boxHeight); 
 
-                    // Grid Data
-                    let gridY = y + 10;
+                    // SPACING: Increased steps to 9 (was 7)
+                    let gridY = y + 8;
                     const drawSpecItem = (label, val, xOffset, yOffset) => {
-                        doc.setFontSize(7);
-                        doc.setTextColor(120, 120, 120);
-                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(7); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
                         doc.text(label.toUpperCase(), mainX + 5 + xOffset, yOffset);
-                        doc.setFontSize(10);
-                        doc.setTextColor(...black);
-                        doc.setFont("helvetica", "normal");
+                        doc.setFontSize(10); doc.setTextColor(...black); doc.setFont("helvetica", "normal");
                         doc.text(val || "-", mainX + 5 + xOffset, yOffset + 5);
                     };
 
-                    // --- CALCULATION LOGIC ---
-                    const hasPricing = formData.price && formData.minHours;
-                    let subTotal = hasPricing ? (parseFloat(formData.price) * parseFloat(formData.minHours)) : 0;
-                    
-                    // Add Extras logic - correctly ignoring if included
-                    if (formData.liftPlanRequired && !formData.liftPlanIncluded && formData.liftPlanCost) {
-                        subTotal += parseFloat(formData.liftPlanCost);
-                    }
-                    if (formData.apRequired && !formData.apIncluded && formData.apCost) {
-                        subTotal += (parseFloat(formData.apCost) * parseInt(formData.apCount));
-                    }
-                    if (formData.banksmanRequired && !formData.banksmanIncluded && formData.banksmanCost) {
-                        subTotal += (parseFloat(formData.banksmanCost) * parseInt(formData.banksmanCount));
-                    }
-                    
-                    const vatAmount = formData.addVat ? (subTotal * 0.23) : 0;
-                    const grandTotal = subTotal + vatAmount;
+                    const hourlyRateVal = parseFloat(formData.hourlyRate || 0);
 
-                    // Draw Items
                     drawSpecItem("Customer Name", formData.clientName, 0, gridY);
-                    gridY += 12;
+                    drawSpecItem("Site Address", formData.siteAddress, 55, gridY);
+                    gridY += 9; // Spaced out
+                    
                     drawSpecItem("Customer Email", formData.clientEmail, 0, gridY);
-                    gridY += 12;
-                    drawSpecItem("Crane Type", formData.craneType, 0, gridY);
-                    gridY += 12;
-                    drawSpecItem("Site Address", formData.siteAddress, 0, gridY);
-                    
-                    // Divider
-                    gridY += 12;
-                    doc.setDrawColor(200, 200, 200);
-                    doc.setLineWidth(0.5);
-                    doc.line(mainX + 5, gridY - 2, mainX + contentW - 5, gridY - 2);
+                    drawSpecItem("Crane Type", formData.craneType, 55, gridY);
+                    gridY += 9; // Spaced out
 
-                    // Standard Pricing
-                    gridY += 6; 
-                    drawSpecItem("Hourly Rate", `EUR ${formData.price || '0.00'}`, 0, gridY);
-                    drawSpecItem("Min. Hours", `${formData.minHours || '8'} Hrs`, 40, gridY);
+                    drawSpecItem("Client Phone", formData.contactNumber, 0, gridY);
+                    gridY += 9;
+
+                    doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.5);
+                    doc.line(mainX + 5, gridY - 2, mainX + contentW - 5, gridY - 2); gridY += 6; 
                     
-                    // Extra Rows
+                    drawSpecItem("Crane Duration", `${totalMinHours} Hours`, 0, gridY);
+                    drawSpecItem("Hourly Rate", `EUR ${formatNumber(hourlyRateVal)}`, 55, gridY);
+                    
+                    // Reduced spacing for items
                     if (formData.liftPlanRequired) {
-                        gridY += 12;
-                        drawSpecItem("Lift Plan", "Required", 0, gridY);
-                        const costStr = formData.liftPlanIncluded ? "Rates Included" : `EUR ${parseFloat(formData.liftPlanCost || 0).toFixed(2)}`;
-                        drawSpecItem("Cost", costStr, 40, gridY);
+                        gridY += 9; drawSpecItem("Lift Plan", "Required", 0, gridY);
+                        drawSpecItem("Cost", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`, 55, gridY);
                     }
-
                     if (formData.apRequired) {
-                        gridY += 12;
-                        drawSpecItem(`Appointed Person (x${formData.apCount})`, "Required", 0, gridY);
-                        const costStr = formData.apIncluded ? "Rates Included" : `EUR ${(parseFloat(formData.apCost || 0) * parseInt(formData.apCount)).toFixed(2)}`;
-                        drawSpecItem("Cost", costStr, 40, gridY);
+                        gridY += 9; drawSpecItem(`Lift Supervisor (x${formData.apCount})`, "Required", 0, gridY);
+                        drawSpecItem("Cost", formData.apIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.apCost)*formData.apCount)}`, 55, gridY);
                     }
-
                     if (formData.banksmanRequired) {
-                        gridY += 12;
-                        drawSpecItem(`Banksman (x${formData.banksmanCount})`, "Required", 0, gridY);
-                        const costStr = formData.banksmanIncluded ? "Rates Included" : `EUR ${(parseFloat(formData.banksmanCost || 0) * parseInt(formData.banksmanCount)).toFixed(2)}`;
-                        drawSpecItem("Cost", costStr, 40, gridY);
+                        gridY += 9; drawSpecItem(`Banksman (x${formData.banksmanCount})`, "Required", 0, gridY);
+                        drawSpecItem("Cost", formData.banksmanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.banksmanCost)*formData.banksmanCount)}`, 55, gridY);
+                    }
+                    if (formData.ballastRequired) {
+                        gridY += 9; drawSpecItem("Ballast Truck (Each Way)", "Required", 0, gridY);
+                        const bCost = parseFloat(formData.ballastCost || 0);
+                        drawSpecItem("Cost", `EUR ${formatNumber(bCost * 2)}`, 55, gridY);
+                    }
+                    // REMOVED Spreader/Accommodation loops from here
+                    
+                    if (formData.otherItemsRequired) {
+                        gridY += 9; 
+                        const oDesc = formData.otherItemsDesc || "Additional Item";
+                        const splitDesc = doc.splitTextToSize(oDesc, 45); 
+                        
+                        doc.setFontSize(7); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
+                        doc.text("ADDITIONAL ITEM", mainX + 5, gridY);
+                        doc.setFontSize(10); doc.setTextColor(...black); doc.setFont("helvetica", "normal");
+                        doc.text(splitDesc, mainX + 5, gridY + 5);
+
+                        drawSpecItem("Cost", `EUR ${formatNumber(parseFloat(formData.otherItemsCost))}`, 55, gridY);
+                        const addedH = Math.max(0, (splitDesc.length - 1) * 4);
+                        gridY += addedH;
                     }
 
-                    gridY += 15; 
+                    gridY += 20; // Increased Gap
                     
                     if (formData.addVat) {
-                        // Subtotal
-                        drawSpecItem("Subtotal (Ex VAT)", `EUR ${subTotal.toFixed(2)}`, 0, gridY);
-                        gridY += 10;
-                        // VAT
-                        drawSpecItem("VAT (23%)", `EUR ${vatAmount.toFixed(2)}`, 0, gridY);
-                        gridY += 10;
-                        // Grand Total
-                        doc.setFillColor(254, 252, 232); 
-                        doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
-                        doc.setTextColor(220, 0, 0); 
-                        drawSpecItem("Total (Inc VAT)", `EUR ${grandTotal.toFixed(2)}`, 0, gridY + 1);
-                    } else {
-                        // Standard Total Ex VAT
-                        doc.setFillColor(254, 252, 232); 
-                        doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
-                        doc.setTextColor(220, 0, 0); 
-                        drawSpecItem("Total (Ex VAT)", hasPricing ? `EUR ${subTotal.toFixed(2)}` : "POA", 0, gridY + 1);
+                        drawSpecItem("Subtotal (Ex VAT)", `EUR ${formatNumber(subTotal)}`, 0, gridY); gridY += 9;
+                        drawSpecItem("VAT (23%)", `EUR ${formatNumber(vatAmount)}`, 0, gridY); gridY += 9;
                     }
-
-                    y += boxHeight + 10;
-
-                    // --- LEFT COL: T&CS ---
-                    doc.setTextColor(...black);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(12);
-                    doc.text("TERMS & CONDITIONS", mainX, y);
-                    y += 6;
-
-                    doc.setTextColor(...grey);
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(8);
                     
-                    const terms = [
-                        "1. All site inductions and familiarisation of site by Employing Contractor/Hirer.",
-                        "2. Crane standing areas by Employing Contractor/Hirer. Kavanagh Crane Hire cannot accept responsibility for any delays incurred in setting up crane if ground conditions/access roads are not favourable.",
-                        "3. Permits & Traffic management are the responsibility of the Hirer unless otherwise agreed.",
-                        "4. All quoted rates are subject to 23% VAT.",
-                        "5. Crane sizes and positions are based on information given. We recommend a site survey to confirm.",
-                        "6. Hirer is responsible for ground conditions and must sign off 'Section 7' of the lift plan.",
-                        "7. Standard Slings/Chains supplied. Specialist tackle available on request.",
-                        "8. Winded off hours charged at 75% of min hire rate."
+                    doc.setFillColor(254, 252, 232); doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
+                    doc.setTextColor(220, 0, 0); 
+                    drawSpecItem(formData.addVat ? "Total (Inc VAT)" : "Total Min. Charge (Ex VAT)", `EUR ${formatNumber(grandTotal)}`, 0, gridY + 1);
+
+                    y += boxHeight + 10; 
+                    y = Math.max(y, sY + 10); 
+
+                    // PAGE BREAK CHECK
+                    if (y > 230) { doc.addPage(); y = 55; }
+
+                    doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+                    doc.text("INSURANCE & NOTES", mainX, y); y += 6;
+                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); 
+                    
+                    const noteLines = [
+                        `ADDITIONAL CHARGES: All Saturday, Sunday, and Bank Holiday hours (including travel) are outside normal working hours and charged at an additional €${formatNumber(parseFloat(formData.weekendCost))} per hour. Accommodation, if required, is charged at €${formatNumber(parseFloat(formData.accommodationCost))} per night.`,
+                        "",
+                        "EQUIPMENT & LIABILITY: Standard lifting tackle (chains, slings & shackles) is included; specialist tackle is available at an additional cost. Please Note: Due to fluctuating fuel prices, quotes are subject to change upon confirmation of dates. Kavanagh Crane Hire Ltd accepts no responsibility for damage to ground during the hire period.",
+                        "",
+                        "INSURANCE HELD: On-Hook: €1m | Height: Unlimited | Employers Liability: €13m | Public Liability: €10m (Primary) & €10m (Excess). (On-hook and Height insurance are above industry standards)"
                     ];
-
-                    terms.forEach((term, index) => {
-                         const lines = doc.splitTextToSize(term, contentW);
-                         doc.text(lines, mainX + 5, y);
-                         // Bullet
-                         doc.setFont("helvetica", "bold");
-                         doc.text((index+1) + ".", mainX, y);
-                         doc.setFont("helvetica", "normal");
-                         y += (lines.length * 4) + 2;
-                    });
-
-
-                    // --- RIGHT COL: SIDEBAR ---
-                    let sY = 40;
-
-                    // 50 Years Logo
-                    if (logo50) {
-                        doc.addImage(logo50, 'PNG', sideX, sY, 50, 40);
-                        sY += 50;
+                    
+                    if (formData.spreaderBars) {
+                         noteLines.splice(1, 0, `• Delivery & Collection of Spreader Bars €${formatNumber(parseFloat(formData.spreaderCost))} E/W`);
                     }
 
-                    // Divider
-                    doc.setDrawColor(200, 200, 200);
-                    doc.setLineWidth(0.5);
-                    doc.line(sideX, sY, sideX+50, sY);
-                    sY += 10;
-
-                    // Locations
-                    doc.setTextColor(...black);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(10);
-                    doc.text("LOCATIONS", sideX + 25, sY, { align: "center" });
-                    sY += 8;
-                    doc.setTextColor(...grey);
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(9);
-                    const locs = ["Dublin", "Cork", "Wexford", "Waterford", "Carlow"];
-                    locs.forEach(l => {
-                        doc.text(l, sideX + 25, sY, { align: "center" });
-                        sY += 5;
+                    noteLines.forEach(line => {
+                        const lines = doc.splitTextToSize(line, fullW);
+                        if (y + (lines.length * 3.5) > 265) {
+                            doc.addPage();
+                            y = 55; // SPACER for new pages too
+                        }
+                        doc.text(lines, mainX, y); y += (lines.length * 3.5) + 1;
                     });
                     
-                    sY += 10;
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(sideX, sY, sideX+50, sY);
-                    sY += 10;
+                    if (y < 265) drawFooter(); 
 
-                    // Contact
-                    drawSidebarContact(sY, sideX);
-
-                    // --- FOOTER PAGE 2 ---
-                    drawFooter(2);
-
-                    // --- SAVE ---
                     const blob = doc.output('blob');
-                    const file = new File([blob], `${cleanRef}_${formData.clientName}.pdf`, { type: 'application/pdf' });
+                    const file = new File([blob], `${uniqueRef}.pdf`, { type: 'application/pdf' });
                     
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: `Quote ${cleanRef}`,
-                            text: `Please find attached quote ${cleanRef} from ${formData.adviserName}.`
-                        });
+                        await navigator.share({ files: [file], title: `Quote ${uniqueRef}` });
                         setStatusMsg('Quote Shared');
                     } else {
                         const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = file.name;
-                        a.click();
+                        const a = document.createElement('a'); a.href = url; a.download = file.name; a.click();
                         setStatusMsg('Quote Downloaded');
                     }
 
-                    if (firebaseAvailable) {
-                        await incrementCounter();
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                    setStatusMsg(`Error: ${err.message}`);
-                }
-                
+                } catch (err) { console.error(err); setStatusMsg(`Error: ${err.message}`); }
                 setTimeout(() => { setIsGenerating(false); setStatusMsg(''); }, 3000);
             };
 
             return (
                 <div className="min-h-screen relative flex flex-col pb-24 bg-slate-50">
-                    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+                    <nav className="sticky top-0 z-50 bg-brand-yellow shadow-md border-b border-yellow-500">
                         <div className="max-w-3xl mx-auto px-4 py-3 flex justify-between items-center">
                              <div className="flex items-center gap-3">
-                                <img 
-                                    src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavLogo.png" 
-                                    alt="Kavanagh" 
-                                    className="h-10 w-auto object-contain"
-                                    onError={(e) => e.target.style.display = 'none'}
-                                />
-                                <div className="hidden sm:block">
-                                    <h1 className="text-sm font-bold text-slate-900 tracking-tight">KAVANAGH</h1>
-                                </div>
+                                <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavLogo.png" alt="Kavanagh" className="h-10 w-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                              </div>
-                             
-                             <div className="px-3 py-1 bg-yellow-100 border border-yellow-200 rounded-full flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                <span className="text-xs font-mono font-bold text-yellow-700 tracking-wide">{quoteRef}</span>
+                             <div className="px-3 py-1 flex items-center gap-2">
+                                <span className="text-xs font-mono font-bold text-slate-800 tracking-wide">
+                                    {quoteRef || "---"}
+                                </span>
                              </div>
                         </div>
                     </nav>
 
+                    {showNotesModal && (
+                        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 relative">
+                                <button onClick={() => setShowNotesModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+                                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Settings size={18} className="text-yellow-500"/> Configure Standard Notes</h3>
+                                <div className="space-y-4">
+                                    <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                        <div className="flex justify-between items-center"><span className="text-sm font-bold text-slate-700 flex items-center gap-2"><TruckIcon size={16}/> Spreader Bars</span><input type="checkbox" name="spreaderBars" checked={formData.spreaderBars} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/></div>
+                                        {formData.spreaderBars && (<div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-400">€</span><input type="number" name="spreaderCost" value={formData.spreaderCost} onChange={handleChange} className="w-24 text-sm p-1 border rounded" /><span className="text-xs text-slate-400">E/W</span></div>)}
+                                    </div>
+                                    <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                        <div className="flex justify-between items-center"><span className="text-sm font-bold text-slate-700 flex items-center gap-2"><BedDouble size={16}/> Accommodation</span><input type="checkbox" name="accommodation" checked={formData.accommodation} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/></div>
+                                        {formData.accommodation && (<div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-400">€</span><input type="number" name="accommodationCost" value={formData.accommodationCost} onChange={handleChange} className="w-24 text-sm p-1 border rounded" /><span className="text-xs text-slate-400">P/Night</span></div>)}
+                                    </div>
+                                    <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                        <div className="flex justify-between items-center"><span className="text-sm font-bold text-slate-700 flex items-center gap-2"><CalendarClock size={16}/> Weekend Surcharge</span><input type="checkbox" name="weekendCharge" checked={formData.weekendCharge} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/></div>
+                                        {formData.weekendCharge && (<div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-400">€</span><input type="number" name="weekendCost" value={formData.weekendCost} onChange={handleChange} className="w-24 text-sm p-1 border rounded" /><span className="text-xs text-slate-400">/hr</span></div>)}
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowNotesModal(false)} className="w-full mt-6 bg-brand-black text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors">Done</button>
+                            </div>
+                        </div>
+                    )}
+
                     <main className="flex-grow w-full max-w-3xl mx-auto px-4 py-6 relative z-10 space-y-6">
-                        <div className="white-panel p-6 rounded-2xl relative overflow-hidden">
-                             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                             <h2 className="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                <FileText className="text-brand-yellow" size={24} /> 
-                                Quote Generator
-                             </h2>
-                             <p className="text-xs text-slate-500">
-                                Create industrial-standard proposals.
-                                {!firebaseAvailable && <span className="text-amber-500 font-bold ml-1"> (Offline Mode)</span>}
-                             </p>
+                        <div className="white-panel p-6 rounded-2xl relative overflow-hidden flex justify-between items-start">
+                             <div>
+                                 <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                                 <h2 className="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2"><FileText className="text-brand-yellow" size={24} /> Quote Generator</h2>
+                             </div>
+                             <button onClick={() => setShowNotesModal(true)} className="bg-slate-100 p-2 rounded-full hover:bg-yellow-100 hover:text-yellow-600 transition-colors z-10"><Settings size={20} /></button>
                         </div>
 
                         <div className="space-y-4 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="md:col-span-2">
                                 <InputGroup label="Crane Adviser" icon={HardHat}>
                                     <div className="relative">
-                                        <select 
-                                            name="adviser"
-                                            value={formData.adviserName}
-                                            onChange={handleAdviserChange}
-                                            className="w-full bg-transparent outline-none text-slate-900 font-bold appearance-none text-sm cursor-pointer"
-                                        >
-                                            {ADVISERS.map(adv => (
-                                                <option key={adv.initials} value={adv.name}>{adv.name}</option>
-                                            ))}
+                                        <select name="adviser" value={formData.adviserName} onChange={handleAdviserChange} className="w-full bg-transparent outline-none text-slate-900 font-bold appearance-none text-sm cursor-pointer">
+                                            {ADVISERS.map(adv => <option key={adv.initials} value={adv.name}>{adv.name}</option>)}
                                         </select>
                                     </div>
                                 </InputGroup>
                             </div>
 
-                            <InputGroup label="Date" icon={Calendar}>
-                                <TextInput type="date" name="date" value={formData.date} onChange={handleChange} />
-                            </InputGroup>
-                            
-                            <InputGroup label="Ref Preview" icon={FileBadge}>
-                                <div className="text-sm font-mono font-bold text-yellow-600 pt-1.5 truncate">{quoteRef}</div>
-                            </InputGroup>
-
-                            <InputGroup label="Client Name" icon={User}>
-                                <TextInput name="clientName" placeholder="Company or Contact Name" value={formData.clientName} onChange={handleChange} />
-                            </InputGroup>
-
-                             <InputGroup label="Client Email" icon={Mail}>
-                                <TextInput type="email" name="clientEmail" placeholder="email@example.com" value={formData.clientEmail} onChange={handleChange} />
-                            </InputGroup>
-
-                            <div className="md:col-span-2">
-                                <InputGroup label="Site Address" icon={MapPin}>
-                                    <TextInput name="siteAddress" value={formData.siteAddress} onChange={handleChange} />
-                                </InputGroup>
-                            </div>
+                            <InputGroup label="Date" icon={Calendar}><TextInput type="date" name="date" value={formData.date} onChange={handleChange} /></InputGroup>
+                            <InputGroup label="Client Name" icon={User}><TextInput name="clientName" placeholder="Company / Contact" value={formData.clientName} onChange={handleChange} /></InputGroup>
+                            <InputGroup label="Client Email" icon={Mail}><TextInput type="email" name="clientEmail" placeholder="client@email.com" value={formData.clientEmail} onChange={handleChange} /></InputGroup>
+                            <InputGroup label="Client Phone" icon={Phone}><TextInput type="tel" name="contactNumber" placeholder="08X..." value={formData.contactNumber} onChange={handleChange} /></InputGroup>
+                            <div className="md:col-span-2"><InputGroup label="Site Address" icon={MapPin}><TextInput name="siteAddress" value={formData.siteAddress} onChange={handleChange} /></InputGroup></div>
 
                             <div className="md:col-span-2">
                                 <InputGroup label="Crane Model" icon={Truck}>
                                     <div className="relative">
-                                        <select 
-                                            name="craneType"
-                                            value={formData.craneType}
-                                            onChange={handleChange}
-                                            className="w-full bg-transparent outline-none text-slate-800 font-semibold appearance-none text-sm cursor-pointer"
-                                        >
+                                        <select name="craneType" value={formData.craneType} onChange={handleCraneChange} className="w-full bg-transparent outline-none text-slate-800 font-semibold appearance-none text-sm cursor-pointer">
                                             {CRANE_LIST.map((group) => (
                                                 <optgroup key={group.category} label={group.category} className="text-yellow-600 bg-white">
-                                                    {group.cranes.map((crane) => (
-                                                        <option key={crane} value={crane} className="text-slate-800 bg-white">{crane}</option>
-                                                    ))}
+                                                    {group.cranes.map((crane) => <option key={crane} value={crane} className="text-slate-800 bg-white">{crane}</option>)}
                                                 </optgroup>
                                             ))}
                                         </select>
@@ -872,160 +680,144 @@
                                 </InputGroup>
                             </div>
 
-                            <InputGroup label="Hourly Rate (Ex VAT)" icon={Euro}>
-                                <TextInput type="number" name="price" placeholder="0.00" value={formData.price} onChange={handleChange} />
-                            </InputGroup>
-                            
-                            <div className="flex flex-col gap-2">
-                                <InputGroup label="Min. Hire Hours" icon={Clock}>
-                                    <TextInput type="number" name="minHours" placeholder="8" value={formData.minHours} onChange={handleChange} />
-                                </InputGroup>
-                                
-                                <div className="flex items-center gap-2 mt-2">
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="addVat" checked={formData.addVat} onChange={handleChange} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
-                                        <span className="ml-2 text-sm font-bold text-slate-600">Add VAT (23%)</span>
-                                    </label>
+                            <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1 flex gap-2 items-center"><TruckIcon size={14}/> Hire Package Configuration</div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <Stepper label="Mob (Hrs)" value={formData.mobHours} onChange={(v) => updateHours('mobHours', v)} step={0.5} />
+                                    <Stepper label="Demob (Hrs)" value={formData.demobHours} onChange={(v) => updateHours('demobHours', v)} step={0.5} />
+                                    <Stepper label="Onsite (Hrs)" value={formData.siteHours} onChange={(v) => updateHours('siteHours', v)} step={0.5} />
+                                </div>
+                                <div className="text-xs text-slate-500 text-center font-mono">Total Min. Hours: <span className="font-bold text-slate-900">{totalMinHours}</span></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputGroup label="Normal Rate (€/hr)" icon={Euro}><TextInput type="number" name="hourlyRate" value={formData.hourlyRate} onChange={handleChange} /></InputGroup>
+                                    <InputGroup label="Overtime Rate (€/hr)" icon={Clock}><TextInput type="number" name="overtimeRate" value={formData.overtimeRate} onChange={handleChange} /></InputGroup>
                                 </div>
                             </div>
 
-                            {/* Additional Services Section */}
                             <div className="md:col-span-2 space-y-4">
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Additional Services</div>
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1 flex justify-between items-center">
+                                    <span>Additional Services</span>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="addVat" checked={formData.addVat} onChange={handleChange} className="sr-only peer" />
+                                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-300 rounded-full peer peer-checked:bg-yellow-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                                        <span className="ml-2 text-[10px] font-bold text-slate-500">VAT (23%)</span>
+                                    </label>
+                                </div>
                                 
-                                {/* Lift Plan */}
+                                {/* LIFT PLAN */}
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
-                                            <input type="checkbox" name="liftPlanRequired" checked={formData.liftPlanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
+                                            <input type="checkbox" name="liftPlanRequired" checked={formData.liftPlanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
                                             <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><FileCheck size={16}/> Lift Plan</span>
                                         </label>
-                                        
                                         {formData.liftPlanRequired && (
+                                            <div className="flex-1 flex gap-4 animate-fade-in items-center">
+                                                <div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span><input type="number" name="liftPlanCost" disabled={formData.liftPlanIncluded} value={formData.liftPlanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/></div>
+                                                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="checkbox" name="liftPlanIncluded" checked={formData.liftPlanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/><span className="text-xs font-bold text-slate-600">Included</span></label>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* LIFT SUPERVISOR (WAS AP) */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="apRequired" checked={formData.apRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Briefcase size={16}/> Lift Supervisor</span>
+                                        </label>
+                                        {formData.apRequired && (
+                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
+                                                <div className="flex items-center gap-2 w-full md:w-32"><span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.apCount}</span><input type="range" name="apCount" min="1" max="5" value={formData.apCount} onChange={handleChange} className="flex-1"/></div>
+                                                <div className="flex gap-4 items-center flex-1">
+                                                    <div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span><input type="number" name="apCost" disabled={formData.apIncluded} value={formData.apCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/></div>
+                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="checkbox" name="apIncluded" checked={formData.apIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/><span className="text-xs font-bold text-slate-600">Included</span></label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* BANKSMAN */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="banksmanRequired" checked={formData.banksmanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Users size={16}/> Banksman</span>
+                                        </label>
+                                        {formData.banksmanRequired && (
+                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
+                                                <div className="flex items-center gap-2 w-full md:w-32"><span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.banksmanCount}</span><input type="range" name="banksmanCount" min="1" max="5" value={formData.banksmanCount} onChange={handleChange} className="flex-1"/></div>
+                                                <div className="flex gap-4 items-center flex-1">
+                                                    <div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span><input type="number" name="banksmanCost" disabled={formData.banksmanIncluded} value={formData.banksmanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/></div>
+                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="checkbox" name="banksmanIncluded" checked={formData.banksmanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/><span className="text-xs font-bold text-slate-600">Included</span></label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* BALLAST TRUCK */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="ballastRequired" checked={formData.ballastRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><TruckIcon size={16}/> Ballast Truck (Each Way)</span>
+                                        </label>
+                                        {formData.ballastRequired && (
                                             <div className="flex-1 flex gap-4 animate-fade-in items-center">
                                                 <div className="relative flex-1">
                                                     <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
-                                                    <input type="number" name="liftPlanCost" placeholder="Cost" disabled={formData.liftPlanIncluded} value={formData.liftPlanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
-                                                </div>
-                                                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                                                    <input type="checkbox" name="liftPlanIncluded" checked={formData.liftPlanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
-                                                    <span className="text-xs font-bold text-slate-600">Included</span>
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Appointed Person */}
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
-                                            <input type="checkbox" name="apRequired" checked={formData.apRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
-                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Briefcase size={16}/> Appointed Person</span>
-                                        </label>
-                                        
-                                        {formData.apRequired && (
-                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
-                                                <div className="flex items-center gap-2 w-full md:w-32">
-                                                    <span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.apCount}</span>
-                                                    <input type="range" name="apCount" min="1" max="5" value={formData.apCount} onChange={handleChange} className="flex-1"/>
-                                                </div>
-                                                <div className="flex gap-4 items-center flex-1">
-                                                    <div className="relative flex-1">
-                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
-                                                        <input type="number" name="apCost" placeholder="Cost per person" disabled={formData.apIncluded} value={formData.apCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
-                                                    </div>
-                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                                                        <input type="checkbox" name="apIncluded" checked={formData.apIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
-                                                        <span className="text-xs font-bold text-slate-600">Included</span>
-                                                    </label>
+                                                    <input type="number" name="ballastCost" value={formData.ballastCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none"/>
+                                                    <span className="absolute right-3 top-2.5 text-slate-400 text-xs">Charge</span>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Banksman */}
+                                {/* OTHER ITEMS */}
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
-                                            <input type="checkbox" name="banksmanRequired" checked={formData.banksmanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
-                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Users size={16}/> Banksman</span>
+                                            <input type="checkbox" name="otherItemsRequired" checked={formData.otherItemsRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Box size={16}/> Other Items</span>
                                         </label>
-                                        
-                                        {formData.banksmanRequired && (
-                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
-                                                <div className="flex items-center gap-2 w-full md:w-32">
-                                                    <span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.banksmanCount}</span>
-                                                    <input type="range" name="banksmanCount" min="1" max="5" value={formData.banksmanCount} onChange={handleChange} className="flex-1"/>
-                                                </div>
-                                                <div className="flex gap-4 items-center flex-1">
-                                                    <div className="relative flex-1">
-                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
-                                                        <input type="number" name="banksmanCost" placeholder="Cost per person" disabled={formData.banksmanIncluded} value={formData.banksmanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
-                                                    </div>
-                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                                                        <input type="checkbox" name="banksmanIncluded" checked={formData.banksmanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
-                                                        <span className="text-xs font-bold text-slate-600">Included</span>
-                                                    </label>
+                                        {formData.otherItemsRequired && (
+                                            <div className="flex-1 flex gap-2 animate-fade-in items-center">
+                                                <input type="text" name="otherItemsDesc" placeholder="Description" value={formData.otherItemsDesc} onChange={handleChange} className="flex-[2] bg-white border border-slate-300 rounded-lg py-2 px-3 text-sm outline-none"/>
+                                                <div className="relative flex-1">
+                                                    <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                    <input type="number" name="otherItemsCost" placeholder="0.00" value={formData.otherItemsCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none"/>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
+
                             </div>
-
                         </div>
 
                         <div className="flex gap-4 overflow-x-auto py-2">
-                             <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white border border-slate-200 whitespace-nowrap shadow-sm">
-                                <ShieldCheck size={12} className="text-brand-yellow" />
-                                <span className="text-[10px] font-bold text-slate-500">ISO 9001 Certified</span>
-                             </div>
-                             <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white border border-slate-200 whitespace-nowrap shadow-sm">
-                                <Map size={12} className="text-brand-yellow" />
-                                <span className="text-[10px] font-bold text-slate-500">Nationwide Coverage</span>
-                             </div>
+                             <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white border border-slate-200 whitespace-nowrap shadow-sm"><ShieldCheck size={12} className="text-brand-yellow" /><span className="text-[10px] font-bold text-slate-500">ISO 9001 Certified</span></div>
+                             <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white border border-slate-200 whitespace-nowrap shadow-sm"><Map size={12} className="text-brand-yellow" /><span className="text-[10px] font-bold text-slate-500">Nationwide Coverage</span></div>
                         </div>
-
                     </main>
 
                     <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50">
                         <div className="max-w-3xl mx-auto flex flex-col gap-2">
-                            {statusMsg && (
-                                <div className="text-center text-[10px] font-bold text-blue-500 animate-pulse">
-                                    {statusMsg}
-                                </div>
-                            )}
-                            <button 
-                                onClick={generatePDF}
-                                disabled={isGenerating || !formData.clientName}
-                                className="w-full bg-brand-black text-white font-bold text-sm py-4 rounded-xl shadow-lg hover:bg-slate-800 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {isGenerating ? (
-                                    <span>Processing...</span>
-                                ) : (
-                                    <>
-                                        <Share size={18} /> Generate & Share Quote
-                                    </>
-                                )}
+                            {statusMsg && <div className="text-center text-[10px] font-bold text-blue-500 animate-pulse">{statusMsg}</div>}
+                            <button onClick={handleGenerate} disabled={isGenerating || !formData.clientName} className="w-full bg-kavanagh-blue text-slate-900 font-bold text-sm py-4 rounded-xl shadow-lg hover:bg-[#33d6ff] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                {isGenerating ? <span>Generating PDF...</span> : <><Share size={18} /> Generate Quote & Share</>}
                             </button>
                         </div>
                     </div>
-
                 </div>
             );
         }
-
         const root = createRoot(document.getElementById('root'));
-        root.render(
-            <ErrorBoundary>
-                <AppContent />
-            </ErrorBoundary>
-        );
+        root.render(<ErrorBoundary><AppContent /></ErrorBoundary>);
     </script>
 </body>
 </html>
-
-
