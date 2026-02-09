@@ -376,6 +376,35 @@
                         }
                     };
 
+                    // Helper for Sidebar - Contact
+                    const drawSidebarContact = (sY, sideX) => {
+                        doc.setTextColor(...black);
+                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(10);
+                        doc.text("CONTACT US", sideX + 25, sY, { align: "center" });
+                        sY += 8;
+                        
+                        // Contact Person
+                        doc.setTextColor(...grey);
+                        doc.setFontSize(9);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Contact Seán O'Herlihy", sideX + 25, sY, { align: "center" });
+                        sY += 8;
+
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Mobile:", sideX + 25, sY, { align: "center" });
+                        doc.setFont("helvetica", "normal");
+                        sY += 5;
+                        doc.text(ADVISERS[0].phone, sideX + 25, sY, { align: "center" });
+                        sY += 8;
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Email:", sideX + 25, sY, { align: "center" });
+                        doc.setFont("helvetica", "normal");
+                        sY += 5;
+                        doc.text("sean@kavanaghcranehire.ie", sideX + 25, sY, { align: "center" });
+                        return sY;
+                    }
+
                     // ================= PAGE 1: PROPOSAL & PHOTOS =================
                     
                     // --- HERO HEADER ---
@@ -405,15 +434,14 @@
                     }
 
                     // Quote Reference Box
-                    doc.setTextColor(...black); // Reset text color
-                    doc.setFontSize(12);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("Quote Reference", 195, 20, { align: "right" });
-                    doc.setFillColor(255, 255, 255);
-                    doc.rect(145, 25, 50, 12, 'F');
-                    doc.setFontSize(14);
                     const cleanRef = count ? quoteRef : `${formData.adviserInitials}-${offlineRef}`;
-                    doc.text(cleanRef, 170, 33, { align: "center" });
+
+                    // Match Page 2 Style (Just text aligned right on header)
+                    doc.setTextColor(...black); 
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "bold");
+                    // Align roughly with Page 2 position
+                    doc.text(`Quote Ref: ${cleanRef}`, 190, 25, { align: "right" });
 
                     // Slogan Bar - Moved up
                     doc.setFillColor(...black);
@@ -441,28 +469,44 @@
                     doc.setTextColor(...grey);
                     doc.setFont("helvetica", "normal");
                     doc.setFontSize(10);
-                    const intro = `Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.`;
-                    const introLines = doc.splitTextToSize(intro, fullW);
+                    
+                    // Combined Text
+                    const para1 = `Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.`;
+                    
+                    const para2 = `Proudly supplying Crane Hire in Dublin & Cork with expert crane hire and specialized heavy lift engineering solutions across a range of industries. Backed by years of experience and investment, our strategically located depots ensure fast, efficient, and reliable service for projects of all sizes.`;
+                    
+                    const para3 = `As a family-run business, we prioritise safety, dependability, and exceptional customer service from consultation to project completion. Our diverse crane fleet—ranging from compact city cranes to powerful 700-tonne all-terrain cranes—is meticulously maintained and operated by certified professionals, ready to handle even the most complex lifting equipment challenges.`;
+
+                    const fullIntro = `${para1}\n\n${para2}\n\n${para3}`;
+
+                    const introLines = doc.splitTextToSize(fullIntro, fullW);
                     doc.text(introLines, mainX, y);
+                    
+                    // Advance Y based on text lines
                     y += (introLines.length * 5) + 10;
 
                     // --- LARGE HERO CRANE PHOTO ---
+                    // Check if we need a new page or just squeeze it
+                    // Max Y for page 1 content (leaving room for footer at 265) is approx 260.
+                    // If y > 180, photo might get tight.
+                    
                     if (craneImg) {
-                        // Squeezed height a bit manually
                         const imgW = 170;
-                        const imgH = 80; // Hardcoded height to squeeze it slightly
+                        const imgH = 80; 
                         
                         // Center image
                         const xPos = (210 - imgW) / 2;
-                        doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
-                        y += imgH + 20;
-                    } else {
-                         // Fallback space if image fails (CORS)
-                         doc.setFillColor(240, 240, 240);
-                         doc.rect(mainX, y, 170, 80, 'F');
-                         doc.setFontSize(8);
-                         doc.text("(Image unavailable due to browser restrictions)", 105, y+40, {align:'center'});
-                         y += 90;
+                        
+                        // Ensure we don't overlap footer
+                        if (y + imgH > 260) {
+                            // If too tight, add page or shrink image? 
+                            // Request said "lower picture", so it must flow after text.
+                            // If text is very long, image might go to page 2?
+                            // Let's try to fit it.
+                            doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
+                        } else {
+                            doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
+                        }
                     }
 
                     // --- SAFETY FOOTER (PAGE 1) ---
@@ -615,24 +659,7 @@
                     sY += 10;
 
                     // Contact
-                    doc.setTextColor(...black);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(10);
-                    doc.text("CONTACT US", sideX + 25, sY, { align: "center" });
-                    sY += 8;
-                    doc.setTextColor(...grey);
-                    doc.setFontSize(9);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("Mobile:", sideX + 25, sY, { align: "center" });
-                    doc.setFont("helvetica", "normal");
-                    sY += 5;
-                    doc.text(ADVISERS[0].phone, sideX + 25, sY, { align: "center" });
-                    sY += 8;
-                    doc.setFont("helvetica", "bold");
-                    doc.text("Email:", sideX + 25, sY, { align: "center" });
-                    doc.setFont("helvetica", "normal");
-                    sY += 5;
-                    doc.text("sean@kavanaghcranehire.ie", sideX + 25, sY, { align: "center" });
+                    drawSidebarContact(sY, sideX);
 
                     // --- FOOTER PAGE 2 ---
                     drawFooter(2);
