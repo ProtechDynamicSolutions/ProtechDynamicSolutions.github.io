@@ -73,6 +73,29 @@
             padding-right: 2.5rem;
             -webkit-print-color-adjust: exact;
         }
+        
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fecb00;
+            cursor: pointer;
+            transition: background .15s ease-in-out;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #eab308;
+        }
 
         body {
             background-color: #f8fafc;
@@ -88,7 +111,7 @@
         import { createRoot } from 'react-dom/client';
         import { 
             FileText, Share, Calendar, MapPin, User, Truck, Phone, 
-            Clipboard, Euro, FileBadge, ShieldCheck, Map, HardHat, Clock, Mail, AlertTriangle
+            Clipboard, Euro, FileBadge, ShieldCheck, Map, HardHat, Clock, Mail, AlertTriangle, FileCheck, Users, Briefcase
         } from 'lucide-react';
         
         // Safe imports for Firebase
@@ -214,10 +237,26 @@
                 craneType: 'Demag AC50-1 (50t)',
                 price: '',
                 minHours: '8',
+                addVat: false, 
                 jobDetails: '',
                 siteAddress: 'Cork',
                 contactName: '',
-                contactNumber: ''
+                contactNumber: '',
+                
+                // Extras
+                liftPlanRequired: false,
+                liftPlanCost: '',
+                liftPlanIncluded: false,
+
+                apRequired: false,
+                apCount: 1,
+                apCost: '',
+                apIncluded: false,
+
+                banksmanRequired: false,
+                banksmanCount: 1,
+                banksmanCost: '',
+                banksmanIncluded: false
             });
 
             const offlineRef = React.useMemo(() => Math.floor(Math.random() * 9000) + 1000, []);
@@ -286,8 +325,11 @@
             };
 
             const handleChange = (e) => {
-                const { name, value } = e.target;
-                setFormData(prev => ({ ...prev, [name]: value }));
+                const { name, value, type, checked } = e.target;
+                setFormData(prev => ({ 
+                    ...prev, 
+                    [name]: type === 'checkbox' ? checked : value 
+                }));
             };
 
             const handleAdviserChange = (e) => {
@@ -421,13 +463,12 @@
 
                     // Header Logo
                     if (kavLogo) {
-                        // Positioned slightly higher due to shorter header
                         doc.addImage(kavLogo, 'PNG', 15, 10, 60, 20); 
                     } else {
-                        // Fallback Text - Beefed up
+                        // Fallback Text
                         doc.setTextColor(...black);
                         doc.setFont("helvetica", "bold");
-                        doc.setFontSize(32); // Beefed up from 28
+                        doc.setFontSize(32); 
                         doc.text("KAVANAGH", 15, 25);
                         doc.setFontSize(12);
                         doc.text("CRANE HIRE LTD.", 15, 32);
@@ -436,14 +477,13 @@
                     // Quote Reference Box
                     const cleanRef = count ? quoteRef : `${formData.adviserInitials}-${offlineRef}`;
 
-                    // Match Page 2 Style (Just text aligned right on header)
+                    // Match Page 2 Style
                     doc.setTextColor(...black); 
                     doc.setFontSize(10);
                     doc.setFont("helvetica", "bold");
-                    // Align roughly with Page 2 position
                     doc.text(`Quote Ref: ${cleanRef}`, 190, 25, { align: "right" });
 
-                    // Slogan Bar - Moved up
+                    // Slogan Bar
                     doc.setFillColor(...black);
                     doc.rect(0, 50, 210, 10, 'F');
                     doc.setTextColor(255, 255, 255);
@@ -452,10 +492,9 @@
                     doc.text("Elevating Excellence Since 1973 - Where Commitment Meets Capability!", 105, 56, { align: "center" });
 
                     // --- PROPOSAL TEXT ---
-                    // Increased margins from 15 to 20 for print safety
                     let y = 75;
                     const mainX = 20; 
-                    const fullW = 170; // Adjusted width for margins
+                    const fullW = 170;
 
                     doc.setTextColor(...black);
                     doc.setFont("helvetica", "bold");
@@ -470,39 +509,22 @@
                     doc.setFont("helvetica", "normal");
                     doc.setFontSize(10);
                     
-                    // Combined Text
                     const para1 = `Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.`;
-                    
                     const para2 = `Proudly supplying Crane Hire in Dublin & Cork with expert crane hire and specialized heavy lift engineering solutions across a range of industries. Backed by years of experience and investment, our strategically located depots ensure fast, efficient, and reliable service for projects of all sizes.`;
-                    
                     const para3 = `As a family-run business, we prioritise safety, dependability, and exceptional customer service from consultation to project completion. Our diverse crane fleet—ranging from compact city cranes to powerful 700-tonne all-terrain cranes—is meticulously maintained and operated by certified professionals, ready to handle even the most complex lifting equipment challenges.`;
 
                     const fullIntro = `${para1}\n\n${para2}\n\n${para3}`;
-
                     const introLines = doc.splitTextToSize(fullIntro, fullW);
                     doc.text(introLines, mainX, y);
-                    
-                    // Advance Y based on text lines
                     y += (introLines.length * 5) + 10;
 
                     // --- LARGE HERO CRANE PHOTO ---
-                    // Check if we need a new page or just squeeze it
-                    // Max Y for page 1 content (leaving room for footer at 265) is approx 260.
-                    // If y > 180, photo might get tight.
-                    
                     if (craneImg) {
                         const imgW = 170;
                         const imgH = 80; 
-                        
-                        // Center image
                         const xPos = (210 - imgW) / 2;
                         
-                        // Ensure we don't overlap footer
                         if (y + imgH > 260) {
-                            // If too tight, add page or shrink image? 
-                            // Request said "lower picture", so it must flow after text.
-                            // If text is very long, image might go to page 2?
-                            // Let's try to fit it.
                             doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
                         } else {
                             doc.addImage(craneImg, 'JPEG', xPos, y, imgW, imgH);
@@ -519,7 +541,6 @@
                     doc.setFillColor(...yellow);
                     doc.rect(0, 0, 210, 25, 'F'); 
                     
-                    // Header Logo Page 2
                     if (kavLogo) {
                         doc.addImage(kavLogo, 'PNG', 20, 2, 45, 15);
                     }
@@ -538,8 +559,13 @@
                     doc.text("JOB SPECIFICATION", mainX, y);
                     y += 6;
 
-                    // Increase box height to accommodate pricing
-                    const boxHeight = 90; // Slightly taller for padding
+                    // --- DYNAMIC BOX HEIGHT CALCULATION ---
+                    let boxHeight = 90; // Base height
+                    if (formData.liftPlanRequired) boxHeight += 12;
+                    if (formData.apRequired) boxHeight += 12;
+                    if (formData.banksmanRequired) boxHeight += 12;
+                    if (formData.addVat) boxHeight += 24; // Extra space for VAT rows
+
                     doc.setFillColor(...lightGrey);
                     doc.setDrawColor(...yellow);
                     doc.setLineWidth(1.5); 
@@ -559,9 +585,25 @@
                         doc.text(val || "-", mainX + 5 + xOffset, yOffset + 5);
                     };
 
+                    // --- CALCULATION LOGIC ---
                     const hasPricing = formData.price && formData.minHours;
-                    const totalVal = hasPricing ? (parseFloat(formData.price) * parseFloat(formData.minHours)).toFixed(2) : "POA";
+                    let subTotal = hasPricing ? (parseFloat(formData.price) * parseFloat(formData.minHours)) : 0;
+                    
+                    // Add Extras logic - correctly ignoring if included
+                    if (formData.liftPlanRequired && !formData.liftPlanIncluded && formData.liftPlanCost) {
+                        subTotal += parseFloat(formData.liftPlanCost);
+                    }
+                    if (formData.apRequired && !formData.apIncluded && formData.apCost) {
+                        subTotal += (parseFloat(formData.apCost) * parseInt(formData.apCount));
+                    }
+                    if (formData.banksmanRequired && !formData.banksmanIncluded && formData.banksmanCost) {
+                        subTotal += (parseFloat(formData.banksmanCost) * parseInt(formData.banksmanCount));
+                    }
+                    
+                    const vatAmount = formData.addVat ? (subTotal * 0.23) : 0;
+                    const grandTotal = subTotal + vatAmount;
 
+                    // Draw Items
                     drawSpecItem("Customer Name", formData.clientName, 0, gridY);
                     gridY += 12;
                     drawSpecItem("Customer Email", formData.clientEmail, 0, gridY);
@@ -570,23 +612,60 @@
                     gridY += 12;
                     drawSpecItem("Site Address", formData.siteAddress, 0, gridY);
                     
-                    // Divider Line inside Box
+                    // Divider
                     gridY += 12;
                     doc.setDrawColor(200, 200, 200);
                     doc.setLineWidth(0.5);
                     doc.line(mainX + 5, gridY - 2, mainX + contentW - 5, gridY - 2);
 
-                    // Pricing INSIDE grid now
+                    // Standard Pricing
                     gridY += 6; 
                     drawSpecItem("Hourly Rate", `EUR ${formData.price || '0.00'}`, 0, gridY);
                     drawSpecItem("Min. Hours", `${formData.minHours || '8'} Hrs`, 40, gridY);
                     
-                    gridY += 15; // Extra padding for Total
-                    // Total with highlight
-                    doc.setFillColor(254, 252, 232); // Light yellow bg for total
-                    doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
-                    doc.setTextColor(220, 0, 0); 
-                    drawSpecItem("Total (Ex VAT)", `EUR ${totalVal}`, 0, gridY + 1); // Added +1 to nudge text down in box
+                    // Extra Rows
+                    if (formData.liftPlanRequired) {
+                        gridY += 12;
+                        drawSpecItem("Lift Plan", "Required", 0, gridY);
+                        const costStr = formData.liftPlanIncluded ? "Rates Included" : `EUR ${parseFloat(formData.liftPlanCost || 0).toFixed(2)}`;
+                        drawSpecItem("Cost", costStr, 40, gridY);
+                    }
+
+                    if (formData.apRequired) {
+                        gridY += 12;
+                        drawSpecItem(`Appointed Person (x${formData.apCount})`, "Required", 0, gridY);
+                        const costStr = formData.apIncluded ? "Rates Included" : `EUR ${(parseFloat(formData.apCost || 0) * parseInt(formData.apCount)).toFixed(2)}`;
+                        drawSpecItem("Cost", costStr, 40, gridY);
+                    }
+
+                    if (formData.banksmanRequired) {
+                        gridY += 12;
+                        drawSpecItem(`Banksman (x${formData.banksmanCount})`, "Required", 0, gridY);
+                        const costStr = formData.banksmanIncluded ? "Rates Included" : `EUR ${(parseFloat(formData.banksmanCost || 0) * parseInt(formData.banksmanCount)).toFixed(2)}`;
+                        drawSpecItem("Cost", costStr, 40, gridY);
+                    }
+
+                    gridY += 15; 
+                    
+                    if (formData.addVat) {
+                        // Subtotal
+                        drawSpecItem("Subtotal (Ex VAT)", `EUR ${subTotal.toFixed(2)}`, 0, gridY);
+                        gridY += 10;
+                        // VAT
+                        drawSpecItem("VAT (23%)", `EUR ${vatAmount.toFixed(2)}`, 0, gridY);
+                        gridY += 10;
+                        // Grand Total
+                        doc.setFillColor(254, 252, 232); 
+                        doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
+                        doc.setTextColor(220, 0, 0); 
+                        drawSpecItem("Total (Inc VAT)", `EUR ${grandTotal.toFixed(2)}`, 0, gridY + 1);
+                    } else {
+                        // Standard Total Ex VAT
+                        doc.setFillColor(254, 252, 232); 
+                        doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
+                        doc.setTextColor(220, 0, 0); 
+                        drawSpecItem("Total (Ex VAT)", hasPricing ? `EUR ${subTotal.toFixed(2)}` : "POA", 0, gridY + 1);
+                    }
 
                     y += boxHeight + 10;
 
@@ -797,9 +876,106 @@
                                 <TextInput type="number" name="price" placeholder="0.00" value={formData.price} onChange={handleChange} />
                             </InputGroup>
                             
-                            <InputGroup label="Min. Hire Hours" icon={Clock}>
-                                <TextInput type="number" name="minHours" placeholder="8" value={formData.minHours} onChange={handleChange} />
-                            </InputGroup>
+                            <div className="flex flex-col gap-2">
+                                <InputGroup label="Min. Hire Hours" icon={Clock}>
+                                    <TextInput type="number" name="minHours" placeholder="8" value={formData.minHours} onChange={handleChange} />
+                                </InputGroup>
+                                
+                                <div className="flex items-center gap-2 mt-2">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="addVat" checked={formData.addVat} onChange={handleChange} className="sr-only peer" />
+                                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                                        <span className="ml-2 text-sm font-bold text-slate-600">Add VAT (23%)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Additional Services Section */}
+                            <div className="md:col-span-2 space-y-4">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Additional Services</div>
+                                
+                                {/* Lift Plan */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="liftPlanRequired" checked={formData.liftPlanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><FileCheck size={16}/> Lift Plan</span>
+                                        </label>
+                                        
+                                        {formData.liftPlanRequired && (
+                                            <div className="flex-1 flex gap-4 animate-fade-in items-center">
+                                                <div className="relative flex-1">
+                                                    <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                    <input type="number" name="liftPlanCost" placeholder="Cost" disabled={formData.liftPlanIncluded} value={formData.liftPlanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
+                                                </div>
+                                                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                                                    <input type="checkbox" name="liftPlanIncluded" checked={formData.liftPlanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
+                                                    <span className="text-xs font-bold text-slate-600">Included</span>
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Appointed Person */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="apRequired" checked={formData.apRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Briefcase size={16}/> Appointed Person</span>
+                                        </label>
+                                        
+                                        {formData.apRequired && (
+                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
+                                                <div className="flex items-center gap-2 w-full md:w-32">
+                                                    <span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.apCount}</span>
+                                                    <input type="range" name="apCount" min="1" max="5" value={formData.apCount} onChange={handleChange} className="flex-1"/>
+                                                </div>
+                                                <div className="flex gap-4 items-center flex-1">
+                                                    <div className="relative flex-1">
+                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                        <input type="number" name="apCost" placeholder="Cost per person" disabled={formData.apIncluded} value={formData.apCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
+                                                    </div>
+                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                                                        <input type="checkbox" name="apIncluded" checked={formData.apIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
+                                                        <span className="text-xs font-bold text-slate-600">Included</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Banksman */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
+                                            <input type="checkbox" name="banksmanRequired" checked={formData.banksmanRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded focus:ring-yellow-500"/>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Users size={16}/> Banksman</span>
+                                        </label>
+                                        
+                                        {formData.banksmanRequired && (
+                                            <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
+                                                <div className="flex items-center gap-2 w-full md:w-32">
+                                                    <span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.banksmanCount}</span>
+                                                    <input type="range" name="banksmanCount" min="1" max="5" value={formData.banksmanCount} onChange={handleChange} className="flex-1"/>
+                                                </div>
+                                                <div className="flex gap-4 items-center flex-1">
+                                                    <div className="relative flex-1">
+                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                        <input type="number" name="banksmanCost" placeholder="Cost per person" disabled={formData.banksmanIncluded} value={formData.banksmanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm focus:border-yellow-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"/>
+                                                    </div>
+                                                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                                                        <input type="checkbox" name="banksmanIncluded" checked={formData.banksmanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/>
+                                                        <span className="text-xs font-bold text-slate-600">Included</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div className="flex gap-4 overflow-x-auto py-2">
