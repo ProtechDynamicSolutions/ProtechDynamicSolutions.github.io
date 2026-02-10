@@ -6,13 +6,10 @@
     <title>Kavanagh Crane Hire - Quote Tool</title>
     <link rel="icon" href="https://kavanaghcranehire.ie/wp-content/uploads/2024/07/quick-quote-chevron-colors-bg.svg" type="image/svg+xml">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- PDF Generation Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- Import Map for React modules -->
     <script type="importmap">
     {
         "imports": {
@@ -23,10 +20,8 @@
     }
     </script>
 
-    <!-- Babel for JSX transformation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Tailwind Config -->
     <script>
         tailwind.config = {
             theme: {
@@ -255,7 +250,6 @@
             const totalMinHours = parseFloat(formData.mobHours) + parseFloat(formData.demobHours) + parseFloat(formData.siteHours);
 
             // --- 1. GENERATE JOB NUMBER (TIMESTAMP BASED) ---
-            // Format: INITIALS-YYMMDDHHMM (Date backwards + Time)
             const fetchNextQuoteNumber = async (initials) => {
                 const now = new Date();
                 const yy = now.getFullYear().toString().slice(-2);
@@ -326,7 +320,6 @@
                 if (!window.jspdf) return;
                 setIsGenerating(true);
 
-                // Use the ref we already fetched, or fetch fresh if needed
                 let uniqueRef = quoteRef;
                 if (!uniqueRef || uniqueRef.includes('Loading') || uniqueRef.includes('ERR')) {
                      uniqueRef = await fetchNextQuoteNumber(formData.adviserInitials);
@@ -343,8 +336,6 @@
                 if (formData.ballastRequired) subTotal += (parseFloat(formData.ballastCost || 0) * 2);
                 if (formData.otherItemsRequired) subTotal += parseFloat(formData.otherItemsCost || 0);
                 
-                // EXCLUDED from Quote Total: Spreader Bars & Accommodation (Notes only)
-
                 const vatAmount = formData.addVat ? (subTotal * 0.23) : 0;
                 const grandTotal = subTotal + vatAmount;
 
@@ -359,9 +350,9 @@
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     const yellow = [254, 203, 0]; 
-                    const black = [26, 26, 26]; 
-                    const grey = [74, 74, 74]; 
-                    const lightGrey = [245, 245, 245];
+                    const black = [20, 20, 20]; 
+                    const darkGrey = [60, 60, 60]; 
+                    const lightGrey = [240, 240, 240]; 
 
                     const [headerBg, craneImg, logo50, isoImg, kavLogo] = await Promise.all([
                         getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavCranes.jpg"),
@@ -373,13 +364,13 @@
 
                     const drawFooter = () => {
                         const fY = 270; 
-                        doc.setFillColor(...black);
+                        doc.setFillColor(26, 26, 26);
                         doc.rect(0, fY, 210, 27, 'F');
                         doc.setTextColor(...yellow);
                         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
                         doc.text("THE CERTIFICATION PROCESS", 20, fY + 8);
-                        doc.setTextColor(200, 200, 200);
-                        doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+                        doc.setTextColor(220, 220, 220); 
+                        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); 
                         doc.text(doc.splitTextToSize("We partnered with Amtivo (formerly Certification Europe) for their strong industry reputation and INAB-accreditation. Working with a consultant, we aligned our systems with ISO 9001, ISO 14001, and ISO 45001 standards.", 110), 20, fY + 14);
                         if (isoImg) doc.addImage(isoImg, 'PNG', 135, fY + 5, 55, 20);
                     };
@@ -391,19 +382,19 @@
                         doc.setFontSize(9);
                         doc.text("Sales Rep", sideX + 25, sY, { align: "center" });
                         sY += 5;
-                        doc.setTextColor(...grey); doc.setFontSize(10); doc.setFont("helvetica", "normal"); 
+                        doc.setTextColor(...darkGrey); doc.setFontSize(10); doc.setFont("helvetica", "normal"); 
                         doc.text(formData.adviserName, sideX + 25, sY, { align: "center" });
                         sY += 8;
-                        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+                        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...black);
                         doc.text("Mobile:", sideX + 25, sY, { align: "center" });
-                        doc.setFont("helvetica", "normal"); sY += 5;
+                        doc.setFont("helvetica", "normal"); doc.setTextColor(...darkGrey); sY += 5;
                         doc.text(formData.adviserPhone, sideX + 25, sY, { align: "center" });
                         sY += 8;
-                        doc.setFont("helvetica", "bold");
+                        doc.setFont("helvetica", "bold"); doc.setTextColor(...black);
                         doc.text("Email:", sideX + 25, sY, { align: "center" });
-                        doc.setFont("helvetica", "normal"); sY += 5;
+                        doc.setFont("helvetica", "normal"); doc.setTextColor(...darkGrey); sY += 5;
                         doc.text(formData.adviserEmail, sideX + 25, sY, { align: "center" }); 
-                        return sY;
+                        return sY + 5; // Return Y with small padding
                     }
 
                     // PAGE 1
@@ -411,7 +402,7 @@
                     doc.setGState(new doc.GState({ opacity: 0.9 })); doc.setFillColor(...yellow); doc.rect(0, 0, 210, 50, 'F'); doc.setGState(new doc.GState({ opacity: 1.0 }));
                     if (kavLogo) doc.addImage(kavLogo, 'PNG', 15, 10, 60, 20); 
 
-                    doc.setTextColor(...black); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                    doc.setTextColor(...black); doc.setFontSize(11); doc.setFont("helvetica", "bold");
                     doc.text(`Quote Ref: ${uniqueRef}`, 190, 25, { align: "right" });
 
                     doc.setFillColor(...black); doc.rect(0, 50, 210, 10, 'F');
@@ -424,22 +415,21 @@
                     doc.text("PROPOSAL", mainX, y);
                     doc.setDrawColor(...yellow); doc.setLineWidth(1); doc.line(mainX, y+2, mainX+30, y+2); y += 10;
 
-                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+                    doc.setTextColor(...darkGrey); doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); 
                     const intro = doc.splitTextToSize("Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.\n\nProudly supplying Crane Hire in Dublin & Cork with expert crane hire and specialized heavy lift engineering solutions across a range of industries. Backed by years of experience and investment, our strategically located depots ensure fast, efficient, and reliable service for projects of all sizes.", fullW);
-                    doc.text(intro, mainX, y); y += (intro.length * 5) + 10;
+                    doc.text(intro, mainX, y); y += (intro.length * 6) + 10;
 
                     if (craneImg) doc.addImage(craneImg, 'JPEG', (210 - 170)/2, y, 170, 80);
                     drawFooter();
 
                     // PAGE 2
                     doc.addPage();
-                    doc.setFillColor(...yellow); doc.rect(0, 0, 210, 25, 'F'); 
-                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 2, 45, 15);
+                    doc.setFillColor(...yellow); doc.rect(0, 0, 210, 32, 'F'); 
+                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 5, 45, 15);
                     doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-                    doc.text(`Quote Ref: ${uniqueRef}`, 190, 15, { align: "right" });
+                    doc.text(`Quote Ref: ${uniqueRef}`, 190, 20, { align: "right" });
 
-                    // SPACER: Moved content HIGHER to 40 (was 55)
-                    let sY = 40; 
+                    let sY = 50; 
                     const sideX = 140; 
                     if (logo50) { 
                         doc.addImage(logo50, 'PNG', sideX + 5, sY, 40, 32); 
@@ -447,140 +437,132 @@
                     }
                     doc.setDrawColor(200, 200, 200); doc.line(sideX, sY, sideX+50, sY); sY += 10;
                     doc.text("LOCATIONS", sideX + 25, sY, { align: "center" }); sY += 8;
-                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+                    doc.setTextColor(...darkGrey); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
                     ["Dublin", "Cork", "Wexford", "Waterford", "Carlow"].forEach(l => { doc.text(l, sideX + 25, sY, { align: "center" }); sY += 5; });
                     sY += 10; doc.setDrawColor(200, 200, 200); doc.line(sideX, sY, sideX+50, sY); sY += 10;
-                    sY = drawSidebarContact(sY, sideX);
-
-                    y = 40; // SPACER: Moved HIGHER to 40
-                    const contentW = 110;
-                    doc.setFontSize(14); doc.setTextColor(...black); doc.text("JOB SPECIFICATION", mainX, y); y += 6;
-
-                    // BOX HEIGHT CALCULATION
-                    // Increased base height (was 70) to allow more breathing room
-                    let boxHeight = 85; 
-                    if (formData.liftPlanRequired) boxHeight += 6; 
-                    if (formData.apRequired) boxHeight += 6;
-                    if (formData.banksmanRequired) boxHeight += 6;
-                    if (formData.ballastRequired) boxHeight += 6;
-                    // REMOVED Spreader/Accommodation from box height calculation as they are notes only
                     
-                    let otherItemsHeight = 0;
-                    if (formData.otherItemsRequired) {
-                         const dText = formData.otherItemsDesc || "Additional Item";
-                         const dLines = doc.splitTextToSize(dText, 55); 
-                         otherItemsHeight = Math.max(6, dLines.length * 4 + 4);
-                         boxHeight += otherItemsHeight;
-                    }
+                    const sidebarBottom = drawSidebarContact(sY, sideX);
 
-                    if (formData.addVat) boxHeight += 24;
+                    // Main Content
+                    y = 50; 
+                    const contentW = 110;
+                    doc.setFontSize(14); doc.setTextColor(...black); doc.setFont("helvetica", "bold");
+                    doc.text("JOB SPECIFICATION", mainX, y); y += 10;
 
-                    doc.setFillColor(...lightGrey); doc.setDrawColor(...yellow); doc.setLineWidth(1.5); 
-                    doc.rect(mainX, y, contentW, boxHeight, 'F'); doc.line(mainX, y, mainX, y+boxHeight); 
+                    // Table Header
+                    doc.setFillColor(...black);
+                    doc.rect(mainX, y, contentW, 8, 'F');
+                    doc.setTextColor(...yellow); doc.setFontSize(9); doc.setFont("helvetica", "bold");
+                    doc.text("DESCRIPTION", mainX + 4, y + 5.5);
+                    doc.text("DETAILS / COST", mainX + contentW - 4, y + 5.5, { align: 'right' });
+                    y += 8;
 
-                    // SPACING: Increased steps to 9 (was 7)
-                    let gridY = y + 8;
-                    const drawSpecItem = (label, val, xOffset, yOffset) => {
-                        doc.setFontSize(7); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-                        doc.text(label.toUpperCase(), mainX + 5 + xOffset, yOffset);
-                        doc.setFontSize(10); doc.setTextColor(...black); doc.setFont("helvetica", "normal");
-                        doc.text(val || "-", mainX + 5 + xOffset, yOffset + 5);
+                    let rowAlt = false;
+
+                    const drawRow = (label, value, isBold = false) => {
+                        if (rowAlt) { doc.setFillColor(...lightGrey); doc.rect(mainX, y, contentW, 7, 'F'); }
+                        
+                        doc.setTextColor(...black); doc.setFontSize(9); 
+                        doc.setFont("helvetica", isBold ? "bold" : "normal");
+                        doc.text(label, mainX + 4, y + 5);
+                        
+                        doc.setTextColor(...darkGrey);
+                        doc.setFont("helvetica", isBold ? "bold" : "normal");
+                        doc.text(value, mainX + contentW - 4, y + 5, { align: 'right' });
+                        
+                        doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.1);
+                        doc.line(mainX, y + 7, mainX + contentW, y + 7);
+                        
+                        y += 7;
+                        rowAlt = !rowAlt;
                     };
 
-                    const hourlyRateVal = parseFloat(formData.hourlyRate || 0);
-
-                    drawSpecItem("Customer Name", formData.clientName, 0, gridY);
-                    drawSpecItem("Site Address", formData.siteAddress, 55, gridY);
-                    gridY += 9; // Spaced out
+                    drawRow("Customer Name", formData.clientName || "-");
+                    drawRow("Site Address", formData.siteAddress || "-");
+                    drawRow("Customer Email", formData.clientEmail || "-");
+                    drawRow("Contact Number", formData.contactNumber || "-");
+                    drawRow("Crane Type", formData.craneType);
+                    drawRow("Total Minimum Hours", `${totalMinHours} Hours`);
+                    drawRow("Hourly Rate", `EUR ${formatNumber(parseFloat(formData.hourlyRate || 0))}`);
                     
-                    drawSpecItem("Customer Email", formData.clientEmail, 0, gridY);
-                    drawSpecItem("Crane Type", formData.craneType, 55, gridY);
-                    gridY += 9; // Spaced out
-
-                    drawSpecItem("Client Phone", formData.contactNumber, 0, gridY);
-                    gridY += 9;
-
-                    doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.5);
-                    doc.line(mainX + 5, gridY - 2, mainX + contentW - 5, gridY - 2); gridY += 6; 
-                    
-                    drawSpecItem("Crane Duration", `${totalMinHours} Hours`, 0, gridY);
-                    drawSpecItem("Hourly Rate", `EUR ${formatNumber(hourlyRateVal)}`, 55, gridY);
-                    
-                    // Reduced spacing for items
                     if (formData.liftPlanRequired) {
-                        gridY += 9; drawSpecItem("Lift Plan", "Required", 0, gridY);
-                        drawSpecItem("Cost", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`, 55, gridY);
+                        drawRow("Lift Plan", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`);
                     }
                     if (formData.apRequired) {
-                        gridY += 9; drawSpecItem(`Lift Supervisor (x${formData.apCount})`, "Required", 0, gridY);
-                        drawSpecItem("Cost", formData.apIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.apCost)*formData.apCount)}`, 55, gridY);
+                        drawRow(`Lift Supervisor (x${formData.apCount})`, formData.apIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.apCost)*formData.apCount)}`);
                     }
                     if (formData.banksmanRequired) {
-                        gridY += 9; drawSpecItem(`Banksman (x${formData.banksmanCount})`, "Required", 0, gridY);
-                        drawSpecItem("Cost", formData.banksmanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.banksmanCost)*formData.banksmanCount)}`, 55, gridY);
+                        drawRow(`Banksman (x${formData.banksmanCount})`, formData.banksmanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.banksmanCost)*formData.banksmanCount)}`);
                     }
                     if (formData.ballastRequired) {
-                        gridY += 9; drawSpecItem("Ballast Truck (Each Way)", "Required", 0, gridY);
-                        const bCost = parseFloat(formData.ballastCost || 0);
-                        drawSpecItem("Cost", `EUR ${formatNumber(bCost * 2)}`, 55, gridY);
+                        drawRow("Ballast Truck (x2 trips)", `EUR ${formatNumber(parseFloat(formData.ballastCost || 0) * 2)}`);
                     }
-                    // REMOVED Spreader/Accommodation loops from here
-                    
                     if (formData.otherItemsRequired) {
-                        gridY += 9; 
                         const oDesc = formData.otherItemsDesc || "Additional Item";
-                        const splitDesc = doc.splitTextToSize(oDesc, 45); 
-                        
-                        doc.setFontSize(7); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-                        doc.text("ADDITIONAL ITEM", mainX + 5, gridY);
-                        doc.setFontSize(10); doc.setTextColor(...black); doc.setFont("helvetica", "normal");
-                        doc.text(splitDesc, mainX + 5, gridY + 5);
-
-                        drawSpecItem("Cost", `EUR ${formatNumber(parseFloat(formData.otherItemsCost))}`, 55, gridY);
-                        const addedH = Math.max(0, (splitDesc.length - 1) * 4);
-                        gridY += addedH;
+                        drawRow(oDesc, `EUR ${formatNumber(parseFloat(formData.otherItemsCost))}`);
                     }
 
-                    gridY += 20; // Increased Gap
+                    y += 4; rowAlt = false;
                     
                     if (formData.addVat) {
-                        drawSpecItem("Subtotal (Ex VAT)", `EUR ${formatNumber(subTotal)}`, 0, gridY); gridY += 9;
-                        drawSpecItem("VAT (23%)", `EUR ${formatNumber(vatAmount)}`, 0, gridY); gridY += 9;
-                    }
-                    
-                    doc.setFillColor(254, 252, 232); doc.rect(mainX + 4, gridY - 3, 60, 12, 'F');
-                    doc.setTextColor(220, 0, 0); 
-                    drawSpecItem(formData.addVat ? "Total (Inc VAT)" : "Total Min. Charge (Ex VAT)", `EUR ${formatNumber(grandTotal)}`, 0, gridY + 1);
+                        doc.setFont("helvetica", "bold"); doc.setTextColor(...black);
+                        doc.text("Subtotal (Ex VAT)", mainX + 4, y + 5);
+                        doc.text(`EUR ${formatNumber(subTotal)}`, mainX + contentW - 4, y + 5, { align: 'right' });
+                        doc.setDrawColor(0,0,0); doc.line(mainX, y+7, mainX+contentW, y+7);
+                        y += 8;
 
-                    y += boxHeight + 10; 
-                    y = Math.max(y, sY + 10); 
+                        doc.setFont("helvetica", "normal");
+                        doc.text("VAT (23%)", mainX + 4, y + 5);
+                        doc.text(`EUR ${formatNumber(vatAmount)}`, mainX + contentW - 4, y + 5, { align: 'right' });
+                        y += 8;
+                    }
+
+                    doc.setFillColor(254, 252, 232); 
+                    doc.rect(mainX, y, contentW, 10, 'F');
+                    doc.setDrawColor(...yellow); doc.setLineWidth(0.5); doc.rect(mainX, y, contentW, 10);
+                    
+                    doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(200, 0, 0); 
+                    doc.text(formData.addVat ? "TOTAL (Inc VAT)" : "TOTAL MIN. CHARGE (Ex VAT)", mainX + 4, y + 6.5);
+                    doc.text(`EUR ${formatNumber(grandTotal)}`, mainX + contentW - 4, y + 6.5, { align: 'right' });
+                    
+                    // --- OVERLAP & SPACING OPTIMIZATION ---
+                    y += 10; // Tightened spacing after total box (was 18)
+                    
+                    // Compact buffer between sidebar and notes
+                    if (y < sidebarBottom + 6) {
+                        y = sidebarBottom + 6;
+                    }
 
                     // PAGE BREAK CHECK
-                    if (y > 230) { doc.addPage(); y = 55; }
+                    if (y > 230) { doc.addPage(); y = 40; }
 
                     doc.setTextColor(...black); doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-                    doc.text("INSURANCE & NOTES", mainX, y); y += 6;
-                    doc.setTextColor(...grey); doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); 
+                    doc.text("INSURANCE & NOTES", mainX, y); y += 8;
+                    doc.setTextColor(...darkGrey); doc.setFont("helvetica", "normal"); doc.setFontSize(8); 
                     
                     const noteLines = [
-                        `ADDITIONAL CHARGES: All Saturday, Sunday, and Bank Holiday hours (including travel) are outside normal working hours and charged at an additional €${formatNumber(parseFloat(formData.weekendCost))} per hour. Accommodation, if required, is charged at €${formatNumber(parseFloat(formData.accommodationCost))} per night.`,
+                        `ADDITIONAL CHARGES: All Saturday, Sunday, and Bank Holiday hours (including travel) are outside normal working hours and charged at an additional EUR ${formatNumber(parseFloat(formData.weekendCost))} per hour. Accommodation, if required, is charged at EUR ${formatNumber(parseFloat(formData.accommodationCost))} per night.`,
                         "",
                         "EQUIPMENT & LIABILITY: Standard lifting tackle (chains, slings & shackles) is included; specialist tackle is available at an additional cost. Please Note: Due to fluctuating fuel prices, quotes are subject to change upon confirmation of dates. Kavanagh Crane Hire Ltd accepts no responsibility for damage to ground during the hire period.",
                         "",
-                        "INSURANCE HELD: On-Hook: €1m | Height: Unlimited | Employers Liability: €13m | Public Liability: €10m (Primary) & €10m (Excess). (On-hook and Height insurance are above industry standards)"
+                        "INSURANCE HELD: On-Hook: EUR 1m | Height: Unlimited | Employers Liability: EUR 13m | Public Liability: EUR 10m (Primary) & EUR 10m (Excess). (On-hook and Height insurance are above industry standards)"
                     ];
                     
                     if (formData.spreaderBars) {
-                         noteLines.splice(1, 0, `• Delivery & Collection of Spreader Bars €${formatNumber(parseFloat(formData.spreaderCost))} E/W`);
+                         noteLines.splice(1, 0, `• Delivery & Collection of Spreader Bars EUR ${formatNumber(parseFloat(formData.spreaderCost))} E/W`);
                     }
 
                     noteLines.forEach(line => {
                         const lines = doc.splitTextToSize(line, fullW);
-                        if (y + (lines.length * 3.5) > 265) {
+                        const lineH = 3.5; // Compact line height (was 4)
+                        
+                        // Allow writing lower on the page (up to 275) to fit 2 pages
+                        if (y + (lines.length * lineH) > 275) {
                             doc.addPage();
-                            y = 55; // SPACER for new pages too
+                            y = 40; 
                         }
-                        doc.text(lines, mainX, y); y += (lines.length * 3.5) + 1;
+                        doc.text(lines, mainX, y); 
+                        y += (lines.length * lineH) + 1; // Reduced paragraph spacing (was +2)
                     });
                     
                     if (y < 265) drawFooter(); 
@@ -763,15 +745,15 @@
                                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer min-w-[150px]">
                                             <input type="checkbox" name="ballastRequired" checked={formData.ballastRequired} onChange={handleChange} className="w-5 h-5 accent-yellow-500 rounded"/>
-                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><TruckIcon size={16}/> Ballast Truck (Each Way)</span>
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><TruckIcon size={16}/> Ballast Truck</span>
                                         </label>
                                         {formData.ballastRequired && (
                                             <div className="flex-1 flex gap-4 animate-fade-in items-center">
                                                 <div className="relative flex-1">
                                                     <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
                                                     <input type="number" name="ballastCost" value={formData.ballastCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none"/>
-                                                    <span className="absolute right-3 top-2.5 text-slate-400 text-xs">Charge</span>
                                                 </div>
+                                                <span className="text-xs font-bold text-slate-400 whitespace-nowrap">Each Way</span>
                                             </div>
                                         )}
                                     </div>
