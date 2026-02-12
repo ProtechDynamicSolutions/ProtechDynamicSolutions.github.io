@@ -401,6 +401,8 @@
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
+                    
+                    // -- COLORS --
                     const yellow = [254, 203, 0]; 
                     const black = [26, 26, 26]; 
                     const darkGrey = [70, 70, 70]; 
@@ -412,6 +414,7 @@
                     const borderGrey = [200, 200, 200];
                     const kavanaghYellowHex = '#fecb00';
 
+                    // -- IMAGES --
                     const [headerBg, craneImg, logo50, isoImg, kavLogo, irelandMap] = await Promise.all([
                         getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/KavCranes.jpg"),
                         getBase64ImageFromURL("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Kavanagh/ltm-1650-8.1.jpg"),
@@ -421,68 +424,110 @@
                         getColoredBase64FromURL("https://upload.wikimedia.org/wikipedia/commons/8/8e/Blank_Ireland.svg", kavanaghYellowHex)
                     ]);
 
+                    // -- MARGINS & LAYOUT CONSTANTS --
+                    // Reduced margins to 12mm to fit more content
+                    const margin = 12; 
+                    const pageWidth = 210;
+                    const pageHeight = 297;
+                    const contentWidth = pageWidth - (margin * 2); // 186mm
+                    const footerY = 268;
+
+                    // -- HELPER: SHADOW TEXT --
+                    const drawShadowText = (text, x, y, size, align = 'center') => {
+                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(size);
+                        
+                        // 1. Shadow Layer (Kavanagh Blue, slightly offset)
+                        doc.setTextColor(...kavBlue);
+                        doc.text(text, x + 0.4, y + 0.4, { align: align });
+                        
+                        // 2. Main Layer (Black)
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(text, x, y, { align: align });
+                    };
+
+                    // -- HELPER: FOOTER --
                     const drawFooter = () => {
-                        const fY = 268; 
                         doc.setFillColor(35, 35, 35);
-                        doc.rect(0, fY, 210, 29, 'F');
+                        doc.rect(0, footerY, pageWidth, 29, 'F');
                         doc.setFillColor(...goldAccent);
-                        doc.rect(0, fY, 210, 0.5, 'F');
+                        doc.rect(0, footerY, pageWidth, 0.5, 'F');
+                        
+                        // Certification Text
                         doc.setTextColor(...yellow);
                         doc.setFont("helvetica", "bold"); 
                         doc.setFontSize(9);
-                        doc.text("CERTIFICATION & QUALITY ASSURANCE", 20, fY + 7);
+                        doc.text("CERTIFICATION & QUALITY ASSURANCE", margin, footerY + 7);
+                        
                         doc.setTextColor(230, 230, 230); 
                         doc.setFont("helvetica", "normal"); 
                         doc.setFontSize(7.5); 
                         const certText = "We partnered with Amtivo (formerly Certification Europe) for their strong industry reputation and INAB-accreditation. Working with a consultant, we aligned our systems with ISO 9001, ISO 14001, and ISO 45001 standards.";
-                        doc.text(doc.splitTextToSize(certText, 110), 20, fY + 13);
+                        doc.text(doc.splitTextToSize(certText, 110), margin, footerY + 13);
+                        
+                        // ISO Logo
                         if (isoImg) {
-                            doc.addImage(isoImg, 'PNG', 135, fY + 6, 55, 18);
+                            doc.addImage(isoImg, 'PNG', 135, footerY + 6, 55, 18);
                         }
                     };
 
+                    // -- HELPER: PAGE 1 BOTTOM INFO --
                     const drawPage1BottomInfo = (startY) => {
-                        let leftX = 20;
-                        let rightX = 120;
-                        let currY = startY;
+                        const boxHeight = 28;
+                        const mapWidth = 22;
+                        
+                        // Line Separator
                         doc.setDrawColor(...borderGrey);
                         doc.setLineWidth(0.3);
-                        doc.line(20, currY - 3, 190, currY - 3);
-                        if (irelandMap) doc.addImage(irelandMap, 'PNG', leftX, currY, 22, 28);
-                        const textX = leftX + 28;
+                        doc.line(margin, startY - 3, pageWidth - margin, startY - 3);
+
+                        // Ireland Map & Locations
+                        if (irelandMap) doc.addImage(irelandMap, 'PNG', margin, startY, mapWidth, boxHeight);
+                        
+                        const textX = margin + mapWidth + 6;
                         doc.setTextColor(...deepBlue); 
                         doc.setFont("helvetica", "bold"); 
                         doc.setFontSize(9);
-                        doc.text("NATIONWIDE LOCATIONS", textX, currY + 4);
+                        doc.text("NATIONWIDE LOCATIONS", textX, startY + 4);
+                        
                         doc.setTextColor(...darkGrey); 
                         doc.setFont("helvetica", "normal"); 
                         doc.setFontSize(8.5);
                         const locs = ["Dublin", "Cork", "Wexford", "Waterford", "Carlow"];
                         locs.forEach((loc, i) => {
+                            // Bullet
                             doc.setFillColor(...yellow);
-                            doc.circle(textX, currY + 8.5 + (i*4), 0.8, 'F');
+                            doc.circle(textX, startY + 8.5 + (i*4), 0.8, 'F');
+                            // Text
                             doc.setTextColor(...darkGrey);
-                            doc.text(loc, textX + 3, currY + 9 + (i*4));
+                            doc.text(loc, textX + 3, startY + 9 + (i*4));
                         });
+
+                        // Adviser Box
+                        const rightX = 120;
                         doc.setFillColor(252, 252, 252);
                         doc.setDrawColor(...borderGrey);
                         doc.setLineWidth(0.3);
-                        doc.roundedRect(rightX - 3, currY - 1, 73, 30, 2, 2, 'FD');
+                        doc.roundedRect(rightX - 3, startY - 1, 73, 30, 2, 2, 'FD');
+                        
                         doc.setTextColor(...deepBlue); 
                         doc.setFont("helvetica", "bold"); 
                         doc.setFontSize(9);
-                        doc.text("YOUR CRANE ADVISER", rightX, currY + 4);
+                        doc.text("YOUR CRANE ADVISER", rightX, startY + 4);
+                        
                         doc.setTextColor(...darkGrey); 
                         doc.setFont("helvetica", "normal"); 
                         doc.setFontSize(8.5);
-                        let cY = currY + 10;
+                        let cY = startY + 10;
                         doc.text(formData.adviserName, rightX, cY);
+                        
                         cY += 5;
                         doc.setFont("helvetica", "bold");
                         doc.setFontSize(8);
                         doc.text("M:", rightX, cY);
                         doc.setFont("helvetica", "normal");
                         doc.text(formData.adviserPhone, rightX + 6, cY);
+                        
                         cY += 5;
                         doc.setFont("helvetica", "bold");
                         doc.text("E:", rightX, cY);
@@ -491,26 +536,38 @@
                         doc.text(formData.adviserEmail, rightX + 6, cY);
                     };
 
-                    // ====== PAGE 1 ======
+                    // ==============================
+                    //            PAGE 1
+                    // ==============================
+                    
+                    // HEADER IMAGE
                     if (headerBg) doc.addImage(headerBg, 'JPEG', 0, 0, 210, 55);
+                    
+                    // Yellow Overlay
                     doc.setGState(new doc.GState({ opacity: 0.88 })); 
                     doc.setFillColor(...yellow); 
                     doc.rect(0, 0, 210, 55, 'F'); 
                     doc.setGState(new doc.GState({ opacity: 1.0 }));
+                    
+                    // Gold Divider Line
                     doc.setDrawColor(...goldAccent);
                     doc.setLineWidth(1.5);
                     doc.line(0, 55, 210, 55);
-                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 18, 13, 65, 22); 
+                    
+                    // Kavanagh Logo
+                    if (kavLogo) doc.addImage(kavLogo, 'PNG', margin - 2, 13, 65, 22); 
 
-                    // Updated: Quote reference text in Kavanagh Blue
+                    // --- QUOTE REF (Updated Style - BIGGER) ---
+                    // "QUOTE REF" Label (Small Blue)
                     doc.setTextColor(...kavBlue); 
-                    doc.setFontSize(7); 
-                    doc.setFont("helvetica", "normal");
-                    doc.text("QUOTE REF", 174, 23, { align: "center" });
-                    doc.setFontSize(9.5); 
+                    doc.setFontSize(9); // Increased Size
                     doc.setFont("helvetica", "bold");
-                    doc.text(uniqueRef, 174, 28, { align: "center" });
+                    doc.text("QUOTE REF", 174, 23, { align: "center" });
+                    
+                    // Reference Number (Shadow Effect - BIGGER)
+                    drawShadowText(uniqueRef, 174, 28, 13, "center");
 
+                    // Blue Strip & Motto
                     doc.setFillColor(...deepBlue);
                     doc.rect(0, 55, 210, 9, 'F');
                     doc.setTextColor(255, 255, 255); 
@@ -519,110 +576,153 @@
                     doc.text("Elevating Excellence Since 1973 — Where Commitment Meets Capability", 105, 60.5, { align: "center" });
                     doc.setFont("helvetica", "normal");
 
+                    // MAIN CONTENT START
                     let y = 78; 
-                    const mainX = 20; 
+                    
+                    // "PROPOSAL" Heading
                     doc.setTextColor(...deepBlue); 
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(16);
-                    doc.text("PROPOSAL", mainX, y);
+                    doc.text("PROPOSAL", margin, y);
+                    
+                    // Underlines
                     doc.setDrawColor(...yellow); 
                     doc.setLineWidth(2); 
-                    doc.line(mainX, y+2, mainX+35, y+2);
+                    doc.line(margin, y+2, margin+35, y+2);
                     doc.setDrawColor(...goldAccent);
                     doc.setLineWidth(0.5);
-                    doc.line(mainX, y+3, mainX+35, y+3);
-                    y += 12;
+                    doc.line(margin, y+3, margin+35, y+3);
+                    y += 10;
 
-                    const introWidth = 110;
+                    // INTRO TEXT & 50 YEAR LOGO
+                    // Width calc: Content width minus space for logo (approx 40mm)
+                    const introTextWidth = contentWidth - 40; 
                     doc.setTextColor(...darkGrey); 
                     doc.setFont("helvetica", "normal"); 
                     doc.setFontSize(9.5); 
-                    const newIntroText = "Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.\n\nProudly supplying crane hire nationwide, we operate from five strategically located depots in Cork, Dublin, Wexford, Waterford, and Carlow. This network keeps us within close proximity to any job, allowing us to deliver expert crane hire and specialised heavy lift engineering solutions across a range of industries. Backed by years of experience and continuous investment in our state-of-the-art equipment, our local presence ensures fast, efficient, and reliable service for projects of all sizes.";
-                    const intro = doc.splitTextToSize(newIntroText, introWidth);
-                    doc.text(intro, mainX, y);
                     
+                    const introStr = "Thank you for giving Kavanagh Crane Hire the opportunity to submit this proposal. Since our formation in 1973 we have gained a wealth of experience and knowledge within the industry. We are committed to maintaining the most modern and advanced equipment there is.\n\nProudly supplying crane hire nationwide, we operate from five strategically located depots in Cork, Dublin, Wexford, Waterford, and Carlow. This network keeps us within close proximity to any job, allowing us to deliver expert crane hire and specialised heavy lift engineering solutions across a range of industries. Backed by years of experience and continuous investment in our state-of-the-art equipment, our local presence ensures fast, efficient, and reliable service for projects of all sizes.";
+                    const introLines = doc.splitTextToSize(introStr, introTextWidth);
+                    
+                    // Calculate Intro Height
+                    const introBlockHeight = introLines.length * 5; 
+                    
+                    // Draw Text
+                    doc.text(introLines, margin, y);
+                    
+                    // Draw Logo Centered vertically relative to text
+                    // MOVED UP by 12mm as requested
                     if (logo50) {
+                        const logoW = 35;
+                        const logoH = 28;
+                        // Center Y = Start Y + Half Height - Half Logo Height - Shift Up
+                        const logoY = y + (introBlockHeight / 2) - (logoH / 2) - 12;
+                        const logoX = pageWidth - margin - logoW; // Align Right
+                        
+                        // Optional drop shadow for logo circle
                         doc.setGState(new doc.GState({ opacity: 0.15 }));
                         doc.setFillColor(0, 0, 0);
-                        doc.circle(172, y + 7, 19, 'F');
+                        doc.circle(logoX + (logoW/2) + 1, logoY + (logoH/2) + 1, 19, 'F');
                         doc.setGState(new doc.GState({ opacity: 1.0 }));
-                        doc.addImage(logo50, 'PNG', 155, y - 8, 35, 28);
-                    }
-                    
-                    // MOVED IMAGE UP: Reduced from 10 to 4
-                    y += (intro.length * 5.2) + 4; 
-
-                    if (craneImg) {
-                        const imgX = 15;
-                        const imgY = y;
-                        const imgW = 180;
-                        const imgH = 75;
                         
-                        // DRAW CLIPPING PATH for rounded image edges
-                        doc.saveGraphicsState();
-                        const r = 6; // radius
-                        // Create a path for the rounded rectangle clipping
-                        doc.roundedRect(imgX, imgY, imgW, imgH, r, r, 'S'); // Draw empty rect
-                        doc.clip(); // Apply the clip
-                        doc.addImage(craneImg, 'JPEG', imgX, imgY, imgW, imgH);
-                        doc.restoreGraphicsState();
-
-                        // DRAW BORDER OVERIMAGE
-                        doc.setDrawColor(...borderGrey);
-                        doc.setLineWidth(0.5);
-                        doc.roundedRect(imgX, imgY, imgW, imgH, r, r, 'D');
+                        doc.addImage(logo50, 'PNG', logoX, logoY, logoW, logoH);
                     }
                     
-                    // Reduced spacing after image
-                    y += 80; 
+                    // Advance Y
+                    y += introBlockHeight + 5; 
 
-                    drawPage1BottomInfo(y);
+                    // FIXED BOTTOM SECTION ANCHOR (Y = 228mm)
+                    // Footer starts at 268mm. 
+                    // Bottom Info (Map/Adviser) starts at 228mm.
+                    const bottomInfoY = 228;
+
+                    // MAIN IMAGE (Fills space between Text and Bottom Info)
+                    if (craneImg) {
+                        const imgX = margin; 
+                        const imgY = y;
+                        let imgW = contentWidth;
+                        
+                        // Calculate available space
+                        const availableSpace = bottomInfoY - imgY - 5; // 5mm buffer
+                        
+                        let imgH = Math.max(20, availableSpace); // Enforce min height
+
+                        // Ensure we don't draw if space is impossible
+                        if (availableSpace > 10) {
+                            const r = 4; // Corner radius
+
+                            // 1. Draw rounded path for clipping
+                            doc.saveGraphicsState();
+                            doc.roundedRect(imgX, imgY, imgW, imgH, r, r, null); 
+                            doc.clip(); 
+                            doc.addImage(craneImg, 'JPEG', imgX, imgY, imgW, imgH);
+                            doc.restoreGraphicsState();
+
+                            // 2. Draw border
+                            doc.setDrawColor(...borderGrey);
+                            doc.setLineWidth(0.5);
+                            doc.roundedRect(imgX, imgY, imgW, imgH, r, r, 'S');
+                        }
+                    }
+
+                    // DRAW FIXED BOTTOM INFO
+                    drawPage1BottomInfo(bottomInfoY);
                     drawFooter();
 
-                    // ====== PAGE 2 ======
+
+                    // ==============================
+                    //            PAGE 2
+                    // ==============================
                     doc.addPage();
+                    
+                    // HEADER PAGE 2
                     doc.setFillColor(...yellow); 
                     doc.rect(0, 0, 210, 24, 'F'); 
                     doc.setDrawColor(...goldAccent);
                     doc.setLineWidth(1.5);
                     doc.line(0, 24, 210, 24);
-                    if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 6, 40, 13);
+                    if (kavLogo) doc.addImage(kavLogo, 'PNG', margin, 6, 40, 13);
                     
-                    doc.setTextColor(...kavBlue); // Kavanagh Blue Quote Ref
-                    doc.setFont("helvetica", "bold"); 
-                    doc.setFontSize(8.5);
-                    doc.text(uniqueRef, 179, 13.5, { align: "center" });
+                    // Quote Ref Page 2 (Shadow - BIGGER)
+                    drawShadowText(uniqueRef, 179, 13.5, 12, "center");
 
-                    const page2MainX = 15; 
-                    const page2ContentW = 180; 
+                    // CONTENT
                     y = 30; 
 
+                    // JOB SPEC
                     doc.setTextColor(...deepBlue); 
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(11);
-                    doc.text("JOB SPECIFICATION", page2MainX, y);
+                    doc.text("JOB SPECIFICATION", margin, y);
                     doc.setDrawColor(...yellow);
                     doc.setLineWidth(1);
-                    doc.line(page2MainX, y + 1.5, page2MainX + 45, y + 1.5);
+                    doc.line(margin, y + 1.5, margin + 45, y + 1.5);
                     y += 6;
 
+                    // Spec Box Function
                     const drawSpecBox = (label, value, x, y, w, h) => {
                         doc.setFillColor(253, 253, 253);
                         doc.setDrawColor(...borderGrey); 
                         doc.setLineWidth(0.3);
                         doc.roundedRect(x, y, w, h, 1.5, 1.5, 'FD'); 
+                        
                         doc.setTextColor(...mediumGrey); 
                         doc.setFontSize(7.5); 
                         doc.setFont("helvetica", "bold");
                         const midY = y + (h/2);
+                        
+                        // Label Position
                         if (h > 12) { doc.text(label.toUpperCase(), x + 3, y + 5); } 
                         else { doc.text(label.toUpperCase(), x + 3, midY + 0.5); }
+                        
+                        // Value Position
                         doc.setTextColor(...black); 
                         doc.setFontSize(9); 
                         doc.setFont("helvetica", "normal");
                         const labelWidth = 28;
                         const valX = x + labelWidth + 2;
                         const valW = w - labelWidth - 3;
+                        
                         if (value && value.length > 30) {
                             const splitVal = doc.splitTextToSize(value, valW);
                             const blockH = splitVal.length * 3.5;
@@ -636,46 +736,56 @@
 
                     const boxH = 8; 
                     const gap = 2; 
-                    const colW = (page2ContentW - gap) / 2;
-                    drawSpecBox("Customer", formData.clientName, page2MainX, y, colW, boxH);
-                    drawSpecBox("Site Address", formData.siteAddress, page2MainX + colW + gap, y, colW, boxH);
+                    const colW = (contentWidth - gap) / 2;
+                    
+                    drawSpecBox("Customer", formData.clientName, margin, y, colW, boxH);
+                    drawSpecBox("Site Address", formData.siteAddress, margin + colW + gap, y, colW, boxH);
                     y += boxH + gap;
-                    drawSpecBox("Email", formData.clientEmail, page2MainX, y, colW, boxH);
-                    drawSpecBox("Phone", formData.contactNumber, page2MainX + colW + gap, y, colW, boxH);
+                    
+                    drawSpecBox("Email", formData.clientEmail, margin, y, colW, boxH);
+                    drawSpecBox("Phone", formData.contactNumber, margin + colW + gap, y, colW, boxH);
                     y += boxH + gap;
+                    
                     const descH = 14; 
-                    drawSpecBox("Description", formData.jobDescription, page2MainX, y, page2ContentW, descH);
+                    drawSpecBox("Description", formData.jobDescription, margin, y, contentWidth, descH);
                     y += descH + 4; 
 
+                    // TABLE HEADERS
                     doc.setFillColor(...deepBlue);
-                    doc.rect(page2MainX, y, page2ContentW, 7, 'F');
+                    doc.rect(margin, y, contentWidth, 7, 'F');
                     doc.setFillColor(...goldAccent);
-                    doc.rect(page2MainX, y, page2ContentW, 1, 'F');
+                    doc.rect(margin, y, contentWidth, 1, 'F');
                     doc.setTextColor(255, 255, 255); 
                     doc.setFontSize(9); 
                     doc.setFont("helvetica", "bold");
-                    doc.text("SCHEDULE OF RATES / ITEMS", page2MainX + 4, y + 4.5); 
-                    doc.text("COST", page2MainX + page2ContentW - 4, y + 4.5, { align: 'right' });
+                    doc.text("SCHEDULE OF RATES / ITEMS", margin + 4, y + 4.5); 
+                    doc.text("COST", margin + contentWidth - 4, y + 4.5, { align: 'right' });
                     y += 7;
 
+                    // TABLE ROWS
                     let rowAlt = false;
                     const drawRow = (label, value, isBold = false) => {
-                        let lines = (typeof value === 'string' && (value.length > 50 || value.includes('\n'))) 
-                                    ? doc.splitTextToSize(value, 90) : [value];
+                        // Wider content width -> fewer line breaks
+                        let lines = (typeof value === 'string' && (value.length > 60 || value.includes('\n'))) 
+                                    ? doc.splitTextToSize(value, 110) : [value];
                         let rH = Math.max(6, (lines.length * 4) + 2);
-                        if (rowAlt) { doc.setFillColor(...lightGrey); doc.rect(page2MainX, y, page2ContentW, rH, 'F'); }
+                        
+                        if (rowAlt) { doc.setFillColor(...lightGrey); doc.rect(margin, y, contentWidth, rH, 'F'); }
+                        
                         doc.setTextColor(...black); 
                         doc.setFontSize(9); 
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        doc.text(label, page2MainX + 4, y + (rH/2) + 1.5);
+                        doc.text(label, margin + 4, y + (rH/2) + 1.5);
+                        
                         doc.setTextColor(...darkGrey);
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        lines.forEach((line, i) => { doc.text(line, page2MainX + page2ContentW - 4, y + 4.5 + (i * 4), { align: 'right' }); });
+                        lines.forEach((line, i) => { doc.text(line, margin + contentWidth - 4, y + 4.5 + (i * 4), { align: 'right' }); });
                         
-                        // ALWAYS DRAW LINE
+                        // Row Border
                         doc.setDrawColor(...borderGrey); 
                         doc.setLineWidth(0.2);
-                        doc.line(page2MainX, y + rH, page2MainX + page2ContentW, y + rH);
+                        doc.line(margin, y + rH, margin + contentWidth, y + rH);
+                        
                         y += rH;
                         rowAlt = !rowAlt;
                     };
@@ -687,6 +797,7 @@
                     const otRateStr = formatNumber(parseFloat(formData.overtimeRate || 0));
                     const standardSiteHours = Math.max(0, 10 - (parseFloat(formData.mobHours) + parseFloat(formData.demobHours)));
                     drawRow(`Overtime Rate (Applicable after ${standardSiteHours} hrs on site)`, `EUR ${otRateStr}/hr`);
+                    
                     if (formData.liftPlanRequired) drawRow("Lift Plan", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`);
                     if (formData.apRequired) drawRow(`Lift Supervisor (x${formData.apCount})`, formData.apIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.apCost)*formData.apCount)}`);
                     if (formData.banksmanRequired) drawRow(`Banksman (x${formData.banksmanCount})`, formData.banksmanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.banksmanCost)*formData.banksmanCount)}`);
@@ -694,64 +805,72 @@
                     if (formData.spreaderBars) drawRow("Spreader Bars (Delivery & Collection)", `EUR ${formatNumber(parseFloat(formData.spreaderCost || 0) * 2)}`);
                     if (formData.otherItemsRequired) drawRow(formData.otherItemsDesc || "Additional Item", `EUR ${formatNumber(parseFloat(formData.otherItemsCost))}`);
 
+                    // TOTALS
                     y += 3; 
                     rowAlt = false;
+                    
                     if (formData.addVat) {
                         doc.setFont("helvetica", "bold"); doc.setTextColor(...black);
-                        doc.text("Subtotal (Ex VAT)", page2MainX + 4, y + 5);
-                        doc.text(`EUR ${formatNumber(subTotal)}`, page2MainX + page2ContentW - 4, y + 5, { align: 'right' });
+                        doc.text("Subtotal (Ex VAT)", margin + 4, y + 5);
+                        doc.text(`EUR ${formatNumber(subTotal)}`, margin + contentWidth - 4, y + 5, { align: 'right' });
                         doc.setDrawColor(...borderGrey); doc.setLineWidth(0.3);
-                        doc.line(page2MainX, y+7, page2MainX+page2ContentW, y+7);
+                        doc.line(margin, y+7, margin+contentWidth, y+7);
                         y += 8;
                         doc.setFont("helvetica", "normal");
-                        doc.text("VAT (23%)", page2MainX + 4, y + 5);
-                        doc.text(`EUR ${formatNumber(vatAmount)}`, page2MainX + page2ContentW - 4, y + 5, { align: 'right' });
+                        doc.text("VAT (23%)", margin + 4, y + 5);
+                        doc.text(`EUR ${formatNumber(vatAmount)}`, margin + contentWidth - 4, y + 5, { align: 'right' });
                         y += 8;
                     }
 
                     doc.setFillColor(255, 253, 240); 
                     doc.setDrawColor(...goldAccent);
                     doc.setLineWidth(0.8);
-                    doc.roundedRect(page2MainX, y, page2ContentW, 11, 2, 2, 'FD');
+                    doc.roundedRect(margin, y, contentWidth, 11, 2, 2, 'FD');
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(10.5); 
                     doc.setTextColor(...deepBlue);
-                    doc.text(formData.addVat ? "TOTAL (Inc VAT)" : "TOTAL MIN. CHARGE (Ex VAT)", page2MainX + 4, y + 7);
+                    doc.text(formData.addVat ? "TOTAL (Inc VAT)" : "TOTAL MIN. CHARGE (Ex VAT)", margin + 4, y + 7);
                     doc.setTextColor(...black);
-                    doc.text(`EUR ${formatNumber(grandTotal)}`, page2MainX + page2ContentW - 4, y + 7, { align: 'right' });
+                    doc.text(`EUR ${formatNumber(grandTotal)}`, margin + contentWidth - 4, y + 7, { align: 'right' });
                     
-                    // MOVED DOWN: Spacing increased to sit comfortable below Total box (2 lines worth)
-                    y += 20; 
+                    y += 18; 
                     
+                    // ADDITIONAL CHARGES
                     doc.setTextColor(...deepBlue); 
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(10);
-                    doc.text("ADDITIONAL CHARGES & INSURANCE", page2MainX, y); 
+                    doc.text("ADDITIONAL CHARGES & INSURANCE", margin, y); 
                     doc.setDrawColor(...yellow);
                     doc.setLineWidth(0.8);
-                    doc.line(page2MainX, y + 1.5, page2MainX + 68, y + 1.5);
+                    doc.line(margin, y + 1.5, margin + 68, y + 1.5);
                     y += 5;
+                    
                     doc.setTextColor(...darkGrey); 
                     doc.setFont("helvetica", "normal"); 
                     doc.setFontSize(7.5); 
+                    
                     const nL = [
                         `ADDITIONAL CHARGES: All Saturday, Sunday, and Bank Holiday hours (including travel) are outside normal working hours and charged at an additional EUR ${formatNumber(parseFloat(formData.weekendCost))} per hour. Accommodation, if required, is charged at EUR ${formatNumber(parseFloat(formData.accommodationCost))} per night.`,
                         "INSURANCE HELD: On-Hook: EUR 1m | Height: Unlimited | Employers Liability: EUR 13m | Public Liability: EUR 10m (Primary) & EUR 10m (Excess). Insurance coverage exceeds industry standards."
                     ];
                     nL.forEach(line => {
-                         const lines = doc.splitTextToSize(line, page2ContentW);
-                         doc.text(lines, page2MainX, y);
+                         const lines = doc.splitTextToSize(line, contentWidth);
+                         doc.text(lines, margin, y);
                          y += (lines.length * 2.5) + 2; 
                     });
+                    
                     y += 4;
+
+                    // TERMS
                     doc.setTextColor(...deepBlue); 
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(10);
-                    doc.text("TERMS & CONDITIONS", page2MainX, y); 
+                    doc.text("TERMS & CONDITIONS", margin, y); 
                     doc.setDrawColor(...yellow);
                     doc.setLineWidth(0.8);
-                    doc.line(page2MainX, y + 1.5, page2MainX + 48, y + 1.5);
+                    doc.line(margin, y + 1.5, margin + 48, y + 1.5);
                     y += 5;
+                    
                     const terms = [
                         "1. All site inductions and familiarisation of site by Employing Contractor/ Hirer",
                         "2. Crane standing areas by Employing Contractor/Hirer. Kavanagh Crane Hire cannot accept responsibility for any delays incurred in setting up crane if ground conditions/ access roads are not favourable. Access routes can be assessed by site survey. Kavanagh Crane Hire can arrange a site survey if required",
@@ -763,22 +882,36 @@
                         "8. Contract lift hire rates may be subject to additional insurance charges. Insurance costs are determined by value of load lifted. Kavanagh Crane Hire can advise costs on receipt of value of proposed lifts.",
                         "9. Winded off hours will be charged at 75% of the min hire rate"
                     ];
-                    doc.setTextColor(...darkGrey); doc.setFont("helvetica", "normal"); doc.setFontSize(7); 
+                    
+                    doc.setTextColor(...darkGrey); 
+                    doc.setFont("helvetica", "normal"); 
+                    doc.setFontSize(7); 
+                    
                     terms.forEach((term) => {
-                        const tL = doc.splitTextToSize(term, page2ContentW);
-                        if (y + (tL.length * 2.5) > 268) {
+                        // Using contentWidth (now wider) means lines wrap less often
+                        const tL = doc.splitTextToSize(term, contentWidth);
+                        
+                        // Page Break Check
+                        if (y + (tL.length * 2.5) > footerY) {
                             doc.addPage();
+                            // Page 3 Header
                             doc.setFillColor(...yellow); doc.rect(0, 0, 210, 24, 'F'); doc.setDrawColor(...goldAccent);
                             doc.setLineWidth(1.5); doc.line(0, 24, 210, 24);
-                            if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 6, 40, 13);
-                            doc.setTextColor(...kavBlue); doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-                            doc.text(uniqueRef, 179, 13.5, { align: "center" });
+                            if (kavLogo) doc.addImage(kavLogo, 'PNG', margin, 6, 40, 13);
+                            
+                            drawShadowText(uniqueRef, 179, 13.5, 9, "center");
                             y = 35;
                         }
-                        doc.setTextColor(...darkGrey); doc.text(tL, page2MainX, y); y += (tL.length * 2.5) + 1.5; 
+                        
+                        doc.setTextColor(...darkGrey); 
+                        doc.text(tL, margin, y); 
+                        y += (tL.length * 2.5) + 1.5; 
                     });
+                    
+                    // Draw Footer on final page
                     drawFooter();
 
+                    // SAVE / SHARE
                     const blob = doc.output('blob');
                     const file = new File([blob], `${uniqueRef}.pdf`, { type: 'application/pdf' });
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
