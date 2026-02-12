@@ -408,7 +408,7 @@
                     const lightGrey = [248, 248, 248]; 
                     const deepBlue = [30, 50, 70]; // Professional navy accent
                     const goldAccent = [180, 150, 80]; // Muted gold for accents
-                    const borderGrey = [200, 200, 200];
+                    const borderGrey = [180, 180, 180]; // Darkened slightly for table lines
                     const kavanaghYellowHex = '#fecb00';
 
                     const [headerBg, craneImg, logo50, isoImg, kavLogo, irelandMap] = await Promise.all([
@@ -527,14 +527,19 @@
                     
                     if (kavLogo) doc.addImage(kavLogo, 'PNG', 18, 13, 65, 22); 
 
-                    // Quote reference (No white box, just text)
-                    doc.setTextColor(...black); 
+                    // Quote reference STYLING (Bold, Shadowed)
                     doc.setFontSize(7); 
                     doc.setFont("helvetica", "normal");
+                    doc.setTextColor(...black);
                     doc.text("QUOTE REF", 174, 23, { align: "center" });
-                    doc.setFontSize(9.5); 
+                    
+                    // Shadow effect for the Quote ID
+                    doc.setFontSize(13); // "Nice and big"
                     doc.setFont("helvetica", "bold");
-                    doc.text(uniqueRef, 174, 28, { align: "center" });
+                    doc.setTextColor(0, 204, 255); // Cyan shadow
+                    doc.text(uniqueRef, 174 + 0.3, 29 + 0.3, { align: "center" });
+                    doc.setTextColor(0, 0, 0); // Black main text
+                    doc.text(uniqueRef, 174, 29, { align: "center" });
 
                     // Refined tagline bar
                     doc.setFillColor(...deepBlue);
@@ -576,8 +581,8 @@
                     const intro = doc.splitTextToSize(newIntroText, introWidth);
                     doc.text(intro, mainX, y);
                     
-                    // Anniversary logo with refined placement
-                    const logoY = y - 8; 
+                    // Anniversary logo MOVED DOWN approx 3 lines (offset +7 instead of -8)
+                    const logoY = y + 7; 
                     if (logo50) {
                         // Subtle shadow effect
                         doc.setGState(new doc.GState({ opacity: 0.15 }));
@@ -622,11 +627,13 @@
                     
                     if (kavLogo) doc.addImage(kavLogo, 'PNG', 20, 6, 40, 13);
                     
-                    // Quote ref badge (No white box)
-                    doc.setTextColor(...black); 
+                    // Quote ref badge (No white box, just text with shadow)
+                    doc.setTextColor(0, 204, 255); // Cyan shadow
                     doc.setFont("helvetica", "bold"); 
-                    doc.setFontSize(8.5);
-                    doc.text(uniqueRef, 179, 13.5, { align: "center" });
+                    doc.setFontSize(12);
+                    doc.text(uniqueRef, 179 + 0.3, 14 + 0.3, { align: "center" });
+                    doc.setTextColor(0, 0, 0); // Black main
+                    doc.text(uniqueRef, 179, 14, { align: "center" });
 
                     // Margins reduced for Page 2 to fit more content
                     const page2MainX = 15; // Was 20
@@ -762,7 +769,8 @@
                              doc.text(line, page2MainX + page2ContentW - 4, y + 4.5 + (i * 4), { align: 'right' });
                         });
                         
-                        doc.setDrawColor(...borderGrey); 
+                        // DRAW LINE UNDER EACH ITEM
+                        doc.setDrawColor(180, 180, 180); // Darker line
                         doc.setLineWidth(0.2);
                         doc.line(page2MainX, y + rowH, page2MainX + page2ContentW, y + rowH);
                         
@@ -1169,6 +1177,7 @@
                             <button onClick={handleGenerate} disabled={isGenerating || !formData.clientName} className="w-full bg-kavanagh-blue text-slate-900 font-bold text-sm py-4 rounded-xl shadow-lg hover:bg-[#33d6ff] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                                 {isGenerating ? <span>Generating PDF...</span> : <><Share size={18} /> Generate Quote & Share</>}
                             </button>
+                            <div className="text-center text-[10px] text-slate-400 pb-1">Created by Dave Maher © 2026</div>
                         </div>
                     </div>
                 </div>
