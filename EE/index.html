@@ -18,18 +18,43 @@
         body { font-family: 'Inter', sans-serif; }
         
         /* Custom scrollbar for dark theme */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #111827; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #374151; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4b5563; 
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* Print Styles - Fixed A4 Landscape */
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { background: white; color: black; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #root { width: 100%; height: 100%; }
+            /* Reset tailwind max-widths for print */
+            .max-w-2xl { max-width: none !important; margin: 0 !important; }
+            .shadow-2xl, .shadow-lg, .shadow-md { box-shadow: none !important; }
+            .bg-gray-900 { background-color: white !important; }
+            
+            /* Force exact sizing for the sheet */
+            .print-sheet {
+                width: 297mm !important;
+                height: 210mm !important;
+                max-width: none !important;
+                margin: 0 auto !important;
+                padding: 10mm !important;
+                page-break-after: always;
+                box-shadow: none !important;
+            }
+            
+            /* Force table borders and backgrounds */
+            table { border-collapse: collapse !important; width: 100% !important; }
+            th, td { border: 1px solid black !important; }
+            .bg-gray-200 { background-color: #e5e7eb !important; }
+            .bg-blue-100 { background-color: #dbeafe !important; }
+            .bg-red-100 { background-color: #fee2e2 !important; }
+            .bg-blue-50 { background-color: #eff6ff !important; }
+            .bg-red-50 { background-color: #fef2f2 !important; }
+            .bg-black { background-color: black !important; color: white !important; }
         }
     </style>
 </head>
@@ -40,147 +65,430 @@
         import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
-            Zap, 
-            Save, 
-            Plus, 
-            ChevronRight, 
-            AlertTriangle, 
-            CheckCircle2, 
-            FileText, 
-            Home, 
-            ArrowLeft, 
-            Trash2, 
-            Activity, 
-            ShieldCheck, 
-            Download, 
-            RotateCcw, 
-            Lightbulb 
+            Zap, Save, Plus, ChevronRight, AlertTriangle, CheckCircle2, 
+            FileText, Home, ArrowLeft, Trash2, Activity, ShieldCheck, 
+            Download, RotateCcw, Lightbulb, Printer, X
         } from 'https://esm.sh/lucide-react@0.294.0';
 
-        // --- DATA CONSTANTS (I.S. 10101:2020 / ETCI Rules) ---
-
-        const CABLE_TYPES = [
-            "PVC/PVC (T&E)",
-            "NYM-J",
-            "SWA (XLPE)",
-            "SWA (PVC)",
-            "Singles (Conduit)",
-            "Fire Rated (FP200)"
-        ];
-
+        // --- DATA CONSTANTS ---
+        const CABLE_TYPES = ["PVC/PVC (T&E)", "NYM-J", "SWA (XLPE)", "SWA (PVC)", "Singles (Conduit)", "Fire Rated (FP200)"];
         const CIRCUIT_TYPES = [
             { id: 'socket', label: 'Socket Outlets (Radial)' },
             { id: 'ring', label: 'Socket Outlets (Ring)' },
             { id: 'lighting', label: 'Lighting' },
-            { id: 'fixed', label: 'Fixed Appliance (Cooker/Shower)' },
-            { id: 'ev', label: 'EV Charger (Mode 3)' },
-            { id: 'pv', label: 'Solar PV Inverter' },
-            { id: 'dist', label: 'Distribution Board Feed' }
+            { id: 'fixed', label: 'Fixed Appliance' },
+            { id: 'ev', label: 'EV Charger' },
+            { id: 'dist', label: 'Distribution Board' }
         ];
-
         const PROTECTIVE_DEVICES = [
-            { id: 'mcb', label: 'MCB (EN 60898)' },
-            { id: 'rcbo', label: 'RCBO (EN 61009)' },
-            { id: 'fuse', label: 'Fuse (IS 88)' },
+            { id: 'mcb', label: 'MCB' },
+            { id: 'rcbo', label: 'RCBO' },
+            { id: 'fuse', label: 'Fuse' },
         ];
+        const CURVES = ['B', 'C', 'D']; 
+        const RATINGS = [6, 10, 16, 20, 25, 32, 40, 50, 63]; 
+        const CSA_SIZES = ['1.5', '2.5', '4.0', '6.0', '10.0', '16.0', '25.0'];
 
-        const CURVES = ['B', 'C', 'D']; // MCB Curves
-        const RATINGS = [6, 10, 16, 20, 25, 32, 40, 50, 63]; // Amps
-        const CSA_SIZES = ['1.5', '2.5', '4.0', '6.0', '10.0', '16.0', '25.0']; // mm²
-
-        // --- UTILS ---
         const getMaxZs = (rating, curve) => {
             const r = parseInt(rating) || 20;
             if (curve === 'B') return (230 / (r * 5)).toFixed(2);
             if (curve === 'C') return (230 / (r * 10)).toFixed(2);
-            return (230 / (r * 20)).toFixed(2); // D
+            return (230 / (r * 20)).toFixed(2); 
         };
 
-        // --- COMPONENT: HEADER ---
+        // --- SUB-COMPONENTS ---
+
         const Header = ({ view, onBack, title }) => (
-            <header className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50 shadow-lg">
+            <header className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50 shadow-lg no-print">
                 <div className="flex items-center justify-between max-w-2xl mx-auto">
-                <div className="flex items-center gap-3">
-                    {view !== 'dashboard' && (
-                    <button onClick={onBack} className="p-1 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-full transition-colors">
-                        <ArrowLeft size={24} />
-                    </button>
-                    )}
                     <div className="flex items-center gap-3">
-                        <img 
-                            src="https://raw.githubusercontent.com/ohmydaysOMD/executiveelectrical.github.io/refs/heads/main/ee.png" 
-                            alt="Executive Electrical Logo"
-                            className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]"
-                            onError={(e) => { e.target.style.display = 'none'; }} 
-                        />
-                        <div>
-                            <h1 className="text-xl font-bold text-yellow-400 tracking-tight leading-none">
-                                Executive Electrical
-                            </h1>
-                            <p className="text-xs text-gray-400 font-medium tracking-wide uppercase mt-0.5">{title}</p>
+                        {view !== 'dashboard' && (
+                            <button onClick={onBack} className="p-1 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-full transition-colors">
+                                <ArrowLeft size={24} />
+                            </button>
+                        )}
+                        <div className="flex items-center gap-3">
+                            <img 
+                                src="https://raw.githubusercontent.com/ohmydaysOMD/executiveelectrical.github.io/refs/heads/main/ee.png" 
+                                alt="Logo"
+                                className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]"
+                                onError={(e) => { e.target.style.display = 'none'; }} 
+                            />
+                            <div>
+                                <h1 className="text-xl font-bold text-yellow-400 tracking-tight leading-none">Executive Electrical</h1>
+                                <p className="text-xs text-gray-400 font-medium tracking-wide uppercase mt-0.5">{title}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="h-8 w-8 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-extrabold text-xs shadow-glow border-2 border-yellow-300">
-                    REC
-                </div>
+                    <div className="h-8 w-8 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-extrabold text-xs shadow-glow border-2 border-yellow-300">REC</div>
                 </div>
             </header>
         );
 
-        // --- COMPONENT: INPUT HELPERS ---
         const SelectGroup = ({ label, value, onChange, options, icon: Icon }) => (
             <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-400 mb-1 flex items-center gap-2">
-                {Icon && <Icon size={14} className="text-yellow-400" />} {label}
+                    {Icon && <Icon size={14} className="text-yellow-400" />} {label}
                 </label>
                 <div className="relative">
-                <select 
-                    value={value} 
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 text-white text-base rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent block p-3 shadow-inner appearance-none transition-all"
-                >
-                    <option value="" disabled>Select {label}</option>
-                    {options.map((opt, idx) => (
-                    <option key={idx} value={typeof opt === 'object' ? opt.id : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                    </option>
-                    ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                </div>
+                    <select 
+                        value={value} 
+                        onChange={(e) => onChange(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 text-white text-base rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent block p-3 shadow-inner appearance-none transition-all"
+                    >
+                        <option value="" disabled>Select {label}</option>
+                        {options.map((opt, idx) => (
+                            <option key={idx} value={typeof opt === 'object' ? opt.id : opt}>
+                                {typeof opt === 'object' ? opt.label : opt}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
         );
 
-        const NumberInput = ({ label, value, onChange, unit, placeholder, step = "0.01", max }) => (
+        const NumberInput = ({ label, value, onChange, unit, placeholder, max }) => (
             <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-400 mb-1">{label}</label>
                 <div className="relative">
-                <input
-                    type="number"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className={`block w-full p-3 pr-10 text-base bg-gray-700 border rounded-lg shadow-inner focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-white transition-all ${
-                    value && max && parseFloat(value) > max ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'
-                    }`}
-                    placeholder={placeholder}
-                    step={step}
-                />
-                {unit && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 font-bold">
-                    {unit}
-                    </div>
-                )}
+                    <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className={`block w-full p-3 pr-10 text-base bg-gray-700 border rounded-lg shadow-inner focus:ring-2 focus:ring-yellow-400 text-white transition-all ${value && max && parseFloat(value) > max ? 'border-red-500' : 'border-gray-600'}`}
+                        placeholder={placeholder}
+                        step="0.01"
+                    />
+                    {unit && <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 font-bold">{unit}</div>}
                 </div>
                 {value && max && parseFloat(value) > max && (
-                <p className="text-red-400 text-xs mt-1 flex items-center gap-1 font-bold animate-pulse">
-                    <AlertTriangle size={12} /> Exceeds max limit ({max})
-                </p>
+                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1 font-bold animate-pulse"><AlertTriangle size={12} /> Exceeds max limit ({max})</p>
                 )}
             </div>
         );
+
+        const Dashboard = ({ installation, circuits, stats, setView, createNewCircuit, setCircuits, setActiveCircuitId, handleReset }) => (
+            <div className="pb-24 bg-gray-900 min-h-screen font-sans text-gray-100 no-print">
+                <div className="bg-gray-800 p-6 mb-4 border-b border-gray-700 shadow-md">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white tracking-tight">{installation.clientName || 'New Job'}</h2>
+                            <p className="text-sm text-gray-400 mt-1">{installation.address || 'Address not set'}</p>
+                        </div>
+                        <button onClick={() => setView('details')} className="text-yellow-400 text-sm font-bold border border-yellow-400/30 px-3 py-1 rounded-full hover:bg-yellow-400/10">Edit Details</button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mt-4">
+                        <div className="bg-gray-700/50 p-3 rounded-xl border border-gray-600 text-center"><span className="block text-3xl font-bold text-blue-400">{stats.total}</span><span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Circuits</span></div>
+                        <div className="bg-gray-700/50 p-3 rounded-xl border border-gray-600 text-center"><span className="block text-3xl font-bold text-green-400">{stats.completed}</span><span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Tested</span></div>
+                        <div className={`p-3 rounded-xl border text-center ${stats.failed > 0 ? 'bg-red-900/20 border-red-500/50' : 'bg-gray-700/50 border-gray-600'}`}><span className={`block text-3xl font-bold ${stats.failed > 0 ? 'text-red-500' : 'text-gray-400'}`}>{stats.failed}</span><span className={`text-[10px] uppercase font-bold tracking-wider ${stats.failed > 0 ? 'text-red-400' : 'text-gray-500'}`}>Failed</span></div>
+                    </div>
+                    <div className="mt-6 flex gap-3">
+                        <button onClick={() => setView('report')} className="flex-1 flex items-center justify-center gap-2 bg-yellow-400 text-gray-900 py-3 rounded-lg text-sm font-bold hover:bg-yellow-300 transition-all"><Printer size={16} /> View Certificate</button>
+                        <button onClick={handleReset} className="flex items-center justify-center px-4 bg-gray-700 text-gray-400 rounded-lg hover:bg-red-900/30 hover:text-red-400 border border-gray-600"><RotateCcw size={16} /></button>
+                    </div>
+                </div>
+
+                <div className="px-4">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">Circuit Schedule</h3>
+                    {circuits.length === 0 ? (
+                        <div className="text-center py-16 bg-gray-800 rounded-xl border-2 border-dashed border-gray-700">
+                            {/* UPDATED: Uses the Zap/Flash icon with a pulse effect */}
+                            <Zap className="h-12 w-12 text-yellow-400 mx-auto mb-2 animate-pulse" />
+                            <p className="text-gray-400 font-medium">No circuits yet.</p>
+                            <p className="text-gray-500 text-xs">Tap + to add a new circuit</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {circuits.map((circuit) => {
+                                const maxZs = getMaxZs(circuit.rating, circuit.curve);
+                                const isFailed = circuit.zs && (parseFloat(circuit.zs) > parseFloat(maxZs));
+                                const isComplete = circuit.zs && circuit.riso_le;
+                                let statusClass = 'bg-gray-700 text-gray-400';
+                                if (isFailed) statusClass = 'bg-red-900/50 text-red-400 border border-red-500/50';
+                                else if (isComplete) statusClass = 'bg-green-900/50 text-green-400 border border-green-500/50';
+
+                                return (
+                                    <div key={circuit.id} onClick={() => { setActiveCircuitId(circuit.id); setView('edit-circuit'); }} className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer hover:border-gray-500 ${isFailed ? 'bg-red-900/10 border-red-900/50' : 'bg-gray-800 border-gray-700'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-inner ${statusClass}`}>{circuit.ref}</div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-100 text-lg">{circuit.name || 'Untitled Circuit'}</h4>
+                                                <p className="text-xs text-gray-400 font-mono mt-0.5">{circuit.csa}mm² | {circuit.rating}A Type {circuit.curve}</p>
+                                                {isFailed && <p className="text-xs text-red-400 font-bold mt-1">FAILED: Zs {circuit.zs}Ω &gt; {maxZs}Ω</p>}
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="text-gray-600" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <button onClick={() => {
+                    const newC = createNewCircuit();
+                    setCircuits([...circuits, newC]);
+                    setActiveCircuitId(newC.id);
+                    setView('edit-circuit');
+                }} className="fixed bottom-6 right-6 bg-yellow-400 text-gray-900 w-16 h-16 rounded-full shadow-lg shadow-yellow-400/20 flex items-center justify-center hover:bg-yellow-300 hover:scale-105 active:scale-95 transition-all z-40"><Plus size={32} /></button>
+            </div>
+        );
+
+        const DetailsEditor = ({ installation, setInstallation, setView }) => (
+            <div className="p-4 bg-gray-900 min-h-screen text-gray-100 font-sans no-print">
+                <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 space-y-6">
+                    <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-3">Installation Details</h3>
+                    <div><label className="block text-sm font-semibold text-gray-400 mb-1">MPRN (11 Digits)</label><input value={installation.mprn} onChange={(e) => setInstallation({...installation, mprn: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400" placeholder="10012345678" maxLength={11} /></div>
+                    <div><label className="block text-sm font-semibold text-gray-400 mb-1">Client Name</label><input value={installation.clientName} onChange={(e) => setInstallation({...installation, clientName: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400" placeholder="John Doe" /></div>
+                    <div><label className="block text-sm font-semibold text-gray-400 mb-1">Address</label><textarea value={installation.address} onChange={(e) => setInstallation({...installation, address: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg h-24 focus:ring-2 focus:ring-yellow-400" placeholder="Site Address..." /></div>
+                    <SelectGroup label="Earthing Arrangement" value={installation.earthingArrangement} onChange={v => setInstallation({...installation, earthingArrangement: v})} options={['TN-C-S', 'TN-S', 'TT']} />
+                    <NumberInput label="Ze (External Loop Impedance)" value={installation.ze} onChange={v => setInstallation({...installation, ze: v})} unit="Ω" placeholder="0.00" />
+                    <button onClick={() => setView('dashboard')} className="w-full bg-yellow-400 text-gray-900 font-bold py-3 rounded-xl mt-4 hover:bg-yellow-300 shadow-lg shadow-yellow-400/20">Update Details</button>
+                </div>
+            </div>
+        );
+
+        const CircuitEditor = ({ activeCircuit, setCircuits, setView, setActiveCircuitId }) => {
+            const [tab, setTab] = useState('wiring');
+            const [localCircuit, setLocalCircuit] = useState({...activeCircuit}); 
+            useEffect(() => { setLocalCircuit({...activeCircuit}); }, [activeCircuit.id]);
+
+            const updateField = (field, value) => setLocalCircuit(prev => ({ ...prev, [field]: value }));
+            const maxZs = useMemo(() => getMaxZs(localCircuit.rating, localCircuit.curve), [localCircuit.rating, localCircuit.curve]);
+
+            const handleSave = () => {
+                setCircuits(prev => prev.map(c => c.id === localCircuit.id ? localCircuit : c));
+                setView('dashboard');
+            };
+
+            const handleDelete = () => {
+                if(window.confirm('Delete this circuit?')) {
+                    setCircuits(prev => prev.filter(c => c.id !== localCircuit.id));
+                    setView('dashboard');
+                }
+            };
+
+            return (
+                <div className="bg-gray-900 min-h-screen flex flex-col font-sans no-print">
+                    <div className="bg-gray-800 px-4 pt-2 border-b border-gray-700">
+                        <div className="flex -mb-px space-x-8 overflow-x-auto">
+                            {['wiring', 'protection', 'testing'].map((t) => (
+                                <button key={t} onClick={() => setTab(t)} className={`pb-4 text-sm font-bold capitalize border-b-2 px-1 transition-colors ${tab === t ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-500'}`}>{t}</button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 p-5 pb-28 overflow-y-auto">
+                        {tab === 'wiring' && (
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-4 gap-3">
+                                    <div className="col-span-1"><label className="block text-sm font-semibold text-gray-400 mb-1">Ref</label><input value={localCircuit.ref} onChange={e => updateField('ref', e.target.value)} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-yellow-400" /></div>
+                                    <div className="col-span-3"><label className="block text-sm font-semibold text-gray-400 mb-1">Circuit Name</label><input value={localCircuit.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Kitchen Sockets" className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400" /></div>
+                                </div>
+                                <SelectGroup label="Circuit Type" value={localCircuit.type} onChange={v => updateField('type', v)} options={CIRCUIT_TYPES} />
+                                <SelectGroup label="Cable Type" value={localCircuit.cableType} onChange={v => updateField('cableType', v)} options={CABLE_TYPES} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <SelectGroup label="CSA (mm²)" value={localCircuit.csa} onChange={v => updateField('csa', v)} options={CSA_SIZES} />
+                                    <SelectGroup label="Conductors" value={localCircuit.conductors} onChange={v => updateField('conductors', v)} options={[2, 3, 4, 5]} />
+                                </div>
+                            </div>
+                        )}
+                        {tab === 'protection' && (
+                            <div className="space-y-5">
+                                <SelectGroup label="Device Type" value={localCircuit.deviceType} onChange={v => updateField('deviceType', v)} options={PROTECTIVE_DEVICES} icon={ShieldCheck} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <SelectGroup label="Rating (Amps)" value={localCircuit.rating} onChange={v => updateField('rating', v)} options={RATINGS} />
+                                    <SelectGroup label="Curve" value={localCircuit.curve} onChange={v => updateField('curve', v)} options={CURVES} />
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl">
+                                    <span className="font-bold text-gray-300">AFDD Installed?</span>
+                                    <button onClick={() => updateField('afdd', !localCircuit.afdd)} className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${localCircuit.afdd ? 'bg-yellow-400' : 'bg-gray-600'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${localCircuit.afdd ? 'translate-x-6' : 'translate-x-1'}`} /></button>
+                                </div>
+                            </div>
+                        )}
+                        {tab === 'testing' && (
+                            <div className="space-y-6">
+                                <div className="bg-yellow-900/20 p-4 rounded-lg flex items-start gap-3 border border-yellow-700/50"><AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={18} /><p className="text-xs text-yellow-200/80"><strong>Check:</strong> Enter measured values.</p></div>
+                                <div className="bg-gray-800 p-5 rounded-xl border border-gray-700"><h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Continuity (Ω)</h4><NumberInput label="R1 + R2" value={localCircuit.r1r2} onChange={v => updateField('r1r2', v)} unit="Ω" placeholder="0.00" /></div>
+                                <div className="bg-gray-800 p-5 rounded-xl border border-gray-700"><h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Insulation (MΩ)</h4><div className="grid grid-cols-2 gap-4"><NumberInput label="Live - Live" value={localCircuit.riso_ll} onChange={v => updateField('riso_ll', v)} unit="MΩ" placeholder=">299" /><NumberInput label="Live - Earth" value={localCircuit.riso_le} onChange={v => updateField('riso_le', v)} unit="MΩ" placeholder=">299" /></div></div>
+                                <div className="bg-gray-800 p-5 rounded-xl border border-gray-700"><div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"><h4 className="text-sm font-bold text-gray-300">Loop (Zs)</h4><span className="text-xs bg-gray-900 text-yellow-400 font-mono px-2 py-1 rounded border border-gray-700">Max: {maxZs}Ω</span></div><NumberInput label="Measured Zs" value={localCircuit.zs} onChange={v => updateField('zs', v)} unit="Ω" placeholder="0.00" max={maxZs} /></div>
+                                <div className="bg-gray-800 p-5 rounded-xl border border-gray-700"><h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">RCD (ms)</h4><div className="grid grid-cols-2 gap-4"><NumberInput label="1x IΔn" value={localCircuit.rcd_x1} onChange={v => updateField('rcd_x1', v)} unit="ms" max="300" /><NumberInput label="5x IΔn" value={localCircuit.rcd_x5} onChange={v => updateField('rcd_x5', v)} unit="ms" max="40" /></div></div>
+                                <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl"><span className="font-bold text-gray-300">Polarity Verified?</span><button onClick={() => updateField('polarity', !localCircuit.polarity)} className={`p-2 rounded-full transition-all ${localCircuit.polarity ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-500'}`}><CheckCircle2 size={24} /></button></div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 max-w-2xl mx-auto flex gap-3 shadow-2xl">
+                        <button onClick={handleDelete} className="p-3 text-red-400 bg-red-900/20 rounded-xl hover:bg-red-900/40"><Trash2 size={24} /></button>
+                        <button onClick={handleSave} className="flex-1 bg-yellow-400 text-gray-900 font-bold rounded-xl py-3 flex items-center justify-center gap-2 hover:bg-yellow-300 shadow-lg shadow-yellow-400/10"><Save size={20} /> Save Circuit</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const ReportView = ({ installation, circuits, setView }) => {
+            const today = new Date().toLocaleDateString('en-GB');
+
+            return (
+                <div className="min-h-screen bg-gray-100 text-black p-4">
+                    {/* Control Bar */}
+                    <div className="no-print fixed top-0 left-0 right-0 bg-gray-800 p-4 flex justify-between items-center z-50 shadow-md">
+                        <h2 className="text-white font-bold text-lg">Test Record Preview</h2>
+                        <div className="flex gap-2">
+                            <button onClick={() => window.print()} className="bg-yellow-400 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-yellow-300"><Printer size={16} /> Print / Save PDF</button>
+                            <button onClick={() => setView('dashboard')} className="bg-gray-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-500"><X size={16} /> Close</button>
+                        </div>
+                    </div>
+
+                    <div className="no-print h-16"></div>
+
+                    {/* Scroll Wrapper for Mobile View */}
+                    <div className="overflow-auto pb-8">
+                        {/* THE SHEET - A4 Landscape Fixed Width */}
+                        <div className="print-sheet bg-white shadow-xl mx-auto text-xs font-sans relative box-border" style={{ width: '297mm', minHeight: '210mm', padding: '10mm' }}>
+                            
+                            {/* Header */}
+                            <div className="flex justify-between items-center border-b-2 border-red-700 pb-2 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <img src="https://raw.githubusercontent.com/ohmydaysOMD/executiveelectrical.github.io/refs/heads/main/ee.png" className="h-12 w-auto" />
+                                    <div>
+                                        <h1 className="text-2xl font-bold text-red-700 uppercase leading-none">Test Record Sheet</h1>
+                                        <p className="font-bold text-gray-800 text-sm">Executive Electrical</p>
+                                    </div>
+                                </div>
+                                <div className="text-right border border-black p-2 bg-white">
+                                    <div className="grid grid-cols-[auto_1fr] gap-x-2 text-left text-[10px]">
+                                        <span className="font-bold">Record No:</span> <span className="font-mono">{Math.floor(Date.now() / 1000)}</span>
+                                        <span className="font-bold">MPRN:</span> <span className="font-mono">{installation.mprn}</span>
+                                        <span className="font-bold">Cert No:</span> <span>-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Details Box */}
+                            <div className="border border-black p-2 mb-4 text-[10px]">
+                                <div className="grid grid-cols-[80px_1fr] gap-x-2 mb-1 border-b border-dotted border-gray-400 pb-1">
+                                    <span className="font-bold">Customer:</span>
+                                    <span className="font-mono uppercase text-blue-800 truncate">{installation.clientName}</span>
+                                </div>
+                                <div className="grid grid-cols-[80px_1fr] gap-x-2 mb-2 border-b border-dotted border-gray-400 pb-1">
+                                    <span className="font-bold">Address:</span>
+                                    <span className="font-mono uppercase text-blue-800 truncate">{installation.address}</span>
+                                </div>
+                                <div className="flex items-center gap-4 flex-wrap">
+                                    <span className="font-bold">Type:</span>
+                                    <div className="flex gap-3">
+                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> New</label>
+                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> Rewire</label>
+                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> Exist</label>
+                                    </div>
+                                    <div className="h-4 w-px bg-gray-400 mx-2"></div>
+                                    <span className="font-bold">Earthing:</span>
+                                    <span className="font-mono border border-black px-2 bg-gray-50">{installation.earthingArrangement}</span>
+                                    <div className="h-4 w-px bg-gray-400 mx-2"></div>
+                                    <span className="font-bold">Ze:</span>
+                                    <span className="font-mono border border-black px-2 bg-gray-50">{installation.ze} Ω</span>
+                                </div>
+                            </div>
+
+                            {/* TABLE */}
+                            <table className="w-full border-collapse border border-black text-[9px] table-fixed">
+                                <thead>
+                                    <tr className="bg-gray-200 text-center h-6">
+                                        <th colSpan="5" className="border border-black bg-black text-white w-[40%]">CIRCUIT DETAILS</th>
+                                        <th colSpan="4" className="border border-black bg-blue-100 w-[25%]">PRE CONNECTION</th>
+                                        <th colSpan="3" className="border border-black bg-red-100 w-[20%]">POST CONNECTION</th>
+                                        <th rowSpan="2" className="border border-black w-[15%]">Comments</th>
+                                    </tr>
+                                    <tr className="text-center font-bold h-8 align-middle">
+                                        {/* Circuit Details */}
+                                        <th className="border border-black w-8">No</th>
+                                        <th className="border border-black text-left pl-1">Designation</th>
+                                        <th className="border border-black w-14">Cable<br/>mm²</th>
+                                        <th className="border border-black w-6">Pts</th>
+                                        <th className="border border-black w-16">Protect<br/>Type/A</th>
+                                        
+                                        {/* Pre */}
+                                        <th className="border border-black w-10 bg-blue-50">R1+R2<br/>Ω</th>
+                                        <th className="border border-black w-10 bg-blue-50">L-L<br/>MΩ</th>
+                                        <th className="border border-black w-10 bg-blue-50">L-E<br/>MΩ</th>
+                                        <th className="border border-black w-6 bg-blue-50">Pol</th>
+
+                                        {/* Post */}
+                                        <th className="border border-black w-10 bg-red-50">Zs<br/>Ω</th>
+                                        <th className="border border-black w-10 bg-red-50">RCD<br/>x1</th>
+                                        <th className="border border-black w-10 bg-red-50">RCD<br/>x5</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {circuits.map((c) => (
+                                        <tr key={c.id} className="text-center h-6 border-b border-gray-400 hover:bg-gray-50">
+                                            <td className="border border-black font-bold">{c.ref}</td>
+                                            <td className="border border-black text-left pl-1 font-medium truncate">{c.name}</td>
+                                            <td className="border border-black">{c.csa}</td>
+                                            <td className="border border-black">-</td>
+                                            <td className="border border-black">{c.curve}{c.rating}</td>
+                                            
+                                            <td className="border border-black bg-blue-50">{c.r1r2}</td>
+                                            <td className="border border-black bg-blue-50">{c.riso_ll}</td>
+                                            <td className="border border-black bg-blue-50">{c.riso_le}</td>
+                                            <td className="border border-black bg-blue-50">{c.polarity ? '✓' : ''}</td>
+                                            
+                                            <td className="border border-black bg-red-50 font-bold">{c.zs}</td>
+                                            <td className="border border-black bg-red-50">{c.rcd_x1}</td>
+                                            <td className="border border-black bg-red-50">{c.rcd_x5}</td>
+                                            <td className="border border-black text-left pl-1 text-[8px] text-gray-500 truncate">
+                                                {c.afdd ? 'AFDD ' : ''}
+                                                {c.rcdType !== 'AC' ? `Type ${c.rcdType}` : ''}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {/* Fill empty rows to make it look like a full sheet (approx 18 rows total fit comfortably) */}
+                                    {[...Array(Math.max(0, 18 - circuits.length))].map((_, i) => (
+                                        <tr key={`empty-${i}`} className="h-6 border-b border-gray-200">
+                                            <td className="border border-black"></td>
+                                            <td className="border border-black"></td>
+                                            <td className="border border-black"></td>
+                                            <td className="border border-black"></td>
+                                            <td className="border border-black"></td>
+                                            <td className="border border-black bg-blue-50"></td>
+                                            <td className="border border-black bg-blue-50"></td>
+                                            <td className="border border-black bg-blue-50"></td>
+                                            <td className="border border-black bg-blue-50"></td>
+                                            <td className="border border-black bg-red-50"></td>
+                                            <td className="border border-black bg-red-50"></td>
+                                            <td className="border border-black bg-red-50"></td>
+                                            <td className="border border-black"></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Signatures - Moved to absolute bottom and lowered text */}
+                            <div className="absolute bottom-5 left-10 right-10">
+                                <div className="grid grid-cols-2 gap-16 border-t-2 border-black pt-4">
+                                    <div>
+                                        <p className="font-bold text-xs mb-8">Tested By (REC):</p>
+                                        <div className="border-b border-black h-1"></div>
+                                        <div className="flex justify-between mt-1 text-[9px]">
+                                            <span>Signature</span>
+                                            <span>Date: {today}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-xs mb-8">QC Verified:</p>
+                                        <div className="border-b border-black h-1"></div>
+                                        <div className="flex justify-between mt-1 text-[9px]">
+                                            <span>Reg No</span>
+                                            <span>Date</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         // --- MAIN APP ---
         function App() {
@@ -191,11 +499,7 @@
             const [installation, setInstallation] = useState(() => {
                 const saved = localStorage.getItem('executive_install');
                 return saved ? JSON.parse(saved) : {
-                mprn: '',
-                clientName: '',
-                address: '',
-                earthingArrangement: 'TN-C-S',
-                ze: ''
+                    mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: ''
                 };
             });
 
@@ -209,59 +513,25 @@
                 localStorage.setItem('executive_circuits', JSON.stringify(circuits));
             }, [installation, circuits]);
 
-            // Initializers
             const createNewCircuit = () => ({
                 id: Date.now(),
                 ref: `C${circuits.length + 1}`,
-                name: '',
-                type: 'socket',
-                cableType: 'PVC/PVC (T&E)',
-                csa: '2.5',
-                conductors: 3,
-                method: 'Capped',
-                deviceType: 'rcbo',
-                rating: '20',
-                curve: 'B',
-                pdBreakingCapacity: '6',
-                rcdType: 'A',
-                rcdRating: '30',
-                afdd: false,
-                r1r2: '',
-                riso_ll: '',
-                riso_le: '',
-                zs: '',
-                rcd_x1: '',
-                rcd_x5: '',
-                polarity: false,
+                name: '', type: 'socket', cableType: 'PVC/PVC (T&E)', csa: '2.5', conductors: 3,
+                method: 'Capped', deviceType: 'rcbo', rating: '20', curve: 'B', pdBreakingCapacity: '6',
+                rcdType: 'A', rcdRating: '30', afdd: false,
+                r1r2: '', riso_ll: '', riso_le: '', zs: '', rcd_x1: '', rcd_x5: '', polarity: false,
             });
 
-            // Metrics
             const getStats = () => {
                 const total = circuits.length;
-                let completed = 0;
-                let failed = 0;
-
+                let completed = 0; let failed = 0;
                 circuits.forEach(c => {
-                const isDone = c.zs !== '' && c.riso_le !== '';
-                if (isDone) completed++;
-                
-                const maxZs = getMaxZs(c.rating, c.curve);
-                if (c.zs && parseFloat(c.zs) > parseFloat(maxZs)) failed++;
+                    const isDone = c.zs !== '' && c.riso_le !== '';
+                    if (isDone) completed++;
+                    const maxZs = getMaxZs(c.rating, c.curve);
+                    if (c.zs && parseFloat(c.zs) > parseFloat(maxZs)) failed++;
                 });
-
                 return { total, completed, failed };
-            };
-
-            const handleExport = () => {
-                const data = JSON.stringify({ installation, circuits, generatedAt: new Date().toISOString() }, null, 2);
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `ETR-${installation.clientName || 'Draft'}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
             };
 
             const handleReset = () => {
@@ -272,484 +542,18 @@
                 }
             };
 
-            // --- SUB-VIEWS ---
-
-            const Dashboard = () => {
-                const stats = getStats();
-                
-                return (
-                <div className="pb-24 bg-gray-900 min-h-screen font-sans text-gray-100">
-                    {/* Project Card */}
-                    <div className="bg-gray-800 p-6 mb-4 border-b border-gray-700 shadow-md">
-                    <div className="flex justify-between items-start mb-4">
-                        <div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">
-                            {installation.clientName || 'New Job'}
-                        </h2>
-                        <p className="text-sm text-gray-400 mt-1">{installation.address || 'Address not set'}</p>
-                        </div>
-                        <button 
-                        onClick={() => setView('details')}
-                        className="text-yellow-400 hover:text-yellow-300 text-sm font-bold border border-yellow-400/30 px-3 py-1 rounded-full hover:bg-yellow-400/10 transition-colors"
-                        >
-                        Edit Details
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mt-4">
-                        <div className="bg-gray-700/50 p-3 rounded-xl border border-gray-600 text-center backdrop-blur-sm">
-                        <span className="block text-3xl font-bold text-blue-400">{stats.total}</span>
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Circuits</span>
-                        </div>
-                        <div className="bg-gray-700/50 p-3 rounded-xl border border-gray-600 text-center backdrop-blur-sm">
-                        <span className="block text-3xl font-bold text-green-400">{stats.completed}</span>
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Tested</span>
-                        </div>
-                        <div className={`p-3 rounded-xl border text-center backdrop-blur-sm ${stats.failed > 0 ? 'bg-red-900/20 border-red-500/50' : 'bg-gray-700/50 border-gray-600'}`}>
-                        <span className={`block text-3xl font-bold ${stats.failed > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                            {stats.failed}
-                        </span>
-                        <span className={`text-[10px] uppercase font-bold tracking-wider ${stats.failed > 0 ? 'text-red-400' : 'text-gray-500'}`}>
-                            Failed
-                        </span>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-6 flex gap-3">
-                        <button 
-                            onClick={handleExport}
-                            className="flex-1 flex items-center justify-center gap-2 bg-gray-700 text-white py-3 rounded-lg text-sm font-bold hover:bg-gray-600 border border-gray-600 transition-all"
-                        >
-                            <Download size={16} className="text-yellow-400" /> Save ETR File
-                        </button>
-                        <button 
-                            onClick={handleReset}
-                            className="flex items-center justify-center px-4 bg-gray-700 text-gray-400 rounded-lg hover:bg-red-900/30 hover:text-red-400 border border-gray-600 transition-all"
-                        >
-                            <RotateCcw size={16} />
-                        </button>
-                    </div>
-                    </div>
-
-                    {/* Circuit List */}
-                    <div className="px-4">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">Circuit Schedule</h3>
-                    
-                    {circuits.length === 0 ? (
-                        <div className="text-center py-16 bg-gray-800 rounded-xl border-2 border-dashed border-gray-700">
-                        <div className="relative inline-block mb-4">
-                            <Lightbulb className="h-12 w-12 text-gray-600" />
-                            <div className="absolute top-0 right-0 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                        </div>
-                        <p className="text-gray-400 font-medium text-lg">Dark in here, isn't it?</p>
-                        <p className="text-gray-500 text-sm mt-1">Add a circuit to get started.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                        {circuits.map((circuit) => {
-                            const maxZs = getMaxZs(circuit.rating, circuit.curve);
-                            const isFailed = circuit.zs && (parseFloat(circuit.zs) > parseFloat(maxZs));
-                            const isComplete = circuit.zs && circuit.riso_le;
-                            
-                            let statusClass = 'bg-gray-700 text-gray-400';
-                            let statusIcon = circuit.ref;
-
-                            if (isFailed) {
-                                statusClass = 'bg-red-900/50 text-red-400 border border-red-500/50';
-                                statusIcon = '!';
-                            } else if (isComplete) {
-                                statusClass = 'bg-green-900/50 text-green-400 border border-green-500/50';
-                            }
-
-                            return (
-                            <div 
-                                key={circuit.id}
-                                onClick={() => { setActiveCircuitId(circuit.id); setView('edit-circuit'); }}
-                                className={`p-4 rounded-xl border flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-lg ${isFailed ? 'bg-red-900/10 border-red-900/50' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
-                            >
-                                <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-inner ${statusClass}`}>
-                                    {statusIcon}
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-100 text-lg">{circuit.name || 'Untitled Circuit'}</h4>
-                                    <p className="text-xs text-gray-400 font-mono mt-0.5">
-                                    {circuit.csa}mm² <span className="text-gray-600">|</span> {circuit.rating}A Type {circuit.curve}
-                                    </p>
-                                    {isFailed && (
-                                        <p className="text-xs text-red-400 font-bold mt-1 flex items-center gap-1">
-                                            <AlertTriangle size={10} /> FAILED: Zs {circuit.zs}Ω &gt; {maxZs}Ω
-                                        </p>
-                                    )}
-                                </div>
-                                </div>
-                                <ChevronRight className="text-gray-600" />
-                            </div>
-                            );
-                        })}
-                        </div>
-                    )}
-                    </div>
-
-                    {/* FAB */}
-                    <button 
-                    onClick={() => {
-                        const newC = createNewCircuit();
-                        setCircuits([...circuits, newC]);
-                        setActiveCircuitId(newC.id);
-                        setView('edit-circuit');
-                    }}
-                    className="fixed bottom-6 right-6 bg-yellow-400 text-gray-900 w-16 h-16 rounded-full shadow-lg shadow-yellow-400/20 flex items-center justify-center hover:bg-yellow-300 hover:scale-105 active:scale-95 transition-all z-40"
-                    >
-                    <Plus size={32} />
-                    </button>
-                </div>
-                );
-            };
-
-            const CircuitEditor = () => {
-                const [tab, setTab] = useState('wiring');
-                const [localCircuit, setLocalCircuit] = useState(
-                circuits.find(c => c.id === activeCircuitId)
-                );
-
-                const handleSave = () => {
-                setCircuits(prev => prev.map(c => c.id === localCircuit.id ? localCircuit : c));
-                setView('dashboard');
-                };
-
-                const handleDelete = () => {
-                if(window.confirm('Delete this circuit record?')) {
-                    setCircuits(prev => prev.filter(c => c.id !== localCircuit.id));
-                    setView('dashboard');
-                }
-                };
-
-                const updateField = (field, value) => {
-                setLocalCircuit(prev => ({ ...prev, [field]: value }));
-                };
-
-                const maxZs = useMemo(() => getMaxZs(localCircuit.rating, localCircuit.curve), [localCircuit.rating, localCircuit.curve]);
-
-                return (
-                <div className="bg-gray-900 min-h-screen flex flex-col font-sans">
-                    {/* Editor Tabs */}
-                    <div className="bg-gray-800 px-4 pt-2 border-b border-gray-700">
-                    <div className="flex -mb-px space-x-8 overflow-x-auto">
-                        {['wiring', 'protection', 'testing'].map((t) => (
-                        <button
-                            key={t}
-                            onClick={() => setTab(t)}
-                            className={`pb-4 text-sm font-bold capitalize border-b-2 whitespace-nowrap px-1 transition-colors ${
-                            tab === t 
-                                ? 'border-yellow-400 text-yellow-400' 
-                                : 'border-transparent text-gray-500 hover:text-gray-300'
-                            }`}
-                        >
-                            {t}
-                        </button>
-                        ))}
-                    </div>
-                    </div>
-
-                    {/* Form Content */}
-                    <div className="flex-1 p-5 pb-28 overflow-y-auto">
-                    {tab === 'wiring' && (
-                        <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="grid grid-cols-4 gap-3">
-                            <div className="col-span-1">
-                            <label className="block text-sm font-semibold text-gray-400 mb-1">Ref</label>
-                            <input 
-                                value={localCircuit.ref} 
-                                onChange={e => updateField('ref', e.target.value)}
-                                className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                            />
-                            </div>
-                            <div className="col-span-3">
-                            <label className="block text-sm font-semibold text-gray-400 mb-1">Circuit Name</label>
-                            <input 
-                                value={localCircuit.name} 
-                                onChange={e => updateField('name', e.target.value)}
-                                placeholder="e.g. Kitchen Sockets" 
-                                className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                            />
-                            </div>
-                        </div>
-
-                        <SelectGroup 
-                            label="Circuit Type" 
-                            value={localCircuit.type} 
-                            onChange={v => updateField('type', v)}
-                            options={CIRCUIT_TYPES} 
-                        />
-                        
-                        <SelectGroup 
-                            label="Cable Type" 
-                            value={localCircuit.cableType} 
-                            onChange={v => updateField('cableType', v)}
-                            options={CABLE_TYPES} 
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SelectGroup 
-                            label="CSA (mm²)" 
-                            value={localCircuit.csa} 
-                            onChange={v => updateField('csa', v)}
-                            options={CSA_SIZES} 
-                            />
-                            <SelectGroup 
-                            label="Conductors" 
-                            value={localCircuit.conductors} 
-                            onChange={v => updateField('conductors', v)}
-                            options={[2, 3, 4, 5]} 
-                            />
-                        </div>
-                        </div>
-                    )}
-
-                    {tab === 'protection' && (
-                        <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <SelectGroup 
-                            label="Device Type" 
-                            value={localCircuit.deviceType} 
-                            onChange={v => updateField('deviceType', v)}
-                            options={PROTECTIVE_DEVICES} 
-                            icon={ShieldCheck}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SelectGroup 
-                            label="Rating (Amps)" 
-                            value={localCircuit.rating} 
-                            onChange={v => updateField('rating', v)}
-                            options={RATINGS} 
-                            />
-                            <SelectGroup 
-                            label="Curve" 
-                            value={localCircuit.curve} 
-                            onChange={v => updateField('curve', v)}
-                            options={CURVES} 
-                            />
-                        </div>
-
-                        {['rcbo', 'rcd'].includes(localCircuit.deviceType) || (
-                            <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-800/50">
-                            <h4 className="text-sm font-bold text-blue-400 mb-4">Residual Current Device</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                                <SelectGroup 
-                                label="RCD Type" 
-                                value={localCircuit.rcdType} 
-                                onChange={v => updateField('rcdType', v)}
-                                options={['AC', 'A', 'F', 'B']} 
-                                />
-                                <SelectGroup 
-                                label="Sensitivity" 
-                                value={localCircuit.rcdRating} 
-                                onChange={v => updateField('rcdRating', v)}
-                                options={['10', '30', '100', '300', '500']} 
-                                />
-                            </div>
-                            </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl">
-                            <span className="font-bold text-gray-300">AFDD Installed?</span>
-                            <button 
-                            onClick={() => updateField('afdd', !localCircuit.afdd)}
-                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${localCircuit.afdd ? 'bg-yellow-400' : 'bg-gray-600'}`}
-                            >
-                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${localCircuit.afdd ? 'translate-x-6' : 'translate-x-1'}`} />
-                            </button>
-                        </div>
-                        </div>
-                    )}
-
-                    {tab === 'testing' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="bg-yellow-900/20 p-4 rounded-lg flex items-start gap-3 border border-yellow-700/50">
-                            <AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={18} />
-                            <p className="text-xs text-yellow-200/80 leading-relaxed">
-                            <strong>Compliance Check:</strong> Enter real measured values. Do not guess. We are watching (not really, but safety first).
-                            </p>
-                        </div>
-
-                        {/* Continuity */}
-                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm">
-                            <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Continuity (Ω)</h4>
-                            <NumberInput 
-                            label="R1 + R2" 
-                            value={localCircuit.r1r2} 
-                            onChange={v => updateField('r1r2', v)}
-                            unit="Ω" 
-                            placeholder="0.00"
-                            />
-                        </div>
-
-                        {/* Insulation Resistance */}
-                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm">
-                            <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Insulation Resistance (MΩ)</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                            <NumberInput 
-                                label="Live - Live" 
-                                value={localCircuit.riso_ll} 
-                                onChange={v => updateField('riso_ll', v)}
-                                unit="MΩ"
-                                placeholder=">299"
-                            />
-                            <NumberInput 
-                                label="Live - Earth" 
-                                value={localCircuit.riso_le} 
-                                onChange={v => updateField('riso_le', v)}
-                                unit="MΩ"
-                                placeholder=">299"
-                            />
-                            </div>
-                        </div>
-
-                        {/* Loop Impedance */}
-                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm">
-                            <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                            <h4 className="text-sm font-bold text-gray-300">Loop Impedance (Zs)</h4>
-                            <span className="text-xs bg-gray-900 text-yellow-400 font-mono px-2 py-1 rounded border border-gray-700">Max: {maxZs}Ω</span>
-                            </div>
-                            <NumberInput 
-                            label="Measured Zs" 
-                            value={localCircuit.zs} 
-                            onChange={v => updateField('zs', v)}
-                            unit="Ω"
-                            placeholder="0.00"
-                            max={maxZs}
-                            />
-                        </div>
-
-                        {/* RCD */}
-                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm">
-                            <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">RCD Performance (ms)</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                            <NumberInput 
-                                label="1x IΔn" 
-                                value={localCircuit.rcd_x1} 
-                                onChange={v => updateField('rcd_x1', v)}
-                                unit="ms"
-                                max="300"
-                                placeholder="<300"
-                            />
-                            <NumberInput 
-                                label="5x IΔn" 
-                                value={localCircuit.rcd_x5} 
-                                onChange={v => updateField('rcd_x5', v)}
-                                unit="ms"
-                                max="40"
-                                placeholder="<40"
-                            />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl">
-                            <span className="font-bold text-gray-300">Polarity Verified?</span>
-                            <button 
-                            onClick={() => updateField('polarity', !localCircuit.polarity)}
-                            className={`p-2 rounded-full transition-all ${localCircuit.polarity ? 'bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-gray-700 text-gray-500'}`}
-                            >
-                            <CheckCircle2 size={24} />
-                            </button>
-                        </div>
-
-                        </div>
-                    )}
-                    </div>
-
-                    {/* Editor Footer */}
-                    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 max-w-2xl mx-auto flex gap-3 shadow-2xl">
-                    <button 
-                        onClick={handleDelete}
-                        className="p-3 text-red-400 bg-red-900/20 rounded-xl hover:bg-red-900/40 border border-transparent hover:border-red-500/50 transition-all"
-                    >
-                        <Trash2 size={24} />
-                    </button>
-                    <button 
-                        onClick={handleSave}
-                        className="flex-1 bg-yellow-400 text-gray-900 font-bold rounded-xl py-3 flex items-center justify-center gap-2 hover:bg-yellow-300 active:scale-95 transition-all shadow-lg shadow-yellow-400/10"
-                    >
-                        <Save size={20} />
-                        Save Circuit
-                    </button>
-                    </div>
-                </div>
-                );
-            };
-
-            const DetailsEditor = () => (
-                <div className="p-4 bg-gray-900 min-h-screen text-gray-100 font-sans">
-                <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 space-y-6">
-                    <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-3">Installation Details</h3>
-                    
-                    <div>
-                    <label className="block text-sm font-semibold text-gray-400 mb-1">MPRN (11 Digits)</label>
-                    <input 
-                        value={installation.mprn}
-                        onChange={(e) => setInstallation({...installation, mprn: e.target.value})}
-                        className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        placeholder="10012345678"
-                        maxLength={11}
-                    />
-                    </div>
-
-                    <div>
-                    <label className="block text-sm font-semibold text-gray-400 mb-1">Client Name</label>
-                    <input 
-                        value={installation.clientName}
-                        onChange={(e) => setInstallation({...installation, clientName: e.target.value})}
-                        className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        placeholder="John Doe"
-                    />
-                    </div>
-
-                    <div>
-                    <label className="block text-sm font-semibold text-gray-400 mb-1">Address</label>
-                    <textarea 
-                        value={installation.address}
-                        onChange={(e) => setInstallation({...installation, address: e.target.value})}
-                        className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg h-24 focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        placeholder="Site Address..."
-                    />
-                    </div>
-
-                    <SelectGroup 
-                    label="Earthing Arrangement" 
-                    value={installation.earthingArrangement} 
-                    onChange={v => setInstallation({...installation, earthingArrangement: v})}
-                    options={['TN-C-S', 'TN-S', 'TT']} 
-                    />
-
-                    <NumberInput 
-                    label="Ze (External Loop Impedance)"
-                    value={installation.ze}
-                    onChange={v => setInstallation({...installation, ze: v})}
-                    unit="Ω"
-                    placeholder="0.00"
-                    />
-
-                    <button 
-                    onClick={() => setView('dashboard')}
-                    className="w-full bg-yellow-400 text-gray-900 font-bold py-3 rounded-xl mt-4 hover:bg-yellow-300 transition-colors shadow-lg shadow-yellow-400/20"
-                    >
-                    Update Details
-                    </button>
-                </div>
-                </div>
-            );
+            const activeCircuit = circuits.find(c => c.id === activeCircuitId);
+            const stats = getStats();
 
             return (
                 <div className="font-sans text-gray-100 max-w-2xl mx-auto bg-gray-900 min-h-screen shadow-2xl border-x border-gray-800">
-                <Header 
-                    view={view} 
-                    onBack={() => setView('dashboard')} 
-                    title={view === 'dashboard' ? 'Test Record' : view === 'add-circuit' ? 'New Circuit' : 'Edit Circuit'}
-                />
-                
-                {view === 'dashboard' && <Dashboard />}
-                {view === 'edit-circuit' && <CircuitEditor />}
-                {view === 'details' && <DetailsEditor />}
+                    {/* Header rendered conditionally based on view */}
+                    {view !== 'report' && <Header view={view} onBack={() => setView('dashboard')} title={view === 'dashboard' ? 'Test Record' : view === 'add-circuit' ? 'New Circuit' : 'Edit Circuit'} />}
+                    
+                    {view === 'dashboard' && <Dashboard installation={installation} circuits={circuits} stats={stats} setView={setView} createNewCircuit={createNewCircuit} setCircuits={setCircuits} setActiveCircuitId={setActiveCircuitId} handleReset={handleReset} />}
+                    {view === 'edit-circuit' && activeCircuit && <CircuitEditor activeCircuit={activeCircuit} setCircuits={setCircuits} setView={setView} setActiveCircuitId={setActiveCircuitId} />}
+                    {view === 'details' && <DetailsEditor installation={installation} setInstallation={setInstallation} setView={setView} />}
+                    {view === 'report' && <ReportView installation={installation} circuits={circuits} setView={setView} />}
                 </div>
             );
         }
