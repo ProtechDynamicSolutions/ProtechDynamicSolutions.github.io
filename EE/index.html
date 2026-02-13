@@ -106,15 +106,22 @@
                         <ArrowLeft size={24} />
                     </button>
                     )}
-                    <div>
-                    <h1 className="text-xl font-bold flex items-center gap-2 text-yellow-400 tracking-tight">
-                        <Zap className="fill-yellow-400 text-yellow-400" size={20} />
-                        Executive Electrical
-                    </h1>
-                    <p className="text-xs text-gray-400 font-medium tracking-wide uppercase">{title}</p>
+                    <div className="flex items-center gap-3">
+                        <img 
+                            src="https://raw.githubusercontent.com/ohmydaysOMD/executiveelectrical.github.io/refs/heads/main/ee.png" 
+                            alt="Executive Electrical Logo"
+                            className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]"
+                            onError={(e) => { e.target.style.display = 'none'; }} 
+                        />
+                        <div>
+                            <h1 className="text-xl font-bold text-yellow-400 tracking-tight leading-none">
+                                Executive Electrical
+                            </h1>
+                            <p className="text-xs text-gray-400 font-medium tracking-wide uppercase mt-0.5">{title}</p>
+                        </div>
                     </div>
                 </div>
-                <div className="h-8 w-8 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-extrabold text-xs shadow-glow">
+                <div className="h-8 w-8 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-extrabold text-xs shadow-glow border-2 border-yellow-300">
                     REC
                 </div>
                 </div>
@@ -752,4 +759,5 @@
     </script>
 </body>
 </html>
+
 
