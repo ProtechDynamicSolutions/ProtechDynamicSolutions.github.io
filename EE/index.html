@@ -241,6 +241,15 @@
                     <div><label className="block text-sm font-semibold text-gray-400 mb-1">MPRN (11 Digits)</label><input value={installation.mprn} onChange={(e) => setInstallation({...installation, mprn: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400" placeholder="10012345678" maxLength={11} /></div>
                     <div><label className="block text-sm font-semibold text-gray-400 mb-1">Client Name</label><input value={installation.clientName} onChange={(e) => setInstallation({...installation, clientName: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-yellow-400" placeholder="John Doe" /></div>
                     <div><label className="block text-sm font-semibold text-gray-400 mb-1">Address</label><textarea value={installation.address} onChange={(e) => setInstallation({...installation, address: e.target.value})} className="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-lg h-24 focus:ring-2 focus:ring-yellow-400" placeholder="Site Address..." /></div>
+                    
+                    {/* ADDED INSTALLATION TYPE */}
+                    <SelectGroup 
+                        label="Installation Type" 
+                        value={installation.type || 'New'} 
+                        onChange={v => setInstallation({...installation, type: v})} 
+                        options={['New', 'Rewire', 'Existing']} 
+                    />
+                    
                     <SelectGroup label="Earthing Arrangement" value={installation.earthingArrangement} onChange={v => setInstallation({...installation, earthingArrangement: v})} options={['TN-C-S', 'TN-S', 'TT']} />
                     <NumberInput label="Ze (External Loop Impedance)" value={installation.ze} onChange={v => setInstallation({...installation, ze: v})} unit="Ω" placeholder="0.00" />
                     <button onClick={() => setView('dashboard')} className="w-full bg-yellow-400 text-gray-900 font-bold py-3 rounded-xl mt-4 hover:bg-yellow-300 shadow-lg shadow-yellow-400/20">Update Details</button>
@@ -377,9 +386,15 @@
                                 <div className="flex items-center gap-4 flex-wrap">
                                     <span className="font-bold">Type:</span>
                                     <div className="flex gap-3">
-                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> New</label>
-                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> Rewire</label>
-                                        <label className="flex items-center gap-1"><input type="checkbox" className="scale-75" /> Exist</label>
+                                        <label className="flex items-center gap-1">
+                                            <input type="checkbox" className="scale-75" checked={installation.type === 'New'} readOnly /> New
+                                        </label>
+                                        <label className="flex items-center gap-1">
+                                            <input type="checkbox" className="scale-75" checked={installation.type === 'Rewire'} readOnly /> Rewire
+                                        </label>
+                                        <label className="flex items-center gap-1">
+                                            <input type="checkbox" className="scale-75" checked={installation.type === 'Existing'} readOnly /> Exist
+                                        </label>
                                     </div>
                                     <div className="h-4 w-px bg-gray-400 mx-2"></div>
                                     <span className="font-bold">Earthing:</span>
@@ -499,7 +514,7 @@
             const [installation, setInstallation] = useState(() => {
                 const saved = localStorage.getItem('executive_install');
                 return saved ? JSON.parse(saved) : {
-                    mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: ''
+                    mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: '', type: 'New'
                 };
             });
 
