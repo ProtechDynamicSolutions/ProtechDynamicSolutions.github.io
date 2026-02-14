@@ -44,7 +44,7 @@
             height: 210mm; /* Exact A4 Landscape height */
             background: white;
             color: black;
-            padding: 10mm;
+            padding: 8mm;
             box-sizing: border-box;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 9px;
@@ -54,7 +54,12 @@
         }
 
         /* Helper Classes for the Report */
-        .report-table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        .report-table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            table-layout: fixed; 
+            border: 2px solid black;
+        }
         .report-table th, .report-table td { 
             border: 1px solid black; 
             padding: 0px 1px; 
@@ -62,11 +67,12 @@
             vertical-align: middle; 
             overflow: hidden; 
             white-space: nowrap; 
-            height: 13px; /* Tight rows */
+            height: 14px; /* Tight rows */
             font-size: 7px;
+            color: black;
         }
         
-        /* Vertical Text Fix: Rotate -90deg instead of writing-mode */
+        /* Vertical Text Fix */
         .vertical-header-container {
             display: flex;
             align-items: center;
@@ -80,9 +86,7 @@
             white-space: nowrap;
             text-align: center;
             display: inline-block;
-            /* Width 0 makes the element effectively a point, preventing it from expanding the cell width */
             width: 0;
-            /* But we need to make sure the text is visible */
             overflow: visible;
             line-height: 0;
         }
@@ -95,9 +99,9 @@
         .border-b-dotted { border-bottom: 1px dotted black; }
         
         /* Specific Colors */
-        .header-black { background-color: black; color: white; }
-        .header-blue { background-color: #0ea5e9; color: white; } 
-        .header-red { background-color: #dc2626; color: white; }
+        .header-black { background-color: black; color: white !important; }
+        .header-blue { background-color: #0ea5e9; color: white !important; } 
+        .header-red { background-color: #dc2626; color: white !important; }
         .title-red { color: #b91c1c; }
         
         /* Loading Overlay */
@@ -500,7 +504,6 @@
                     
                     try {
                         const element = document.getElementById('pdf-target');
-                        // Increased scale to 3 for better quality
                         const canvas = await window.html2canvas(element, { scale: 3, useCORS: true, logging: false });
                         
                         setStatus('Generating PDF...');
@@ -510,12 +513,17 @@
                         doc.addImage(imgData, 'PNG', 0, 0, 297, 210);
 
                         const blob = doc.output('blob');
-                        const uniqueRef = installation.recordNo ? `TestRecord_${installation.recordNo}` : 'TestRecord';
-                        const file = new File([blob], `${uniqueRef}.pdf`, { type: 'application/pdf' });
+                        
+                        // NEW FILENAME LOGIC
+                        const safeClientName = (installation.clientName || 'Client').replace(/[^a-z0-9]/gi, '_').trim();
+                        const uniqueRef = installation.recordNo ? `_${installation.recordNo}` : '';
+                        const filename = `${safeClientName}_TestRecord${uniqueRef}.pdf`;
+                        
+                        const file = new File([blob], filename, { type: 'application/pdf' });
 
                         setStatus('Ready to Share...');
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            await navigator.share({ files: [file], title: `Test Record ${uniqueRef}` });
+                            await navigator.share({ files: [file], title: `Test Record for ${installation.clientName}` });
                         } else {
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a'); a.href = url; a.download = file.name; a.click();
@@ -564,25 +572,28 @@
                                 <div className="text-center pt-2">
                                     <h1 className="text-2xl font-bold title-red tracking-tight" style={{ fontFamily: 'Arial Black, sans-serif' }}>TEST RECORD SHEET</h1>
                                 </div>
-                                <div className="w-1/3">
+                                <div className="w-[85mm]">
                                     <div className="border border-black">
-                                        <div className="flex border-b border-black">
-                                            <div className="w-32 pl-1 border-r border-black font-bold text-[8px] bg-white">Test Record Sheet No T</div>
-                                            <div className="flex-1 pl-1 text-[8px]">{installation.recordNo}</div>
-                                            <div className="w-16 pl-1 border-l border-black font-bold text-[8px]">Seal No</div>
-                                            <div className="w-20 pl-1 border-l border-black text-[8px]">{installation.sealNo}</div>
+                                        <div className="flex border-b border-black h-5">
+                                            <div className="w-32 pl-1 border-r border-black font-bold text-[8px] flex items-center bg-white">Test Record Sheet No T</div>
+                                            <div className="flex-1 pl-1 text-[8px] flex items-center font-bold">{installation.recordNo}</div>
+                                            <div className="w-12 pl-1 border-l border-black font-bold text-[8px] flex items-center">Seal No</div>
+                                            <div className="w-20 pl-1 border-l border-black text-[8px] flex items-center font-bold">{installation.sealNo}</div>
                                         </div>
-                                        <div className="flex border-b border-black">
-                                            <div className="w-24 pl-1 border-r border-black font-bold text-[8px]">MPRN No</div>
+                                        <div className="flex h-5">
+                                            <div className="w-16 pl-1 border-r border-black font-bold text-[8px] flex items-center">MPRN No</div>
                                             <div className="flex-1 text-[8px] flex">
-                                                {installation.mprn.split('').map((d,i) => (
-                                                    <div key={i} className="flex-1 border-r border-gray-300 text-center last:border-0">{d}</div>
+                                                {/* 12 boxes for MPRN */}
+                                                {[...Array(12)].map((_, i) => (
+                                                    <div key={i} className="flex-1 border-r border-black text-center flex items-center justify-center font-bold last:border-0">
+                                                        {(installation.mprn || '').charAt(i) || ''}
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="flex">
-                                            <div className="w-24 pl-1 border-r border-black font-bold text-[8px]">Cert No</div>
-                                            <div className="flex-1 pl-1 text-[8px]">{installation.certNo}</div>
+                                        <div className="flex border-t border-black h-5">
+                                            <div className="w-16 pl-1 border-r border-black font-bold text-[8px] flex items-center">Cert No</div>
+                                            <div className="flex-1 pl-1 text-[8px] flex items-center font-bold">{installation.certNo}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -592,19 +603,19 @@
                             <div className="mb-1 text-[8px]">
                                 <div className="flex items-end mb-1">
                                     <span className="w-24 font-bold uppercase">Customer Name:</span>
-                                    <div className="flex-1 border-b-dotted px-2 uppercase">{installation.clientName}</div>
+                                    <div className="flex-1 border-b-dotted px-2 uppercase font-bold">{installation.clientName}</div>
                                 </div>
                                 <div className="flex items-end mb-1">
                                     <span className="w-24 font-bold uppercase">Installation Address:</span>
-                                    <div className="flex-1 border-b-dotted px-2 uppercase">{installation.address}</div>
+                                    <div className="flex-1 border-b-dotted px-2 uppercase font-bold">{installation.address}</div>
                                 </div>
                                 <div className="flex items-end mb-1">
                                     <span className="w-24 font-bold uppercase">Distribution Board Ref:</span>
-                                    <div className="w-40 border-b-dotted px-2 uppercase">{installation.boardRef}</div>
+                                    <div className="w-40 border-b-dotted px-2 uppercase font-bold">{installation.boardRef}</div>
                                 </div>
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="font-bold w-12 uppercase">Category:</span>
-                                    <div className="w-32 border-b-dotted px-1 uppercase">{installation.category}</div>
+                                    <div className="w-32 border-b-dotted px-1 uppercase font-bold">{installation.category}</div>
                                     <span className="text-[7px] italic text-gray-500">(Domestic, Commercial, Industrial etc.)</span>
 
                                     <span className="font-bold ml-4 uppercase">Type of Installation:</span>
@@ -619,13 +630,13 @@
                                 </div>
                                 <div className="flex items-end">
                                     <span className="font-bold mr-1">Comments:</span>
-                                    <div className="flex-1 border-b-dotted px-2">{installation.comments}</div>
+                                    <div className="flex-1 border-b-dotted px-2 font-bold">{installation.comments}</div>
                                     <div className="flex gap-2 ml-2">
                                         <span>MAX Rp+Re (if applicable)</span>
-                                        <span className="border-b-dotted w-8 text-center">{installation.maxRpRe}</span>
+                                        <span className="border-b-dotted w-8 text-center font-bold">{installation.maxRpRe}</span>
                                         <span>OHMS</span>
                                         <span className="ml-2">MAX RES.PROT.COND (Re)</span>
-                                        <span className="border-b-dotted w-8 text-center">{installation.maxRe}</span>
+                                        <span className="border-b-dotted w-8 text-center font-bold">{installation.maxRe}</span>
                                         <span>OHMS</span>
                                     </div>
                                 </div>
@@ -658,56 +669,73 @@
                             {/* MAIN TABLE */}
                             <table className="report-table border-black mb-1">
                                 <thead>
-                                    {/* HEADERS */}
+                                    {/* ROW 1: MAIN GROUPS */}
                                     <tr className="h-4 text-[7px]">
-                                        <th colSpan="8" className="header-black text-left pl-2 font-bold uppercase">Circuit Details</th>
-                                        <th colSpan="10" className="header-blue font-bold uppercase">Pre Connection</th>
-                                        <th colSpan="6" className="header-red font-bold uppercase">Post Connection</th>
-                                        <th rowSpan="3" className="w-[18mm] bg-white text-black font-normal text-[5px] text-left p-0.5 leading-tight align-top">
+                                        <th colSpan="8" className="header-black text-left pl-2 font-bold uppercase border-black">Circuit Details</th>
+                                        <th colSpan="10" className="header-blue font-bold uppercase border-black">Pre Connection</th>
+                                        <th colSpan="5" className="header-red font-bold uppercase border-black">Post Connection</th>
+                                        
+                                        {/* LEGEND BLOCK - TOP RIGHT CORNER */}
+                                        <th rowSpan="2" className="w-[45mm] bg-white text-black font-normal text-[5px] text-left p-1 align-top border-black">
                                             † - MCB / RCBO / Fuse etc.<br/>
-                                            †† - Type B-C-D etc.<br/><br/>
+                                            †† - Type B-C-D etc.<br/>
                                             * Resistance of phase conductor (Rp)<br/>
                                             ** Resistance of earth conductor (Re)
                                         </th>
                                     </tr>
+
+                                    {/* ROW 2: SUB GROUPS & SPANNERS */}
                                     <tr className="h-6 text-[6px]">
                                         <th rowSpan="2" className="w-[5mm]"><VerticalText text="Circuit Number" /></th>
-                                        <th rowSpan="2" className="w-auto">Circuit Designation</th>
-                                        <th colSpan="2" className="h-3">Cable</th>
-                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="No. of Points" /></th>
-                                        <th colSpan="3" className="h-3">Overcurrent Protection</th>
+                                        <th rowSpan="2" className="w-[35mm]">Circuit Designation</th>
+                                        <th colSpan="2" className="h-3 w-[16mm]">Cable</th>
+                                        <th rowSpan="2" className="w-[6mm]"><VerticalText text="No. of Points" /></th>
+                                        <th colSpan="3" className="h-3 w-[24mm]">Overcurrent Protection</th>
 
-                                        <th colSpan="5" className="h-3">Max Circuit Continuity (Ohms)</th>
-                                        <th colSpan="3" className="h-3">MIN.INSULATION RES (MEG OHMS)</th>
+                                        {/* PRE CONN SUB HEADERS */}
+                                        <th colSpan="2" className="h-3 w-[16mm]">Max Circuit Continuity (Ohms)</th>
+                                        <th colSpan="3" className="h-3 w-[24mm]">Ring Circuit End to End</th>
+                                        <th colSpan="3" className="h-3 w-[24mm]">MIN.INSULATION RES (MEG OHMS)</th>
                                         <th rowSpan="2" className="w-[5mm]"><VerticalText text="Erroneous Test (✓)" /></th>
                                         <th rowSpan="2" className="w-[5mm]"><VerticalText text="Polarity Correct (✓)" /></th>
 
-                                        <th rowSpan="2" className="w-[8mm]">L-E<br/>Max Fault<br/>Loop Imp.<br/>(Ohms)</th>
-                                        <th colSpan="3" className="h-3">Max RCD Operating times (ms)</th>
+                                        {/* POST CONN SUB HEADERS */}
+                                        <th rowSpan="2" className="w-[10mm]">L-E<br/>Max Fault<br/>Loop Imp.<br/>(Ohms)</th>
+                                        <th colSpan="3" className="h-3 w-[24mm]">Max RCD Operating times (ms)</th>
                                         <th rowSpan="2" className="w-[5mm]"><VerticalText text="RCD Test Button (✓)" /></th>
-                                        <th rowSpan="2" className="w-auto">Other Comments</th>
                                     </tr>
+
+                                    {/* ROW 3: UNIT COLUMNS */}
                                     <tr className="h-14 text-[6px]">
-                                        <th className="w-[6mm]"><VerticalText text="Type" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="Sq mm" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="Device †" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="Type ††" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="Amps" /></th>
+                                        {/* Cable */}
+                                        <th className="w-[8mm]"><VerticalText text="Type" /></th>
+                                        <th className="w-[8mm]"><VerticalText text="Sq mm" /></th>
+                                        {/* Protection */}
+                                        <th className="w-[8mm]"><VerticalText text="Device †" /></th>
+                                        <th className="w-[8mm]"><VerticalText text="Type ††" /></th>
+                                        <th className="w-[8mm]"><VerticalText text="Amps" /></th>
                                         
-                                        {/* Pre Conn Sub Headers */}
+                                        {/* Max Continuity */}
                                         <th className="w-[8mm]">All Circuits<br/>Rp* + Re**</th>
-                                        <th className="w-[6mm]">Re**</th>
-                                        <th className="w-[6mm]">L-L</th>
-                                        <th className="w-[6mm]">N-N</th>
-                                        <th className="w-[6mm]">E-E</th>
+                                        <th className="w-[8mm]">Re**</th>
                                         
+                                        {/* Ring */}
+                                        <th className="w-[8mm]">L-L</th>
+                                        <th className="w-[8mm]">N-N</th>
+                                        <th className="w-[8mm]">E-E</th>
+                                        
+                                        {/* Insulation */}
                                         <th className="w-[8mm]">Phase &<br/>Neutral<br/>to Earth<br/>(MΩ)</th>
                                         <th className="w-[8mm]">Phase to<br/>Neutral<br/>(MΩ)</th>
                                         <th className="w-[8mm]">3 Phase<br/>Phase to<br/>Phase<br/>(MΩ)</th>
                                         
-                                        <th className="w-[6mm]"><VerticalText text="½ x IΔn" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="1 x IΔn" /></th>
-                                        <th className="w-[6mm]"><VerticalText text="5 x IΔn" /></th>
+                                        {/* RCD Times */}
+                                        <th className="w-[8mm]"><VerticalText text="½ x IΔn" /></th>
+                                        <th className="w-[8mm]"><VerticalText text="1 x IΔn" /></th>
+                                        <th className="w-[8mm]"><VerticalText text="5 x IΔn" /></th>
+
+                                        {/* LAST COLUMN HEADER - OTHER COMMENTS */}
+                                        <th className="w-auto">Other Comments</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -732,39 +760,44 @@
                                             <td>{c.zs}</td>
                                             <td>{c.rcd_half}</td><td>{c.rcd_x1}</td><td>{c.rcd_x5}</td>
                                             <td>{c.rcd_button?'✓':''}</td>
-                                            <td className="text-left pl-1 truncate">{c.comments}</td>
+                                            <td className="text-left pl-1 truncate text-[5px]">{c.comments}</td>
                                         </tr>
                                     ))}
                                     {[...Array(emptyRows)].map((_, i) => (
-                                        <tr key={`empty-${i}`} className="h-3 border-black"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                                        <tr key={`empty-${i}`} className="h-3 border-black">
+                                            {/* Just generating empty cells for all 24 columns */}
+                                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                                        </tr>
                                     ))}
                                 </tbody>
                             </table>
 
                             {/* FOOTER */}
-                            <div className="absolute bottom-10 left-10mm right-10mm text-[8px]">
-                                <div className="flex mb-2">
-                                    <span className="w-32">Pre Connection Tested By:</span>
+                            <div className="absolute bottom-10 left-8mm right-8mm text-[8px]">
+                                <div className="flex mb-2 items-end">
+                                    <span className="w-32 font-bold">Pre Connection Tested By:</span>
                                     <div className="border-b-dotted flex-1"></div>
-                                    <span className="w-16 ml-2">SIGNATURE</span>
-                                    <div className="border-b-dotted flex-1 text-blue-900 font-script text-xs">{installation.engineerName}</div>
-                                    <span className="w-10 ml-2">QC No.</span><div className="border-b-dotted w-16">{installation.qcNo}</div>
-                                    <span className="w-10 ml-2">Reg No.</span><div className="border-b-dotted w-16">{installation.regNo}</div>
-                                    <span className="w-8 ml-2">DATE</span><div className="border-b-dotted w-16">{today}</div>
+                                    <span className="w-16 ml-2 font-bold">SIGNATURE</span>
+                                    <div className="border-b-dotted flex-1 text-blue-900 font-script text-xs px-2">{installation.engineerName}</div>
+                                    <span className="w-10 ml-2 font-bold">QC No.</span><div className="border-b-dotted w-16 px-1">{installation.qcNo}</div>
+                                    <span className="w-10 ml-2 font-bold">Reg No.</span><div className="border-b-dotted w-16 px-1">{installation.regNo}</div>
+                                    <span className="w-8 ml-2 font-bold">DATE</span><div className="border-b-dotted w-16 px-1">{today}</div>
                                 </div>
-                                <div className="flex">
-                                    <span className="w-32">Post Connection Tested By:</span>
+                                <div className="flex items-end">
+                                    <span className="w-32 font-bold">Post Connection Tested By:</span>
                                     <div className="border-b-dotted flex-1"></div>
-                                    <span className="w-16 ml-2">SIGNATURE</span>
-                                    <div className="border-b-dotted flex-1 text-blue-900 font-script text-xs">{installation.engineerName}</div>
-                                    <span className="w-10 ml-2">QC No.</span><div className="border-b-dotted w-16">{installation.qcNo}</div>
-                                    <span className="w-10 ml-2">Reg No.</span><div className="border-b-dotted w-16">{installation.regNo}</div>
-                                    <span className="w-8 ml-2">DATE</span><div className="border-b-dotted w-16">{today}</div>
+                                    <span className="w-16 ml-2 font-bold">SIGNATURE</span>
+                                    <div className="border-b-dotted flex-1 text-blue-900 font-script text-xs px-2">{installation.engineerName}</div>
+                                    <span className="w-10 ml-2 font-bold">QC No.</span><div className="border-b-dotted w-16 px-1">{installation.qcNo}</div>
+                                    <span className="w-10 ml-2 font-bold">Reg No.</span><div className="border-b-dotted w-16 px-1">{installation.regNo}</div>
+                                    <span className="w-8 ml-2 font-bold">DATE</span><div className="border-b-dotted w-16 px-1">{today}</div>
                                 </div>
                             </div>
                             
-                            <div className="absolute bottom-2 w-full text-center text-[6px] text-gray-500">
-                                Original To Customer-White &nbsp;&nbsp; Return to Electrical Safety Supervisory Body-Yellow &nbsp;&nbsp; Contractors record-Pink
+                            <div className="absolute bottom-2 w-full text-center text-[6px] text-gray-500 uppercase tracking-wider">
+                                Original To Customer-White &nbsp;&nbsp;&nbsp;&nbsp; Return to Electrical Safety Supervisory Body-Yellow &nbsp;&nbsp;&nbsp;&nbsp; Contractors record-Pink
                             </div>
                         </div>
                     </div>
