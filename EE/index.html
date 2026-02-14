@@ -27,7 +27,14 @@
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 4mm; /* Very small margins to maximize space */
+                margin: 0mm; /* Zero margin to control it via body padding */
+            }
+            
+            html, body {
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important; /* Force no scrollbars/extra pages */
             }
             
             body { 
@@ -35,10 +42,9 @@
                 color: black; 
                 print-color-adjust: exact; 
                 -webkit-print-color-adjust: exact; 
-                margin: 0;
-                padding: 0;
                 /* Crucial: Scales content down to fit width */
-                zoom: 0.85; 
+                zoom: 0.65; 
+                padding: 10mm !important; /* Internal padding for aesthetics */
             }
 
             .no-print { display: none !important; }
@@ -55,18 +61,18 @@
             /* The Sheet Container */
             .print-sheet {
                 width: 100% !important;
-                height: 100vh !important;
+                height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 font-family: Arial, Helvetica, sans-serif;
                 font-size: 9px;
                 line-height: 1.1;
-                overflow: hidden; /* Prevent spillover pages */
+                border: none !important;
             }
             
             /* Table Resets */
             table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-            th, td { border: 1px solid black; padding: 1px 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; height: 16px; }
+            th, td { border: 1px solid black; padding: 0px 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; height: 14px; } /* Reduced height */
             
             /* Vertical Text Utilities */
             .vertical-text {
@@ -167,7 +173,7 @@
                             </button>
                         )}
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
+                            <div className="w-12 h-12 flex items-center justify-center">
                                 <img src={LOGO_URL} alt="EE Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
@@ -268,7 +274,18 @@
                     )}
                 </div>
 
-                <button onClick={createNewCircuit} className="fixed bottom-6 right-6 bg-yellow-400 text-gray-900 w-16 h-16 rounded-full shadow-xl shadow-yellow-400/20 flex items-center justify-center hover:bg-yellow-300 hover:scale-110 active:scale-95 transition-all z-40"><Plus size={32} strokeWidth={2.5} /></button>
+                {/* PULSING ADD BUTTON - Only pulses if circuits.length is 0 */}
+                <button onClick={createNewCircuit} className="fixed bottom-6 right-6 w-16 h-16 group z-50">
+                    {/* Ping effect for attention - CONDITIONAL */}
+                    {circuits.length === 0 && (
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75 animate-ping"></span>
+                    )}
+                    
+                    {/* The actual button */}
+                    <span className="relative inline-flex rounded-full h-16 w-16 bg-yellow-400 text-gray-900 shadow-xl shadow-yellow-400/50 items-center justify-center hover:bg-yellow-300 hover:scale-110 active:scale-95 transition-all">
+                        <Plus size={32} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" />
+                    </span>
+                </button>
             </div>
         );
 
@@ -562,8 +579,9 @@
             const emptyRows = Math.max(0, maxRows - circuits.length);
 
             const handleEmail = () => {
+                alert("Reminder: Please manually attach the PDF you just downloaded to the email.");
                 const subject = encodeURIComponent(`Test Record - ${installation.address || 'New Installation'}`);
-                const body = encodeURIComponent(`Please find attached the Electrical Test Record for:\n\nClient: ${installation.clientName}\nAddress: ${installation.address}\n\nNote: Please attach the saved PDF file to this email manually.`);
+                const body = encodeURIComponent(`Please find attached the Electrical Test Record for:\n\nClient: ${installation.clientName}\nAddress: ${installation.address}\n\nNote: I have attached the saved PDF file to this email.`);
                 window.location.href = `mailto:?subject=${subject}&body=${body}`;
             };
 
@@ -975,4 +993,5 @@
     </script>
 </body>
 </html>
+
 
