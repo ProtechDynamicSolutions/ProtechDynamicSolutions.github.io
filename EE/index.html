@@ -27,7 +27,7 @@
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-        /* Print Styles - Engineered for Single Page A4 Landscape */
+        /* Print Styles */
         @media print {
             @page { 
                 size: A4 landscape; 
@@ -66,18 +66,25 @@
             font-size: 7px;
         }
         
-        .vertical-text {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            white-space: nowrap;
-            text-align: center;
-            margin: 0 auto;
-            height: 100%;
+        /* Vertical Text Fix: Rotate -90deg instead of writing-mode */
+        .vertical-header-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 7px;
+            height: 100%;
             width: 100%;
+        }
+
+        .vertical-text {
+            transform: rotate(-90deg);
+            white-space: nowrap;
+            text-align: center;
+            display: inline-block;
+            /* Width 0 makes the element effectively a point, preventing it from expanding the cell width */
+            width: 0;
+            /* But we need to make sure the text is visible */
+            overflow: visible;
+            line-height: 0;
         }
 
         .check-box { 
@@ -87,9 +94,9 @@
         
         .border-b-dotted { border-bottom: 1px dotted black; }
         
-        /* Specific Colors from Image */
+        /* Specific Colors */
         .header-black { background-color: black; color: white; }
-        .header-blue { background-color: #0ea5e9; color: white; } /* Sky Blueish */
+        .header-blue { background-color: #0ea5e9; color: white; } 
         .header-red { background-color: #dc2626; color: white; }
         .title-red { color: #b91c1c; }
         
@@ -295,7 +302,6 @@
         // ==========================================
         // SECTION 4: EDITORS
         // ==========================================
-        // (Keeping DetailsEditor and CircuitEditor mostly same as previous version but abbreviated here for cleaner file flow)
         
         const DetailsEditor = ({ installation, setInstallation, setView }) => {
             const update = (field, val) => setInstallation(prev => ({...prev, [field]: val}));
@@ -421,7 +427,6 @@
                                         <InputField label="Rp + Re" value={localCircuit.r1r2} onChange={v => updateField('r1r2', v)} type="number" step="0.01" />
                                         <InputField label="Re Only" value={localCircuit.re} onChange={v => updateField('re', v)} type="number" step="0.01" />
                                     </div>
-                                    {/* Ring Circuit Fields - ALWAYS visible so user can fill if needed, though mostly for Ring circuits */}
                                     <div className="mt-4 pt-4 border-t border-gray-700">
                                         <p className="text-xs text-blue-400 font-bold mb-2">Ring End-to-End (Optional)</p>
                                         <div className="grid grid-cols-3 gap-2">
@@ -479,7 +484,7 @@
         };
 
         // ==========================================
-        // SECTION 5: REPORT GENERATOR (Auto-runs)
+        // SECTION 5: REPORT GENERATOR
         // ==========================================
 
         const ReportGenerator = ({ installation, circuits, onComplete }) => {
@@ -495,7 +500,8 @@
                     
                     try {
                         const element = document.getElementById('pdf-target');
-                        const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, logging: false });
+                        // Increased scale to 3 for better quality
+                        const canvas = await window.html2canvas(element, { scale: 3, useCORS: true, logging: false });
                         
                         setStatus('Generating PDF...');
                         const imgData = canvas.toDataURL('image/png');
@@ -527,6 +533,12 @@
             const CheckBox = ({ checked }) => (
                 <div className={`check-box ${checked ? 'bg-black text-white' : ''}`}>{checked ? '✓' : ''}</div>
             );
+            
+            const VerticalText = ({ text }) => (
+                <div className="vertical-header-container">
+                    <span className="vertical-text">{text}</span>
+                </div>
+            );
 
             return (
                 <div className="fixed inset-0 bg-white z-50 flex flex-col">
@@ -537,7 +549,7 @@
                         <div className="text-sm text-gray-400 mt-2">Please wait...</div>
                     </div>
 
-                    {/* THE DOCUMENT TO CAPTURE (Hidden behind overlay but rendered) */}
+                    {/* THE DOCUMENT TO CAPTURE */}
                     <div className="overflow-auto flex items-start justify-center bg-white h-full">
                         <div id="pdf-target" className="pdf-container">
                             
@@ -659,28 +671,28 @@
                                         </th>
                                     </tr>
                                     <tr className="h-6 text-[6px]">
-                                        <th rowSpan="2" className="w-[5mm]"><div className="vertical-text">Circuit Number</div></th>
+                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="Circuit Number" /></th>
                                         <th rowSpan="2" className="w-auto">Circuit Designation</th>
                                         <th colSpan="2" className="h-3">Cable</th>
-                                        <th rowSpan="2" className="w-[5mm]"><div className="vertical-text">No. of Points</div></th>
+                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="No. of Points" /></th>
                                         <th colSpan="3" className="h-3">Overcurrent Protection</th>
 
                                         <th colSpan="5" className="h-3">Max Circuit Continuity (Ohms)</th>
                                         <th colSpan="3" className="h-3">MIN.INSULATION RES (MEG OHMS)</th>
-                                        <th rowSpan="2" className="w-[5mm]"><div className="vertical-text">Erroneous Test Carried out (✓)</div></th>
-                                        <th rowSpan="2" className="w-[5mm]"><div className="vertical-text">Polarity Correct (✓)</div></th>
+                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="Erroneous Test (✓)" /></th>
+                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="Polarity Correct (✓)" /></th>
 
                                         <th rowSpan="2" className="w-[8mm]">L-E<br/>Max Fault<br/>Loop Imp.<br/>(Ohms)</th>
                                         <th colSpan="3" className="h-3">Max RCD Operating times (ms)</th>
-                                        <th rowSpan="2" className="w-[5mm]"><div className="vertical-text">RCD Test Button Verified (✓)</div></th>
+                                        <th rowSpan="2" className="w-[5mm]"><VerticalText text="RCD Test Button (✓)" /></th>
                                         <th rowSpan="2" className="w-auto">Other Comments</th>
                                     </tr>
                                     <tr className="h-14 text-[6px]">
-                                        <th className="w-[6mm] vertical-text">Type</th>
-                                        <th className="w-[6mm] vertical-text">Sq mm</th>
-                                        <th className="w-[6mm] vertical-text">Device †</th>
-                                        <th className="w-[6mm] vertical-text">Type ††</th>
-                                        <th className="w-[6mm] vertical-text">Amps</th>
+                                        <th className="w-[6mm]"><VerticalText text="Type" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="Sq mm" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="Device †" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="Type ††" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="Amps" /></th>
                                         
                                         {/* Pre Conn Sub Headers */}
                                         <th className="w-[8mm]">All Circuits<br/>Rp* + Re**</th>
@@ -693,9 +705,9 @@
                                         <th className="w-[8mm]">Phase to<br/>Neutral<br/>(MΩ)</th>
                                         <th className="w-[8mm]">3 Phase<br/>Phase to<br/>Phase<br/>(MΩ)</th>
                                         
-                                        <th className="w-[6mm]">½ x<br/>IΔn<br/>(✓)</th>
-                                        <th className="w-[6mm]">1 x IΔn</th>
-                                        <th className="w-[6mm]">5 x IΔn</th>
+                                        <th className="w-[6mm]"><VerticalText text="½ x IΔn" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="1 x IΔn" /></th>
+                                        <th className="w-[6mm]"><VerticalText text="5 x IΔn" /></th>
                                     </tr>
                                 </thead>
                                 <tbody>
