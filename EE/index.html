@@ -23,34 +23,50 @@
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-        /* Print Styles - Exact Replica of Test Record Sheet */
+        /* Print Styles - Engineered for Single Page A4 Landscape */
         @media print {
-            @page { size: A4 landscape; margin: 5mm; }
-            body { background: white; color: black; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            @page { 
+                size: A4 landscape; 
+                margin: 4mm; /* Very small margins to maximize space */
+            }
+            
+            body { 
+                background: white; 
+                color: black; 
+                print-color-adjust: exact; 
+                -webkit-print-color-adjust: exact; 
+                margin: 0;
+                padding: 0;
+                /* Crucial: Scales content down to fit width */
+                zoom: 0.85; 
+            }
+
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            #root { width: 100%; height: 100%; overflow: visible; }
+            
+            #root { width: 100%; height: 100%; margin: 0; padding: 0; }
             
             /* Reset sizing for print */
             .max-w-2xl { max-width: none !important; margin: 0 !important; }
-            .shadow-2xl, .shadow-lg, .shadow-md { box-shadow: none !important; }
+            .shadow-2xl, .shadow-lg, .shadow-md { box-shadow: none !important; border: none !important; }
             .bg-gray-900 { background-color: white !important; }
             .text-gray-100 { color: black !important; }
             
             /* The Sheet Container */
             .print-sheet {
                 width: 100% !important;
-                max-width: none !important;
+                height: 100vh !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 font-family: Arial, Helvetica, sans-serif;
-                font-size: 10px;
+                font-size: 9px;
                 line-height: 1.1;
+                overflow: hidden; /* Prevent spillover pages */
             }
             
             /* Table Resets */
             table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-            th, td { border: 1px solid black; padding: 1px 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; }
+            th, td { border: 1px solid black; padding: 1px 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; height: 16px; }
             
             /* Vertical Text Utilities */
             .vertical-text {
@@ -63,12 +79,13 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                font-size: 8px;
             }
 
             /* Specific Color Classes for Print */
             .bg-print-black { background-color: black !important; color: white !important; }
-            .bg-print-blue { background-color: #3b82f6 !important; color: white !important; } /* Blue-500 equivalent */
-            .bg-print-red { background-color: #ef4444 !important; color: white !important; } /* Red-500 equivalent */
+            .bg-print-blue { background-color: #3b82f6 !important; color: white !important; } 
+            .bg-print-red { background-color: #ef4444 !important; color: white !important; } 
             .bg-print-gray { background-color: #e5e7eb !important; }
             
             /* Borders */
@@ -78,18 +95,18 @@
             /* Text Sizes */
             .text-xs { font-size: 8px !important; }
             .text-xxs { font-size: 7px !important; }
-            .text-title { font-size: 24px !important; color: #991b1b !important; } /* Red-800 */
+            .text-title { font-size: 20px !important; color: #991b1b !important; } 
             
             /* Checkboxes in print */
             .check-box { 
-                width: 10px; 
-                height: 10px; 
+                width: 8px; 
+                height: 8px; 
                 border: 1px solid black; 
                 display: inline-flex; 
                 align-items: center; 
                 justify-content: center;
                 margin: 0 2px;
-                font-size: 8px;
+                font-size: 7px;
                 line-height: 1;
             }
         }
@@ -105,7 +122,7 @@
             Zap, Save, Plus, ChevronRight, AlertTriangle, CheckCircle2, 
             FileText, Home, ArrowLeft, Trash2, Activity, ShieldCheck, 
             Download, RotateCcw, Lightbulb, Printer, X, Settings, Calendar,
-            Hash, User, PenTool, CheckSquare, MoreHorizontal
+            Hash, User, PenTool, CheckSquare, MoreHorizontal, Mail, Share2
         } from 'https://esm.sh/lucide-react@0.294.0';
 
         // --- CONSTANTS ---
@@ -127,6 +144,7 @@
         const CURVES = ['B', 'C', 'D']; 
         const RATINGS = [6, 10, 16, 20, 25, 32, 40, 50, 63]; 
         const CSA_SIZES = ['1.5', '2.5', '4.0', '6.0', '10.0', '16.0', '25.0'];
+        const LOGO_URL = "https://raw.githubusercontent.com/ohmydaysOMD/executiveelectrical.github.io/refs/heads/main/ee.png";
 
         const getMaxZs = (rating, curve) => {
             const r = parseInt(rating) || 20;
@@ -149,8 +167,8 @@
                             </button>
                         )}
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center text-gray-900 font-bold text-xl shadow-lg shadow-yellow-400/20">
-                                <Zap size={24} fill="currentColor" />
+                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
+                                <img src={LOGO_URL} alt="EE Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-yellow-400 tracking-tight leading-none">Executive Electrical</h1>
@@ -226,7 +244,9 @@
                         <div className={`p-3 rounded-xl border text-center backdrop-blur-sm ${stats.failed > 0 ? 'bg-red-900/20 border-red-500/50' : 'bg-gray-700/50 border-gray-600'}`}><span className={`block text-3xl font-bold ${stats.failed > 0 ? 'text-red-500' : 'text-gray-400'}`}>{stats.failed}</span><span className={`text-[10px] uppercase font-bold tracking-wider ${stats.failed > 0 ? 'text-red-400' : 'text-gray-500'}`}>Failed</span></div>
                     </div>
                     <div className="mt-6 flex gap-3">
-                        <button onClick={() => setView('report')} className="flex-1 flex items-center justify-center gap-2 bg-yellow-400 text-gray-900 py-3 rounded-lg text-sm font-bold hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/10 transform hover:scale-[1.02] active:scale-[0.98]"><Printer size={16} /> View Certificate</button>
+                        <button onClick={() => setView('report')} className="flex-1 flex items-center justify-center gap-2 bg-yellow-400 text-gray-900 py-3 rounded-lg text-sm font-bold hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/10 transform hover:scale-[1.02] active:scale-[0.98]">
+                            <Share2 size={16} /> Export / Send
+                        </button>
                         <button onClick={handleReset} className="flex items-center justify-center px-4 bg-gray-700 text-gray-400 rounded-lg hover:bg-red-900/30 hover:text-red-400 border border-gray-600 transition-all"><RotateCcw size={16} /></button>
                     </div>
                 </div>
@@ -541,7 +561,12 @@
             const maxRows = 16;
             const emptyRows = Math.max(0, maxRows - circuits.length);
 
-            // Helpers to render checks box
+            const handleEmail = () => {
+                const subject = encodeURIComponent(`Test Record - ${installation.address || 'New Installation'}`);
+                const body = encodeURIComponent(`Please find attached the Electrical Test Record for:\n\nClient: ${installation.clientName}\nAddress: ${installation.address}\n\nNote: Please attach the saved PDF file to this email manually.`);
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            };
+
             const CheckBox = ({ checked }) => (
                 <div className={`check-box ${checked ? 'bg-black text-white' : ''}`}>
                     {checked ? '✓' : ''}
@@ -550,15 +575,22 @@
 
             return (
                 <div className="min-h-screen bg-gray-100 text-black p-0">
-                    <div className="no-print fixed top-0 left-0 right-0 bg-gray-900 p-4 flex justify-between items-center z-50 shadow-md">
-                        <div className="flex items-center gap-3">
+                    <div className="no-print fixed top-0 left-0 right-0 bg-gray-900 p-4 flex flex-col md:flex-row justify-between items-center z-50 shadow-md gap-4">
+                        <div className="flex items-center gap-3 w-full md:w-auto">
                             <button onClick={() => setView('dashboard')} className="text-gray-400 hover:text-white transition-colors"><ArrowLeft /></button>
-                            <h2 className="text-white font-bold text-lg">Certificate Preview</h2>
+                            <h2 className="text-white font-bold text-lg">Send Report</h2>
                         </div>
-                        <button onClick={() => window.print()} className="bg-yellow-400 text-gray-900 px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-yellow-300 shadow-lg shadow-yellow-400/20"><Printer size={18} /> Print PDF</button>
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <button onClick={() => window.print()} className="flex-1 md:flex-none bg-yellow-400 text-gray-900 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-yellow-300 shadow-lg transition-transform active:scale-95">
+                                <Save size={18} /> 1. Save PDF
+                            </button>
+                            <button onClick={handleEmail} className="flex-1 md:flex-none bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-500 shadow-lg transition-transform active:scale-95">
+                                <Mail size={18} /> 2. Open Email
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="no-print h-20"></div>
+                    <div className="no-print h-32 md:h-24"></div>
 
                     <div className="overflow-auto flex justify-center pb-10 bg-gray-500/10">
                         {/* THE PDF REPLICA */}
@@ -567,7 +599,9 @@
                             {/* HEADER */}
                             <div className="flex items-end justify-between mb-2">
                                 <div className="w-1/4">
-                                    <div className="w-16 h-10 bg-blue-300 mb-1 border border-black flex items-center justify-center text-xs">LOGO</div>
+                                    <div className="w-24 h-12 mb-1 border-none flex items-center justify-start overflow-hidden">
+                                        <img src={LOGO_URL} className="w-full h-full object-contain object-left" alt="EE" />
+                                    </div>
                                     <div className="text-xs">Sheet .... of ....</div>
                                 </div>
                                 <div className="text-center w-1/2">
@@ -678,7 +712,7 @@
                                     </div>
                                 </div>
 
-                                /* RIGHT: INSTRUMENTS */
+                                {/* RIGHT: INSTRUMENTS */}
                                 <div className="flex-1">
                                     <table className="w-full text-[9px] border-black">
                                         <thead>
@@ -725,7 +759,7 @@
 
                                         {/* Pre Connection Cols */}
                                         <th colSpan="2" className="h-4">Max Circuit Continuity (Ohms)</th>
-                                        <th colSpan="3" className="h-4">Ring Circuit End to End</th>
+                                        <th colSpan="3" className="h-4">MIN.INSULATION RES (MEG OHMS)</th>
                                         <th rowSpan="2" className="w-6"><div className="vertical-text">Erroneous Test Carried out (✓)</div></th>
                                         <th rowSpan="2" className="w-6"><div className="vertical-text">Polarity Correct (✓)</div></th>
 
@@ -736,78 +770,6 @@
                                     </tr>
 
                                     {/* ROW 3: Specific Columns */}
-                                    <tr className="h-16">
-                                        {/* Cable Subcols */}
-                                        <th className="w-8 vertical-text">Type</th>
-                                        <th className="w-8 vertical-text">Sq mm</th>
-                                        {/* Overcurrent Subcols */}
-                                        <th className="w-8 vertical-text">Device †</th>
-                                        <th className="w-8 vertical-text">Type ††</th>
-                                        <th className="w-8 vertical-text">Amps</th>
-                                        {/* Continuity Subcols */}
-                                        <th className="w-10">All Circuits<br/>Rp* + Re**</th>
-                                        <th className="w-8">Re**</th>
-                                        {/* Ring Subcols */}
-                                        <th className="w-8">L-L</th>
-                                        <th className="w-8">N-N</th>
-                                        <th className="w-8">E-E</th>
-                                        
-                                        {/* Post Conn Subcols */}
-                                        <th className="w-8">½ x IΔn (✓)</th>
-                                        <th className="w-8">1 x IΔn</th>
-                                        <th className="w-8">5 x IΔn</th>
-                                    </tr>
-                                    
-                                    {/* ROW 4: Sub-Sub Headers for Insulation (Merged into flow in Image but logic suggests they are headers for the Min Insulation Res section which shares space with Continuity? No, look at image. 
-                                    Ah, "MIN INSULATION RES (MEG OHMS)" is actually distinct columns in the image. 
-                                    Let's adjust. The Image has 3 columns for Insulation: Phase & Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase.
-                                    Wait, in my grid above I put Ring Circuit cols where Insulation should be? 
-                                    Let's re-read the image carefully.
-                                    Pre Connection: 
-                                    1. Max Circuit Continuity (Rp+Re, Re).
-                                    2. Ring Circuit End to End (L-L, N-N, E-E) -- WAIT NO. The image shows blank headers there? No.
-                                    It's: 
-                                    - Max Circuit Continuity (Rp+Re, Re)
-                                    - MIN. INSULATION RES (Phase&Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase).
-                                    - Erroneous Test
-                                    - Polarity
-                                    
-                                    WHERE IS RING CIRCUIT? 
-                                    Ah, typically Ring Circuit data goes in the Continuity columns or separate? 
-                                    Actually, looking at the image provided:
-                                    The columns under Pre Connection are:
-                                    1. Max Circuit Continuity (Rp+Re, Re)
-                                    2. "Ring Circuit End to End" is WRITTEN above the column headers for L-L, N-N, E-E.
-                                    Wait, the image provided has:
-                                    Col 1: Rp*+Re**
-                                    Col 2: Re**
-                                    Col 3: L-L (Header says "Ring Circuit End to End" above cols 3,4,5?? No, looking at screenshot, "Ring Circuit End to End" is NOT there.
-                                    Actually, looking at screenshot 20260214_091333_Drive.jpg:
-                                    Under PRE CONNECTION:
-                                    - Max Circuit Continuity (Ohms): [Rp* + Re**] [Re**]
-                                    - MIN.INSULATION RES (MEG OHMS): [Phase & Neutral to Earth] [Phase to Neutral] [3 Phase Phase to Phase]
-                                    - Erroneous Test (vert)
-                                    - Polarity (vert)
-                                    
-                                    Wait, where did I see Ring Circuit? Ah, in standard ETCI sheets it's usually there. In THIS specific screenshot, "Ring Circuit End to End" is NOT explicitly a header column group. 
-                                    However, look closely at the blank columns between Continuity and Insulation? No.
-                                    Let's look really closely at the screenshot.
-                                    Col group 1: Max Circuit Continuity. Subcols: Rp+Re, Re.
-                                    Col group 2: MIN.INSULATION RES. Subcols: Phase & Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase.
-                                    Col 3: Erroneous Test.
-                                    Col 4: Polarity.
-                                    
-                                    There are NO dedicated columns for Ring L-L/N-N in this specific PDF screenshot. I will follow the screenshot EXACTLY.
-                                    If user enters ring data, I won't print it in dedicated columns if they don't exist in the image. Or maybe I should reuse columns?
-                                    Wait, look at row 4 of table (the header row).
-                                    It says "L-L", "N-N", "E-E" in the screenshot?
-                                    NO. It says: "Phase & Neutral to Earth", "Phase to Neutral", "3 Phase Phase to Phase".
-                                    
-                                    OKAY. STRICT ADHERENCE TO SCREENSHOT.
-                                    Removes Ring L-L/N-N columns from the visual table.
-                                    */}
-
-                                    {/* RE-DOING HEADER ROW 3 TO MATCH SCREENSHOT EXACTLY */}
                                     <tr className="h-20 text-[7px]">
                                         <th className="w-8 vertical-text">Type</th>
                                         <th className="w-8 vertical-text">Sq mm</th>
@@ -819,7 +781,7 @@
                                         <th className="w-10">Rp* +<br/>Re**</th>
                                         <th className="w-8">Re**</th>
                                         
-                                        {/* Insulation Details - These replace the Ring cols I had before */}
+                                        {/* Insulation Details */}
                                         <th className="w-10">Phase &<br/>Neutral<br/>to Earth<br/>(MΩ)</th>
                                         <th className="w-10">Phase to<br/>Neutral<br/>(MΩ)</th>
                                         <th className="w-10">3 Phase<br/>Phase to<br/>Phase<br/>(MΩ)</th>
