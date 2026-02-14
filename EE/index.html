@@ -44,29 +44,54 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 font-family: Arial, Helvetica, sans-serif;
-                font-size: 9px;
-                line-height: 1.2;
+                font-size: 10px;
+                line-height: 1.1;
             }
             
             /* Table Resets */
             table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-            th, td { border: 1px solid black; padding: 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; }
+            th, td { border: 1px solid black; padding: 1px 2px; text-align: center; vertical-align: middle; overflow: hidden; white-space: nowrap; }
             
-            /* Utilities */
+            /* Vertical Text Utilities */
+            .vertical-text {
+                writing-mode: vertical-rl;
+                transform: rotate(180deg);
+                white-space: nowrap;
+                text-align: center;
+                margin: 0 auto;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Specific Color Classes for Print */
+            .bg-print-black { background-color: black !important; color: white !important; }
+            .bg-print-blue { background-color: #3b82f6 !important; color: white !important; } /* Blue-500 equivalent */
+            .bg-print-red { background-color: #ef4444 !important; color: white !important; } /* Red-500 equivalent */
+            .bg-print-gray { background-color: #e5e7eb !important; }
+            
+            /* Borders */
             .border-black { border: 1px solid black !important; }
-            .border-b-black { border-bottom: 1px solid black !important; }
-            .border-r-black { border-right: 1px solid black !important; }
-            .border-t-black { border-top: 1px solid black !important; }
-            .font-bold { font-weight: bold !important; }
-            .text-left { text-align: left !important; }
-            .text-right { text-align: right !important; }
-            .bg-gray-200 { background-color: #e5e7eb !important; }
+            .border-b-dotted { border-bottom: 1px dotted black !important; }
+            
+            /* Text Sizes */
             .text-xs { font-size: 8px !important; }
             .text-xxs { font-size: 7px !important; }
+            .text-title { font-size: 24px !important; color: #991b1b !important; } /* Red-800 */
             
-            /* Specific Input Resets */
-            input[type="checkbox"] { appearance: auto; -webkit-appearance: checkbox; width: 10px; height: 10px; margin: 0; }
-            .box-input { border-bottom: 1px dotted black; font-family: 'Courier New', monospace; padding: 0 4px; display: inline-block; min-width: 20px; }
+            /* Checkboxes in print */
+            .check-box { 
+                width: 10px; 
+                height: 10px; 
+                border: 1px solid black; 
+                display: inline-flex; 
+                align-items: center; 
+                justify-content: center;
+                margin: 0 2px;
+                font-size: 8px;
+                line-height: 1;
+            }
         }
     </style>
 </head>
@@ -80,18 +105,17 @@
             Zap, Save, Plus, ChevronRight, AlertTriangle, CheckCircle2, 
             FileText, Home, ArrowLeft, Trash2, Activity, ShieldCheck, 
             Download, RotateCcw, Lightbulb, Printer, X, Settings, Calendar,
-            Hash, User, PenTool, CheckSquare
+            Hash, User, PenTool, CheckSquare, MoreHorizontal
         } from 'https://esm.sh/lucide-react@0.294.0';
 
         // --- CONSTANTS ---
-        const CABLE_TYPES = ["PVC/PVC (T&E)", "NYM-J", "SWA (XLPE)", "SWA (PVC)", "Singles (Conduit)", "Fire Rated (FP200)"];
+        const CABLE_TYPES = ["PVC", "SWA", "Singles", "FP200", "NYM-J"];
         const CIRCUIT_TYPES = [
             { id: 'socket', label: 'Socket Outlets (Radial)' },
             { id: 'ring', label: 'Socket Outlets (Ring)' },
             { id: 'lighting', label: 'Lighting' },
             { id: 'fixed', label: 'Fixed Appliance' },
             { id: 'ev', label: 'EV Charger' },
-            { id: 'dist', label: 'Distribution Board' },
             { id: 'cooker', label: 'Cooker / Oven' },
             { id: 'shower', label: 'Shower' }
         ];
@@ -99,11 +123,10 @@
             { id: 'mcb', label: 'MCB' },
             { id: 'rcbo', label: 'RCBO' },
             { id: 'fuse', label: 'Fuse' },
-            { id: 'mccb', label: 'MCCB' }
         ];
-        const CURVES = ['B', 'C', 'D', 'K', 'Z']; 
-        const RATINGS = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100]; 
-        const CSA_SIZES = ['1.5', '2.5', '4.0', '6.0', '10.0', '16.0', '25.0', '35.0', '50.0'];
+        const CURVES = ['B', 'C', 'D']; 
+        const RATINGS = [6, 10, 16, 20, 25, 32, 40, 50, 63]; 
+        const CSA_SIZES = ['1.5', '2.5', '4.0', '6.0', '10.0', '16.0', '25.0'];
 
         const getMaxZs = (rating, curve) => {
             const r = parseInt(rating) || 20;
@@ -259,6 +282,10 @@
             const updateBonding = (key, val) => setInstallation(prev => ({
                 ...prev, bonding: { ...prev.bonding, [key]: val }
             }));
+            
+            const updateBondingNA = (key, val) => setInstallation(prev => ({
+                ...prev, bonding_na: { ...prev.bonding_na, [key]: val }
+            }));
 
             return (
                 <div className="p-4 bg-gray-900 min-h-screen text-gray-100 font-sans no-print pb-24">
@@ -268,7 +295,7 @@
                         <div>
                             <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-2 mb-4 flex items-center gap-2"><FileText size={18} /> Job Identifiers</h3>
                             <div className="grid grid-cols-2 gap-4">
-                                <InputField label="Record Sheet No" value={installation.recordNo} onChange={v => update('recordNo', v)} placeholder="001" type="number" />
+                                <InputField label="Record Sheet No" value={installation.recordNo} onChange={v => update('recordNo', v)} placeholder="001" />
                                 <InputField label="Seal No" value={installation.sealNo} onChange={v => update('sealNo', v)} placeholder="S-1234" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -280,9 +307,9 @@
                         {/* Section: Client */}
                         <div>
                             <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-2 mb-4 flex items-center gap-2"><User size={18} /> Client & Site</h3>
-                            <InputField label="Client Name" value={installation.clientName} onChange={v => update('clientName', v)} placeholder="Full Name" icon={User} />
+                            <InputField label="Customer Name" value={installation.clientName} onChange={v => update('clientName', v)} placeholder="Full Name" icon={User} />
                             <div>
-                                <label className="block text-sm font-semibold text-gray-400 mb-1 flex items-center gap-2"><Home size={14} className="text-yellow-400" /> Address</label>
+                                <label className="block text-sm font-semibold text-gray-400 mb-1 flex items-center gap-2"><Home size={14} className="text-yellow-400" /> Installation Address</label>
                                 <textarea 
                                     value={installation.address} 
                                     onChange={(e) => update('address', e.target.value)} 
@@ -307,21 +334,40 @@
                         <div>
                             <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-2 mb-4 flex items-center gap-2"><Zap size={18} /> Earthing & Bonding</h3>
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                                <SelectGroup label="Earthing" value={installation.earthingArrangement} onChange={v => update('earthingArrangement', v)} options={['TN-C-S', 'TN-S', 'TT']} />
                                 <InputField label="Ze (Ext. Loop)" value={installation.ze} onChange={v => update('ze', v)} placeholder="0.00" type="number" step="0.01" />
                             </div>
                             
-                            <label className="block text-sm font-semibold text-gray-400 mb-2">Main Bonding Verified</label>
-                            <div className="grid grid-cols-2 gap-2 mb-4">
-                                {['Gas', 'Water', 'Supp.', 'Electrode', 'Other'].map(type => (
+                            <label className="block text-sm font-semibold text-gray-400 mb-2">Bonding Verified</label>
+                            <div className="space-y-2 mb-4">
+                                {['Gas', 'Water', 'Supp', 'Electrode', 'Other'].map(type => (
                                     <div key={type} className="flex items-center justify-between bg-gray-700 p-3 rounded-lg border border-gray-600">
-                                        <span className="text-sm font-bold text-gray-300">{type}</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="w-5 h-5 accent-yellow-400 rounded cursor-pointer"
-                                            checked={installation.bonding?.[type] || false}
-                                            onChange={(e) => updateBonding(type, e.target.checked)}
-                                        />
+                                        <span className="text-sm font-bold text-gray-300 w-24">{type}</span>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-5 h-5 accent-yellow-400 rounded"
+                                                    checked={installation.bonding?.[type] || false}
+                                                    onChange={(e) => {
+                                                        updateBonding(type, e.target.checked);
+                                                        if(e.target.checked) updateBondingNA(type, false);
+                                                    }}
+                                                />
+                                                <span className="text-xs text-gray-400">YES</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-5 h-5 accent-gray-500 rounded"
+                                                    checked={installation.bonding_na?.[type] || false}
+                                                    onChange={(e) => {
+                                                        updateBondingNA(type, e.target.checked);
+                                                        if(e.target.checked) updateBonding(type, false);
+                                                    }}
+                                                />
+                                                <span className="text-xs text-gray-400">N/A</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -335,7 +381,7 @@
                         <div>
                             <h3 className="font-bold text-lg text-yellow-400 border-b border-gray-700 pb-2 mb-4 flex items-center gap-2"><Settings size={18} /> Test Instruments</h3>
                             <div className="bg-gray-700/50 p-4 rounded-xl border border-gray-600 mb-4">
-                                <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Multifunction Tester (MFT)</p>
+                                <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Multifunction / All Tests</p>
                                 <div className="grid grid-cols-2 gap-4">
                                     <InputField label="Serial No" value={installation.testerSerial} onChange={v => update('testerSerial', v)} placeholder="SN-123" />
                                     <InputField label="Expiry Date" value={installation.testerExpiry} onChange={v => update('testerExpiry', v)} type="date" icon={Calendar} />
@@ -393,15 +439,15 @@
                         {tab === 'wiring' && (
                             <div className="space-y-5 animate-fadeIn">
                                 <div className="grid grid-cols-4 gap-3">
-                                    <div className="col-span-1"><InputField label="Ref" value={localCircuit.ref} onChange={v => updateField('ref', v)} /></div>
+                                    <div className="col-span-1"><InputField label="No." value={localCircuit.ref} onChange={v => updateField('ref', v)} /></div>
                                     <div className="col-span-1"><InputField label="Pts" value={localCircuit.points} onChange={v => updateField('points', v)} type="number" /></div>
-                                    <div className="col-span-2"><InputField label="Name" value={localCircuit.name} onChange={v => updateField('name', v)} placeholder="e.g. Kitchen" /></div>
+                                    <div className="col-span-2"><InputField label="Designation" value={localCircuit.name} onChange={v => updateField('name', v)} placeholder="e.g. Kitchen" /></div>
                                 </div>
                                 <SelectGroup label="Circuit Type" value={localCircuit.type} onChange={v => updateField('type', v)} options={CIRCUIT_TYPES} />
                                 <SelectGroup label="Cable Type" value={localCircuit.cableType} onChange={v => updateField('cableType', v)} options={CABLE_TYPES} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <SelectGroup label="CSA (mm²)" value={localCircuit.csa} onChange={v => updateField('csa', v)} options={CSA_SIZES} />
-                                    <SelectGroup label="Conductors" value={localCircuit.conductors} onChange={v => updateField('conductors', v)} options={[2, 3, 4, 5]} />
+                                    <InputField label="Comments (Optional)" value={localCircuit.comments} onChange={v => updateField('comments', v)} />
                                 </div>
                             </div>
                         )}
@@ -410,59 +456,67 @@
                                 <SelectGroup label="Device Type" value={localCircuit.deviceType} onChange={v => updateField('deviceType', v)} options={PROTECTIVE_DEVICES} icon={ShieldCheck} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <SelectGroup label="Rating (Amps)" value={localCircuit.rating} onChange={v => updateField('rating', v)} options={RATINGS} />
-                                    <SelectGroup label="Curve" value={localCircuit.curve} onChange={v => updateField('curve', v)} options={CURVES} />
-                                </div>
-                                <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl">
-                                    <span className="font-bold text-gray-300">AFDD Installed?</span>
-                                    <button onClick={() => updateField('afdd', !localCircuit.afdd)} className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${localCircuit.afdd ? 'bg-yellow-400' : 'bg-gray-600'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${localCircuit.afdd ? 'translate-x-6' : 'translate-x-1'}`} /></button>
+                                    <SelectGroup label="Curve / Type" value={localCircuit.curve} onChange={v => updateField('curve', v)} options={CURVES} />
                                 </div>
                             </div>
                         )}
                         {tab === 'testing' && (
                             <div className="space-y-6 animate-fadeIn">
-                                <div className="bg-yellow-900/20 p-4 rounded-lg flex items-start gap-3 border border-yellow-700/50"><AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={18} /><p className="text-xs text-yellow-200/80"><strong>Input Mode:</strong> Use numeric keypad.</p></div>
                                 
                                 <div className="bg-gray-800 p-5 rounded-xl border border-gray-700">
                                     <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Continuity (Ω)</h4>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="R1 + R2" value={localCircuit.r1r2} onChange={v => updateField('r1r2', v)} type="number" step="0.01" />
-                                        <InputField label="Re (Earth)" value={localCircuit.re} onChange={v => updateField('re', v)} type="number" step="0.01" />
+                                        <InputField label="Rp + Re" value={localCircuit.r1r2} onChange={v => updateField('r1r2', v)} type="number" step="0.01" />
+                                        <InputField label="Re Only" value={localCircuit.re} onChange={v => updateField('re', v)} type="number" step="0.01" />
                                     </div>
                                     {/* Ring Circuit Fields */}
                                     {localCircuit.type === 'ring' && (
                                         <div className="mt-4 pt-4 border-t border-gray-700">
                                             <p className="text-xs text-blue-400 font-bold mb-2">Ring End-to-End</p>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 <InputField label="L-L" value={localCircuit.ring_ll} onChange={v => updateField('ring_ll', v)} type="number" step="0.01" />
                                                 <InputField label="N-N" value={localCircuit.ring_nn} onChange={v => updateField('ring_nn', v)} type="number" step="0.01" />
+                                                <InputField label="E-E" value={localCircuit.ring_ee} onChange={v => updateField('ring_ee', v)} type="number" step="0.01" />
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                                    <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Insulation (MΩ)</h4>
+                                    <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Min. Insulation Res (MΩ)</h4>
                                     <div className="grid grid-cols-3 gap-2">
-                                        <InputField label="L-L / L-N" value={localCircuit.riso_ll} onChange={v => updateField('riso_ll', v)} type="number" step="0.01" placeholder=">299" />
-                                        <InputField label="E-E / L-E" value={localCircuit.riso_le} onChange={v => updateField('riso_le', v)} type="number" step="0.01" placeholder=">299" />
-                                        <InputField label="Ph-Ph" value={localCircuit.riso_pp} onChange={v => updateField('riso_pp', v)} type="number" step="0.01" placeholder=">299" />
+                                        <InputField label="Ph & N - E" value={localCircuit.riso_le} onChange={v => updateField('riso_le', v)} type="number" step="0.01" placeholder=">299" />
+                                        <InputField label="Ph - N" value={localCircuit.riso_ln} onChange={v => updateField('riso_ln', v)} type="number" step="0.01" placeholder=">299" />
+                                        <InputField label="3Ph Ph-Ph" value={localCircuit.riso_pp} onChange={v => updateField('riso_pp', v)} type="number" step="0.01" placeholder=">299" />
+                                    </div>
+                                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-600">
+                                         <span className="text-sm text-gray-400 font-bold">Erroneous Test?</span>
+                                         <button onClick={() => updateField('erroneousTest', !localCircuit.erroneousTest)} className={`p-2 rounded-lg transition-colors ${localCircuit.erroneousTest ? 'bg-yellow-500 text-gray-900' : 'bg-gray-600 text-gray-400'}`}>
+                                            {localCircuit.erroneousTest ? 'YES' : 'NO'}
+                                         </button>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-4">
+                                         <span className="text-sm text-gray-400 font-bold">Polarity Correct?</span>
+                                         <button onClick={() => updateField('polarity', !localCircuit.polarity)} className={`p-2 rounded-lg transition-colors ${localCircuit.polarity ? 'bg-green-500 text-white' : 'bg-gray-600 text-gray-400'}`}>
+                                            {localCircuit.polarity ? 'YES' : 'NO'}
+                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div className="bg-gray-800 p-5 rounded-xl border border-gray-700">
                                     <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                                        <h4 className="text-sm font-bold text-gray-300">Loop Impedance (Zs)</h4>
+                                        <h4 className="text-sm font-bold text-gray-300">Max Fault Loop (Zs)</h4>
                                         <span className="text-xs bg-gray-900 text-yellow-400 font-mono px-2 py-1 rounded border border-gray-700">Max: {maxZs}Ω</span>
                                     </div>
-                                    <InputField label="Measured Zs (Ω)" value={localCircuit.zs} onChange={v => updateField('zs', v)} type="number" step="0.01" max={maxZs} />
+                                    <InputField label="L-E (Ohms)" value={localCircuit.zs} onChange={v => updateField('zs', v)} type="number" step="0.01" max={maxZs} />
                                 </div>
                                 
                                 <div className="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                                    <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">RCD (ms)</h4>
+                                    <h4 className="text-sm font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Max RCD Operating Times (ms)</h4>
                                     <div className="grid grid-cols-3 gap-2">
+                                        <InputField label="½x IΔn" value={localCircuit.rcd_half} onChange={v => updateField('rcd_half', v)} type="number" />
                                         <InputField label="1x IΔn" value={localCircuit.rcd_x1} onChange={v => updateField('rcd_x1', v)} type="number" max="300" />
                                         <InputField label="5x IΔn" value={localCircuit.rcd_x5} onChange={v => updateField('rcd_x5', v)} type="number" max="40" />
-                                        <InputField label="½x IΔn" value={localCircuit.rcd_half} onChange={v => updateField('rcd_half', v)} type="number" />
                                     </div>
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-600">
                                          <span className="text-sm text-gray-400 font-bold">Test Button Verified?</span>
@@ -471,7 +525,6 @@
                                          </button>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl"><span className="font-bold text-gray-300">Polarity Verified?</span><button onClick={() => updateField('polarity', !localCircuit.polarity)} className={`p-2 rounded-full transition-all ${localCircuit.polarity ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-500'}`}><CheckCircle2 size={24} /></button></div>
                             </div>
                         )}
                     </div>
@@ -487,6 +540,13 @@
             const today = installation.testDate || new Date().toISOString().split('T')[0];
             const maxRows = 16;
             const emptyRows = Math.max(0, maxRows - circuits.length);
+
+            // Helpers to render checks box
+            const CheckBox = ({ checked }) => (
+                <div className={`check-box ${checked ? 'bg-black text-white' : ''}`}>
+                    {checked ? '✓' : ''}
+                </div>
+            );
 
             return (
                 <div className="min-h-screen bg-gray-100 text-black p-0">
@@ -504,138 +564,295 @@
                         {/* THE PDF REPLICA */}
                         <div className="print-sheet bg-white">
                             
-                            {/* HEADER ROW 1 */}
-                            <div className="flex items-end justify-between mb-1">
-                                <div className="text-[10px]">
-                                    <h1 className="text-xl font-bold tracking-tighter">CIRCUIT DETAILS</h1>
-                                    <span>Sheet &nbsp;<span className="box-input w-8 text-center">1</span>&nbsp; of &nbsp;<span className="box-input w-8 text-center">1</span></span>
+                            {/* HEADER */}
+                            <div className="flex items-end justify-between mb-2">
+                                <div className="w-1/4">
+                                    <div className="w-16 h-10 bg-blue-300 mb-1 border border-black flex items-center justify-center text-xs">LOGO</div>
+                                    <div className="text-xs">Sheet .... of ....</div>
                                 </div>
-                                <h1 className="text-xl font-bold border-2 border-black px-2 py-1">TEST RECORD SHEET</h1>
-                                <div className="text-right text-[10px]">
-                                    <div>Test Record Sheet No T <span className="box-input w-16 text-red-600 font-bold">{installation.recordNo}</span></div>
-                                    <div className="mt-1">Seal No <span className="box-input w-16">{installation.sealNo}</span></div>
+                                <div className="text-center w-1/2">
+                                    <h1 className="text-title font-bold tracking-tight">TEST RECORD SHEET</h1>
                                 </div>
-                            </div>
-
-                            {/* MAIN INFO BLOCK */}
-                            <div className="border border-black mb-1 p-1">
-                                <div className="flex mb-1">
-                                    <div className="w-1/2 flex"><span className="font-bold w-32 text-[9px]">CUSTOMER NAME:</span> <div className="border-b border-black border-dotted flex-1 text-[10px] uppercase text-blue-900 font-bold px-1">{installation.clientName}</div></div>
-                                    <div className="w-1/2 flex pl-4"><span className="font-bold w-24 text-[9px]">MPRN No:</span> <div className="border-b border-black border-dotted flex-1 text-[10px] font-mono px-1">{installation.mprn}</div></div>
-                                </div>
-                                <div className="flex mb-1">
-                                    <div className="w-1/2 flex"><span className="font-bold w-32 text-[9px]">INSTALLATION ADDRESS:</span> <div className="border-b border-black border-dotted flex-1 text-[8px] uppercase text-blue-900 leading-tight px-1">{installation.address}</div></div>
-                                    <div className="w-1/2 flex pl-4"><span className="font-bold w-24 text-[9px]">Cert No:</span> <div className="border-b border-black border-dotted flex-1 text-[10px] font-mono px-1">{installation.certNo}</div></div>
-                                </div>
-                                <div className="flex mb-1">
-                                    <div className="w-1/2 flex"><span className="font-bold w-32 text-[9px]">DISTRIBUTION BOARD REF:</span> <div className="border-b border-black border-dotted flex-1 text-[10px] uppercase px-1">{installation.boardRef}</div></div>
-                                    <div className="w-1/2 flex pl-4"><span className="font-bold w-24 text-[9px]">CATEGORY:</span> <div className="border-b border-black border-dotted flex-1 text-[10px] uppercase px-1">{installation.category}</div></div>
-                                </div>
-                                <div className="flex items-center mb-1 text-[9px]">
-                                    <span className="font-bold w-32">TYPE OF INSTALLATION:</span>
-                                    <div className="flex gap-3">
-                                        {['New', 'Rewire', 'Existing', 'Addition', 'Temp Supply', 'Other'].map(type => (
-                                            <div key={type} className="flex items-center">
-                                                <div className="w-3 h-3 border border-black flex items-center justify-center mr-1 text-[8px]">{installation.type === type ? '✓' : ''}</div>
-                                                <span>{type}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex text-[9px]">
-                                    <span className="font-bold w-32">Comments:</span>
-                                    <div className="border-b border-black border-dotted flex-1">{installation.comments}</div>
-                                </div>
-                            </div>
-
-                            {/* SPLIT SECTION: BONDING & INSTRUMENTS */}
-                            <div className="flex gap-1 mb-1">
-                                {/* LEFT: BONDING */}
-                                <div className="w-1/2 border border-black p-1">
-                                    <div className="grid grid-cols-2 gap-x-2 text-[9px]">
-                                        <div className="flex items-center justify-between mb-1"><span>MAIN BONDING VERIFIED FOR: GAS</span> <span className="font-bold">{installation.bonding?.Gas ? 'YES' : 'N/A'}</span></div>
-                                        <div className="flex items-center justify-between mb-1"><span>WATER</span> <span className="font-bold">{installation.bonding?.Water ? 'YES' : 'N/A'}</span></div>
-                                        <div className="flex items-center justify-between mb-1 col-span-2"><span>SUPPLEMENTARY BONDING VERIFIED -</span> <span className="font-bold">{installation.bonding?.Supp ? 'YES' : 'N/A'}</span></div>
-                                        <div className="flex items-center justify-between mb-1 col-span-2"><span>ELECTRODE EARTHING CONDUCTOR</span> <span className="font-bold">{installation.bonding?.Electrode ? 'YES' : 'N/A'}</span></div>
-                                        <div className="flex items-center justify-between mb-1 col-span-2"><span>OTHER</span> <span className="font-bold">{installation.bonding?.Other ? 'YES' : 'N/A'}</span> <span className="border-b border-dotted border-black flex-1 ml-2"></span></div>
-                                    </div>
-                                    <div className="border-t border-black mt-1 pt-1 flex justify-between text-[9px]">
-                                        <div>MAX Rp+Re: <span className="font-bold border-b border-dotted border-black min-w-[30px] inline-block text-center">{installation.maxRpRe}</span> OHMS</div>
-                                        <div>MAX RES.PROT.COND (Re): <span className="font-bold border-b border-dotted border-black min-w-[30px] inline-block text-center">{installation.maxRe}</span> OHMS</div>
-                                    </div>
-                                </div>
-                                
-                                {/* RIGHT: INSTRUMENTS */}
-                                <div className="w-1/2 border border-black">
-                                    <div className="bg-gray-200 border-b border-black text-center font-bold text-[9px]">TEST INSTRUMENTS USED</div>
-                                    <table className="w-full text-[8px] border-none">
-                                        <thead>
-                                            <tr>
-                                                <th className="border-none border-b border-r border-black text-left pl-1">Instrument Type</th>
-                                                <th className="border-none border-b border-r border-black">Serial No</th>
-                                                <th className="border-none border-b border-black">Expiry Date</th>
-                                            </tr>
-                                        </thead>
+                                <div className="w-1/3">
+                                    <table className="w-full text-xs">
                                         <tbody>
-                                            <tr><td className="text-left pl-1 border-r border-black">Insulation / Continuity</td><td className="border-r border-black">{installation.testerSerial}</td><td>{installation.testerExpiry}</td></tr>
-                                            <tr><td className="text-left pl-1 border-r border-black">Earth Loop Impedance</td><td className="border-r border-black">"</td><td>"</td></tr>
-                                            <tr><td className="text-left pl-1 border-r border-black">RCD</td><td className="border-r border-black">"</td><td>"</td></tr>
-                                            <tr><td className="text-left pl-1 border-r border-black">Multifunction</td><td className="border-r border-black">"</td><td>"</td></tr>
+                                            <tr>
+                                                <td className="text-left font-bold w-32 border-black">Test Record Sheet No T</td>
+                                                <td className="text-left border-black">{installation.recordNo}</td>
+                                                <td className="text-left font-bold border-black">Seal No</td>
+                                                <td className="text-left border-black">{installation.sealNo}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colSpan="2" className="text-left font-bold border-black">MPRN No</td>
+                                                <td colSpan="2" className="text-left border-black font-mono tracking-widest">{installation.mprn}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colSpan="2" className="text-left font-bold border-black">Cert No</td>
+                                                <td colSpan="2" className="text-left border-black">{installation.certNo}</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            {/* MAIN TABLE */}
-                            <table className="w-full border-black mb-2 text-[8px]">
+                            {/* CUSTOMER & SITE INFO */}
+                            <div className="text-xs space-y-1 mb-2">
+                                <div className="flex items-end">
+                                    <span className="w-32 font-bold uppercase">Customer Name:</span>
+                                    <div className="flex-1 border-b-dotted border-black px-2 text-blue-900 uppercase">{installation.clientName}</div>
+                                </div>
+                                <div className="flex items-end">
+                                    <span className="w-32 font-bold uppercase">Installation Address:</span>
+                                    <div className="flex-1 border-b-dotted border-black px-2 text-blue-900 uppercase">{installation.address}</div>
+                                </div>
+                                <div className="flex items-end">
+                                    <span className="w-32 font-bold uppercase">Distribution Board Ref:</span>
+                                    <div className="w-48 border-b-dotted border-black px-2 uppercase">{installation.boardRef}</div>
+                                </div>
+                            </div>
+
+                            {/* INSTALLATION TYPE */}
+                            <div className="flex items-center text-xs mb-2 gap-4">
+                                <span className="font-bold w-24 uppercase">Category:</span>
+                                <div className="w-48 border-b-dotted border-black px-1 uppercase">{installation.category}</div>
+                                <span className="text-[9px] italic text-gray-600">(Domestic, Commercial, Industrial etc.)</span>
+
+                                <span className="font-bold ml-4 uppercase">Type of Installation:</span>
+                                {['New', 'Rewire', 'Existing', 'Addition', 'Temp Supply'].map(type => (
+                                    <div key={type} className="flex items-center gap-1">
+                                        <span>{type}</span>
+                                        <div className="check-box">{installation.type === type ? '✓' : ''}</div>
+                                    </div>
+                                ))}
+                                <div className="flex items-center gap-1 flex-1">
+                                    <span>Other (Specify)</span>
+                                    <div className="border-b-dotted border-black flex-1"></div>
+                                </div>
+                            </div>
+
+                            {/* COMMENTS */}
+                            <div className="flex items-end text-xs mb-2">
+                                <span className="font-bold mr-2">Comments:</span>
+                                <div className="flex-1 border-b-dotted border-black px-2 text-xs">{installation.comments}</div>
+                                <div className="w-1/3 flex gap-2 ml-4">
+                                    <span>MAX Rp+Re (if applicable)</span>
+                                    <span className="border-b-dotted border-black w-10 text-center">{installation.maxRpRe}</span>
+                                    <span>OHMS</span>
+                                    <span className="ml-2">MAX RES.PROT.COND (Re)</span>
+                                    <span className="border-b-dotted border-black w-10 text-center">{installation.maxRe}</span>
+                                    <span>OHMS</span>
+                                </div>
+                            </div>
+
+                            {/* SPLIT SECTION: BONDING (Left) & INSTRUMENTS (Right) */}
+                            <div className="flex gap-1 mb-1">
+                                {/* LEFT: BONDING */}
+                                <div className="w-1/3 text-[9px] font-bold">
+                                    <div className="flex items-center mb-1">
+                                        <span className="w-40 text-right mr-2">MAIN BONDING VERIFIED FOR:</span>
+                                        <span className="w-8">GAS -</span>
+                                        <span>YES</span> <CheckBox checked={installation.bonding?.Gas} />
+                                        <span className="ml-1">N/A</span> <CheckBox checked={installation.bonding_na?.Gas} />
+                                    </div>
+                                    <div className="flex items-center mb-1">
+                                        <span className="w-40 text-right mr-2"></span>
+                                        <span className="w-8">WATER -</span>
+                                        <span>YES</span> <CheckBox checked={installation.bonding?.Water} />
+                                        <span className="ml-1">N/A</span> <CheckBox checked={installation.bonding_na?.Water} />
+                                    </div>
+                                    <div className="flex items-center mb-1">
+                                        <span className="w-40 text-right mr-2">SUPPLEMENTARY BONDING VERIFIED -</span>
+                                        <span>YES</span> <CheckBox checked={installation.bonding?.Supp} />
+                                        <span className="ml-1">N/A</span> <CheckBox checked={installation.bonding_na?.Supp} />
+                                    </div>
+                                    <div className="flex items-center mb-1">
+                                        <span className="w-40 text-right mr-2">ELECTRODE EARTHING CONDUCTOR -</span>
+                                        <span>YES</span> <CheckBox checked={installation.bonding?.Electrode} />
+                                        <span className="ml-1">N/A</span> <CheckBox checked={installation.bonding_na?.Electrode} />
+                                    </div>
+                                    <div className="flex items-center mb-1">
+                                        <span className="w-40 text-right mr-2">OTHER -</span>
+                                        <span>YES</span> 
+                                        <span className="ml-1 font-normal">DETAILS</span>
+                                        <span className="flex-1 border-b-dotted border-black ml-1"></span>
+                                    </div>
+                                </div>
+
+                                /* RIGHT: INSTRUMENTS */
+                                <div className="flex-1">
+                                    <table className="w-full text-[9px] border-black">
+                                        <thead>
+                                            <tr>
+                                                <th className="bg-gray-200 border-black text-red-800 font-bold uppercase w-1/3">Test Instruments Used</th>
+                                                <th className="bg-gray-200 border-black text-red-800 font-bold uppercase w-1/3">Serial No</th>
+                                                <th className="bg-gray-200 border-black text-red-800 font-bold uppercase w-1/3">Calibration Expiry Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td className="text-left pl-1">Insulation Resistance/Continuity</td><td>{installation.testerSerial}</td><td>{installation.testerExpiry}</td></tr>
+                                            <tr><td className="text-left pl-1">Earth Loop Impedance</td><td>"</td><td>"</td></tr>
+                                            <tr><td className="text-left pl-1">RCD</td><td>"</td><td>"</td></tr>
+                                            <tr><td className="text-left pl-1">Multifunction</td><td>"</td><td>"</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* MAIN TABLE - THE COMPLEX GRID */}
+                            <table className="w-full border-black mb-1 text-[8px]">
                                 <thead>
-                                    {/* SUPER HEADERS */}
+                                    {/* ROW 1: Section Headers */}
                                     <tr className="h-4">
-                                        <th colSpan="8" className="bg-white border-black text-left pl-1">CIRCUIT DETAILS</th>
-                                        <th colSpan="7" className="bg-gray-200 border-black">PRE CONNECTION</th>
-                                        <th colSpan="6" className="bg-gray-200 border-black">POST CONNECTION</th>
+                                        <th colSpan="8" className="bg-print-black border-black text-left pl-2 font-bold uppercase text-xs">Circuit Details</th>
+                                        <th colSpan="7" className="bg-print-blue border-black font-bold uppercase text-xs">Pre Connection</th>
+                                        <th colSpan="6" className="bg-print-red border-black font-bold uppercase text-xs">Post Connection</th>
+                                        <th rowSpan="3" className="w-24 border-black align-top text-left p-1 bg-white text-black font-normal">
+                                            † - MCB / RCBO / Fuse etc.<br/>
+                                            †† - Type B-C-D etc.<br/><br/>
+                                            * Resistance of phase conductor (Rp)<br/>
+                                            ** Resistance of earth conductor (Re)
+                                        </th>
                                     </tr>
-                                    {/* COLUMN HEADERS */}
-                                    <tr className="h-12 align-bottom">
-                                        <th className="w-6">No.</th>
-                                        <th className="w-auto">Supply / Circuit Designation</th>
-                                        <th className="w-8">Cable<br/>Type</th>
-                                        <th className="w-8">Cable<br/>mm²</th>
-                                        <th className="w-6">Pts</th>
-                                        <th className="w-8">Device<br/>†</th>
-                                        <th className="w-6">Type<br/>††</th>
-                                        <th className="w-6">Amps</th>
+
+                                    {/* ROW 2: Column Groups */}
+                                    <tr className="h-8">
+                                        {/* Circuit Details Cols */}
+                                        <th rowSpan="2" className="w-6"><div className="vertical-text">Circuit Number</div></th>
+                                        <th rowSpan="2" className="w-auto">Circuit Designation</th>
+                                        <th colSpan="2" className="h-4">Cable</th>
+                                        <th rowSpan="2" className="w-6"><div className="vertical-text">No. of Points</div></th>
+                                        <th colSpan="3" className="h-4">Overcurrent Protection</th>
+
+                                        {/* Pre Connection Cols */}
+                                        <th colSpan="2" className="h-4">Max Circuit Continuity (Ohms)</th>
+                                        <th colSpan="3" className="h-4">Ring Circuit End to End</th>
+                                        <th rowSpan="2" className="w-6"><div className="vertical-text">Erroneous Test Carried out (✓)</div></th>
+                                        <th rowSpan="2" className="w-6"><div className="vertical-text">Polarity Correct (✓)</div></th>
+
+                                        {/* Post Connection Cols */}
+                                        <th rowSpan="2" className="w-10">L-E<br/>Max Fault<br/>Loop Imp.<br/>(Ohms)</th>
+                                        <th colSpan="3" className="h-4">Max RCD Operating times (ms)</th>
+                                        <th rowSpan="2" className="w-6"><div className="vertical-text">RCD Test Button Verified (✓)</div></th>
+                                    </tr>
+
+                                    {/* ROW 3: Specific Columns */}
+                                    <tr className="h-16">
+                                        {/* Cable Subcols */}
+                                        <th className="w-8 vertical-text">Type</th>
+                                        <th className="w-8 vertical-text">Sq mm</th>
+                                        {/* Overcurrent Subcols */}
+                                        <th className="w-8 vertical-text">Device †</th>
+                                        <th className="w-8 vertical-text">Type ††</th>
+                                        <th className="w-8 vertical-text">Amps</th>
+                                        {/* Continuity Subcols */}
+                                        <th className="w-10">All Circuits<br/>Rp* + Re**</th>
+                                        <th className="w-8">Re**</th>
+                                        {/* Ring Subcols */}
+                                        <th className="w-8">L-L</th>
+                                        <th className="w-8">N-N</th>
+                                        <th className="w-8">E-E</th>
                                         
-                                        {/* PRE */}
-                                        <th className="w-8">Rp +<br/>Re**</th>
-                                        <th className="w-8">Re</th>
-                                        <th className="w-8">Ring<br/>L-L</th>
-                                        <th className="w-8">Ring<br/>N-N</th>
-                                        <th className="w-8">Ins<br/>Ph-Ph</th>
-                                        <th className="w-8">Ins<br/>Ph-N</th>
-                                        <th className="w-8">Ins<br/>Ph-E</th>
+                                        {/* Post Conn Subcols */}
+                                        <th className="w-8">½ x IΔn (✓)</th>
+                                        <th className="w-8">1 x IΔn</th>
+                                        <th className="w-8">5 x IΔn</th>
+                                    </tr>
+                                    
+                                    {/* ROW 4: Sub-Sub Headers for Insulation (Merged into flow in Image but logic suggests they are headers for the Min Insulation Res section which shares space with Continuity? No, look at image. 
+                                    Ah, "MIN INSULATION RES (MEG OHMS)" is actually distinct columns in the image. 
+                                    Let's adjust. The Image has 3 columns for Insulation: Phase & Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase.
+                                    Wait, in my grid above I put Ring Circuit cols where Insulation should be? 
+                                    Let's re-read the image carefully.
+                                    Pre Connection: 
+                                    1. Max Circuit Continuity (Rp+Re, Re).
+                                    2. Ring Circuit End to End (L-L, N-N, E-E) -- WAIT NO. The image shows blank headers there? No.
+                                    It's: 
+                                    - Max Circuit Continuity (Rp+Re, Re)
+                                    - MIN. INSULATION RES (Phase&Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase).
+                                    - Erroneous Test
+                                    - Polarity
+                                    
+                                    WHERE IS RING CIRCUIT? 
+                                    Ah, typically Ring Circuit data goes in the Continuity columns or separate? 
+                                    Actually, looking at the image provided:
+                                    The columns under Pre Connection are:
+                                    1. Max Circuit Continuity (Rp+Re, Re)
+                                    2. "Ring Circuit End to End" is WRITTEN above the column headers for L-L, N-N, E-E.
+                                    Wait, the image provided has:
+                                    Col 1: Rp*+Re**
+                                    Col 2: Re**
+                                    Col 3: L-L (Header says "Ring Circuit End to End" above cols 3,4,5?? No, looking at screenshot, "Ring Circuit End to End" is NOT there.
+                                    Actually, looking at screenshot 20260214_091333_Drive.jpg:
+                                    Under PRE CONNECTION:
+                                    - Max Circuit Continuity (Ohms): [Rp* + Re**] [Re**]
+                                    - MIN.INSULATION RES (MEG OHMS): [Phase & Neutral to Earth] [Phase to Neutral] [3 Phase Phase to Phase]
+                                    - Erroneous Test (vert)
+                                    - Polarity (vert)
+                                    
+                                    Wait, where did I see Ring Circuit? Ah, in standard ETCI sheets it's usually there. In THIS specific screenshot, "Ring Circuit End to End" is NOT explicitly a header column group. 
+                                    However, look closely at the blank columns between Continuity and Insulation? No.
+                                    Let's look really closely at the screenshot.
+                                    Col group 1: Max Circuit Continuity. Subcols: Rp+Re, Re.
+                                    Col group 2: MIN.INSULATION RES. Subcols: Phase & Neutral to Earth, Phase to Neutral, 3 Phase Phase to Phase.
+                                    Col 3: Erroneous Test.
+                                    Col 4: Polarity.
+                                    
+                                    There are NO dedicated columns for Ring L-L/N-N in this specific PDF screenshot. I will follow the screenshot EXACTLY.
+                                    If user enters ring data, I won't print it in dedicated columns if they don't exist in the image. Or maybe I should reuse columns?
+                                    Wait, look at row 4 of table (the header row).
+                                    It says "L-L", "N-N", "E-E" in the screenshot?
+                                    NO. It says: "Phase & Neutral to Earth", "Phase to Neutral", "3 Phase Phase to Phase".
+                                    
+                                    OKAY. STRICT ADHERENCE TO SCREENSHOT.
+                                    Removes Ring L-L/N-N columns from the visual table.
+                                    */}
+
+                                    {/* RE-DOING HEADER ROW 3 TO MATCH SCREENSHOT EXACTLY */}
+                                    <tr className="h-20 text-[7px]">
+                                        <th className="w-8 vertical-text">Type</th>
+                                        <th className="w-8 vertical-text">Sq mm</th>
+                                        <th className="w-8 vertical-text">Device †</th>
+                                        <th className="w-8 vertical-text">Type ††</th>
+                                        <th className="w-8 vertical-text">Amps</th>
                                         
-                                        {/* POST */}
-                                        <th className="w-10">Fault Loop<br/>(Zs)</th>
-                                        <th className="w-6">Pol<br/>OK</th>
-                                        <th className="w-8">RCD<br/>½ x</th>
-                                        <th className="w-8">RCD<br/>1 x</th>
-                                        <th className="w-8">RCD<br/>5 x</th>
-                                        <th className="w-6">Btn</th>
+                                        {/* Pre Conn Details */}
+                                        <th className="w-10">Rp* +<br/>Re**</th>
+                                        <th className="w-8">Re**</th>
+                                        
+                                        {/* Insulation Details - These replace the Ring cols I had before */}
+                                        <th className="w-10">Phase &<br/>Neutral<br/>to Earth<br/>(MΩ)</th>
+                                        <th className="w-10">Phase to<br/>Neutral<br/>(MΩ)</th>
+                                        <th className="w-10">3 Phase<br/>Phase to<br/>Phase<br/>(MΩ)</th>
+                                        
+                                        {/* Post Conn Details */}
+                                        <th className="w-8">½ x<br/>IΔn<br/>(✓)</th>
+                                        <th className="w-8">1 x IΔn</th>
+                                        <th className="w-8">5 x IΔn</th>
+                                        
+                                        {/* Last col is Other Comments */}
+                                        <th className="w-auto">Other Comments</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="h-4 text-center font-bold text-blue-900">
-                                        <td>-</td><td className="text-left pl-1">SUPPLY CABLE</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                                        <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                                        <td className="font-bold">{installation.ze}</td>
-                                        <td>✓</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                                    {/* FIXED ROW: Supply Cable */}
+                                    <tr className="h-6 text-center text-blue-900 font-bold border-black">
+                                        <td className="bg-white text-black">x</td>
+                                        <td className="text-left pl-1">Supply Cable</td>
+                                        <td>-</td><td>-</td><td>1</td><td>-</td><td>-</td><td>-</td>
+                                        <td>-</td><td>-</td>
+                                        <td>N/A</td><td>N/A</td><td>N/A</td>
+                                        <td>-</td><td>-</td>
+                                        <td className="text-black">{installation.ze}</td>
+                                        <td>-</td><td>-</td><td>-</td><td>-</td>
+                                        <td>-</td>
                                     </tr>
+
+                                    {/* DYNAMIC ROWS */}
                                     {circuits.map((c) => (
-                                        <tr key={c.id} className="h-4 text-center border-b border-gray-300">
+                                        <tr key={c.id} className="h-6 text-center border-black">
                                             <td className="font-bold">{c.ref}</td>
                                             <td className="text-left pl-1 truncate font-medium">{c.name}</td>
-                                            <td>{c.cableType.includes('PVC') ? 'PVC' : 'SWA'}</td>
+                                            <td>{c.cableType}</td>
                                             <td>{c.csa}</td>
                                             <td>{c.points}</td>
                                             <td className="uppercase">{c.deviceType}</td>
@@ -644,22 +861,27 @@
                                             
                                             <td>{c.r1r2}</td>
                                             <td>{c.re}</td>
-                                            <td>{c.ring_ll || '-'}</td>
-                                            <td>{c.ring_nn || '-'}</td>
-                                            <td>{c.riso_pp}</td>
-                                            <td>{c.riso_ll}</td>
+                                            
+                                            {/* Insulation Columns */}
                                             <td>{c.riso_le}</td>
+                                            <td>{c.riso_ln}</td>
+                                            <td>{c.riso_pp}</td>
+                                            
+                                            <td>{c.erroneousTest ? '✓' : ''}</td>
+                                            <td>{c.polarity ? '✓' : ''}</td>
                                             
                                             <td className="font-bold">{c.zs}</td>
-                                            <td>{c.polarity ? '✓' : ''}</td>
                                             <td>{c.rcd_half}</td>
                                             <td>{c.rcd_x1}</td>
                                             <td>{c.rcd_x5}</td>
                                             <td>{c.rcd_button ? '✓' : ''}</td>
+                                            <td className="text-left pl-1 text-[7px]">{c.comments}</td>
                                         </tr>
                                     ))}
+                                    
+                                    {/* FILLER ROWS */}
                                     {[...Array(emptyRows)].map((_, i) => (
-                                        <tr key={`empty-${i}`} className="h-4 border-b border-gray-300">
+                                        <tr key={`empty-${i}`} className="h-6 border-black">
                                             <td className="text-white">.</td>
                                             {[...Array(20)].map((_, j) => <td key={j}></td>)}
                                         </tr>
@@ -668,36 +890,38 @@
                             </table>
 
                             {/* FOOTER / SIGNATURES */}
-                            <div className="flex gap-4 mt-2">
-                                <div className="w-1/2 border border-black p-1 bg-gray-50">
-                                    <div className="font-bold text-[9px] mb-2 uppercase border-b border-black">Pre Connection Tested By:</div>
-                                    <div className="flex items-end mb-1">
-                                        <span className="text-[8px] font-bold w-16">SIGNATURE</span>
-                                        <span className="font-script text-lg leading-none border-b border-black border-dotted flex-1 text-blue-900">{installation.engineerName}</span>
+                            <div className="flex justify-between items-end mt-4 text-[9px]">
+                                <div className="w-full">
+                                    <div className="flex mb-2">
+                                        <span className="w-32">Pre Connection Tested By:</span>
+                                        <div className="border-b-dotted border-black flex-1"></div>
+                                        <span className="w-20 ml-4">SIGNATURE</span>
+                                        <div className="border-b-dotted border-black flex-1 text-blue-900 font-script text-lg">{installation.engineerName}</div>
+                                        <span className="w-10 ml-4">QC No.</span>
+                                        <div className="border-b-dotted border-black w-20">{installation.qcNo}</div>
+                                        <span className="w-10 ml-4">Reg No.</span>
+                                        <div className="border-b-dotted border-black w-20">{installation.regNo}</div>
+                                        <span className="w-10 ml-4">DATE</span>
+                                        <div className="border-b-dotted border-black w-20">{today}</div>
                                     </div>
-                                    <div className="flex justify-between text-[8px]">
-                                        <span>QC No: <span className="font-bold">{installation.qcNo}</span></span>
-                                        <span>Reg No: <span className="font-bold">{installation.regNo}</span></span>
-                                        <span>Date: <span className="font-bold">{today}</span></span>
-                                    </div>
-                                </div>
-                                <div className="w-1/2 border border-black p-1 bg-gray-50">
-                                    <div className="font-bold text-[9px] mb-2 uppercase border-b border-black">Post Connection Tested By:</div>
-                                    <div className="flex items-end mb-1">
-                                        <span className="text-[8px] font-bold w-16">SIGNATURE</span>
-                                        <span className="font-script text-lg leading-none border-b border-black border-dotted flex-1 text-blue-900">{installation.engineerName}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[8px]">
-                                        <span>QC No: <span className="font-bold">{installation.qcNo}</span></span>
-                                        <span>Reg No: <span className="font-bold">{installation.regNo}</span></span>
-                                        <span>Date: <span className="font-bold">{today}</span></span>
+                                    <div className="flex">
+                                        <span className="w-32">Post Connection Tested By:</span>
+                                        <div className="border-b-dotted border-black flex-1"></div>
+                                        <span className="w-20 ml-4">SIGNATURE</span>
+                                        <div className="border-b-dotted border-black flex-1 text-blue-900 font-script text-lg">{installation.engineerName}</div>
+                                        <span className="w-10 ml-4">QC No.</span>
+                                        <div className="border-b-dotted border-black w-20">{installation.qcNo}</div>
+                                        <span className="w-10 ml-4">Reg No.</span>
+                                        <div className="border-b-dotted border-black w-20">{installation.regNo}</div>
+                                        <span className="w-10 ml-4">DATE</span>
+                                        <div className="border-b-dotted border-black w-20">{today}</div>
                                     </div>
                                 </div>
                             </div>
                             
-                            {/* LEGEND */}
-                            <div className="text-[7px] mt-1 text-gray-600">
-                                † MCB/RCBO/Fuse etc. &nbsp; | &nbsp; †† Type B, C, D &nbsp; | &nbsp; ** Resistance of phase conductor (Rp) + Resistance of earth conductor (Re)
+                            {/* BOTTOM LEGEND */}
+                            <div className="text-[7px] text-center mt-2 text-gray-500">
+                                Original To Customer-White &nbsp;&nbsp; Return to Electrical Safety Supervisory Body-Yellow &nbsp;&nbsp; Contractors record-Pink
                             </div>
                         </div>
                     </div>
@@ -715,7 +939,7 @@
                 const saved = localStorage.getItem('executive_install');
                 return saved ? JSON.parse(saved) : {
                     mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: '', type: 'New', 
-                    category: 'Domestic', bonding: {}, testerSerial: '', testerExpiry: '', recordNo: '', certNo: '', boardRef: '',
+                    category: 'Domestic', bonding: {}, bonding_na: {}, testerSerial: '', testerExpiry: '', recordNo: '', certNo: '', boardRef: '',
                     sealNo: '', comments: '', maxRpRe: '', maxRe: '', engineerName: '', qcNo: '', regNo: '', testDate: ''
                 };
             });
@@ -737,12 +961,12 @@
             const createNewCircuit = () => ({
                 id: Date.now(),
                 ref: `${circuits.length + 1}`,
-                name: '', type: 'socket', cableType: 'PVC/PVC (T&E)', csa: '2.5', conductors: 3,
+                name: '', type: 'socket', cableType: 'PVC', csa: '2.5', conductors: 3,
                 deviceType: 'rcbo', rating: '20', curve: 'B', 
-                r1r2: '', re: '', ring_ll: '', ring_nn: '', 
-                riso_ll: '', riso_le: '', riso_pp: '',
-                zs: '', rcd_x1: '', rcd_x5: '', rcd_half: '', rcd_button: false, polarity: false,
-                points: '', afdd: false
+                r1r2: '', re: '', ring_ll: '', ring_nn: '', ring_ee: '',
+                riso_ln: '', riso_le: '', riso_pp: '',
+                zs: '', rcd_x1: '', rcd_x5: '', rcd_half: '', rcd_button: false, polarity: false, erroneousTest: false,
+                points: '', comments: ''
             });
 
             const getStats = () => {
@@ -760,7 +984,7 @@
             const handleReset = () => {
                 if(window.confirm("Delete everything? This cannot be undone.")) {
                     setCircuits([]);
-                    setInstallation({ mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: '', type: 'New', bonding: {} });
+                    setInstallation({ mprn: '', clientName: '', address: '', earthingArrangement: 'TN-C-S', ze: '', type: 'New', bonding: {}, bonding_na: {} });
                     localStorage.clear();
                 }
             };
