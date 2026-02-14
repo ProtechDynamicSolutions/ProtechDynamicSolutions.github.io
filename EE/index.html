@@ -601,7 +601,6 @@
                 
                 const shareData = {
                     title: 'Electrical Test Record',
-                    text: `Electrical Test Record Details:\n\nClient: ${installation.clientName}\nAddress: ${installation.address}\n\n(See attached PDF report)`,
                 };
 
                 if (navigator.share) {
@@ -613,8 +612,7 @@
                 } else {
                     // Fallback to mailto if Web Share API is not supported
                     const subject = encodeURIComponent(shareData.title);
-                    const body = encodeURIComponent(shareData.text);
-                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                    window.location.href = `mailto:?subject=${subject}`;
                 }
             };
 
@@ -1029,5 +1027,4 @@
     </script>
 </body>
 </html>
-
 
