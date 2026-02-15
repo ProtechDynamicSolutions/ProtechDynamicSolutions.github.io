@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en-GB" class="scroll-smooth">
 <head>
@@ -24,6 +23,28 @@
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png">
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        copper: {
+                            light: '#eacda3',
+                            DEFAULT: '#d6a4a4',
+                            dark: '#8b5a2b', 
+                            accent: '#cd7f32' 
+                        },
+                        steel: {
+                            light: '#aebdd0',   /* Lighter Metallic Blue */
+                            DEFAULT: '#4e6e8e', /* TRUE BLUE STEEL */
+                            dark: '#2d4052',    /* Darker Blue Steel */
+                            deep: '#1a2634'     /* Deepest Navy Steel */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Load Google Fonts: Inter and Playfair Display -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +53,7 @@
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
-            background: #000
+            background: #020406 /* Very dark blue-black */
         }
 
         .luxury-serif {
@@ -40,7 +61,6 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-
             *,
             *::before,
             *::after {
@@ -52,19 +72,13 @@
         }
 
         @keyframes aurora {
-
-            0%,
-            100% {
-                background-position: 0% 50%
-            }
-
-            50% {
-                background-position: 100% 50%
-            }
+            0%, 100% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
         }
 
         .hero-bg {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1410 25%, #0f0f0f 50%, #1a1410 75%, #0a0a0a 100%);
+            /* Adjusted to Blue Steel Gradient */
+            background: linear-gradient(135deg, #020406 0%, #0d161f 25%, #050a0f 50%, #0d161f 75%, #020406 100%);
             background-size: 400% 400%;
             animation: aurora 20s ease infinite;
             position: relative
@@ -77,12 +91,15 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.06) 0%, transparent 50%);
+            /* Changed from generic slate to specific steel blue/azure glow */
+            background: radial-gradient(circle at 20% 50%, rgba(78, 110, 142, 0.1) 0%, transparent 50%), 
+                        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
             pointer-events: none
         }
 
         .luxury-gold-text {
-            background: linear-gradient(135deg, #f4c791 0%, #d4a574 25%, #f9d9a8 50%, #d4a574 75%, #f4c791 100%);
+            /* Copper/Bronze gradient matches the logo wiring */
+            background: linear-gradient(135deg, #f0c296 0%, #cd7f32 25%, #ffdfba 50%, #cd7f32 75%, #f0c296 100%);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -97,23 +114,16 @@
         }
 
         .ultra-glass {
-            background: rgba(15, 15, 15, 0.4);
+            background: rgba(26, 38, 52, 0.4); /* Blue Steel Tint */
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(212, 165, 116, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 60px rgba(212, 165, 116, 0.08)
+            border: 1px solid rgba(205, 127, 50, 0.15); /* Copper border */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(174, 189, 208, 0.05), 0 0 60px rgba(78, 110, 142, 0.1)
         }
 
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px)
-            }
-
-            50% {
-                transform: translateY(-20px)
-            }
+            0%, 100% { transform: translateY(0px) }
+            50% { transform: translateY(-20px) }
         }
 
         .float-animation {
@@ -121,11 +131,11 @@
         }
 
         .luxury-card {
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(26, 20, 16, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(20, 30, 40, 0.9) 0%, rgba(26, 38, 52, 0.8) 100%); /* Deep Blue Steel Card */
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(212, 165, 116, 0.2);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(205, 127, 50, 0.2); /* Copper border */
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(174, 189, 208, 0.05);
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -139,7 +149,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(212, 165, 116, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(205, 127, 50, 0.1) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.5s;
             pointer-events: none
@@ -151,14 +161,15 @@
 
         .luxury-card:hover {
             transform: translateY(-16px) scale(1.02);
-            box-shadow: 0 30px 90px rgba(212, 165, 116, 0.3), 0 0 80px rgba(212, 165, 116, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+            box-shadow: 0 30px 90px rgba(205, 127, 50, 0.15), 0 0 80px rgba(205, 127, 50, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)
         }
 
         .ultra-btn {
-            background: linear-gradient(135deg, #d4a574 0%, #f4c791 50%, #d4a574 100%);
+            /* Copper Gradient */
+            background: linear-gradient(135deg, #cd7f32 0%, #f0c296 50%, #cd7f32 100%);
             background-size: 200% auto;
             color: #000;
-            box-shadow: 0 8px 30px rgba(212, 165, 116, 0.4), 0 0 40px rgba(212, 165, 116, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 30px rgba(205, 127, 50, 0.4), 0 0 40px rgba(205, 127, 50, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -179,7 +190,7 @@
 
         .ultra-btn:hover {
             transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 15px 50px rgba(212, 165, 116, 0.6), 0 0 60px rgba(212, 165, 116, 0.4);
+            box-shadow: 0 15px 50px rgba(205, 127, 50, 0.5), 0 0 60px rgba(205, 127, 50, 0.3);
             background-position: right center
         }
 
@@ -188,29 +199,29 @@
         }
 
         .icon-luxury {
-            background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(244, 199, 145, 0.1));
-            box-shadow: 0 0 30px rgba(212, 165, 116, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(240, 194, 150, 0.1));
+            box-shadow: 0 0 30px rgba(205, 127, 50, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform
         }
 
         .luxury-card:hover .icon-luxury {
             transform: scale(1.15) rotate(5deg);
-            box-shadow: 0 0 50px rgba(212, 165, 116, 0.6), 0 0 80px rgba(212, 165, 116, 0.4)
+            box-shadow: 0 0 50px rgba(205, 127, 50, 0.4), 0 0 80px rgba(205, 127, 50, 0.2)
         }
 
         .tech-luxury {
-            background: linear-gradient(135deg, rgba(30, 30, 30, 0.8), rgba(40, 35, 30, 0.6));
-            border: 1px solid rgba(212, 165, 116, 0.3);
+            background: linear-gradient(135deg, rgba(45, 64, 82, 0.8), rgba(30, 41, 59, 0.6)); /* Cool blue steel tint */
+            border: 1px solid rgba(205, 127, 50, 0.3);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
         }
 
         .tech-luxury:hover {
-            background: linear-gradient(135deg, #d4a574, #f4c791);
+            background: linear-gradient(135deg, #cd7f32, #f0c296);
             color: #000;
             transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 8px 30px rgba(212, 165, 116, 0.5)
+            box-shadow: 0 8px 30px rgba(205, 127, 50, 0.5)
         }
 
         .title-luxury {
@@ -226,8 +237,9 @@
             transform: translateX(-50%);
             width: 120px;
             height: 4px;
-            background: linear-gradient(90deg, transparent, #d4a574, #f4c791, #d4a574, transparent);
-            box-shadow: 0 0 20px rgba(212, 165, 116, 0.6), 0 4px 10px rgba(212, 165, 116, 0.3)
+            /* Copper Gradient Line */
+            background: linear-gradient(90deg, transparent, #cd7f32, #f0c296, #cd7f32, transparent);
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.6), 0 4px 10px rgba(205, 127, 50, 0.3)
         }
 
         /* --- Particle Styles Start --- */
@@ -245,69 +257,32 @@
             position: absolute;
             width: 2px;
             height: 2px;
-            background: #d4a574; /* This is the gold color */
+            background: #cd7f32; /* Copper particle */
             border-radius: 50%;
-            box-shadow: 0 0 10px rgba(212, 165, 116, 0.8);
+            box-shadow: 0 0 10px rgba(205, 127, 50, 0.8);
             animation: particle-float 15s infinite
         }
 
         @keyframes particle-float {
-            0% {
-                transform: translateY(100vh) translateX(0);
-                opacity: 0
-            }
-
-            10% {
-                opacity: 1
-            }
-
-            90% {
-                opacity: 1
-            }
-
-            100% {
-                transform: translateY(-100vh) translateX(100px);
-                opacity: 0
-            }
+            0% { transform: translateY(100vh) translateX(0); opacity: 0 }
+            10% { opacity: 1 }
+            90% { opacity: 1 }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0 }
         }
 
-        .particle:nth-child(1) {
-            left: 10%;
-            animation-delay: 0s;
-            animation-duration: 12s
-        }
-
-        .particle:nth-child(2) {
-            left: 30%;
-            animation-delay: 2s;
-            animation-duration: 15s
-        }
-
-        .particle:nth-child(3) {
-            left: 50%;
-            animation-delay: 4s;
-            animation-duration: 10s
-        }
-
-        .particle:nth-child(4) {
-            left: 70%;
-            animation-delay: 1s;
-            animation-duration: 14s
-        }
-
-        .particle:nth-child(5) {
-            left: 90%;
-            animation-delay: 3s;
-            animation-duration: 11s
-        }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s }
+        .particle:nth-child(2) { left: 30%; animation-delay: 2s; animation-duration: 15s }
+        .particle:nth-child(3) { left: 50%; animation-delay: 4s; animation-duration: 10s }
+        .particle:nth-child(4) { left: 70%; animation-delay: 1s; animation-duration: 14s }
+        .particle:nth-child(5) { left: 90%; animation-delay: 3s; animation-duration: 11s }
         /* --- Particle Styles End --- */
 
         .nav-luxury {
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 16, 22, 0.85); /* Slightly cooler */
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
-            border-bottom: 1px solid rgba(212, 165, 116, 0.15);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 165, 116, 0.05)
+            border-bottom: 1px solid rgba(205, 127, 50, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 40px rgba(205, 127, 50, 0.05)
         }
 
         .logo-container {
@@ -322,44 +297,17 @@
         }
 
         @media (max-width:768px) {
-            .logo-full {
-                display: none
-            }
-
-            .logo-p {
-                display: block;
-                height: 48px;
-                width: 48px
-            }
-
-            .hero-mobile-center {
-                text-align: center !important
-            }
-
-            .mobile-center-flex {
-                justify-content: center !important
-            }
-
-            .mobile-full-width {
-                width: 100%
-            }
-
-            h1 {
-                font-size: 2.5rem !important
-            }
+            .logo-full { display: none }
+            .logo-p { display: block; height: 48px; width: 48px }
+            .hero-mobile-center { text-align: center !important }
+            .mobile-center-flex { justify-content: center !important }
+            .mobile-full-width { width: 100% }
+            h1 { font-size: 2.5rem !important }
         }
 
         @media (min-width:769px) {
-            .logo-full {
-                display: block;
-                height: 64px;
-                width: auto;
-                max-width: 280px
-            }
-
-            .logo-p {
-                display: none
-            }
+            .logo-full { display: block; height: 64px; width: auto; max-width: 280px }
+            .logo-p { display: none }
         }
 
         .magnetic-hover {
@@ -372,7 +320,7 @@
         }
 
         *:focus-visible {
-            outline: 2px solid #d4a574;
+            outline: 2px solid #cd7f32;
             outline-offset: 4px;
             border-radius: 4px
         }
@@ -381,7 +329,7 @@
             position: absolute;
             top: -100px;
             left: 0;
-            background: #d4a574;
+            background: #cd7f32;
             color: #000;
             padding: 8px 16px;
             text-decoration: none;
@@ -389,9 +337,7 @@
             font-weight: bold
         }
 
-        .skip-link:focus {
-            top: 0
-        }
+        .skip-link:focus { top: 0 }
     </style>
 </head>
 <body class="bg-black text-white">
@@ -400,13 +346,13 @@
         <nav class="container mx-auto px-4 sm:px-6 lg:px-12" role="navigation" aria-label="Main navigation">
             <div class="flex justify-between items-center h-24">
                 <a href="#home" class="logo-container group" aria-label="Protech Dynamic Solutions - Home">
-                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="logo-p logo-img object-contain group-hover:scale-110" loading="eager" onerror="this.src='https://placehold.co/48x48/000/a855f7?text=P';">
-                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions - Premium AI and Automation Consultancy" class="logo-full logo-img object-contain group-hover:scale-105" loading="eager" onerror="this.src='https::placehold.co/280x64/000/a855f7?text=Protech+Dynamic+Solutions';">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="logo-p logo-img object-contain group-hover:scale-110" loading="eager" onerror="this.src='https://placehold.co/48x48/0f1115/cd7f32?text=P';">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions - Premium AI and Automation Consultancy" class="logo-full logo-img object-contain group-hover:scale-105" loading="eager" onerror="this.src='https::placehold.co/280x64/0f1115/cd7f32?text=Protech+Dynamic+Solutions';">
                 </a>
                 <div class="hidden md:flex md:items-center md:space-x-10">
-                    <a href="#home" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to home section">HOME</a>
-                    <a href="#services" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to services section">SERVICES</a>
-                    <a href="#about" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-amber-400 hover:to-yellow-300 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to about section">ABOUT</a>
+                    <a href="#home" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to home section">HOME</a>
+                    <a href="#services" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to services section">SERVICES</a>
+                    <a href="#about" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to about section">ABOUT</a>
                     <a href="#contact" class="ultra-btn text-black py-3 px-8 rounded-full text-sm uppercase tracking-wider" aria-label="Get started with a consultation">Get Started</a>
                 </div>
                 <button id="mobile-menu-button" class="flex md:hidden p-2 text-gray-400 hover:text-white" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -416,10 +362,10 @@
             </div>
         </nav>
         <div class="hidden" id="mobile-menu">
-            <div class="px-4 pt-2 pb-4 space-y-2 bg-black/95 backdrop-blur-xl border-t border-amber-400/10">
-                <a href="#home" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold text-center">Home</a>
-                <a href="#services" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold text-center">Services</a>
-                <a href="#about" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-amber-400/10 hover:text-amber-400 transition-all font-semibold text-center">About</a>
+            <div class="px-4 pt-2 pb-4 space-y-2 bg-black/95 backdrop-blur-xl border-t border-copper-accent/10">
+                <a href="#home" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">Home</a>
+                <a href="#services" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">Services</a>
+                <a href="#about" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">About</a>
                 <a href="#contact" class="mobile-menu-link ultra-btn block text-center text-black py-3 rounded-lg font-bold">Get Started</a>
             </div>
         </div>
@@ -435,8 +381,10 @@
                 <div class="particle"></div>
             </div>
             <!-- Particle HTML End -->
-            <div class="absolute top-20 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" aria-hidden="true"></div>
-            <div class="absolute bottom-20 right-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" aria-hidden="true"></div>
+            <!-- Changed blobs from Purple to Blue Steel -->
+            <div class="absolute top-20 left-10 w-96 h-96 bg-steel-DEFAULT/20 rounded-full blur-3xl" aria-hidden="true"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-steel-dark/30 rounded-full blur-3xl" aria-hidden="true"></div>
+            
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
                 <div class="grid lg:grid-cols-2 gap-20 items-center">
                     <div class="text-center lg:text-left hero-mobile-center">
@@ -451,20 +399,22 @@
                         </p>
                         <div class="mt-14 flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mobile-center-flex">
                             <a href="#services" class="ultra-btn magnetic-hover text-black py-5 px-10 rounded-full text-base uppercase tracking-wider mobile-full-width" aria-label="Explore our services">Explore Excellence</a>
-                            <a href="#contact" class="ultra-glass magnetic-hover text-white py-5 px-10 rounded-full text-base uppercase tracking-wider hover:border-amber-400/40 transition-all mobile-full-width" aria-label="Contact us to begin your journey">Begin Your Journey</a>
+                            <a href="#contact" class="ultra-glass magnetic-hover text-white py-5 px-10 rounded-full text-base uppercase tracking-wider hover:border-copper-accent/40 transition-all mobile-full-width" aria-label="Contact us to begin your journey">Begin Your Journey</a>
                         </div>
                     </div>
                     <div class="relative flex justify-center float-animation">
                         <div class="relative">
-                            <div class="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-violet-300/20 rounded-full blur-3xl" aria-hidden="true"></div>
-                            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions - Advanced technology and automation visualization" class="relative w-full max-w-lg rounded-2xl transition-transform duration-700 hover:scale-105 magnetic-hover" loading="lazy" onerror="this.src='https::placehold.co/512x512/1a1410/d4a574?text=PDS';">
+                            <!-- Glow behind image changed to Cool Grey/Steel -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-steel-DEFAULT/30 to-steel-light/10 rounded-full blur-3xl" aria-hidden="true"></div>
+                            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions - Advanced technology and automation visualization" class="relative w-full max-w-lg rounded-2xl transition-transform duration-700 hover:scale-105 magnetic-hover" loading="lazy" onerror="this.src='https::placehold.co/512x512/0f1115/cd7f32?text=PDS';">
                         </div>
                     </div>
                 </div>
             </div>
         </section>
         <section id="services" class="py-32 bg-black relative overflow-hidden">
-            <div class="absolute top-0 left-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -translate-x-12" aria-hidden="true"></div>
+             <!-- Changed blobs from Purple to Steel/Cool Grey -->
+            <div class="absolute top-0 left-1/2 w-96 h-96 bg-steel-dark/20 rounded-full blur-3xl -translate-x-12" aria-hidden="true"></div>
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
                 <div class="text-center max-w-5xl mx-auto mb-24">
                     <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Our Expertise</span>
@@ -475,43 +425,43 @@
                 </div>
                 <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-3 mt-20">
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">API Integration</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Expert development in Python, HTML, and robust API integration to connect and automate your systems.</p>
                     </article>
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Project Management</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Bespoke software and consultancy that keeps projects transparent, on time, and within budget.</p>
                     </article>
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">AI & Machine Learning</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Predictive insights, custom AI applications, and intelligent decision engines that transform data into strategy.</p>
                     </article>
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Process Automation</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Eliminate manual workflows with intelligent automation, digital forms, and seamless integrations.</p>
                     </article>
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Custom Applications</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Secure, scalable, and beautifully designed applications built from the ground up for your needs.</p>
                     </article>
                     <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-amber-400/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
+                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         </div>
                         <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Spreadsheet Excellence</h3>
                         <p class="mt-6 text-gray-400 leading-relaxed text-lg">Transform static spreadsheets into dynamic powerhouses with advanced Excel programming and automation.</p>
@@ -519,8 +469,9 @@
                 </div>
             </div>
         </section>
-        <section id="about" class="py-32 bg-gradient-to-b from-black to-zinc-900 relative overflow-hidden">
-            <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
+        <section id="about" class="py-32 bg-gradient-to-b from-black to-steel-deep relative overflow-hidden">
+             <!-- Changed blobs from Purple to Steel/Cool Grey -->
+            <div class="absolute bottom-0 right-0 w-96 h-96 bg-steel-DEFAULT/20 rounded-full blur-3xl" aria-hidden="true"></div>
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
                 <div class="grid lg:grid-cols-2 gap-20 items-center">
                     <div class="text-center lg:text-left hero-mobile-center">
@@ -544,16 +495,16 @@
                             <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="api" aria-label="Learn about our API Integration expertise">API Integration</button>
                             <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="automation" aria-label="Learn about our Automation expertise">Automation</button>
                         </div>
-                        <div class="mt-12 pt-10 border-t border-amber-400/20">
+                        <div class="mt-12 pt-10 border-t border-copper-accent/20">
                             <h4 class="text-2xl font-bold luxury-serif text-center mb-6 luxury-gold-text">
                                 'Smarter, Not Harder' Philosophy
                             </h4>
                             <p class="text-gray-400 leading-relaxed text-center text-lg">
-                                We're <strong class="text-amber-400">money-wise</strong> by design. Using AI to identify the smartest path to ROI, we automate high-cost repetitive tasks, freeing your team for high-value strategic work. This isn't just transformation—it's <em class="text-amber-400">financial optimisation</em>.
+                                We're <strong class="text-copper-accent">money-wise</strong> by design. Using AI to identify the smartest path to ROI, we automate high-cost repetitive tasks, freeing your team for high-value strategic work. This isn't just transformation—it's <em class="text-copper-accent">financial optimisation</em>.
                             </p>
-                            <div class="mt-8 p-6 bg-black/40 rounded-xl border border-amber-400/20">
-                                <p class="text-amber-300 text-center font-semibold mb-2">Real Result:</p>
-                                <p class="text-gray-300 text-center">One client <span class="text-amber-400 font-bold">freed up 15 hours of staff time weekly</span> by automating invoice processing that previously required manual data entry, allowing the team to focus on higher-value tasks.</p>
+                            <div class="mt-8 p-6 bg-black/40 rounded-xl border border-copper-accent/20">
+                                <p class="text-copper-light text-center font-semibold mb-2">Real Result:</p>
+                                <p class="text-gray-300 text-center">One client <span class="text-copper-accent font-bold">freed up 15 hours of staff time weekly</span> by automating invoice processing that previously required manual data entry, allowing the team to focus on higher-value tasks.</p>
                             </div>
                         </div>
                     </div>
@@ -562,7 +513,7 @@
         </section>
         <div id="tech-modal" class="fixed inset-0 z-[100] h-full w-full hidden items-center justify-center bg-black/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div id="modal-content-box" class="relative w-full max-w-3xl transition-all duration-300 ease-in-out opacity-0 scale-95">
-                <div class="ultra-glass rounded-3xl p-8 sm:p-12 relative overflow-hidden border-amber-400/30 max-h-[90vh] overflow-y-auto">
+                <div class="ultra-glass rounded-3xl p-8 sm:p-12 relative overflow-hidden border-copper-accent/30 max-h-[90vh] overflow-y-auto">
                     <button id="close-modal-btn" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-all hover:scale-125 z-10" aria-label="Close modal">
                         <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
@@ -579,7 +530,8 @@
                 <div class="particle"></div>
             </div>
             <!-- Particle HTML End -->
-            <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" aria-hidden="true"></div>
+            <!-- Changed blobs from Purple to Steel/Cool Grey -->
+            <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-steel-dark/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" aria-hidden="true"></div>
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
                 <div class="text-center max-w-5xl mx-auto mb-20">
                     <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Get In Touch</span>
@@ -599,11 +551,12 @@
             </div>
         </section>
     </main>
-    <footer class="bg-black border-t border-amber-400/10 relative overflow-hidden">
-        <div class="absolute top-0 left-1/2 w-full h-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent -translate-x-1/2" aria-hidden="true"></div>
+    <footer class="bg-black border-t border-copper-accent/10 relative overflow-hidden">
+        <!-- Copper gradient footer line -->
+        <div class="absolute top-0 left-1/2 w-full h-1 bg-gradient-to-r from-transparent via-copper-accent/30 to-transparent -translate-x-1/2" aria-hidden="true"></div>
         <div class="container mx-auto px-4 sm:px-6 lg:px-12 py-16 text-center">
             <div class="flex justify-center mb-8">
-                <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" loading="lazy" onerror="this.src='https::placehold.co/200x80/000/a855f7?text=Protech';">
+                <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" loading="lazy" onerror="this.src='https::placehold.co/200x80/0f1115/cd7f32?text=Protech';">
             </div>
             <p class="text-gray-500 text-lg font-semibold mb-4">&copy; 2025 Protech Dynamic Solutions. All rights reserved.</p>
             <p class="text-base luxury-gold-text font-medium">Bespoke Software & AI Solutions | Ireland</p>
@@ -615,6 +568,7 @@
         const hamburger = document.getElementById('hamburger-icon');
         const close = document.getElementById('close-icon');
         const links = document.querySelectorAll('.mobile-menu-link');
+
         menuBtn.addEventListener('click', () => {
             const isExpanded = menu.classList.contains('hidden');
             menu.classList.toggle('hidden');
@@ -622,6 +576,7 @@
             close.classList.toggle('hidden');
             menuBtn.setAttribute('aria-expanded', isExpanded);
         });
+
         links.forEach(link => link.addEventListener('click', () => {
             if (!menu.classList.contains('hidden')) {
                 menu.classList.add('hidden');
@@ -630,16 +585,19 @@
                 menuBtn.setAttribute('aria-expanded', 'false');
             }
         }));
+
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                e.preventDefault(); // <-- This was the line with the error
+                e.preventDefault(); 
                 const targetId = this.getAttribute('href');
+                
                 if (this.classList.contains('mobile-menu-link')) {
                     menu.classList.add('hidden');
                     hamburger.classList.remove('hidden');
                     close.classList.add('hidden');
                     menuBtn.setAttribute('aria-expanded', 'false');
                 }
+
                 const target = document.querySelector(targetId);
                 if (target) {
                     target.scrollIntoView({
@@ -649,22 +607,26 @@
                 }
             });
         });
+
         document.addEventListener('DOMContentLoaded', () => {
             const modal = document.getElementById('tech-modal');
             const modalContentBox = document.getElementById('modal-content-box');
             if (!modal || !modalContentBox) return;
+
             const modalTitle = document.getElementById('modal-title');
             const modalContent = document.getElementById('modal-content');
             const closeModalBtn = document.getElementById('close-modal-btn');
             const badges = document.querySelectorAll('.tech-badge');
+
             let firstFocusable, lastFocusable;
+
             const techContent = {
                 'python': {
                     title: "Custom Python Solutions",
                     content: `
                         <p>We use Python to build powerful automation scripts, custom APIs, and intelligent data processing pipelines.</p>
                         <p>Imagine a workflow that automatically reads your sales emails, extracts order details, and updates your database in real-time. That's the power we deliver.</p>
-                        <pre class="bg-black/50 border border-amber-400/20 rounded-lg p-4 text-sm text-amber-300 overflow-x-auto mt-4"><code>def process_orders(email_data):
+                        <pre class="bg-black/50 border border-copper-accent/20 rounded-lg p-4 text-sm text-copper-light overflow-x-auto mt-4"><code>def process_orders(email_data):
     for email in email_data:
         if email.subject.startswith("NEW ORDER"):
             order_details = parse_email_body(email.body)
@@ -704,6 +666,7 @@
                     content: "<p>We identify and eliminate high-cost, repetitive manual tasks. Using digital forms, robotic process automation (RPA), and custom scripts, we free your team to focus on high-value strategic work instead of manual data entry.</p>"
                 }
             };
+
             const getFocusableElements = () => {
                 const focusableElements = modalContentBox.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -713,6 +676,7 @@
                     lastFocusable = focusableElements[focusableElements.length - 1];
                 }
             };
+
             const handleFocusTrap = (e) => {
                 if (e.key === 'Tab') {
                     if (e.shiftKey) {
@@ -728,25 +692,32 @@
                     }
                 }
             };
+
             const openModal = (techKey) => {
                 const content = techContent[techKey];
                 if (!content || !modalTitle || !modalContent) return;
+
                 modalTitle.textContent = content.title;
                 modalContent.innerHTML = content.content;
+
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
+                
                 getFocusableElements();
                 document.addEventListener('keydown', handleFocusTrap);
+
                 requestAnimationFrame(() => {
                     modalContentBox.classList.remove('opacity-0');
                     modalContentBox.classList.remove('scale-95');
                     closeModalBtn.focus();
                 });
             };
+
             const closeModal = () => {
                 modalContentBox.classList.add('opacity-0');
                 modalContentBox.classList.add('scale-95');
                 document.removeEventListener('keydown', handleFocusTrap);
+
                 const onTransitionEnd = () => {
                     modal.classList.add('hidden');
                     modal.classList.remove('flex');
@@ -754,6 +725,7 @@
                 };
                 modalContentBox.addEventListener('transitionend', onTransitionEnd);
             };
+
             badges.forEach(badge => {
                 badge.addEventListener('click', () => {
                     const techKey = badge.getAttribute('data-tech');
@@ -767,12 +739,15 @@
                     }
                 });
             });
+
             closeModalBtn.addEventListener('click', closeModal);
+
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeModal();
                 }
             });
+
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                     closeModal();
@@ -782,4 +757,3 @@
     </script>
 </body>
 </html>
-
