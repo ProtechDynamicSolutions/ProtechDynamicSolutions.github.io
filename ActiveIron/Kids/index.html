@@ -427,15 +427,9 @@
                             <line x1="60" y1="110" x2="380" y2="110" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
                             <line x1="60" y1="20" x2="380" y2="20" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
 
-                            {/* Axes Icons (Smiley vs Tired) */}
-                            <g transform="translate(20, 190)">
-                                <circle cx="12" cy="12" r="14" fill="#E2E8F0" />
-                                <Frown size={20} className="text-slate-500" x="2" y="2" />
-                            </g>
-                            <g transform="translate(20, 10)">
-                                <circle cx="12" cy="12" r="14" fill="#BBF7D0" />
-                                <Smile size={20} className="text-green-600" x="2" y="2" />
-                            </g>
+                            {/* Axes Icons (Emoji Style) */}
+                            <text x="20" y="210" fontSize="30" textAnchor="middle" className="animate-pop-in" style={{animationDelay: '0.2s'}}>😴</text>
+                            <text x="20" y="30" fontSize="30" textAnchor="middle" className="animate-pop-in" style={{animationDelay: '1.2s'}}>😃</text>
 
                             {/* Line Path */}
                             <path 
@@ -464,12 +458,6 @@
                             <text x="60" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">Day 1</text>
                             <text x="220" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">3 Weeks</text>
                             <text x="380" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">6 Weeks</text>
-
-                            {/* Fun Sticker Tooltip */}
-                            <g className="animate-pop-in" style={{animationDelay: '1.8s'}}>
-                                <path d="M 330 20 Q 380 0 380 40 Q 380 80 330 60 Q 280 80 280 40 Q 280 0 330 20" fill="#FFD700" stroke="white" strokeWidth="3" />
-                                <text x="330" y="45" textAnchor="middle" className="text-[10px] font-black fill-yellow-900 kid-font">MAX POWER!</text>
-                            </g>
                         </svg>
                     </div>
                 </div>
