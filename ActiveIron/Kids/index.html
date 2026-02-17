@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Immune Kids - Super Protection</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Import Map for React and Lucide Icons -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+        }
+    }
+    </script>
+
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Nunito:wght@400;600;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        h1, h2, h3, .kid-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Custom Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 12s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-orange-50/50">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            Sun, Shield, Zap, Smile, Star, Check, ArrowRight, 
+            X, Heart, Cloud, Sparkles, PlayCircle
+        } from 'lucide-react';
+
+        // --- Custom Assets ---
+
+        /**
+         * BearCharacter: The cute mascot from the game
+         */
+        const BearCharacter = ({ className }) => (
+            <svg viewBox="0 0 100 110" className={className}>
+                {/* Ears */}
+                <circle cx="20" cy="25" r="12" fill="#8B4513" />
+                <circle cx="80" cy="25" r="12" fill="#8B4513" />
+                <circle cx="20" cy="25" r="6" fill="#D2691E" />
+                <circle cx="80" cy="25" r="6" fill="#D2691E" />
+                {/* Head */}
+                <ellipse cx="50" cy="50" rx="42" ry="40" fill="#8B4513" />
+                {/* Snout */}
+                <ellipse cx="50" cy="62" rx="20" ry="15" fill="#F4A460" />
+                <ellipse cx="50" cy="58" rx="8" ry="5" fill="#3E2723" />
+                {/* Eyes */}
+                <circle cx="35" cy="45" r="4" fill="white" />
+                <circle cx="35" cy="45" r="2" fill="black" />
+                <circle cx="65" cy="45" r="4" fill="white" />
+                <circle cx="65" cy="45" r="2" fill="black" />
+                {/* Mouth */}
+                <path d="M40 68 Q50 75 60 68" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />
+                {/* Cheeks */}
+                <circle cx="25" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
+                <circle cx="75" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
+            </svg>
+        );
+
+        /**
+         * BrandLogo: "Active Immune KiDS" SVG Logo
+         */
+        const BrandLogo = () => (
+            <div className="flex items-center gap-2">
+                <div className="relative w-10 h-10 bg-orange-500 rounded-lg transform -rotate-3 flex items-center justify-center shadow-md">
+                    <span className="text-white font-black text-2xl font-serif">A</span>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-700 rounded-full border-2 border-white"></div>
+                </div>
+                <div className="flex flex-col leading-none">
+                    <span className="text-gray-400 text-[10px] tracking-widest font-bold uppercase">Active</span>
+                    <span className="text-gray-800 font-bold text-lg tracking-tight">IMMUNE</span>
+                    <div className="flex gap-0.5 text-xs font-black">
+                        <span className="text-purple-600 bg-purple-100 px-1 rounded-sm">K</span>
+                        <span className="text-green-500 bg-green-100 px-1 rounded-sm">i</span>
+                        <span className="text-orange-500 bg-orange-100 px-1 rounded-sm">D</span>
+                        <span className="text-red-500 bg-red-100 px-1 rounded-sm">S</span>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- Animations & Layout ---
+
+        const AnimatedBlob = ({ color, className, delay = 0 }) => (
+            <div 
+                className={`absolute rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob ${className}`}
+                style={{ backgroundColor: color, animationDelay: `${delay}s` }}
+            />
+        );
+
+        const FadeInSection = ({ children, delay = 0, className = "" }) => {
+            const [isVisible, setIsVisible] = useState(false);
+            const domRef = useRef();
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => setIsVisible(entry.isIntersecting));
+                });
+                if (domRef.current) observer.observe(domRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div
+                    ref={domRef}
+                    className={`transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}
+                    style={{ transitionDelay: `${delay}ms` }}
+                >
+                    {children}
+                </div>
+            );
+        };
+
+        // --- The "Magic Shield" Science Section ---
+
+        const ShieldSimulation = () => {
+            return (
+                <div className="py-16 md:py-20 bg-gradient-to-b from-white to-orange-50 relative overflow-hidden">
+                    <div className="max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-12 items-center">
+                        
+                        {/* Text Content */}
+                        <div className="order-2 lg:order-1">
+                            <div className="inline-block px-4 py-1 rounded-full bg-orange-100 text-orange-700 font-bold text-xs md:text-sm mb-4 border border-orange-200">
+                                POWERED BY SCIENCE
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-4">
+                                The <span className="text-orange-500">Super Shield</span> Effect
+                            </h2>
+                            <p className="text-gray-600 mb-8 text-lg">
+                                Ordinary vitamins can get lost in the tummy. Active Immune is specially designed to get where it's needed, creating a magical shield of protection!
+                            </p>
+
+                            <div className="space-y-4">
+                                <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-yellow-400 flex items-start gap-4 hover:shadow-md transition-shadow">
+                                    <div className="p-2 bg-yellow-100 rounded-full text-yellow-600"><Sun size={24} /></div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-800">Vitamin D (Sunshine Power)</h4>
+                                        <p className="text-sm text-gray-500">600 IU Strength for healthy bones and smiles.</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-400 flex items-start gap-4 hover:shadow-md transition-shadow">
+                                    <div className="p-2 bg-orange-100 rounded-full text-orange-600"><Shield size={24} /></div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-800">Vitamin C & Zinc (The Bodyguards)</h4>
+                                        <p className="text-sm text-gray-500">Defends little cells against nasty germs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Visualization */}
+                        <div className="order-1 lg:order-2 relative h-[400px] bg-white rounded-[2rem] shadow-2xl p-4 flex items-center justify-center border-4 border-white overflow-hidden">
+                            <div className="absolute inset-0 bg-blue-50/50"></div>
+                            <div className="absolute top-4 right-4 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-blue-500 uppercase tracking-wider shadow-sm z-10">
+                                Immune Simulation
+                            </div>
+                            
+                            <svg viewBox="0 0 400 400" className="w-full h-full relative z-0">
+                                <defs>
+                                    <radialGradient id="shieldGradient" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stopColor="#60A5FA" stopOpacity="0" />
+                                        <stop offset="80%" stopColor="#3B82F6" stopOpacity="0.1" />
+                                        <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.6" />
+                                    </radialGradient>
+                                </defs>
+
+                                {/* The Bear Center */}
+                                <foreignObject x="150" y="150" width="100" height="100">
+                                    <BearCharacter className="w-full h-full" />
+                                </foreignObject>
+
+                                {/* Orbiting Particles (Vitamins) */}
+                                <g>
+                                    <circle r="6" fill="#FBBF24">
+                                        <animateMotion dur="4s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
+                                    </circle>
+                                    <circle r="6" fill="#F97316">
+                                        <animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
+                                    </circle>
+                                    <circle r="6" fill="#8B5CF6">
+                                        <animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
+                                    </circle>
+                                </g>
+
+                                {/* The Shield Pulse */}
+                                <circle cx="200" cy="200" r="90" fill="url(#shieldGradient)" stroke="#60A5FA" strokeWidth="2" strokeDasharray="10 5">
+                                    <animate attributeName="r" values="90;100;90" dur="3s" repeatCount="indefinite" />
+                                    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+                                    <animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="20s" repeatCount="indefinite" />
+                                </circle>
+
+                                {/* Sparkles */}
+                                <g className="opacity-0">
+                                    <path d="M 200 100 L 205 110 L 215 110 L 207 117 L 210 127 L 200 120 L 190 127 L 193 117 L 185 110 L 195 110 Z" fill="#FBBF24" />
+                                    <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+                                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -20" dur="2s" repeatCount="indefinite" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Comparison Section ---
+
+        const ComparisonTable = () => (
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <FadeInSection className="bg-white p-6 rounded-3xl shadow-xl border-t-8 border-orange-500 relative overflow-hidden transform hover:-translate-y-1 transition-transform">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                       <Shield size={100} />
+                    </div>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="bg-orange-100 p-2 rounded-full"><Smile className="text-orange-500" /></div>
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-800 kid-font">
+                            Active Immune Chews
+                        </h3>
+                    </div>
+                    <ul className="space-y-4">
+                        {[
+                            "High Strength Vitamin D (600 IU)",
+                            "Great tasting Orange flavour",
+                            "Sugar Free & Vegan Friendly",
+                            "Free from artificial colours",
+                            "One chew a day!"
+                        ].map((item, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                                <div className="mt-1 bg-green-100 p-1 rounded-full text-green-600 flex-shrink-0">
+                                    <Check size={14} strokeWidth={3}/>
+                                </div>
+                                <span className="text-base text-gray-700 font-bold">{item}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </FadeInSection>
+
+                <FadeInSection delay={200} className="bg-gray-100 p-6 rounded-3xl border border-gray-200 opacity-90">
+                    <div className="flex items-center gap-3 mb-6">
+                         <div className="bg-gray-200 p-2 rounded-full"><Cloud className="text-gray-500" /></div>
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-400 kid-font">
+                            Ordinary Gummies
+                        </h3>
+                    </div>
+                    <ul className="space-y-4">
+                        {[
+                            "Often packed with sugar",
+                            "Low levels of Vitamin D",
+                            "Can stick to teeth",
+                            "Artificial preservatives",
+                            "Multiple sweets needed"
+                        ].map((item, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                                <div className="mt-1 bg-red-100 p-1 rounded-full text-red-500 flex-shrink-0">
+                                    <X size={14} strokeWidth={3}/>
+                                </div>
+                                <span className="text-base text-gray-500">{item}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </FadeInSection>
+            </div>
+        );
+
+        // --- Main Component ---
+
+        const ActiveImmuneKids = () => {
+            const [scrolled, setScrolled] = useState(false);
+            const basePrice = 14.99; // Euro
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="min-h-screen font-sans text-gray-900 overflow-x-hidden">
+                    
+                    {/* Navigation */}
+                    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-4 md:py-6'}`}>
+                        <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
+                            <BrandLogo />
+                            <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-bold text-sm md:text-base transition-transform hover:scale-105 shadow-md flex items-center gap-2">
+                                Buy Now <span className="bg-orange-700/20 px-2 rounded-full text-xs">€{basePrice}</span>
+                            </button>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <header className="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden bg-orange-50">
+                        {/* Blobs */}
+                        <AnimatedBlob color="#FDBA74" className="w-[400px] h-[400px] top-0 left-0 -translate-x-1/3 -translate-y-1/4" delay={0} />
+                        <AnimatedBlob color="#C4B5FD" className="w-[300px] h-[300px] bottom-0 right-0 translate-x-1/3 translate-y-1/4" delay={2} />
+                        
+                        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-8 items-center">
+                            
+                            {/* Copy */}
+                            <div className="text-center lg:text-left order-2 lg:order-1 space-y-6">
+                                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm animate-bounce">
+                                    <Star className="text-yellow-400 fill-yellow-400" size={16} />
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Parents' #1 Choice</span>
+                                </div>
+                                
+                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-none text-slate-900 kid-font">
+                                    Little Heroes, <br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Big Defense.</span>
+                                </h1>
+                                
+                                <p className="text-lg md:text-xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                                    The yummy chew that helps protect your little ones while they explore, play, and grow. Packed with Sunshine Vitamin D, C & Zinc!
+                                </p>
+                                
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black text-xl shadow-lg shadow-orange-500/30 transform hover:scale-105 transition-all flex items-center justify-center gap-2">
+                                        Shop Chews <ArrowRight />
+                                    </button>
+                                    <button className="bg-white hover:bg-gray-50 text-slate-700 px-8 py-4 rounded-2xl font-bold text-xl shadow-sm border border-gray-100 flex items-center justify-center gap-2 group">
+                                        <PlayCircle className="text-purple-500 group-hover:scale-110 transition-transform" /> Play Game
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Free shipping in Ireland over €50</p>
+                            </div>
+
+                            {/* Hero Image / 3D Composition */}
+                            <div className="order-1 lg:order-2 relative flex justify-center items-center h-[400px] md:h-[500px]">
+                                {/* The Bottle (Placeholder for product image, using CSS representation for now or image) */}
+                                <div className="relative z-20 w-64 md:w-80 animate-float">
+                                    {/* Simulated Bottle using div since I can't use real image url perfectly */}
+                                    <div className="bg-white rounded-3xl shadow-2xl p-6 border-2 border-gray-100 relative overflow-hidden h-[400px] flex flex-col items-center">
+                                        <div className="w-full bg-gradient-to-b from-orange-400 to-orange-500 h-48 rounded-2xl mb-4 relative overflow-hidden flex items-center justify-center">
+                                             <BearCharacter className="w-40 h-40 absolute bottom-[-20px]" />
+                                             <div className="absolute top-4 right-4 bg-white/20 backdrop-blur rounded-full p-2">
+                                                <Sun className="text-white" />
+                                             </div>
+                                        </div>
+                                        <h3 className="text-2xl font-black text-gray-800 mb-1 kid-font">Active Immune</h3>
+                                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 mb-2 kid-font">KiDS</div>
+                                        <div className="flex gap-2 mt-auto">
+                                            <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded">Vit D</span>
+                                            <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded">Vit C</span>
+                                            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">Zinc</span>
+                                        </div>
+                                        
+                                        {/* Badge */}
+                                        <div className="absolute top-4 left-4 w-16 h-16 bg-purple-600 rounded-full flex flex-col items-center justify-center text-white text-center shadow-lg border-2 border-white transform -rotate-12">
+                                            <span className="text-xs font-bold">60</span>
+                                            <span className="text-[8px] font-bold uppercase">Chews</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Background Elements */}
+                                <div className="absolute top-10 right-10 text-yellow-400 animate-spin-slow opacity-60"><Sun size={80} /></div>
+                                <div className="absolute bottom-20 left-10 text-blue-400 opacity-40"><Cloud size={60} fill="#BFDBFE" /></div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Features Grid */}
+                    <section className="py-16 bg-white">
+                        <div className="max-w-7xl mx-auto px-4 md:px-6">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4 kid-font">Why Kids Love It!</h2>
+                                <p className="text-gray-500">Approved by little taste testers everywhere.</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                {[
+                                    { icon: Smile, color: "text-orange-500", bg: "bg-orange-100", title: "Yummy Taste", desc: "Natural Orange flavour" },
+                                    { icon: Shield, color: "text-blue-500", bg: "bg-blue-100", title: "Super Strong", desc: "Immune support" },
+                                    { icon: Heart, color: "text-red-500", bg: "bg-red-100", title: "Sugar Free", desc: "Kind to teeth" },
+                                    { icon: Zap, color: "text-purple-500", bg: "bg-purple-100", title: "Energy", desc: "With added Iron" }
+                                ].map((item, i) => (
+                                    <FadeInSection key={i} delay={i * 100} className="p-6 rounded-3xl bg-gray-50 border border-transparent hover:border-gray-200 hover:shadow-xl transition-all text-center group cursor-default">
+                                        <div className={`w-16 h-16 mx-auto rounded-full ${item.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${item.color}`}>
+                                            <item.icon size={32} />
+                                        </div>
+                                        <h3 className="font-bold text-lg mb-2 kid-font">{item.title}</h3>
+                                        <p className="text-sm text-gray-500">{item.desc}</p>
+                                    </FadeInSection>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Science Section */}
+                    <ShieldSimulation />
+
+                    {/* Comparison */}
+                    <section className="py-20 bg-orange-50/50">
+                        <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
+                            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4 kid-font">The Better Choice</h2>
+                            <p className="text-gray-500 mb-12">See how we stack up against the rest.</p>
+                            <ComparisonTable />
+                        </div>
+                    </section>
+
+                    {/* CTA Section */}
+                    <section className="py-20 bg-purple-900 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
+                        
+                        <div className="max-w-4xl mx-auto px-6 relative z-10 text-center text-white">
+                            <BearCharacter className="w-24 h-24 mx-auto mb-6 drop-shadow-lg" />
+                            <h2 className="text-3xl md:text-5xl font-black mb-6 kid-font">Ready to boost their immunity?</h2>
+                            <p className="text-purple-200 text-lg mb-10 max-w-2xl mx-auto">
+                                Give them the support they need for school, play, and everything in between.
+                            </p>
+                            
+                            <button className="bg-gradient-to-r from-orange-400 to-pink-500 hover:from-orange-500 hover:to-pink-600 text-white px-12 py-5 rounded-full font-black text-xl shadow-lg shadow-purple-900/50 transform hover:scale-105 transition-all flex items-center gap-3 mx-auto w-full md:w-auto justify-center">
+                                Add to Basket - €{basePrice} <ArrowRight />
+                            </button>
+                            <p className="mt-6 text-sm text-purple-300 opacity-80">
+                                60 Chews • 2 Month Supply • Made in Ireland 🇮🇪
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<ActiveImmuneKids />);
+    </script>
+</body>
+</html>
