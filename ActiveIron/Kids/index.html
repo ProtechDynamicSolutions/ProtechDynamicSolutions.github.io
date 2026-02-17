@@ -87,43 +87,89 @@
         import { createRoot } from 'react-dom/client';
         import { 
             Sun, Shield, Zap, Smile, Star, Check, ArrowRight, 
-            X, Heart, Cloud, Sparkles, PlayCircle, Trophy, RefreshCw, ArrowLeft
+            X, Heart, Cloud, Sparkles, PlayCircle, Trophy, RefreshCw, ArrowLeft, Frown
         } from 'lucide-react';
 
         // --- Custom Assets ---
 
         const BearCharacter = ({ className, mood = 'happy', isPoweredUp = false }) => (
-            <svg viewBox="0 0 100 110" className={className}>
-                {/* Iron Shield Aura */}
+            <svg viewBox="0 0 100 120" className={className}>
+                {/* Purple Lightning Aura */}
                 {isPoweredUp && (
-                    <circle cx="50" cy="55" r="50" fill="#7E22CE" opacity="0.2">
-                        <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1s" repeatCount="indefinite" />
-                    </circle>
+                    <g className="animate-pulse">
+                         <path d="M10 60 L30 50 L20 80 L40 70" stroke="#7E22CE" strokeWidth="3" fill="none" opacity="0.6" />
+                         <path d="M90 60 L70 50 L80 80 L60 70" stroke="#7E22CE" strokeWidth="3" fill="none" opacity="0.6" />
+                         <circle cx="50" cy="60" r="55" stroke="#7E22CE" strokeWidth="2" strokeDasharray="5,5" fill="none" opacity="0.4">
+                            <animateTransform attributeName="transform" type="rotate" from="0 50 60" to="360 50 60" dur="3s" repeatCount="indefinite" />
+                         </circle>
+                    </g>
                 )}
+                
                 {/* Ears */}
-                <circle cx="20" cy="25" r="12" fill="#8B4513" />
-                <circle cx="80" cy="25" r="12" fill="#8B4513" />
-                <circle cx="20" cy="25" r="6" fill="#D2691E" />
-                <circle cx="80" cy="25" r="6" fill="#D2691E" />
+                <circle cx="25" cy="25" r="14" fill="#8B4513" />
+                <circle cx="75" cy="25" r="14" fill="#8B4513" />
+                <circle cx="25" cy="25" r="7" fill="#D2691E" />
+                <circle cx="75" cy="25" r="7" fill="#D2691E" />
+
+                {/* Body */}
+                <path d="M20 90 Q50 130 80 90 L80 120 L20 120 Z" fill={isPoweredUp ? "#5C2D91" : "#F58220"} />
+                {/* T-Shirt Line */}
+                <path d="M20 90 Q50 110 80 90" fill="none" stroke="white" strokeWidth="2" opacity="0.3" />
+                
                 {/* Head */}
-                <ellipse cx="50" cy="50" rx="42" ry="40" fill="#8B4513" />
+                <ellipse cx="50" cy="55" rx="45" ry="42" fill="#8B4513" />
+
                 {/* Snout */}
-                <ellipse cx="50" cy="62" rx="20" ry="15" fill="#F4A460" />
-                <ellipse cx="50" cy="58" rx="8" ry="5" fill="#3E2723" />
+                <ellipse cx="50" cy="68" rx="22" ry="16" fill="#F4A460" />
+                <ellipse cx="50" cy="64" rx="10" ry="6" fill="#3E2723" />
+
                 {/* Eyes */}
-                <circle cx="35" cy="45" r="4" fill="white" />
-                <circle cx="35" cy="45" r="2" fill="black" />
-                <circle cx="65" cy="45" r="4" fill="white" />
-                <circle cx="65" cy="45" r="2" fill="black" />
+                <circle cx="35" cy="50" r="5" fill="white" />
+                <circle cx="35" cy="50" r="2.5" fill="black" />
+                <circle cx="65" cy="50" r="5" fill="white" />
+                <circle cx="65" cy="50" r="2.5" fill="black" />
+
                 {/* Mouth */}
-                {mood === 'happy' && <path d="M40 68 Q50 75 60 68" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />}
-                {mood === 'worried' && <path d="M40 72 Q50 65 60 72" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />}
-                {mood === 'super' && <path d="M40 68 Q50 78 60 68" stroke="#3E2723" strokeWidth="3" fill="none" strokeLinecap="round" />}
+                {mood === 'happy' && <path d="M40 76 Q50 84 60 76" stroke="#3E2723" strokeWidth="2.5" fill="none" strokeLinecap="round" />}
+                {mood === 'worried' && <path d="M40 80 Q50 72 60 80" stroke="#3E2723" strokeWidth="2.5" fill="none" strokeLinecap="round" />}
+                {mood === 'super' && <path d="M40 76 Q50 88 60 76" stroke="#3E2723" strokeWidth="3.5" fill="none" strokeLinecap="round" />}
+
                 {/* Cheeks */}
-                <circle cx="25" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
-                <circle cx="75" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
-                {/* Body for game */}
-                {mood !== 'head-only' && <path d="M15 85 Q50 115 85 85 L85 110 L15 110 Z" fill={isPoweredUp ? "#5C2D91" : "#F58220"} />}
+                <circle cx="25" cy="60" r="6" fill="#FFB6C1" opacity="0.6" />
+                <circle cx="75" cy="60" r="6" fill="#FFB6C1" opacity="0.6" />
+            </svg>
+        );
+
+        const GermMonster = () => (
+            <svg viewBox="0 0 40 40" className="w-full h-full drop-shadow-md">
+                <path d="M20 2 C10 2 2 10 2 20 C2 30 10 38 20 38 C30 38 38 30 38 20 C38 10 30 2 20 2 Z M8 12 L12 16 M32 12 L28 16 M5 20 L10 20 M35 20 L30 20 M8 28 L12 24 M32 28 L28 24" 
+                      fill="#84CC16" stroke="#4D7C0F" strokeWidth="1" />
+                {/* Spikes */}
+                <path d="M20 2 L20 6 M20 38 L20 34 M2 20 L6 20 M38 20 L34 20 M7 7 L10 10 M33 7 L30 10 M7 33 L10 30 M33 33 L30 30" stroke="#4D7C0F" strokeWidth="3" strokeLinecap="round" />
+                {/* Face */}
+                <circle cx="14" cy="18" r="3" fill="white" />
+                <circle cx="14" cy="18" r="1" fill="black" />
+                <circle cx="26" cy="18" r="3" fill="white" />
+                <circle cx="26" cy="18" r="1" fill="black" />
+                <path d="M15 26 Q20 22 25 26" stroke="#14532D" strokeWidth="2" fill="none" />
+            </svg>
+        );
+
+        const OrangeFruit = () => (
+            <svg viewBox="0 0 40 40" className="w-full h-full drop-shadow-sm">
+                <circle cx="20" cy="22" r="16" fill="#FFA500" />
+                <circle cx="20" cy="22" r="13" fill="none" stroke="#FB923C" strokeWidth="2" opacity="0.6" />
+                <path d="M20 6 L20 12" stroke="#4D7C0F" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M20 6 Q28 2 26 12 Z" fill="#65A30D" />
+                <circle cx="15" cy="18" r="0.5" fill="#9A3412" opacity="0.4" />
+                <circle cx="25" cy="26" r="0.5" fill="#9A3412" opacity="0.4" />
+                <circle cx="28" cy="18" r="0.5" fill="#9A3412" opacity="0.4" />
+            </svg>
+        );
+
+        const IronBolt = () => (
+            <svg viewBox="0 0 40 40" className="w-full h-full filter drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]">
+                 <path d="M22 2 L12 22 L20 22 L16 38 L30 16 L22 16 Z" fill="#9333EA" stroke="#E9D5FF" strokeWidth="2" />
             </svg>
         );
 
@@ -161,8 +207,8 @@
             const containerRef = useRef(null);
             const lastSpawnTime = useRef(0);
 
-            const BEAR_SIZE = 20; 
-            const ITEM_SIZE = 12;
+            const BEAR_SIZE = 24; // Bigger Bear
+            const ITEM_SIZE = 14;
 
             const handleInput = useCallback((clientX) => {
                 if (gameState !== 'playing' || !containerRef.current) return;
@@ -175,11 +221,11 @@
             const spawnItem = useCallback(() => {
                 const rand = Math.random();
                 let type = 'vitD';
-                if (rand < 0.3) type = 'vitD';
-                else if (rand < 0.5) type = 'vitC';
-                else if (rand < 0.65) type = 'zinc';
-                else if (rand < 0.75) type = 'iron';
-                else if (rand < 0.9) type = 'germ';
+                if (rand < 0.25) type = 'vitD';
+                else if (rand < 0.45) type = 'vitC';
+                else if (rand < 0.60) type = 'zinc';
+                else if (rand < 0.70) type = 'iron';
+                else if (rand < 0.85) type = 'germ';
                 else type = 'cloud';
 
                 setItems(prev => [...prev, {
@@ -187,7 +233,7 @@
                     x: Math.random() * (100 - ITEM_SIZE),
                     y: -20,
                     type,
-                    speed: 0.5 + Math.random() * 0.4
+                    speed: 0.6 + Math.random() * 0.4
                 }]);
             }, []);
 
@@ -202,7 +248,7 @@
                         item.y += item.speed;
                         
                         // Collision
-                        const bearBox = { x: bearX, y: 80, w: BEAR_SIZE, h: BEAR_SIZE }; // Approximate logic
+                        const bearBox = { x: bearX + 4, y: 75, w: BEAR_SIZE - 8, h: BEAR_SIZE }; // Adjusted hitbox
                         const itemBox = { x: item.x, y: item.y, w: ITEM_SIZE, h: ITEM_SIZE };
 
                         const isColliding = 
@@ -230,29 +276,29 @@
             const handleCollision = (type) => {
                 const isSuper = powerUpTime > 0;
                 if (type === 'iron') {
-                    setPowerUpTime(5000);
-                    flashMessage("IRON POWER: Energy!", 'iron');
-                    setScore(s => s + 200);
+                    setPowerUpTime(6000); // 6 seconds
+                    flashMessage("SUPER IRON POWER!", 'iron');
+                    setScore(s => s + 300);
                 } else if (['vitD', 'vitC', 'zinc'].includes(type)) {
                     setScore(s => s + 100);
-                    flashMessage("Yum! Vitamins!", 'good');
+                    flashMessage("Tasty Vitamins!", 'good');
                 } else if (type === 'germ') {
                     if (isSuper) {
                         setScore(s => s + 50);
-                        flashMessage("Iron Protection!", 'good');
+                        flashMessage("Iron Protection Shield!", 'good');
                     } else {
                         setHealth(h => {
                             if (h <= 1) setGameState('gameover');
                             return h - 1;
                         });
-                        flashMessage("Ouch! Germs!", 'bad');
+                        flashMessage("Yuck! Germs!", 'bad');
                     }
                 } else if (type === 'cloud') {
                      if (isSuper) {
                         flashMessage("Energy Boost!", 'good');
                     } else {
                         setScore(s => Math.max(0, s - 50));
-                        flashMessage("Tiredness...", 'bad');
+                        flashMessage("So Tired...", 'bad');
                     }
                 }
             };
@@ -281,9 +327,9 @@
                         <div className="bg-white p-3 border-b-2 border-orange-100 flex justify-between items-center z-10 relative">
                             <h3 className="font-black text-orange-500 kid-font">Active Bear</h3>
                             <div className="flex gap-2">
-                                {[...Array(3)].map((_, i) => <Heart key={i} size={16} className={i < health ? "fill-red-500 text-red-500" : "fill-gray-200 text-gray-200"} />)}
+                                {[...Array(3)].map((_, i) => <Heart key={i} size={20} className={i < health ? "fill-red-500 text-red-500" : "fill-gray-200 text-gray-200"} />)}
                             </div>
-                            <div className="font-black text-slate-700">{score}</div>
+                            <div className="font-black text-2xl text-slate-700">{score}</div>
                         </div>
 
                         {/* Game Area */}
@@ -293,21 +339,26 @@
                             onMouseMove={(e) => handleInput(e.clientX)}
                             onTouchMove={(e) => handleInput(e.touches[0].clientX)}
                         >
+                            {/* Background Elements */}
+                            <div className="absolute top-10 left-10 opacity-40"><Cloud size={80} color="white" /></div>
+                            <div className="absolute top-40 right-10 opacity-30"><Cloud size={60} color="white" /></div>
+
                             {gameState === 'start' && (
                                 <div className="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center text-center p-6">
-                                    <div className="w-24 h-24 mb-4 animate-bounce"><BearCharacter mood="happy" /></div>
-                                    <h2 className="text-2xl font-black text-orange-600 mb-2 kid-font">Immunity Adventure!</h2>
-                                    <p className="text-gray-500 text-sm mb-6">Collect Vitamins & the Purple Bolt for Iron Power!</p>
-                                    <button onClick={() => { setScore(0); setHealth(3); setGameState('playing'); }} className="bg-orange-500 text-white px-8 py-3 rounded-full font-bold shadow-lg animate-pulse flex items-center gap-2">
-                                        <PlayCircle /> Start
+                                    <div className="w-32 h-32 mb-4 animate-bounce"><BearCharacter mood="happy" /></div>
+                                    <h2 className="text-3xl font-black text-orange-600 mb-2 kid-font">Immunity Adventure!</h2>
+                                    <p className="text-gray-500 text-sm mb-6">Catch Vitamins & the Purple Bolt for Super Protection!</p>
+                                    <button onClick={() => { setScore(0); setHealth(3); setGameState('playing'); }} className="bg-orange-500 text-white px-8 py-3 rounded-full font-bold shadow-lg animate-pulse flex items-center gap-2 text-xl">
+                                        <PlayCircle /> Start Game
                                     </button>
                                 </div>
                             )}
 
                             {gameState === 'gameover' && (
                                 <div className="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center text-center p-6 text-white">
-                                    <h2 className="text-3xl font-bold mb-2 kid-font">Good Try!</h2>
-                                    <div className="text-5xl font-black text-orange-400 mb-6">{score}</div>
+                                    <h2 className="text-3xl font-bold mb-2 kid-font">Good Job!</h2>
+                                    <p className="mb-4 text-gray-300">You collected lots of protection!</p>
+                                    <div className="text-6xl font-black text-orange-400 mb-6">{score}</div>
                                     <button onClick={() => { setScore(0); setHealth(3); setGameState('playing'); setItems([]); }} className="bg-white text-orange-600 px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-2">
                                         <RefreshCw /> Play Again
                                     </button>
@@ -321,17 +372,21 @@
                                     </div>
                                     {items.map(item => (
                                         <div key={item.id} className="absolute flex items-center justify-center" style={{ left: `${item.x}%`, top: `${item.y}%`, width: `${ITEM_SIZE}%` }}>
-                                            {item.type === 'vitD' && <Sun className="text-yellow-400 fill-yellow-200" />}
-                                            {item.type === 'vitC' && <div className="w-full h-full rounded-full bg-orange-500 border-2 border-orange-600" />}
-                                            {item.type === 'zinc' && <Shield className="text-blue-400 fill-blue-100" />}
-                                            {item.type === 'iron' && <Zap className="text-purple-600 fill-purple-300 drop-shadow-lg" />}
-                                            {item.type === 'germ' && <div className="w-full h-full bg-green-500 rounded-full opacity-80 animate-pulse" />}
-                                            {item.type === 'cloud' && <Cloud className="text-gray-300 fill-gray-100" />}
+                                            {item.type === 'vitD' && <Sun className="text-yellow-400 fill-yellow-200 drop-shadow-md animate-spin-slow" />}
+                                            {item.type === 'vitC' && <OrangeFruit />}
+                                            {item.type === 'zinc' && <Shield className="text-blue-500 fill-blue-100 drop-shadow-md" />}
+                                            {item.type === 'iron' && <IronBolt />}
+                                            {item.type === 'germ' && <GermMonster />}
+                                            {item.type === 'cloud' && <Cloud className="text-gray-300 fill-gray-100 drop-shadow-sm" />}
                                         </div>
                                     ))}
                                     {message && (
-                                        <div className="absolute top-1/4 left-0 right-0 flex justify-center pointer-events-none">
-                                            <span className={`px-4 py-2 rounded-xl font-bold text-xs shadow-xl animate-bounce bg-white border-2 ${message.type === 'bad' ? 'text-red-500 border-red-200' : 'text-green-600 border-green-200'}`}>
+                                        <div className="absolute top-1/3 left-0 right-0 flex justify-center pointer-events-none z-30">
+                                            <span className={`px-6 py-3 rounded-2xl font-black text-sm shadow-2xl animate-bounce bg-white border-4 transform rotate-1 ${
+                                                message.type === 'bad' ? 'text-red-500 border-red-200' : 
+                                                message.type === 'iron' ? 'text-purple-600 border-purple-300 scale-110' : 
+                                                'text-green-600 border-green-200'
+                                            }`}>
                                                 {message.text}
                                             </span>
                                         </div>
@@ -365,44 +420,50 @@
                         </div>
                     </div>
 
-                    <div className="relative h-48 w-full">
-                        <svg viewBox="0 0 400 200" className="w-full h-full overflow-visible">
+                    <div className="relative h-64 w-full">
+                        <svg viewBox="0 0 400 240" className="w-full h-full overflow-visible">
                             {/* Grid lines */}
-                            <line x1="50" y1="180" x2="380" y2="180" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
-                            <line x1="50" y1="100" x2="380" y2="100" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
-                            <line x1="50" y1="20" x2="380" y2="20" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+                            <line x1="60" y1="200" x2="380" y2="200" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+                            <line x1="60" y1="110" x2="380" y2="110" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+                            <line x1="60" y1="20" x2="380" y2="20" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
 
-                            {/* Axes Text */}
-                            <text x="40" y="185" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Start</text>
-                            <text x="40" y="25" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Super</text>
+                            {/* Axes Icons (Smiley vs Tired) */}
+                            <g transform="translate(20, 190)">
+                                <circle cx="12" cy="12" r="14" fill="#E2E8F0" />
+                                <Frown size={20} className="text-slate-500" x="2" y="2" />
+                            </g>
+                            <g transform="translate(20, 10)">
+                                <circle cx="12" cy="12" r="14" fill="#BBF7D0" />
+                                <Smile size={20} className="text-green-600" x="2" y="2" />
+                            </g>
 
                             {/* Line Path */}
                             <path 
-                                d="M 50 160 L 215 90 L 380 40" 
+                                d="M 60 180 L 220 100 L 380 40" 
                                 fill="none" 
                                 stroke="url(#gradientLine)" 
-                                strokeWidth="6" 
+                                strokeWidth="8" 
                                 strokeLinecap="round"
                                 className="animate-draw-line"
                             />
                             
                             <defs>
                                 <linearGradient id="gradientLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stopColor="#F58220" />
-                                    <stop offset="50%" stopColor="#EC4899" />
-                                    <stop offset="100%" stopColor="#7E22CE" />
+                                    <stop offset="0%" stopColor="#94A3B8" />
+                                    <stop offset="50%" stopColor="#F58220" />
+                                    <stop offset="100%" stopColor="#22C55E" />
                                 </linearGradient>
                             </defs>
 
                             {/* Points with pop-in animation */}
-                            <circle cx="50" cy="160" r="8" fill="#F58220" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '0.5s'}} />
-                            <circle cx="215" cy="90" r="8" fill="#EC4899" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '1.0s'}} />
-                            <circle cx="380" cy="40" r="8" fill="#7E22CE" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '1.5s'}} />
+                            <circle cx="60" cy="180" r="8" fill="#94A3B8" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '0.5s'}} />
+                            <circle cx="220" cy="100" r="8" fill="#F58220" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '1.0s'}} />
+                            <circle cx="380" cy="40" r="10" fill="#22C55E" stroke="white" strokeWidth="4" className="animate-pop-in" style={{animationDelay: '1.5s'}} />
 
                             {/* Labels */}
-                            <text x="50" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">Day 1</text>
-                            <text x="215" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">3 Weeks</text>
-                            <text x="380" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">6 Weeks</text>
+                            <text x="60" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">Day 1</text>
+                            <text x="220" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">3 Weeks</text>
+                            <text x="380" y="230" textAnchor="middle" className="text-xs font-bold fill-gray-500">6 Weeks</text>
 
                             {/* Fun Sticker Tooltip */}
                             <g className="animate-pop-in" style={{animationDelay: '1.8s'}}>
@@ -494,7 +555,7 @@
                                         <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.6" />
                                     </radialGradient>
                                 </defs>
-                                <foreignObject x="150" y="150" width="100" height="100">
+                                <foreignObject x="150" y="150" width="100" height="120">
                                     <BearCharacter className="w-full h-full" />
                                 </foreignObject>
                                 <g>
