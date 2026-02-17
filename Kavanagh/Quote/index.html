@@ -599,13 +599,13 @@
                     if (craneImg) {
                         const imgX = 15;
                         const imgY = y;
-                        const imgW = 175;
-                        const imgH = 70;
+                        const imgW = 155;
+                        const imgH = 50;
                         
                         // Rounded border frame (Radius increased to 6)
                         doc.setDrawColor(...borderGrey);
                         doc.setLineWidth(0.5);
-                        doc.roundedRect(imgX - 1, imgY - 1, imgW + 2, imgH + 2, 6, 6, 'D');
+                        doc.roundedRect(imgX - 1, imgY - 1, imgW + 2.5, imgH + 2.5, 6, 6, 'D');
                         
                         doc.addImage(craneImg, 'JPEG', imgX, imgY, imgW, imgH);
                     }
