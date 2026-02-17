@@ -59,26 +59,47 @@
         .animate-spin-slow {
             animation: spin-slow 12s linear infinite;
         }
+
+        /* Chart Animations */
+        @keyframes drawLine {
+            from { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+            to { stroke-dasharray: 1000; stroke-dashoffset: 0; }
+        }
+        .animate-draw-line {
+            animation: drawLine 2s ease-out forwards;
+        }
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform-origin: center;
+        }
     </style>
 </head>
 <body class="bg-orange-50/50">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef } from 'react';
+        import React, { useState, useEffect, useRef, useCallback } from 'react';
         import { createRoot } from 'react-dom/client';
         import { 
             Sun, Shield, Zap, Smile, Star, Check, ArrowRight, 
-            X, Heart, Cloud, Sparkles, PlayCircle
+            X, Heart, Cloud, Sparkles, PlayCircle, Trophy, RefreshCw, ArrowLeft
         } from 'lucide-react';
 
         // --- Custom Assets ---
 
-        /**
-         * BearCharacter: The cute mascot from the game
-         */
-        const BearCharacter = ({ className }) => (
+        const BearCharacter = ({ className, mood = 'happy', isPoweredUp = false }) => (
             <svg viewBox="0 0 100 110" className={className}>
+                {/* Iron Shield Aura */}
+                {isPoweredUp && (
+                    <circle cx="50" cy="55" r="50" fill="#7E22CE" opacity="0.2">
+                        <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                )}
                 {/* Ears */}
                 <circle cx="20" cy="25" r="12" fill="#8B4513" />
                 <circle cx="80" cy="25" r="12" fill="#8B4513" />
@@ -95,16 +116,17 @@
                 <circle cx="65" cy="45" r="4" fill="white" />
                 <circle cx="65" cy="45" r="2" fill="black" />
                 {/* Mouth */}
-                <path d="M40 68 Q50 75 60 68" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />
+                {mood === 'happy' && <path d="M40 68 Q50 75 60 68" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />}
+                {mood === 'worried' && <path d="M40 72 Q50 65 60 72" stroke="#3E2723" strokeWidth="2" fill="none" strokeLinecap="round" />}
+                {mood === 'super' && <path d="M40 68 Q50 78 60 68" stroke="#3E2723" strokeWidth="3" fill="none" strokeLinecap="round" />}
                 {/* Cheeks */}
                 <circle cx="25" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
                 <circle cx="75" cy="55" r="5" fill="#FFB6C1" opacity="0.6" />
+                {/* Body for game */}
+                {mood !== 'head-only' && <path d="M15 85 Q50 115 85 85 L85 110 L15 110 Z" fill={isPoweredUp ? "#5C2D91" : "#F58220"} />}
             </svg>
         );
 
-        /**
-         * BrandLogo: "Active Immune KiDS" SVG Logo
-         */
         const BrandLogo = () => (
             <div className="flex items-center gap-2">
                 <div className="relative w-10 h-10 bg-orange-500 rounded-lg transform -rotate-3 flex items-center justify-center shadow-md">
@@ -119,6 +141,275 @@
                         <span className="text-green-500 bg-green-100 px-1 rounded-sm">i</span>
                         <span className="text-orange-500 bg-orange-100 px-1 rounded-sm">D</span>
                         <span className="text-red-500 bg-red-100 px-1 rounded-sm">S</span>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- GAME COMPONENT ---
+
+        const ActiveImmuneGame = ({ onClose }) => {
+            const [gameState, setGameState] = useState('start');
+            const [score, setScore] = useState(0);
+            const [health, setHealth] = useState(3);
+            const [items, setItems] = useState([]);
+            const [bearX, setBearX] = useState(40); 
+            const [powerUpTime, setPowerUpTime] = useState(0);
+            const [message, setMessage] = useState(null);
+            
+            const gameLoopRef = useRef();
+            const containerRef = useRef(null);
+            const lastSpawnTime = useRef(0);
+
+            const BEAR_SIZE = 20; 
+            const ITEM_SIZE = 12;
+
+            const handleInput = useCallback((clientX) => {
+                if (gameState !== 'playing' || !containerRef.current) return;
+                const rect = containerRef.current.getBoundingClientRect();
+                const relativeX = clientX - rect.left;
+                const percentageX = (relativeX / rect.width) * 100;
+                setBearX(Math.max(0, Math.min(100 - BEAR_SIZE, percentageX - (BEAR_SIZE / 2))));
+            }, [gameState]);
+
+            const spawnItem = useCallback(() => {
+                const rand = Math.random();
+                let type = 'vitD';
+                if (rand < 0.3) type = 'vitD';
+                else if (rand < 0.5) type = 'vitC';
+                else if (rand < 0.65) type = 'zinc';
+                else if (rand < 0.75) type = 'iron';
+                else if (rand < 0.9) type = 'germ';
+                else type = 'cloud';
+
+                setItems(prev => [...prev, {
+                    id: Date.now(),
+                    x: Math.random() * (100 - ITEM_SIZE),
+                    y: -20,
+                    type,
+                    speed: 0.5 + Math.random() * 0.4
+                }]);
+            }, []);
+
+            const updateGame = useCallback(() => {
+                if (gameState !== 'playing') return;
+
+                if (powerUpTime > 0) setPowerUpTime(prev => Math.max(0, prev - 16));
+
+                setItems(prevItems => {
+                    const nextItems = [];
+                    for (const item of prevItems) {
+                        item.y += item.speed;
+                        
+                        // Collision
+                        const bearBox = { x: bearX, y: 80, w: BEAR_SIZE, h: BEAR_SIZE }; // Approximate logic
+                        const itemBox = { x: item.x, y: item.y, w: ITEM_SIZE, h: ITEM_SIZE };
+
+                        const isColliding = 
+                            bearBox.x < itemBox.x + itemBox.w &&
+                            bearBox.x + bearBox.w > itemBox.x &&
+                            bearBox.y < itemBox.y + itemBox.h &&
+                            bearBox.h + bearBox.y > itemBox.y;
+
+                        if (isColliding) {
+                            handleCollision(item.type);
+                        } else if (item.y < 110) {
+                            nextItems.push(item);
+                        }
+                    }
+                    return nextItems;
+                });
+
+                if (Date.now() - lastSpawnTime.current > 800) {
+                    spawnItem();
+                    lastSpawnTime.current = Date.now();
+                }
+                gameLoopRef.current = requestAnimationFrame(updateGame);
+            }, [gameState, bearX, powerUpTime, spawnItem]);
+
+            const handleCollision = (type) => {
+                const isSuper = powerUpTime > 0;
+                if (type === 'iron') {
+                    setPowerUpTime(5000);
+                    flashMessage("IRON POWER: Energy!", 'iron');
+                    setScore(s => s + 200);
+                } else if (['vitD', 'vitC', 'zinc'].includes(type)) {
+                    setScore(s => s + 100);
+                    flashMessage("Yum! Vitamins!", 'good');
+                } else if (type === 'germ') {
+                    if (isSuper) {
+                        setScore(s => s + 50);
+                        flashMessage("Iron Protection!", 'good');
+                    } else {
+                        setHealth(h => {
+                            if (h <= 1) setGameState('gameover');
+                            return h - 1;
+                        });
+                        flashMessage("Ouch! Germs!", 'bad');
+                    }
+                } else if (type === 'cloud') {
+                     if (isSuper) {
+                        flashMessage("Energy Boost!", 'good');
+                    } else {
+                        setScore(s => Math.max(0, s - 50));
+                        flashMessage("Tiredness...", 'bad');
+                    }
+                }
+            };
+
+            const flashMessage = (text, type) => {
+                setMessage({ text, type });
+                setTimeout(() => setMessage(null), 1500);
+            };
+
+            useEffect(() => {
+                if (gameState === 'playing') {
+                    lastSpawnTime.current = Date.now();
+                    gameLoopRef.current = requestAnimationFrame(updateGame);
+                }
+                return () => cancelAnimationFrame(gameLoopRef.current);
+            }, [gameState, updateGame]);
+
+            return (
+                <div className="fixed inset-0 z-[60] bg-orange-50 flex flex-col items-center justify-center p-4">
+                    <button onClick={onClose} className="absolute top-4 left-4 bg-white p-2 rounded-full shadow-md z-50 flex items-center gap-2 text-sm font-bold text-gray-600 hover:bg-gray-100">
+                        <ArrowLeft size={16} /> Back to Home
+                    </button>
+                    
+                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-orange-200 relative h-[80vh]">
+                        {/* Header */}
+                        <div className="bg-white p-3 border-b-2 border-orange-100 flex justify-between items-center z-10 relative">
+                            <h3 className="font-black text-orange-500 kid-font">Active Bear</h3>
+                            <div className="flex gap-2">
+                                {[...Array(3)].map((_, i) => <Heart key={i} size={16} className={i < health ? "fill-red-500 text-red-500" : "fill-gray-200 text-gray-200"} />)}
+                            </div>
+                            <div className="font-black text-slate-700">{score}</div>
+                        </div>
+
+                        {/* Game Area */}
+                        <div 
+                            ref={containerRef}
+                            className="relative w-full h-full bg-gradient-to-b from-blue-100 to-white overflow-hidden"
+                            onMouseMove={(e) => handleInput(e.clientX)}
+                            onTouchMove={(e) => handleInput(e.touches[0].clientX)}
+                        >
+                            {gameState === 'start' && (
+                                <div className="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center text-center p-6">
+                                    <div className="w-24 h-24 mb-4 animate-bounce"><BearCharacter mood="happy" /></div>
+                                    <h2 className="text-2xl font-black text-orange-600 mb-2 kid-font">Immunity Adventure!</h2>
+                                    <p className="text-gray-500 text-sm mb-6">Collect Vitamins & the Purple Bolt for Iron Power!</p>
+                                    <button onClick={() => { setScore(0); setHealth(3); setGameState('playing'); }} className="bg-orange-500 text-white px-8 py-3 rounded-full font-bold shadow-lg animate-pulse flex items-center gap-2">
+                                        <PlayCircle /> Start
+                                    </button>
+                                </div>
+                            )}
+
+                            {gameState === 'gameover' && (
+                                <div className="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center text-center p-6 text-white">
+                                    <h2 className="text-3xl font-bold mb-2 kid-font">Good Try!</h2>
+                                    <div className="text-5xl font-black text-orange-400 mb-6">{score}</div>
+                                    <button onClick={() => { setScore(0); setHealth(3); setGameState('playing'); setItems([]); }} className="bg-white text-orange-600 px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-2">
+                                        <RefreshCw /> Play Again
+                                    </button>
+                                </div>
+                            )}
+
+                            {gameState === 'playing' && (
+                                <>
+                                    <div className="absolute bottom-0 transition-all duration-75" style={{ left: `${bearX}%`, width: `${BEAR_SIZE}%` }}>
+                                        <BearCharacter mood={powerUpTime > 0 ? 'super' : 'happy'} isPoweredUp={powerUpTime > 0} />
+                                    </div>
+                                    {items.map(item => (
+                                        <div key={item.id} className="absolute flex items-center justify-center" style={{ left: `${item.x}%`, top: `${item.y}%`, width: `${ITEM_SIZE}%` }}>
+                                            {item.type === 'vitD' && <Sun className="text-yellow-400 fill-yellow-200" />}
+                                            {item.type === 'vitC' && <div className="w-full h-full rounded-full bg-orange-500 border-2 border-orange-600" />}
+                                            {item.type === 'zinc' && <Shield className="text-blue-400 fill-blue-100" />}
+                                            {item.type === 'iron' && <Zap className="text-purple-600 fill-purple-300 drop-shadow-lg" />}
+                                            {item.type === 'germ' && <div className="w-full h-full bg-green-500 rounded-full opacity-80 animate-pulse" />}
+                                            {item.type === 'cloud' && <Cloud className="text-gray-300 fill-gray-100" />}
+                                        </div>
+                                    ))}
+                                    {message && (
+                                        <div className="absolute top-1/4 left-0 right-0 flex justify-center pointer-events-none">
+                                            <span className={`px-4 py-2 rounded-xl font-bold text-xs shadow-xl animate-bounce bg-white border-2 ${message.type === 'bad' ? 'text-red-500 border-red-200' : 'text-green-600 border-green-200'}`}>
+                                                {message.text}
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- CHART COMPONENT ---
+
+        const PlaytimePowerChart = () => (
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-xl border-4 border-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100 rounded-bl-full -mr-16 -mt-16 z-0"></div>
+                
+                <div className="relative z-10">
+                    <div className="flex justify-between items-end mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Zap className="text-purple-600 fill-purple-200" size={24} />
+                                <h3 className="text-2xl font-black text-slate-800 kid-font">Playtime Power</h3>
+                            </div>
+                            <p className="text-gray-500 text-sm font-medium">More energy for running & fun!</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-4xl font-black text-green-500 kid-font animate-bounce">+94%</div>
+                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Energy Boost</div>
+                        </div>
+                    </div>
+
+                    <div className="relative h-48 w-full">
+                        <svg viewBox="0 0 400 200" className="w-full h-full overflow-visible">
+                            {/* Grid lines */}
+                            <line x1="50" y1="180" x2="380" y2="180" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+                            <line x1="50" y1="100" x2="380" y2="100" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+                            <line x1="50" y1="20" x2="380" y2="20" stroke="#f3f4f6" strokeWidth="2" strokeDasharray="4 4"/>
+
+                            {/* Axes Text */}
+                            <text x="40" y="185" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Start</text>
+                            <text x="40" y="25" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Super</text>
+
+                            {/* Line Path */}
+                            <path 
+                                d="M 50 160 L 215 90 L 380 40" 
+                                fill="none" 
+                                stroke="url(#gradientLine)" 
+                                strokeWidth="6" 
+                                strokeLinecap="round"
+                                className="animate-draw-line"
+                            />
+                            
+                            <defs>
+                                <linearGradient id="gradientLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#F58220" />
+                                    <stop offset="50%" stopColor="#EC4899" />
+                                    <stop offset="100%" stopColor="#7E22CE" />
+                                </linearGradient>
+                            </defs>
+
+                            {/* Points with pop-in animation */}
+                            <circle cx="50" cy="160" r="8" fill="#F58220" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '0.5s'}} />
+                            <circle cx="215" cy="90" r="8" fill="#EC4899" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '1.0s'}} />
+                            <circle cx="380" cy="40" r="8" fill="#7E22CE" stroke="white" strokeWidth="3" className="animate-pop-in" style={{animationDelay: '1.5s'}} />
+
+                            {/* Labels */}
+                            <text x="50" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">Day 1</text>
+                            <text x="215" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">3 Weeks</text>
+                            <text x="380" y="200" textAnchor="middle" className="text-xs font-bold fill-gray-500">6 Weeks</text>
+
+                            {/* Fun Sticker Tooltip */}
+                            <g className="animate-pop-in" style={{animationDelay: '1.8s'}}>
+                                <path d="M 330 20 Q 380 0 380 40 Q 380 80 330 60 Q 280 80 280 40 Q 280 0 330 20" fill="#FFD700" stroke="white" strokeWidth="3" />
+                                <text x="330" y="45" textAnchor="middle" className="text-[10px] font-black fill-yellow-900 kid-font">MAX POWER!</text>
+                            </g>
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -162,8 +453,6 @@
             return (
                 <div className="py-16 md:py-20 bg-gradient-to-b from-white to-orange-50 relative overflow-hidden">
                     <div className="max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-12 items-center">
-                        
-                        {/* Text Content */}
                         <div className="order-2 lg:order-1">
                             <div className="inline-block px-4 py-1 rounded-full bg-orange-100 text-orange-700 font-bold text-xs md:text-sm mb-4 border border-orange-200">
                                 POWERED BY SCIENCE
@@ -174,7 +463,6 @@
                             <p className="text-gray-600 mb-8 text-lg">
                                 Ordinary vitamins can get lost in the tummy. Active Immune is specially designed to get where it's needed, creating a magical shield of protection!
                             </p>
-
                             <div className="space-y-4">
                                 <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-yellow-400 flex items-start gap-4 hover:shadow-md transition-shadow">
                                     <div className="p-2 bg-yellow-100 rounded-full text-yellow-600"><Sun size={24} /></div>
@@ -193,13 +481,11 @@
                             </div>
                         </div>
 
-                        {/* Visualization */}
                         <div className="order-1 lg:order-2 relative h-[400px] bg-white rounded-[2rem] shadow-2xl p-4 flex items-center justify-center border-4 border-white overflow-hidden">
                             <div className="absolute inset-0 bg-blue-50/50"></div>
                             <div className="absolute top-4 right-4 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-blue-500 uppercase tracking-wider shadow-sm z-10">
                                 Immune Simulation
                             </div>
-                            
                             <svg viewBox="0 0 400 400" className="w-full h-full relative z-0">
                                 <defs>
                                     <radialGradient id="shieldGradient" cx="50%" cy="50%" r="50%">
@@ -208,38 +494,19 @@
                                         <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.6" />
                                     </radialGradient>
                                 </defs>
-
-                                {/* The Bear Center */}
                                 <foreignObject x="150" y="150" width="100" height="100">
                                     <BearCharacter className="w-full h-full" />
                                 </foreignObject>
-
-                                {/* Orbiting Particles (Vitamins) */}
                                 <g>
-                                    <circle r="6" fill="#FBBF24">
-                                        <animateMotion dur="4s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
-                                    </circle>
-                                    <circle r="6" fill="#F97316">
-                                        <animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
-                                    </circle>
-                                    <circle r="6" fill="#8B5CF6">
-                                        <animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" />
-                                    </circle>
+                                    <circle r="6" fill="#FBBF24"><animateMotion dur="4s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" /></circle>
+                                    <circle r="6" fill="#F97316"><animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" /></circle>
+                                    <circle r="6" fill="#8B5CF6"><animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M 200 200 m -120 0 a 120 120 0 1 0 240 0 a 120 120 0 1 0 -240 0" /></circle>
                                 </g>
-
-                                {/* The Shield Pulse */}
                                 <circle cx="200" cy="200" r="90" fill="url(#shieldGradient)" stroke="#60A5FA" strokeWidth="2" strokeDasharray="10 5">
                                     <animate attributeName="r" values="90;100;90" dur="3s" repeatCount="indefinite" />
                                     <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
                                     <animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="20s" repeatCount="indefinite" />
                                 </circle>
-
-                                {/* Sparkles */}
-                                <g className="opacity-0">
-                                    <path d="M 200 100 L 205 110 L 215 110 L 207 117 L 210 127 L 200 120 L 190 127 L 193 117 L 185 110 L 195 110 Z" fill="#FBBF24" />
-                                    <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
-                                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -20" dur="2s" repeatCount="indefinite" />
-                                </g>
                             </svg>
                         </div>
                     </div>
@@ -247,19 +514,13 @@
             );
         };
 
-        // --- Comparison Section ---
-
         const ComparisonTable = () => (
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <FadeInSection className="bg-white p-6 rounded-3xl shadow-xl border-t-8 border-orange-500 relative overflow-hidden transform hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-4 opacity-5">
-                       <Shield size={100} />
-                    </div>
+                    <div className="absolute top-0 right-0 p-4 opacity-5"><Shield size={100} /></div>
                     <div className="flex items-center gap-3 mb-6">
                         <div className="bg-orange-100 p-2 rounded-full"><Smile className="text-orange-500" /></div>
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-800 kid-font">
-                            Active Immune Chews
-                        </h3>
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-800 kid-font">Active Immune Chews</h3>
                     </div>
                     <ul className="space-y-4">
                         {[
@@ -270,21 +531,16 @@
                             "One chew a day!"
                         ].map((item, i) => (
                             <li key={i} className="flex items-start gap-3">
-                                <div className="mt-1 bg-green-100 p-1 rounded-full text-green-600 flex-shrink-0">
-                                    <Check size={14} strokeWidth={3}/>
-                                </div>
+                                <div className="mt-1 bg-green-100 p-1 rounded-full text-green-600 flex-shrink-0"><Check size={14} strokeWidth={3}/></div>
                                 <span className="text-base text-gray-700 font-bold">{item}</span>
                             </li>
                         ))}
                     </ul>
                 </FadeInSection>
-
                 <FadeInSection delay={200} className="bg-gray-100 p-6 rounded-3xl border border-gray-200 opacity-90">
                     <div className="flex items-center gap-3 mb-6">
                          <div className="bg-gray-200 p-2 rounded-full"><Cloud className="text-gray-500" /></div>
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-400 kid-font">
-                            Ordinary Gummies
-                        </h3>
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-400 kid-font">Ordinary Gummies</h3>
                     </div>
                     <ul className="space-y-4">
                         {[
@@ -295,9 +551,7 @@
                             "Multiple sweets needed"
                         ].map((item, i) => (
                             <li key={i} className="flex items-start gap-3">
-                                <div className="mt-1 bg-red-100 p-1 rounded-full text-red-500 flex-shrink-0">
-                                    <X size={14} strokeWidth={3}/>
-                                </div>
+                                <div className="mt-1 bg-red-100 p-1 rounded-full text-red-500 flex-shrink-0"><X size={14} strokeWidth={3}/></div>
                                 <span className="text-base text-gray-500">{item}</span>
                             </li>
                         ))}
@@ -310,7 +564,8 @@
 
         const ActiveImmuneKids = () => {
             const [scrolled, setScrolled] = useState(false);
-            const basePrice = 14.99; // Euro
+            const [showGame, setShowGame] = useState(false);
+            const basePrice = 14.99;
 
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -318,10 +573,12 @@
                 return () => window.removeEventListener('scroll', handleScroll);
             }, []);
 
+            if (showGame) {
+                return <ActiveImmuneGame onClose={() => setShowGame(false)} />;
+            }
+
             return (
                 <div className="min-h-screen font-sans text-gray-900 overflow-x-hidden">
-                    
-                    {/* Navigation */}
                     <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-4 md:py-6'}`}>
                         <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
                             <BrandLogo />
@@ -331,46 +588,39 @@
                         </div>
                     </nav>
 
-                    {/* Hero Section */}
                     <header className="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden bg-orange-50">
-                        {/* Blobs */}
                         <AnimatedBlob color="#FDBA74" className="w-[400px] h-[400px] top-0 left-0 -translate-x-1/3 -translate-y-1/4" delay={0} />
                         <AnimatedBlob color="#C4B5FD" className="w-[300px] h-[300px] bottom-0 right-0 translate-x-1/3 translate-y-1/4" delay={2} />
                         
                         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-8 items-center">
-                            
-                            {/* Copy */}
                             <div className="text-center lg:text-left order-2 lg:order-1 space-y-6">
                                 <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm animate-bounce">
                                     <Star className="text-yellow-400 fill-yellow-400" size={16} />
                                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Parents' #1 Choice</span>
                                 </div>
-                                
                                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-none text-slate-900 kid-font">
                                     Little Heroes, <br/>
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Big Defense.</span>
                                 </h1>
-                                
                                 <p className="text-lg md:text-xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
                                     The yummy chew that helps protect your little ones while they explore, play, and grow. Packed with Sunshine Vitamin D, C & Zinc!
                                 </p>
-                                
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
                                     <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black text-xl shadow-lg shadow-orange-500/30 transform hover:scale-105 transition-all flex items-center justify-center gap-2">
                                         Shop Chews <ArrowRight />
                                     </button>
-                                    <button className="bg-white hover:bg-gray-50 text-slate-700 px-8 py-4 rounded-2xl font-bold text-xl shadow-sm border border-gray-100 flex items-center justify-center gap-2 group">
+                                    <button 
+                                        onClick={() => setShowGame(true)}
+                                        className="bg-white hover:bg-gray-50 text-slate-700 px-8 py-4 rounded-2xl font-bold text-xl shadow-sm border border-gray-100 flex items-center justify-center gap-2 group"
+                                    >
                                         <PlayCircle className="text-purple-500 group-hover:scale-110 transition-transform" /> Play Game
                                     </button>
                                 </div>
                                 <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Free shipping in Ireland over €50</p>
                             </div>
 
-                            {/* Hero Image / 3D Composition */}
                             <div className="order-1 lg:order-2 relative flex justify-center items-center h-[400px] md:h-[500px]">
-                                {/* The Bottle (Placeholder for product image, using CSS representation for now or image) */}
                                 <div className="relative z-20 w-64 md:w-80 animate-float">
-                                    {/* Simulated Bottle using div since I can't use real image url perfectly */}
                                     <div className="bg-white rounded-3xl shadow-2xl p-6 border-2 border-gray-100 relative overflow-hidden h-[400px] flex flex-col items-center">
                                         <div className="w-full bg-gradient-to-b from-orange-400 to-orange-500 h-48 rounded-2xl mb-4 relative overflow-hidden flex items-center justify-center">
                                              <BearCharacter className="w-40 h-40 absolute bottom-[-20px]" />
@@ -385,23 +635,18 @@
                                             <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded">Vit C</span>
                                             <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">Zinc</span>
                                         </div>
-                                        
-                                        {/* Badge */}
                                         <div className="absolute top-4 left-4 w-16 h-16 bg-purple-600 rounded-full flex flex-col items-center justify-center text-white text-center shadow-lg border-2 border-white transform -rotate-12">
                                             <span className="text-xs font-bold">60</span>
                                             <span className="text-[8px] font-bold uppercase">Chews</span>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                {/* Background Elements */}
                                 <div className="absolute top-10 right-10 text-yellow-400 animate-spin-slow opacity-60"><Sun size={80} /></div>
                                 <div className="absolute bottom-20 left-10 text-blue-400 opacity-40"><Cloud size={60} fill="#BFDBFE" /></div>
                             </div>
                         </div>
                     </header>
 
-                    {/* Features Grid */}
                     <section className="py-16 bg-white">
                         <div className="max-w-7xl mx-auto px-4 md:px-6">
                             <div className="text-center mb-12">
@@ -409,7 +654,7 @@
                                 <p className="text-gray-500">Approved by little taste testers everywhere.</p>
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
                                 {[
                                     { icon: Smile, color: "text-orange-500", bg: "bg-orange-100", title: "Yummy Taste", desc: "Natural Orange flavour" },
                                     { icon: Shield, color: "text-blue-500", bg: "bg-blue-100", title: "Super Strong", desc: "Immune support" },
@@ -425,13 +670,17 @@
                                     </FadeInSection>
                                 ))}
                             </div>
+
+                            {/* PLAYTIME POWER CHART */}
+                            <FadeInSection delay={300} className="max-w-4xl mx-auto">
+                                <PlaytimePowerChart />
+                            </FadeInSection>
+
                         </div>
                     </section>
 
-                    {/* Science Section */}
                     <ShieldSimulation />
 
-                    {/* Comparison */}
                     <section className="py-20 bg-orange-50/50">
                         <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
                             <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4 kid-font">The Better Choice</h2>
@@ -440,17 +689,14 @@
                         </div>
                     </section>
 
-                    {/* CTA Section */}
                     <section className="py-20 bg-purple-900 relative overflow-hidden">
                         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
-                        
                         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center text-white">
-                            <BearCharacter className="w-24 h-24 mx-auto mb-6 drop-shadow-lg" />
+                            <div className="w-24 h-24 mx-auto mb-6"><BearCharacter /></div>
                             <h2 className="text-3xl md:text-5xl font-black mb-6 kid-font">Ready to boost their immunity?</h2>
                             <p className="text-purple-200 text-lg mb-10 max-w-2xl mx-auto">
                                 Give them the support they need for school, play, and everything in between.
                             </p>
-                            
                             <button className="bg-gradient-to-r from-orange-400 to-pink-500 hover:from-orange-500 hover:to-pink-600 text-white px-12 py-5 rounded-full font-black text-xl shadow-lg shadow-purple-900/50 transform hover:scale-105 transition-all flex items-center gap-3 mx-auto w-full md:w-auto justify-center">
                                 Add to Basket - €{basePrice} <ArrowRight />
                             </button>
