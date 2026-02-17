@@ -1,0 +1,410 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, Zap, Scale, Brain, Shield, ChevronDown, Check, ArrowRight } from 'lucide-react';
+
+// --- Components ---
+
+/**
+ * AnimatedSplash: Creates the background abstract "ink" effects
+ */
+const AnimatedSplash = ({ color, className, delay = 0 }) => (
+  <div 
+    className={`absolute rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob ${className}`}
+    style={{ 
+      backgroundColor: color,
+      animationDelay: `${delay}s`
+    }}
+  />
+);
+
+/**
+ * BenefitCard: Displays individual benefits with hover effects
+ */
+const BenefitCard = ({ icon: Icon, title, desc, delay }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const domRef = useRef();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => setIsVisible(entry.isIntersecting));
+    });
+    if (domRef.current) observer.observe(domRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div 
+      ref={domRef}
+      className={`p-6 rounded-2xl bg-white/80 backdrop-blur-md border border-white/50 shadow-xl transition-all duration-700 transform hover:-translate-y-2 hover:shadow-2xl ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mb-4 text-purple-700 shadow-inner">
+        <Icon size={24} strokeWidth={2} />
+      </div>
+      <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+      <p className="text-gray-600 text-sm leading-relaxed">{desc}</p>
+    </div>
+  );
+};
+
+/**
+ * ScienceSection: SVG Animation of the gut
+ */
+const ScienceSection = () => {
+  const [activeTab, setActiveTab] = useState('iron'); // 'iron' or 'vitamin'
+
+  return (
+    <div className="py-20 bg-gradient-to-b from-white to-purple-50 relative overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+        
+        {/* Left: Text Content */}
+        <div>
+          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-6">
+            The Active Difference
+          </h2>
+          <div className="space-y-4 mb-8">
+            <button 
+              onClick={() => setActiveTab('iron')}
+              className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center gap-4 ${activeTab === 'iron' ? 'bg-purple-600 text-white shadow-lg scale-105' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+            >
+              <div className={`p-2 rounded-full ${activeTab === 'iron' ? 'bg-white/20' : 'bg-purple-100 text-purple-600'}`}>1</div>
+              <div>
+                <h4 className="font-bold">Active Iron Capsule</h4>
+                <p className="text-sm opacity-90">Targets the DMT-1 for optimal absorption.</p>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => setActiveTab('vitamin')}
+              className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center gap-4 ${activeTab === 'vitamin' ? 'bg-pink-500 text-white shadow-lg scale-105' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+            >
+              <div className={`p-2 rounded-full ${activeTab === 'vitamin' ? 'bg-white/20' : 'bg-pink-100 text-pink-600'}`}>2</div>
+              <div>
+                <h4 className="font-bold">Active Multivitamin</h4>
+                <p className="text-sm opacity-90">Delayed release for synchronized support.</p>
+              </div>
+            </button>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
+            <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+              <Sparkles size={18} className="text-yellow-500" />
+              Result:
+            </h4>
+            <p className="text-gray-600">
+              {activeTab === 'iron' 
+                ? "Helps protect the gut from inflammation and oxidation. Clinically proven better absorption of iron sulphate."
+                : "Absorbed in the lower large intestine without conflict. Complete nutritional support without the side effects."}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: SVG Visualization */}
+        <div className="relative h-[500px] bg-white rounded-3xl shadow-2xl p-8 flex items-center justify-center border border-gray-100">
+          <div className="absolute top-4 right-4 bg-gray-50 px-3 py-1 rounded-full text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Gut Simulation
+          </div>
+          
+          <svg viewBox="0 0 400 600" className="w-full h-full drop-shadow-xl">
+            {/* The Gut Path (Stomach to Intestine) */}
+            <path 
+              d="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550" 
+              fill="none" 
+              stroke="#E5E7EB" 
+              strokeWidth="40" 
+              strokeLinecap="round"
+            />
+             <path 
+              d="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550" 
+              fill="none" 
+              stroke="#FFF" 
+              strokeWidth="30" 
+              strokeLinecap="round"
+            />
+            
+            {/* Labels */}
+            <text x="210" y="150" className="text-xs fill-gray-400 font-sans">Stomach</text>
+            <text x="250" y="350" className="text-xs fill-gray-400 font-sans">DMT-1 (Iron Site)</text>
+            <text x="230" y="500" className="text-xs fill-gray-400 font-sans">Lower Intestine</text>
+
+            {/* Iron Animation Path */}
+            {activeTab === 'iron' && (
+              <>
+                <circle r="8" fill="#7E22CE">
+                  <animateMotion 
+                    dur="2s" 
+                    repeatCount="indefinite"
+                    path="M 150 50 Q 150 150 100 200 Q 50 250 150 350"
+                    keyPoints="0;1"
+                    keyTimes="0;1"
+                    calcMode="spline"
+                    keySplines="0.4 0 0.2 1"
+                  />
+                  <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
+                </circle>
+                {/* Absorption Burst at DMT-1 */}
+                <circle cx="150" cy="350" r="0" fill="none" stroke="#7E22CE" strokeWidth="2" opacity="0.5">
+                  <animate attributeName="r" values="0;40" dur="1.5s" begin="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.8;0" dur="1.5s" begin="1.5s" repeatCount="indefinite" />
+                </circle>
+              </>
+            )}
+
+            {/* Vitamin Animation Path */}
+            {activeTab === 'vitamin' && (
+              <>
+                <circle r="8" fill="#EC4899">
+                  <animateMotion 
+                    dur="3s" 
+                    repeatCount="indefinite"
+                    path="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550"
+                    keyPoints="0;1"
+                    keyTimes="0;1"
+                    calcMode="spline"
+                    keySplines="0.4 0 0.2 1"
+                  />
+                  <animate attributeName="opacity" values="1;0" dur="3s" repeatCount="indefinite" />
+                </circle>
+                 {/* Absorption Burst at Lower Intestine */}
+                 <circle cx="200" cy="550" r="0" fill="none" stroke="#EC4899" strokeWidth="2" opacity="0.5">
+                  <animate attributeName="r" values="0;40" dur="1.5s" begin="2.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.8;0" dur="1.5s" begin="2.5s" repeatCount="indefinite" />
+                </circle>
+              </>
+            )}
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App Component ---
+
+export default function ActiveIronPresentation() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-purple-200 selection:text-purple-900 overflow-x-hidden">
+      
+      {/* Navigation */}
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-black tracking-tighter text-gray-800">ACTIVE <span className="text-purple-700">IRON</span></span>
+            <span className="text-xs font-semibold px-2 py-0.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full">WOMEN</span>
+          </div>
+          <button className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-full font-medium transition-transform hover:scale-105">
+            Buy Now €24.99
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <header className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        {/* Animated Background Splashes */}
+        <AnimatedSplash color="#9333ea" className="w-[500px] h-[500px] top-0 left-0 -translate-x-1/2 -translate-y-1/4" delay={0} />
+        <AnimatedSplash color="#ec4899" className="w-[400px] h-[400px] bottom-0 right-0 translate-x-1/3 translate-y-1/4" delay={2} />
+        <AnimatedSplash color="#f97316" className="w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" delay={4} />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+          {/* Text Content */}
+          <div className="space-y-8 text-center lg:text-left">
+            <div className="inline-block">
+              <span className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide mb-4 inline-block">
+                ADVANCED FORMULA
+              </span>
+            </div>
+            <h1 className="text-5xl lg:text-7xl font-black leading-tight text-gray-900">
+              Kind & <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400">
+                Strong.
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              Clinically proven better absorption. 16 essential vitamins and minerals tailored specifically for women's health, energy, and balance.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-purple-200 transition-all flex items-center justify-center gap-2 group">
+                Start Your Journey
+                <ChevronDown className="group-hover:translate-y-1 transition-transform" />
+              </button>
+              <button className="bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-8 py-4 rounded-full font-bold text-lg shadow-sm transition-all">
+                Learn the Science
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Image / Product Mockup */}
+          <div className="relative group perspective-1000">
+             {/* Abstract packaging representation */}
+             <div className="w-[320px] h-[480px] mx-auto bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-2xl border border-white relative overflow-hidden transform transition-transform duration-700 hover:rotate-y-6 hover:rotate-x-6 z-20">
+                
+                {/* Silver Foil Effect */}
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-gray-200 via-white to-gray-300 opacity-50 z-0"></div>
+                
+                {/* Content inside box */}
+                <div className="relative z-10 p-8 h-full flex flex-col justify-between">
+                  <div className="text-center">
+                    <div className="w-24 h-24 rounded-full border-4 border-gray-800 flex items-center justify-center mx-auto mb-6 bg-white shadow-lg">
+                      <div className="text-center leading-none">
+                         <span className="block font-serif text-gray-900 font-bold text-lg">KIND &</span>
+                         <span className="block font-sans text-gray-900 font-black text-xl">STRONG</span>
+                      </div>
+                    </div>
+                    
+                    {/* Logo Mark */}
+                    <div className="w-16 h-16 mx-auto mb-2 relative">
+                        {/* Triangle A shape */}
+                         <div className="w-0 h-0 border-l-[30px] border-r-[30px] border-b-[50px] border-l-transparent border-r-transparent border-b-orange-500 mx-auto transform -translate-y-2"></div>
+                         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45"></div>
+                    </div>
+                    <h3 className="text-2xl font-light tracking-[0.2em] text-gray-800">ACTIVE</h3>
+                    <h3 className="text-3xl font-bold tracking-[0.1em] text-gray-600">IRON</h3>
+                  </div>
+
+                  {/* Bottom section */}
+                  <div className="bg-gradient-to-r from-purple-700 to-pink-500 -mx-8 -mb-8 p-8 text-white">
+                    <h4 className="text-2xl font-bold mb-1">FOR WOMEN</h4>
+                    <p className="text-xs opacity-90 mb-4">CONTAINS ACTIVE IRON AND 16 ESSENTIAL VITAMINS</p>
+                    <div className="flex justify-between items-end border-t border-white/20 pt-4">
+                       <div className="flex gap-2">
+                          <div className="w-8 h-4 rounded-full bg-green-800"></div>
+                          <div className="w-4 h-4 rounded-full bg-pink-400"></div>
+                       </div>
+                       <div className="text-right">
+                          <span className="block text-3xl font-bold leading-none">60</span>
+                          <span className="text-[10px] opacity-80 uppercase">Capsules & Tablets</span>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+             </div>
+
+             {/* Dynamic Shadow */}
+             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[280px] h-10 bg-black/20 blur-xl rounded-[100%] group-hover:scale-110 transition-transform duration-700"></div>
+          </div>
+        </div>
+      </header>
+
+      {/* Benefits Section */}
+      <section className="py-24 bg-white relative z-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Complete Support</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto">Designed to work in harmony with your body, not against it.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <BenefitCard 
+              icon={Zap} 
+              title="Energy" 
+              desc="Reduces tiredness and fatigue with essential B-vitamins tailored for women."
+              delay={0}
+            />
+            <BenefitCard 
+              icon={Scale} 
+              title="Hormonal Balance" 
+              desc="Vitamin B6 specifically included to support the regulation of hormonal activity."
+              delay={100}
+            />
+            <BenefitCard 
+              icon={Brain} 
+              title="Mental Performance" 
+              desc="Pantothenic acid supports normal mental performance and cognitive health."
+              delay={200}
+            />
+            <BenefitCard 
+              icon={Shield} 
+              title="Immune System" 
+              desc="Zinc and Vitamin D work together to maintain a healthy, responsive immune system."
+              delay={300}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* The Science / Difference Section */}
+      <ScienceSection />
+
+      {/* Ingredients / Composition */}
+      <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
+        {/* Background Texture */}
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#4b5563 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+        
+        <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
+          <h2 className="text-3xl font-bold mb-12">What's Inside</h2>
+          
+          <div className="grid md:grid-cols-2 gap-12 text-left">
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-green-900/50 rounded-lg text-green-400 border border-green-800">
+                  <div className="w-8 h-4 rounded-full bg-green-700"></div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-green-400">30 Daily Capsules</h3>
+                  <p className="text-gray-400 text-sm">Active Iron Whey Protein Formula</p>
+                </div>
+              </div>
+              <ul className="space-y-3 pl-16">
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-green-500"/> Non-constipating</li>
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-green-500"/> Kind to your stomach</li>
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-green-500"/> 2X Absorption</li>
+              </ul>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-pink-900/50 rounded-lg text-pink-400 border border-pink-800">
+                   <div className="w-4 h-4 rounded-full bg-pink-500"></div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-pink-400">30 Daily Tablets</h3>
+                  <p className="text-gray-400 text-sm">Active Multivitamin For Women</p>
+                </div>
+              </div>
+              <ul className="space-y-3 pl-16">
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-pink-500"/> Folic Acid & Biotin</li>
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-pink-500"/> Vitamin B, C, D & Zinc</li>
+                 <li className="flex items-center gap-2 text-gray-300"><Check size={16} className="text-pink-500"/> Cycle-synced support</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-16 pt-16 border-t border-gray-800">
+            <h3 className="text-2xl font-bold mb-6">Invest in your vitality today.</h3>
+            <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-10 py-5 rounded-full font-bold text-xl shadow-lg shadow-purple-900/50 transform hover:scale-105 transition-all flex items-center gap-3 mx-auto">
+              Add to Basket - €24.99 <ArrowRight />
+            </button>
+            <p className="mt-4 text-gray-500 text-sm">Free shipping in Ireland on orders over €50</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Styles for custom blob animations */}
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .rotate-y-6 {
+          transform: rotateY(10deg) rotateX(5deg);
+        }
+      `}</style>
+    </div>
+  );
+}
