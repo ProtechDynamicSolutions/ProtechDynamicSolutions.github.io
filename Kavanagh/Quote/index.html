@@ -99,7 +99,7 @@
             FileText, Share, Calendar, MapPin, User, Truck, Phone, 
             Euro, ShieldCheck, Map, HardHat, Clock, Mail, AlertTriangle, 
             FileCheck, Users, Briefcase, TruckIcon, BedDouble, CalendarClock, 
-            Settings, Minus, Plus, X, Box, CloudLightning, RefreshCw
+            Settings, Minus, Plus, X, Box, CloudLightning, RefreshCw, Layers
         } from 'lucide-react';
 
         // --- CUSTOM ICONS ---
@@ -194,8 +194,8 @@
             }
         }
 
-        const InputGroup = ({ label, icon: Icon, children }) => (
-            <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-yellow-400 transition-all group hover:border-slate-300">
+        const InputGroup = ({ label, icon: Icon, children, className }) => (
+            <div className={`bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-yellow-400 transition-all group hover:border-slate-300 ${className}`}>
                 <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest group-focus-within:text-yellow-600 transition-colors">
                     {Icon && <Icon size={12} />} {label}
                 </label>
@@ -243,6 +243,11 @@
                 clientEmail: '',
                 date: new Date().toISOString().split('T')[0],
                 craneType: 'Demag AC50-1 (50t)',
+                
+                tandemLift: false,
+                secondCraneType: 'Demag AC50-1 (50t)',
+                secondCraneRate: initialRate,
+
                 mobHours: 1.0,
                 demobHours: 1.0,
                 siteHours: 8.0,
@@ -306,6 +311,24 @@
                 setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
             };
 
+            const handleTandemToggle = (e) => {
+                const isTandem = e.target.checked;
+                let newDesc = formData.jobDescription;
+                
+                // Auto-update description if it matches standard defaults
+                if (isTandem) {
+                    if (newDesc === 'Standard crane hire') newDesc = 'Tandem Lift';
+                } else {
+                    if (newDesc === 'Tandem Lift') newDesc = 'Standard crane hire';
+                }
+
+                setFormData(prev => ({
+                    ...prev,
+                    tandemLift: isTandem,
+                    jobDescription: newDesc
+                }));
+            };
+
             const handleCraneChange = (e) => {
                 const newCrane = e.target.value;
                 const newRate = getRateForCrane(newCrane);
@@ -314,6 +337,16 @@
                     craneType: newCrane,
                     hourlyRate: newRate,
                     overtimeRate: newRate + 35
+                }));
+            };
+
+            const handleSecondCraneChange = (e) => {
+                const newCrane = e.target.value;
+                const newRate = getRateForCrane(newCrane);
+                setFormData(prev => ({
+                    ...prev,
+                    secondCraneType: newCrane,
+                    secondCraneRate: newRate
                 }));
             };
 
@@ -381,10 +414,25 @@
                 // Base Calculation: Total Hours * Hourly Rate
                 let subTotal = totalMinHours * hourlyRateVal;
                 
+                // Tandem Lift Calculation
+                if (formData.tandemLift) {
+                    const secondRate = parseFloat(formData.secondCraneRate || 0);
+                    subTotal += (totalMinHours * secondRate);
+                }
+
                 // Additional Items
                 if (formData.liftPlanRequired && !formData.liftPlanIncluded) subTotal += parseFloat(formData.liftPlanCost);
-                if (formData.apRequired && !formData.apIncluded) subTotal += (parseFloat(formData.apCost || 0) * parseInt(formData.apCount));
-                if (formData.banksmanRequired && !formData.banksmanIncluded) subTotal += (parseFloat(formData.banksmanCost || 0) * parseInt(formData.banksmanCount));
+                
+                // --- UPDATED LABOR CALCULATIONS (Rate * Hours * Count) ---
+                if (formData.apRequired && !formData.apIncluded) {
+                    subTotal += (parseFloat(formData.apCost || 0) * totalMinHours * parseInt(formData.apCount));
+                }
+                
+                if (formData.banksmanRequired && !formData.banksmanIncluded) {
+                    subTotal += (parseFloat(formData.banksmanCost || 0) * totalMinHours * parseInt(formData.banksmanCount));
+                }
+                // -----------------------------------------------------------
+
                 if (formData.ballastRequired) subTotal += (parseFloat(formData.ballastCost || 0) * 2);
                 if (formData.spreaderBars) subTotal += (parseFloat(formData.spreaderCost || 0) * 2); // Each Way * 2
                 if (formData.otherItemsRequired) subTotal += parseFloat(formData.otherItemsCost || 0);
@@ -602,15 +650,15 @@
                         const imgW = 180;
                         const imgH = 75;
                         
-                        // Rounded border frame (Radius increased to 6)
+                        // Rounded border frame (Radius increased to 6) 
                         doc.setDrawColor(...borderGrey);
                         doc.setLineWidth(0.5);
-                        doc.roundedRect(imgX - 1, imgY - 1, imgW + 2.5, imgH + 2.5, 6, 6, 'D');
+                        doc.roundedRect(imgX - 2.5, imgY - 2.5, imgW + 4.5, imgH + 4.5, 6, 6, 'D');
                         
                         doc.addImage(craneImg, 'JPEG', imgX, imgY, imgW, imgH);
                     }
                     // Reduced spacing after image to prevent footer overlap
-                    y += 82; 
+                    y += 87; 
 
                     drawPage1BottomInfo(y);
                     drawFooter();
@@ -636,22 +684,22 @@
                     doc.text(uniqueRef, 179, 14, { align: "center" });
 
                     // Margins reduced for Page 2 to fit more content
-                    const page2MainX = 15; // Was 20
-                    const page2ContentW = 180; // Was 170
+                    const page2MainX = 10; // Was 15
+                    const page2ContentW = 190; // Was 180
                     y = 30; // Moved further down/adjusted
 
                     // --- JOB SPECIFICATION SECTION ---
                     doc.setTextColor(...deepBlue); 
                     doc.setFont("helvetica", "bold"); 
                     doc.setFontSize(11);
-                    doc.text("JOB SPECIFICATION", page2MainX, y);
+                    doc.text("JOB SPECIFICATION", page2MainX, y+0.5);
                     
                     // Elegant underline
                     doc.setDrawColor(...yellow);
                     doc.setLineWidth(1);
-                    doc.line(page2MainX, y + 1.5, page2MainX + 45, y + 1.5);
+                    doc.line(page2MainX, y + 2, page2MainX + 45, y + 2);
                     
-                    y += 6;
+                    y += 6.5;
 
                     const drawSpecBox = (label, value, x, y, w, h) => {
                         // Refined box design
@@ -702,7 +750,7 @@
                     };
 
                     // Reduced box height slightly to save space
-                    const boxH = 8; 
+                    const boxH = 9; 
                     const gap = 2; 
                     const colW = (page2ContentW - gap) / 2;
 
@@ -784,6 +832,13 @@
                     drawRow("Mobilisation & Demobilisation", `${travelHours} hrs @ EUR ${hRateStr}/hr`);
                     drawRow("Site Duration", `${formData.siteHours} hrs @ EUR ${hRateStr}/hr`);
                     
+                    // --- TANDEM CRANE ROW ---
+                    if (formData.tandemLift) {
+                        const secRateStr = formatNumber(parseFloat(formData.secondCraneRate || 0));
+                        const secTotal = parseFloat(formData.secondCraneRate || 0) * totalMinHours;
+                        drawRow(`Tandem Crane: ${formData.secondCraneType}`, `${totalMinHours} hrs @ EUR ${secRateStr}/hr (Total: EUR ${formatNumber(secTotal)})`);
+                    }
+
                     const otRateStr = formatNumber(parseFloat(formData.overtimeRate || 0));
                     // DYNAMIC OVERTIME TEXT
                     const standardSiteHours = Math.max(0, 10 - (parseFloat(formData.mobHours) + parseFloat(formData.demobHours)));
@@ -792,12 +847,28 @@
                     if (formData.liftPlanRequired) {
                         drawRow("Lift Plan", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`);
                     }
+                    
+                    // --- UPDATED LABOR ROWS ---
                     if (formData.apRequired) {
-                        drawRow(`Lift Supervisor (x${formData.apCount})`, formData.apIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.apCost)*formData.apCount)}`);
+                         if (formData.apIncluded) {
+                             drawRow(`Lift Supervisor (x${formData.apCount})`, "Included");
+                         } else {
+                             const apTotal = parseFloat(formData.apCost || 0) * totalMinHours * parseInt(formData.apCount);
+                             const apRateStr = formatNumber(parseFloat(formData.apCost));
+                             drawRow(`Lift Supervisor (x${formData.apCount})`, `${totalMinHours} hrs @ EUR ${apRateStr}/hr (Total: EUR ${formatNumber(apTotal)})`);
+                         }
                     }
                     if (formData.banksmanRequired) {
-                        drawRow(`Banksman (x${formData.banksmanCount})`, formData.banksmanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.banksmanCost)*formData.banksmanCount)}`);
+                        if (formData.banksmanIncluded) {
+                            drawRow(`Banksman (x${formData.banksmanCount})`, "Included");
+                        } else {
+                            const bTotal = parseFloat(formData.banksmanCost || 0) * totalMinHours * parseInt(formData.banksmanCount);
+                            const bRateStr = formatNumber(parseFloat(formData.banksmanCost));
+                            drawRow(`Banksman (x${formData.banksmanCount})`, `${totalMinHours} hrs @ EUR ${bRateStr}/hr (Total: EUR ${formatNumber(bTotal)})`);
+                        }
                     }
+                    // ---------------------------
+
                     if (formData.ballastRequired) {
                         drawRow("Ballast Truck (x2 trips)", `EUR ${formatNumber(parseFloat(formData.ballastCost || 0) * 2)}`);
                     }
@@ -1013,7 +1084,15 @@
                                 </InputGroup>
                             </div>
 
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 relative">
+                                <div className="flex justify-between items-center mb-1">
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Primary Crane</div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="tandemLift" checked={formData.tandemLift} onChange={handleTandemToggle} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                        <span className="ml-3 text-xs font-bold text-slate-700 flex items-center gap-1"><Layers size={14} className="text-yellow-600"/> Tandem Lift</span>
+                                    </label>
+                                </div>
                                 <InputGroup label="Crane Model" icon={Truck}>
                                     <div className="relative">
                                         <select name="craneType" value={formData.craneType} onChange={handleCraneChange} className="w-full bg-transparent outline-none text-slate-800 font-semibold appearance-none text-sm cursor-pointer">
@@ -1025,6 +1104,34 @@
                                         </select>
                                     </div>
                                 </InputGroup>
+
+                                {/* TANDEM CRANE DROPDOWN */}
+                                {formData.tandemLift && (
+                                    <div className="mt-4 animate-fade-in relative p-3 bg-yellow-50/50 rounded-xl border border-yellow-100">
+                                        <div className="absolute left-0 top-2 bottom-2 w-1 bg-yellow-400 rounded-r"></div>
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-2">Secondary Crane Configuration</div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div className="md:col-span-2">
+                                                <InputGroup label="Model" icon={Truck} className="border-yellow-200 bg-white">
+                                                    <div className="relative">
+                                                        <select name="secondCraneType" value={formData.secondCraneType} onChange={handleSecondCraneChange} className="w-full bg-transparent outline-none text-slate-800 font-semibold appearance-none text-sm cursor-pointer">
+                                                            {CRANE_LIST.map((group) => (
+                                                                <optgroup key={group.category} label={group.category} className="text-yellow-600 bg-white">
+                                                                    {group.cranes.map((crane) => <option key={crane} value={crane} className="text-slate-800 bg-white">{crane}</option>)}
+                                                                </optgroup>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </InputGroup>
+                                            </div>
+                                            <div>
+                                                <InputGroup label="Rate (€/hr)" icon={Euro} className="border-yellow-200 bg-white">
+                                                     <TextInput type="number" name="secondCraneRate" value={formData.secondCraneRate} onChange={handleChange} />
+                                                </InputGroup>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
@@ -1078,7 +1185,11 @@
                                             <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
                                                 <div className="flex items-center gap-2 w-full md:w-32"><span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.apCount}</span><input type="range" name="apCount" min="1" max="5" value={formData.apCount} onChange={handleChange} className="flex-1"/></div>
                                                 <div className="flex gap-4 items-center flex-1">
-                                                    <div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span><input type="number" name="apCost" disabled={formData.apIncluded} value={formData.apCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/></div>
+                                                    <div className="relative flex-1">
+                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                        <input type="number" name="apCost" disabled={formData.apIncluded} value={formData.apCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/>
+                                                        <span className="absolute right-8 top-2.5 text-slate-400 text-[10px] font-bold">/hr</span>
+                                                    </div>
                                                     <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="checkbox" name="apIncluded" checked={formData.apIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/><span className="text-xs font-bold text-slate-600">Included</span></label>
                                                 </div>
                                             </div>
@@ -1097,7 +1208,11 @@
                                             <div className="flex-1 flex flex-col md:flex-row gap-4 animate-fade-in md:items-center">
                                                 <div className="flex items-center gap-2 w-full md:w-32"><span className="text-xs font-bold text-slate-500 w-8">Qty: {formData.banksmanCount}</span><input type="range" name="banksmanCount" min="1" max="5" value={formData.banksmanCount} onChange={handleChange} className="flex-1"/></div>
                                                 <div className="flex gap-4 items-center flex-1">
-                                                    <div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span><input type="number" name="banksmanCost" disabled={formData.banksmanIncluded} value={formData.banksmanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/></div>
+                                                    <div className="relative flex-1">
+                                                        <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">€</span>
+                                                        <input type="number" name="banksmanCost" disabled={formData.banksmanIncluded} value={formData.banksmanCost} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg py-2 pl-7 pr-3 text-sm outline-none disabled:bg-slate-100"/>
+                                                        <span className="absolute right-8 top-2.5 text-slate-400 text-[10px] font-bold">/hr</span>
+                                                    </div>
                                                     <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="checkbox" name="banksmanIncluded" checked={formData.banksmanIncluded} onChange={handleChange} className="w-4 h-4 accent-green-500 rounded"/><span className="text-xs font-bold text-slate-600">Included</span></label>
                                                 </div>
                                             </div>
