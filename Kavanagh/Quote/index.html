@@ -575,7 +575,7 @@
                     
                     if (kavLogo) doc.addImage(kavLogo, 'svg', 18, 13, 65, 22); 
 
-                    // Quote reference STYLING (Bold, Shadowed)
+                    // Quote ref badge (No white box, just text with shadow)
                     doc.setFontSize(7); 
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(...black);
@@ -773,53 +773,73 @@
                     // --- SCHEDULE OF RATES TABLE ---
                     // Professional header design
                     doc.setFillColor(...deepBlue);
-                    doc.rect(page2MainX, y, page2ContentW, 7, 'F');
+                    doc.rect(page2MainX, y, page2ContentW, 8, 'F'); // Make header 8mm too
                     
                     // Gold accent line
                     doc.setFillColor(...goldAccent);
-                    doc.rect(page2MainX, y, page2ContentW, 1, 'F');
+                    doc.rect(page2MainX, y, page2ContentW, 0.5, 'F'); // Top bar
                     
                     doc.setTextColor(255, 255, 255); 
                     doc.setFontSize(9); 
                     doc.setFont("helvetica", "bold");
-                    doc.text("SCHEDULE OF RATES / ITEMS", page2MainX + 4, y + 4.5); 
-                    doc.text("COST", page2MainX + page2ContentW - 4, y + 4.5, { align: 'right' });
-                    y += 6; // Tightened header spacing
+                    doc.text("SCHEDULE OF RATES / ITEMS", page2MainX + 4, y + 5.5); 
+                    doc.text("COST", page2MainX + page2ContentW - 4, y + 5.5, { align: 'right' });
+                    y += 8; // Tightened header spacing
 
                     let rowAlt = false;
 
                     const drawRow = (label, value, isBold = false) => {
-                        let lines = [];
-                        let rowH = 6; // Reduced row height for compression
-                        
-                        if (typeof value === 'string' && (value.length > 50 || value.includes('\n'))) {
-                            lines = doc.splitTextToSize(value, 90); 
-                            rowH = Math.max(6, (lines.length * 4) + 2); 
-                        } else {
-                            lines = [value];
-                        }
+                        doc.setFontSize(9);
+                        const valStr = String(value);
+                        // Split text to fit right column width (approx 90mm)
+                        const valLines = doc.splitTextToSize(valStr, 85); 
+                        const labelLines = doc.splitTextToSize(label, 90); // Left column
 
+                        const lineCount = Math.max(valLines.length, labelLines.length);
+                        
+                        // Uniform height logic: 
+                        // Base height 8mm. Add 4mm for each extra line.
+                        const rowH = 6 + ((lineCount - 1) * 4);
+                        
+                        // Background
                         if (rowAlt) { 
                             doc.setFillColor(...lightGrey); 
                             doc.rect(page2MainX, y, page2ContentW, rowH, 'F'); 
                         }
                         
+                        // Text Vertical Center
+                        const textY = y + (rowH / 2) + 1.5; // +1.5 approximates baseline offset for 9pt font
+                        
+                        // Label
                         doc.setTextColor(...black); 
-                        doc.setFontSize(9); 
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        
-                        doc.text(label, page2MainX + 4, y + (rowH/2) + 1.5);
-                        
+                        // If multi-line label, we might need manual positioning, but usually labels are short.
+                        // For safety, let's just print simple text if single line, loop if multi.
+                        if (labelLines.length === 1) {
+                             doc.text(label, page2MainX + 4, textY);
+                        } else {
+                             // Top align if multi-line to avoid complex center math issues
+                             const topY = y + 2.5; 
+                             labelLines.forEach((l, i) => doc.text(l, page2MainX + 4, topY + (i*4) + 1.5));
+                        }
+
+                        // Value
                         doc.setTextColor(...darkGrey);
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
                         
-                        lines.forEach((line, i) => {
-                             doc.text(line, page2MainX + page2ContentW - 4, y + 4.5 + (i * 4), { align: 'right' });
-                        });
-                        
-                        // DRAW LINE UNDER EACH ITEM
-                        doc.setDrawColor(180, 180, 180); // Darker line
-                        doc.setLineWidth(0.2);
+                        if (valLines.length === 1) {
+                            doc.text(valLines[0], page2MainX + page2ContentW - 4, textY, { align: 'right' });
+                        } else {
+                            // Top align multi-line values
+                            const topY = y + 2.5; // 2.5mm down from top
+                            valLines.forEach((l, i) => {
+                                doc.text(l, page2MainX + page2ContentW - 4, topY + (i * 4) + 1.5, { align: 'right' });
+                            });
+                        }
+
+                        // Bottom Line
+                        doc.setDrawColor(220, 220, 220); // Softer grey for uniformity
+                        doc.setLineWidth(0.1);
                         doc.line(page2MainX, y + rowH, page2MainX + page2ContentW, y + rowH);
                         
                         y += rowH;
@@ -1105,9 +1125,27 @@
                                     </div>
                                 </InputGroup>
 
+
+                            </div>
+
+                            <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1 flex gap-2 items-center"><TruckIcon size={14}/> Hire Package Configuration</div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <Stepper label="Mob (Hrs)" value={formData.mobHours} onChange={(v) => updateHours('mobHours', v)} step={0.5} />
+                                    <Stepper label="Demob (Hrs)" value={formData.demobHours} onChange={(v) => updateHours('demobHours', v)} step={0.5} />
+                                    <Stepper label="Onsite (Hrs)" value={formData.siteHours} onChange={(v) => updateHours('siteHours', v)} step={0.5} />
+                                </div>
+                                <div className="text-xs text-slate-500 text-center font-mono">Total Hours: <span className="font-bold text-slate-900">{totalMinHours}</span></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputGroup label="Normal Rate (€/hr)" icon={Euro}><TextInput type="number" name="hourlyRate" value={formData.hourlyRate} onChange={handleChange} /></InputGroup>
+                                    <InputGroup label="Overtime Rate (€/hr)" icon={Clock}><TextInput type="number" name="overtimeRate" value={formData.overtimeRate} onChange={handleChange} /></InputGroup>
+                                </div>
+                            </div>
+
+
                                 {/* TANDEM CRANE DROPDOWN */}
                                 {formData.tandemLift && (
-                                    <div className="mt-4 animate-fade-in relative p-3 bg-yellow-50/50 rounded-xl border border-yellow-100">
+                                    <div className="md:col-span-2 mt-4 animate-fade-in relative p-3 bg-yellow-50/50 rounded-xl border border-yellow-100">
                                         <div className="absolute left-0 top-2 bottom-2 w-1 bg-yellow-400 rounded-r"></div>
                                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-2">Secondary Crane Configuration</div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1132,22 +1170,6 @@
                                         </div>
                                     </div>
                                 )}
-                            </div>
-
-                            <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1 flex gap-2 items-center"><TruckIcon size={14}/> Hire Package Configuration</div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <Stepper label="Mob (Hrs)" value={formData.mobHours} onChange={(v) => updateHours('mobHours', v)} step={0.5} />
-                                    <Stepper label="Demob (Hrs)" value={formData.demobHours} onChange={(v) => updateHours('demobHours', v)} step={0.5} />
-                                    <Stepper label="Onsite (Hrs)" value={formData.siteHours} onChange={(v) => updateHours('siteHours', v)} step={0.5} />
-                                </div>
-                                <div className="text-xs text-slate-500 text-center font-mono">Total Hours: <span className="font-bold text-slate-900">{totalMinHours}</span></div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <InputGroup label="Normal Rate (€/hr)" icon={Euro}><TextInput type="number" name="hourlyRate" value={formData.hourlyRate} onChange={handleChange} /></InputGroup>
-                                    <InputGroup label="Overtime Rate (€/hr)" icon={Clock}><TextInput type="number" name="overtimeRate" value={formData.overtimeRate} onChange={handleChange} /></InputGroup>
-                                </div>
-                            </div>
-
                             <div className="md:col-span-2 space-y-4">
                                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1 flex justify-between items-center">
                                     <span>Additional Services</span>
@@ -1157,7 +1179,7 @@
                                         <span className="ml-2 text-[10px] font-bold text-slate-500">VAT (23%)</span>
                                     </label>
                                 </div>
-                                
+
                                 {/* LIFT PLAN */}
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                     <div className="flex flex-col md:flex-row md:items-center gap-4">
