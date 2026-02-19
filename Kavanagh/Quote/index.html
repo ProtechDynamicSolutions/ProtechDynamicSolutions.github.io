@@ -244,9 +244,10 @@
                 date: new Date().toISOString().split('T')[0],
                 craneType: 'Demag AC50-1 (50t)',
                 
-                tandemLift: false,
+                secondCraneLift: false,
                 secondCraneType: 'Demag AC50-1 (50t)',
                 secondCraneRate: initialRate,
+                secondCraneOvertimeRate: initialRate + 35, // ADDED: Initial second crane overtime rate
 
                 mobHours: 1.0,
                 demobHours: 1.0,
@@ -311,20 +312,20 @@
                 setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
             };
 
-            const handleTandemToggle = (e) => {
-                const isTandem = e.target.checked;
+            const handleSecondCraneToggle = (e) => {
+                const isSecondCrane = e.target.checked;
                 let newDesc = formData.jobDescription;
                 
                 // Auto-update description if it matches standard defaults
-                if (isTandem) {
-                    if (newDesc === 'Standard crane hire') newDesc = 'Tandem Lift';
+                if (isSecondCrane) {
+                    if (newDesc === 'Standard crane hire') newDesc = 'Standard crane hire x 2';
                 } else {
-                    if (newDesc === 'Tandem Lift') newDesc = 'Standard crane hire';
+                    if (newDesc === 'Standard crane hire x 2') newDesc = 'Standard crane hire';
                 }
 
                 setFormData(prev => ({
                     ...prev,
-                    tandemLift: isTandem,
+                    secondCraneLift: isSecondCrane,
                     jobDescription: newDesc
                 }));
             };
@@ -346,7 +347,8 @@
                 setFormData(prev => ({
                     ...prev,
                     secondCraneType: newCrane,
-                    secondCraneRate: newRate
+                    secondCraneRate: newRate,
+                    secondCraneOvertimeRate: newRate + 35 // UPDATED: Auto-calculate second crane OT Rate
                 }));
             };
 
@@ -414,8 +416,8 @@
                 // Base Calculation: Total Hours * Hourly Rate
                 let subTotal = totalMinHours * hourlyRateVal;
                 
-                // Tandem Lift Calculation
-                if (formData.tandemLift) {
+                // second crane Lift Calculation
+                if (formData.secondCraneLift) {
                     const secondRate = parseFloat(formData.secondCraneRate || 0);
                     subTotal += (totalMinHours * secondRate);
                 }
@@ -852,11 +854,11 @@
                     drawRow("Mobilisation & Demobilisation", `${travelHours} hrs @ EUR ${hRateStr}/hr`);
                     drawRow("Site Duration", `${formData.siteHours} hrs @ EUR ${hRateStr}/hr`);
                     
-                    // --- TANDEM CRANE ROW ---
-                    if (formData.tandemLift) {
+                    // --- second crane CRANE ROW ---
+                    if (formData.secondCraneLift) {
                         const secRateStr = formatNumber(parseFloat(formData.secondCraneRate || 0));
                         const secTotal = parseFloat(formData.secondCraneRate || 0) * totalMinHours;
-                        drawRow(`Tandem Crane: ${formData.secondCraneType}`, `${totalMinHours} hrs @ EUR ${secRateStr}/hr (Total: EUR ${formatNumber(secTotal)})`);
+                        drawRow(`Second Crane: ${formData.secondCraneType}`, `${totalMinHours} hrs @ EUR ${secRateStr}/hr (Total: EUR ${formatNumber(secTotal)})`);
                     }
 
                     const otRateStr = formatNumber(parseFloat(formData.overtimeRate || 0));
@@ -864,6 +866,12 @@
                     const standardSiteHours = Math.max(0, 10 - (parseFloat(formData.mobHours) + parseFloat(formData.demobHours)));
                     drawRow(`Overtime Rate (Applicable after ${standardSiteHours} hrs on site)`, `EUR ${otRateStr}/hr`);
                     
+                    // --- ADDED second crane OVERTIME TO PDF ---
+                    if (formData.secondCraneLift) {
+                        const secOtRateStr = formatNumber(parseFloat(formData.secondCraneOvertimeRate || 0));
+                        drawRow(`Second Crane Overtime Rate (Applicable after ${standardSiteHours} hrs)`, `EUR ${secOtRateStr}/hr`);
+                    }
+
                     if (formData.liftPlanRequired) {
                         drawRow("Lift Plan", formData.liftPlanIncluded ? "Included" : `EUR ${formatNumber(parseFloat(formData.liftPlanCost))}`);
                     }
@@ -1108,9 +1116,9 @@
                                 <div className="flex justify-between items-center mb-1">
                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Primary Crane</div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="tandemLift" checked={formData.tandemLift} onChange={handleTandemToggle} className="sr-only peer" />
+                                        <input type="checkbox" name="secondCraneLift" checked={formData.secondCraneLift} onChange={handleSecondCraneToggle} className="sr-only peer" />
                                         <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:bg-yellow-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                                        <span className="ml-3 text-xs font-bold text-slate-700 flex items-center gap-1"><Layers size={14} className="text-yellow-600"/> Tandem Lift</span>
+                                        <span className="ml-3 text-xs font-bold text-slate-700 flex items-center gap-1"><Layers size={14} className="text-yellow-600"/> Second Crane Lift</span>
                                     </label>
                                 </div>
                                 <InputGroup label="Crane Model" icon={Truck}>
@@ -1143,12 +1151,13 @@
                             </div>
 
 
-                                {/* TANDEM CRANE DROPDOWN */}
-                                {formData.tandemLift && (
+                                {/* Second Crane CRANE DROPDOWN */}
+                                {formData.secondCraneLift && (
                                     <div className="md:col-span-2 mt-4 animate-fade-in relative p-3 bg-yellow-50/50 rounded-xl border border-yellow-100">
                                         <div className="absolute left-0 top-2 bottom-2 w-1 bg-yellow-400 rounded-r"></div>
                                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-2">Secondary Crane Configuration</div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {/* UPDATED: Added a 4th column for OT Rate */}
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                             <div className="md:col-span-2">
                                                 <InputGroup label="Model" icon={Truck} className="border-yellow-200 bg-white">
                                                     <div className="relative">
@@ -1165,6 +1174,11 @@
                                             <div>
                                                 <InputGroup label="Rate (€/hr)" icon={Euro} className="border-yellow-200 bg-white">
                                                      <TextInput type="number" name="secondCraneRate" value={formData.secondCraneRate} onChange={handleChange} />
+                                                </InputGroup>
+                                            </div>
+                                            <div>
+                                                <InputGroup label="OT Rate (€/hr)" icon={Clock} className="border-yellow-200 bg-white">
+                                                     <TextInput type="number" name="secondCraneOvertimeRate" value={formData.secondCraneOvertimeRate} onChange={handleChange} />
                                                 </InputGroup>
                                             </div>
                                         </div>
