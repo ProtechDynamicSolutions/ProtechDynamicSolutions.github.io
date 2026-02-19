@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASMS Timesheet App</title>
+    <link rel="icon" href="https://www.asms.ie/wp-content/uploads/2017/12/fav16.png" type="image/png">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        asms: {
+                            dark: '#1e293b', // Slate 800
+                            darker: '#0f172a', // Slate 900
+                            orange: '#f97316', // Orange 500
+                            orangeHover: '#ea580c', // Orange 600
+                        }
+                    },
+                    animation: {
+                        'spin': 'spin 1s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-error': 'pulseError 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        pulseError: {
+                             '0%, 100%': { opacity: '1' },
+                             '50%': { opacity: '0.5' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .glass-input:focus {
+            border-color: #f97316;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+        }
+        .glass-input.error {
+            border-color: #ef4444;
+            background: rgba(69, 10, 10, 0.3);
+        }
+        
+        /* Force time inputs to be white in dark mode browsers */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(30, 41, 59, 1) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        
+        /* File Input Styling */
+        input[type="file"]::file-selector-button {
+            background-color: #f97316;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-right: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #ea580c;
+        }
+    </style>
+</head>
+<body class="text-slate-100 antialiased selection:bg-asms-orange selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- ASMS Logo Component ---
+        const ASMSLogo = ({ className = "", width = 200, showBackground = false }) => {
+            const height = width * 0.4;
+            return (
+                <div className={`flex flex-col items-center justify-center ${className}`}>
+                    <svg 
+                        viewBox="0 0 500 200" 
+                        width={width} 
+                        height={height}
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="max-w-full h-auto"
+                    >
+                        {showBackground && (
+                            <rect width="500" height="200" fill="#1e293b" rx="10" />
+                        )}
+                        <path d="M 25,25 L 475,135 L 25,135 Z" fill="#f97316" />
+                        <text x="40" y="118" fill="white" style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: '400', fontSize: '60px', letterSpacing: '1px' }}>
+                            ASMS
+                        </text>
+                        <text x="35" y="165" fill="white" style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '34px', fontWeight: '400' }}>
+                            Mechanical Services Ltd.
+                        </text>
+                        <rect x="25" y="180" width="450" height="3" fill="#f97316" />
+                        <rect x="25" y="188" width="450" height="1.5" fill="#f97316" />
+                    </svg>
+                </div>
+            );
+        };
+
+        // --- Icon Components ---
+        const IconBase = ({ children, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+
+        const Trash2 = (props) => <IconBase {...props}><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/></IconBase>;
+        const Calendar = (props) => <IconBase {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>;
+        const Clock = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>;
+        const Send = (props) => <IconBase {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></IconBase>;
+        const ChevronRight = (props) => <IconBase {...props}><polyline points="9 18 15 12 9 6"/></IconBase>;
+        const User = (props) => <IconBase {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconBase>;
+        const Mail = (props) => <IconBase {...props}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></IconBase>;
+        const CheckCircle = (props) => <IconBase {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>;
+        const AlertCircle = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconBase>;
+        const FileText = (props) => <IconBase {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></IconBase>;
+        const Loader2 = (props) => <IconBase {...props} className={props.className || "animate-spin"}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>;
+        const UploadCloud = (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></IconBase>;
+        const Pen = (props) => <IconBase {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>;
+        const Edit = (props) => <IconBase {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></IconBase>;
+
+        // --- Constants ---
+        const DISPLAY_WEEK_DAYS = [
+          { name: 'Monday', offset: 0 },
+          { name: 'Tuesday', offset: 1 },
+          { name: 'Wednesday', offset: 2 },
+          { name: 'Thursday', offset: 3 },
+          { name: 'Friday', offset: 4 },
+          { name: 'Saturday', offset: 5 },
+          { name: 'Sunday', offset: 6 }
+        ];
+
+        // --- Helper Functions ---
+        const timeToDec = (timeStr) => {
+          if (!timeStr) return 0;
+          const [h, m] = timeStr.split(':').map(Number);
+          return h + (m / 60);
+        };
+
+        const formatDuration = (decimalHours) => {
+          if (!decimalHours || isNaN(decimalHours)) return '0hr 0m';
+          const totalMinutes = Math.round(decimalHours * 60);
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          return `${hours}hr ${minutes}m`;
+        };
+        
+        const formatDurationDecimal = (decimalHours) => {
+            if (!decimalHours || isNaN(decimalHours)) return '0';
+            return decimalHours.toFixed(2);
+        };
+
+        const getOverlap = (start, end, bandStart, bandEnd) => {
+          const s = Math.max(start, bandStart);
+          const e = Math.min(end, bandEnd);
+          return Math.max(0, e - s);
+        };
+
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        const formatDateEU = (dateStr) => {
+            if(!dateStr) return '';
+            const d = new Date(dateStr);
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        const doTimesOverlap = (start1, end1, start2, end2) => {
+          const crossesMidnight1 = end1 < start1;
+          const crossesMidnight2 = end2 < start2;
+          
+          if (!crossesMidnight1 && !crossesMidnight2) {
+            return start1 < end2 && start2 < end1;
+          }
+          if (crossesMidnight1 && !crossesMidnight2) {
+            return (start2 < 24 && start1 < 24) || (end2 > 0 && end1 > 0) || (start2 >= start1 || end2 <= end1);
+          }
+          if (!crossesMidnight1 && crossesMidnight2) {
+            return (start1 < 24 && start2 < 24) || (end1 > 0 && end2 > 0) || (start1 >= start2 || end1 <= end2);
+          }
+          return true;
+        };
+
+        const calculateDailyHours = (jobs, dateStr) => {
+          const date = new Date(dateStr);
+          const dayIndex = date.getDay(); // 0=Sun
+          
+          let dailyNormalRaw = 0; // Hours that fall within the Normal Band
+          let daily15 = 0;
+          let daily20 = 0;
+
+          jobs.forEach(job => {
+            if (!job.startTime || !job.finishTime) return;
+            
+            let start = timeToDec(job.startTime);
+            let finish = timeToDec(job.finishTime);
+            
+            const crossesMidnight = finish < start;
+            if (!crossesMidnight && finish <= start) return;
+
+            const processTimeRange = (dayIdx, rangeStart, rangeEnd) => {
+              if (dayIdx >= 1 && dayIdx <= 4) { // Mon-Thu
+                 // Normal Band: 07:00 - 16:30
+                 dailyNormalRaw += getOverlap(rangeStart, rangeEnd, 7, 16.5);
+                 // 1.5x Band: 16:30 - 24:00 (Midnight)
+                 daily15 += getOverlap(rangeStart, rangeEnd, 16.5, 24);
+                 // Early Morning 1.5x: 00:00 - 07:00 (Assume 1.5x for unsocial pre-start)
+                 daily15 += getOverlap(rangeStart, rangeEnd, 0, 7); 
+              } else if (dayIdx === 5) { // Fri
+                 // Normal Band: 07:00 - 15:30
+                 dailyNormalRaw += getOverlap(rangeStart, rangeEnd, 7, 15.5);
+                 // 1.5x Band: 15:30 - 24:00
+                 daily15 += getOverlap(rangeStart, rangeEnd, 15.5, 24);
+                 // Early Morning 1.5x
+                 daily15 += getOverlap(rangeStart, rangeEnd, 0, 7);
+              } else if (dayIdx === 6) { // Sat
+                 // 1.5x Band: 08:00 - 12:00
+                 daily15 += getOverlap(rangeStart, rangeEnd, 8, 12);
+                 // 2.0x Band: 12:00 onwards
+                 daily20 += getOverlap(rangeStart, rangeEnd, 12, 24);
+                 // Early/Late 2.0x (Unsocial)
+                 daily20 += getOverlap(rangeStart, rangeEnd, 0, 8);
+              } else if (dayIdx === 0) { // Sun
+                 // All day 2.0x
+                 daily20 += getOverlap(rangeStart, rangeEnd, 0, 24);
+              }
+            };
+
+            if (crossesMidnight) {
+              processTimeRange(dayIndex, start, 24);
+              const nextDayIndex = (dayIndex + 1) % 7;
+              processTimeRange(nextDayIndex, 0, finish);
+            } else {
+              processTimeRange(dayIndex, start, finish);
+            }
+          });
+
+          // 1. DEDUCT LUNCH from Normal Band Hours
+          // If total time accumulated in the Normal Band is > 5 hours, deduct 0.5hr for lunch
+          let paidNormal = dailyNormalRaw;
+          if (paidNormal > 5) {
+            paidNormal -= 0.5;
+          }
+
+          // 2. APPLY STANDARD DAY CAPS
+          // Even after lunch deduction, if the "Normal" hours exceed the standard day (8h M-Th, 7h F),
+          // the excess implies working through lunch or some other anomaly, but based on rules:
+          // Normal Time is CAP 8 hours (Mon-Thu) or 7 hours (Fri).
+          // Any accumulated time in the "Normal Band" exceeding this cap moves to 1.5x.
+          
+          let standardCap = 0;
+          if (dayIndex >= 1 && dayIndex <= 4) standardCap = 8;
+          if (dayIndex === 5) standardCap = 7;
+
+          if (standardCap > 0 && paidNormal > standardCap) {
+              const extra = paidNormal - standardCap;
+              paidNormal = standardCap;
+              daily15 += extra;
+          }
+
+          return {
+            normal: parseFloat(paidNormal.toFixed(2)),
+            ot15: parseFloat(daily15.toFixed(2)),
+            ot20: parseFloat(daily20.toFixed(2)),
+            total: parseFloat((paidNormal + daily15 + daily20).toFixed(2))
+          };
+        };
+
+        // --- Signature Pad Component ---
+        const SignaturePad = ({ onSave }) => {
+            const canvasRef = useRef(null);
+            const [isDrawing, setIsDrawing] = useState(false);
+            const [hasSignature, setHasSignature] = useState(false);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                
+                const resizeCanvas = () => {
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = 180;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.strokeStyle = '#0f172a'; // Dark ink
+                    ctx.lineWidth = 2;
+                };
+
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                return () => window.removeEventListener('resize', resizeCanvas);
+            }, []);
+
+            const getPos = (e) => {
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            };
+
+            const startDrawing = (e) => {
+                e.preventDefault();
+                setIsDrawing(true);
+                const pos = getPos(e);
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            };
+
+            const draw = (e) => {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const pos = getPos(e);
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                if (!hasSignature) setHasSignature(true);
+            };
+
+            const stopDrawing = (e) => {
+                e.preventDefault();
+                if (isDrawing) {
+                    setIsDrawing(false);
+                    saveSignature();
+                }
+            };
+
+            const saveSignature = () => {
+                if (canvasRef.current) {
+                    const dataUrl = canvasRef.current.toDataURL('image/png');
+                    onSave(dataUrl);
+                }
+            };
+
+            const clearSignature = (e) => {
+                e.preventDefault();
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                setHasSignature(false);
+                onSave('');
+            };
+
+            return (
+                <div className="w-full">
+                    <div className="relative border-2 border-dashed border-slate-500 rounded-xl bg-slate-200 overflow-hidden touch-none">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-[180px] cursor-crosshair touch-none"
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            onTouchStart={startDrawing}
+                            onTouchMove={draw}
+                            onTouchEnd={stopDrawing}
+                        />
+                        {!hasSignature && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-sm">
+                                Sign here
+                            </div>
+                        )}
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                        <button 
+                            type="button" 
+                            onClick={clearSignature} 
+                            className="text-xs text-red-400 hover:text-red-300 font-medium px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                            Clear Signature
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Sub-Components ---
+        const InputField = ({ label, type = "text", value, onChange, icon: Icon, placeholder, required, isError }) => (
+          <div className="mb-5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 ml-1">
+              {label} {required && <span className="text-asms-orange">*</span>}
+            </label>
+            <div className="relative">
+              {Icon && (
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                  <Icon size={18} />
+                </div>
+              )}
+              <input
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder}
+                className={`w-full glass-input rounded-xl block py-3.5 px-4 ${Icon ? 'pl-11' : ''} text-sm transition-all placeholder-slate-500 ${isError ? 'border-red-500 bg-red-900/10' : ''}`}
+              />
+            </div>
+          </div>
+        );
+
+        const TimeInput = ({ label, value, onChange, error, isError, required }) => (
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 ml-1">
+                {label} {required && <span className="text-asms-orange">*</span>}
+            </label>
+            <input 
+              type="time" 
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className={`w-full glass-input rounded-xl py-3 px-3 text-sm transition-all appearance-none ${error || isError ? 'border-red-500/50 bg-red-900/20' : ''}`}
+              style={{ WebkitAppearance: 'none', MozAppearance: 'textfield', colorScheme: 'dark' }}
+            />
+            {error && (
+              <p className="text-red-400 text-[10px] mt-1 flex items-center gap-1 font-medium">
+                <AlertCircle size={10} />
+                {error}
+              </p>
+            )}
+          </div>
+        );
+
+        const JobRow = ({ job, index, onChange, onRemove, hasOverlap, overlapMessage, showValidation }) => {
+          const start = timeToDec(job.startTime);
+          const finish = timeToDec(job.finishTime);
+          const crossesMidnight = job.startTime && job.finishTime && finish < start;
+          
+          let duration = 0;
+          if (job.startTime && job.finishTime) {
+            if (crossesMidnight) duration = (24 - start) + finish;
+            else if (finish > start) duration = finish - start;
+          }
+          
+          const durationStr = formatDuration(duration);
+          const isInvalid = (field) => showValidation && !job[field];
+
+          return (
+            <div className={`glass-panel rounded-2xl p-5 mb-4 relative animate-fade-in ${hasOverlap ? 'border-red-500/30 bg-red-900/10' : ''}`}>
+              {hasOverlap && (
+                <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
+                  <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-300 text-sm font-medium">{overlapMessage}</p>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-start mb-5 pb-3 border-b border-white/5">
+                <h3 className="font-bold text-slate-200 flex items-center gap-2">
+                  <span className={`text-xs font-bold px-3 py-1 rounded-lg ${hasOverlap ? 'bg-red-500 text-white' : 'bg-asms-orange text-white'}`}>
+                    Job {index + 1}
+                  </span>
+                  {crossesMidnight && (
+                    <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-2 py-1 rounded-lg">
+                      Next Day
+                    </span>
+                  )}
+                </h3>
+                <button 
+                  onClick={onRemove} 
+                  className="text-slate-500 hover:text-red-400 hover:bg-white/5 p-2 -mr-2 -mt-2 rounded-lg transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4 mb-5">
+                <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                        ASMS Project Ref <span className="text-asms-orange">*</span>
+                    </label>
+                    <input 
+                        className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('asmsRef') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                        placeholder="Project Ref"
+                        value={job.asmsRef}
+                        onChange={(e) => onChange(job.id, 'asmsRef', e.target.value)}
+                    />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                            HSE PO Number <span className="text-asms-orange">*</span>
+                        </label>
+                        <input 
+                            className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('hsePo') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                            placeholder="PO Number"
+                            value={job.hsePo}
+                            onChange={(e) => onChange(job.id, 'hsePo', e.target.value)}
+                        />
+                    </div>
+                    <div>
+                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                             Site / Location <span className="text-asms-orange">*</span>
+                         </label>
+                        <input 
+                            className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('site') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                            placeholder="e.g. CUH"
+                            value={job.site}
+                            onChange={(e) => onChange(job.id, 'site', e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                        Description <span className="text-asms-orange">*</span>
+                    </label>
+                    <textarea 
+                        className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 min-h-[60px] resize-none ${isInvalid('hseDesc') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                        placeholder="Work performed..."
+                        value={job.hseDesc}
+                        onChange={(e) => onChange(job.id, 'hseDesc', e.target.value)}
+                        rows={2}
+                    />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/30 border border-white/5 p-4 rounded-xl">
+                <TimeInput
+                  label="Start"
+                  value={job.startTime}
+                  onChange={(val) => onChange(job.id, 'startTime', val)}
+                  error={hasOverlap ? "Overlap" : null}
+                  isError={isInvalid('startTime')}
+                  required
+                />
+                <TimeInput
+                  label="Finish"
+                  value={job.finishTime}
+                  onChange={(val) => onChange(job.id, 'finishTime', val)}
+                  error={hasOverlap ? "Overlap" : null}
+                  isError={isInvalid('finishTime')}
+                  required
+                />
+                <div className="flex flex-col justify-end">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 ml-1">Duration</label>
+                    <div className={`border ${crossesMidnight ? 'bg-purple-500/10 border-purple-500/30' : 'bg-asms-orange/10 border-asms-orange/30'} rounded-xl py-2.5 px-4 text-center`}>
+                      <span className={`font-bold text-lg whitespace-nowrap ${crossesMidnight ? 'text-purple-300' : 'text-asms-orange'}`}>{durationStr}</span>
+                    </div>
+                    {duration > 5 && (
+                        <div className="text-[10px] text-slate-500 font-medium text-center mt-1">(Less 30m Lunch)</div>
+                    )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // --- Main App Component ---
+        function App() {
+          const [userDetails, setUserDetails] = useState({ firstName: '', lastName: '', email: '' });
+          
+          const [weekStartDate, setWeekStartDate] = useState(() => {
+            const d = new Date();
+            const day = d.getDay(); 
+            const diff = day === 0 ? -6 : 1 - day; 
+            d.setDate(d.getDate() + diff);
+            return formatDate(d);
+          });
+          
+          const [currentDayIndex, setCurrentDayIndex] = useState(0); 
+          const [timesheetData, setTimesheetData] = useState({});
+          const [showSuccess, setShowSuccess] = useState(false);
+          const [isSubmitting, setIsSubmitting] = useState(false);
+          const [showValidation, setShowValidation] = useState(false);
+          const [fileCount, setFileCount] = useState(0);
+          
+          // New States
+          const [notes, setNotes] = useState('');
+          const [signatureData, setSignatureData] = useState('');
+
+          const jotFormRef = useRef(null);
+          const isSubmittingRef = useRef(false);
+
+          const activeDateStr = useMemo(() => {
+              const d = new Date(weekStartDate);
+              d.setDate(d.getDate() + currentDayIndex);
+              return formatDate(d);
+          }, [weekStartDate, currentDayIndex]);
+
+          const weekEndingDate = useMemo(() => {
+            const d = new Date(weekStartDate);
+            d.setDate(d.getDate() + 6);
+            return formatDate(d);
+          }, [weekStartDate]);
+
+          const currentJobs = timesheetData[activeDateStr] || [];
+          
+          const jobOverlaps = useMemo(() => {
+            const overlaps = {};
+            currentJobs.forEach((job, idx) => {
+              if (!job.startTime || !job.finishTime) return;
+              const start1 = timeToDec(job.startTime);
+              const end1 = timeToDec(job.finishTime);
+              currentJobs.forEach((otherJob, otherIdx) => {
+                if (idx === otherIdx) return;
+                if (!otherJob.startTime || !otherJob.finishTime) return;
+                const start2 = timeToDec(otherJob.startTime);
+                const end2 = timeToDec(otherJob.finishTime);
+                if (doTimesOverlap(start1, end1, start2, end2)) {
+                  overlaps[job.id] = `Overlaps with Job ${otherIdx + 1}`;
+                }
+              });
+            });
+            return overlaps;
+          }, [currentJobs]);
+
+          const dailyStats = calculateDailyHours(currentJobs, activeDateStr);
+          const hasAnyOverlaps = Object.keys(jobOverlaps).length > 0;
+
+          const handleWeekEndingChange = (e) => {
+            const selected = new Date(e.target.value);
+            const day = selected.getDay();
+            const distToSunday = (7 - day) % 7;
+            selected.setDate(selected.getDate() + distToSunday);
+            selected.setDate(selected.getDate() - 6);
+            setWeekStartDate(formatDate(selected));
+          };
+
+          const handleAddJob = () => {
+            const newJob = { id: Date.now(), asmsRef: '', hsePo: '', hseDesc: '', startTime: '', finishTime: '', site: '' };
+            setTimesheetData(prev => ({
+              ...prev,
+              [activeDateStr]: [...(prev[activeDateStr] || []), newJob]
+            }));
+            setShowValidation(false); 
+          };
+
+          const handleUpdateJob = (id, field, value) => {
+            setTimesheetData(prev => ({
+              ...prev,
+              [activeDateStr]: prev[activeDateStr].map(j => j.id === id ? { ...j, [field]: value } : j)
+            }));
+          };
+
+          const handleRemoveJob = (id) => {
+            setTimesheetData(prev => ({
+              ...prev,
+              [activeDateStr]: prev[activeDateStr].filter(j => j.id !== id)
+            }));
+          };
+
+          const validateCurrentPage = () => {
+              if (currentDayIndex > 6) return true; 
+              if (!userDetails.firstName || !userDetails.lastName) {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  return false;
+              }
+              for (const job of currentJobs) {
+                  if (!job.asmsRef || !job.hsePo || !job.site || !job.hseDesc || !job.startTime || !job.finishTime) {
+                      return false;
+                  }
+              }
+              return true;
+          };
+          
+          const validateAllDataForSubmission = () => {
+              if (!userDetails.firstName || !userDetails.lastName) return false;
+              
+              const allDays = Object.keys(timesheetData);
+              for (const day of allDays) {
+                  const jobs = timesheetData[day];
+                  for (const job of jobs) {
+                      if (!job.asmsRef || !job.hsePo || !job.site || !job.hseDesc || !job.startTime || !job.finishTime) {
+                          return false; 
+                      }
+                  }
+              }
+              // Mandatory Signature Check
+              if (!signatureData || signatureData.length < 100) return false; 
+              return true;
+          };
+
+          const handleSubmit = () => {
+             if (!validateAllDataForSubmission()) {
+                 setShowValidation(true);
+                 if (!signatureData || signatureData.length < 100) {
+                     // Scroll to signature if it's missing
+                     const sigPad = document.querySelector('.signature-section');
+                     if(sigPad) sigPad.scrollIntoView({ behavior: 'smooth' });
+                     alert("You must sign the timesheet before submitting.");
+                 } else {
+                     alert("Please complete all mandatory fields in your entries before submitting.");
+                 }
+                 return;
+             }
+             
+             setIsSubmitting(true);
+             isSubmittingRef.current = true;
+             
+             setTimeout(() => {
+                  if (jotFormRef.current) {
+                      jotFormRef.current.submit();
+                  }
+              }, 500);
+          };
+
+          const handleNext = () => {
+             if (hasAnyOverlaps) return;
+             if (!validateCurrentPage()) {
+                 setShowValidation(true);
+                 return;
+             }
+             setShowValidation(false);
+             if (currentDayIndex < 7) {
+                setCurrentDayIndex(p => p + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+             }
+          };
+
+          const handleReview = () => {
+             if (hasAnyOverlaps) return;
+             if (!validateCurrentPage()) {
+                 setShowValidation(true);
+                 return;
+             }
+             setShowValidation(false);
+             setCurrentDayIndex(7); // Jump to Review page
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+          };
+
+          const handleIframeLoad = () => {
+              if (isSubmittingRef.current) {
+                  setIsSubmitting(false);
+                  isSubmittingRef.current = false;
+                  setShowSuccess(true);
+              }
+          };
+
+          const dateDisplay = new Date(activeDateStr).toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+          const dateObj = new Date(weekEndingDate);
+          const formYear = dateObj.getFullYear();
+          const formMonth = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+          const formDay = dateObj.getDate().toString().padStart(2, '0');
+
+          const allWeekJobs = useMemo(() => {
+              let jobs = [];
+              const daysToProcess = Array.from({length: 7}, (_, i) => {
+                  const d = new Date(weekStartDate);
+                  d.setDate(d.getDate() + i);
+                  return formatDate(d);
+              });
+              daysToProcess.forEach(dateStr => {
+                  const dayJobs = timesheetData[dateStr] || [];
+                  dayJobs.forEach(job => jobs.push({ ...job, date: dateStr }));
+              });
+              return jobs;
+          }, [timesheetData, weekStartDate]);
+          
+          const weekStats = useMemo(() => {
+              let total = 0, normal = 0, ot15 = 0, ot20 = 0;
+              const daysToProcess = Array.from({length: 7}, (_, i) => {
+                  const d = new Date(weekStartDate);
+                  d.setDate(d.getDate() + i);
+                  return formatDate(d);
+              });
+              daysToProcess.forEach(dateStr => {
+                  const s = calculateDailyHours(timesheetData[dateStr] || [], dateStr);
+                  total += s.total;
+                  normal += s.normal;
+                  ot15 += s.ot15;
+                  ot20 += s.ot20;
+              });
+              return { total, normal, ot15, ot20 };
+          }, [timesheetData, weekStartDate]);
+
+          const renderHiddenMatrixInputs = () => {
+              const inputs = [];
+              // Adjusted loop to 56 to match JotForm row count (indices 0-55)
+              for (let i = 0; i < 56; i++) {
+                  const job = allWeekJobs[i] || {};
+                  let durationStr = "";
+                  if (job.startTime && job.finishTime) {
+                      const start = timeToDec(job.startTime);
+                      const finish = timeToDec(job.finishTime);
+                      const crossesMidnight = finish < start;
+                      let d = 0;
+                      if (crossesMidnight) d = (24 - start) + finish;
+                      else if (finish > start) d = finish - start;
+                      durationStr = formatDurationDecimal(d);
+                  }
+                  inputs.push(<input key={`r${i}c0`} type="hidden" name={`q5_typeA[${i}][0]`} value={formatDateEU(job.date) || ''} />);
+                  inputs.push(<input key={`r${i}c1`} type="hidden" name={`q5_typeA[${i}][1]`} value={job.asmsRef || ''} />);
+                  inputs.push(<input key={`r${i}c2`} type="hidden" name={`q5_typeA[${i}][2]`} value={job.hsePo || ''} />);
+                  const combinedDesc = job.site ? `${job.site} - ${job.hseDesc || ''}` : (job.hseDesc || '');
+                  inputs.push(<input key={`r${i}c3`} type="hidden" name={`q5_typeA[${i}][3]`} value={combinedDesc} />);
+                  inputs.push(<input key={`r${i}c4`} type="hidden" name={`q5_typeA[${i}][4]`} value={job.startTime || ''} />);
+                  inputs.push(<input key={`r${i}c5`} type="hidden" name={`q5_typeA[${i}][5]`} value={job.finishTime || ''} />);
+                  inputs.push(<input key={`r${i}c6`} type="hidden" name={`q5_typeA[${i}][6]`} value={durationStr} />);
+              }
+              return inputs;
+          };
+
+          if (showSuccess) {
+            return (
+              <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade-in">
+                <div className="glass-panel rounded-3xl p-8 max-w-md w-full text-center border-t border-white/10 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-asms-orange to-red-500"></div>
+                  <div className="bg-asms-orange/20 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center ring-1 ring-asms-orange/50">
+                    <CheckCircle className="text-asms-orange w-12 h-12" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Timesheet Sent!</h2>
+                  <p className="text-slate-400 mb-8">Your timesheet has been successfully submitted to the office.</p>
+                  
+                  <button onClick={() => { setShowSuccess(false); setTimesheetData({}); setNotes(''); setSignatureData(''); setCurrentDayIndex(0); setIsSubmitting(false); }} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2"><Clock size={20} />Start New Timesheet</button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="min-h-screen pb-32">
+              <iframe name="jotform_iframe" id="jotform_iframe" title="jotform_iframe" style={{ display: 'none' }} onLoad={handleIframeLoad} />
+              
+              {/* LOADING OVERLAY */}
+              {isSubmitting && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-sm animate-fade-in">
+                    <div className="glass-panel p-8 rounded-2xl flex flex-col items-center shadow-2xl border border-asms-orange/30">
+                        <Loader2 className="w-12 h-12 text-asms-orange animate-spin mb-4" />
+                        <h2 className="text-xl font-bold text-white">Submitting...</h2>
+                        <p className="text-slate-400 text-sm mt-2">Uploading files & sending data...</p>
+                    </div>
+                </div>
+              )}
+
+              <div className="glass-panel sticky top-0 z-20 border-b border-white/5">
+                <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
+                  <ASMSLogo width={160} showBackground={false} />
+                </div>
+                <div className="w-full bg-slate-800 h-1">
+                    <div className="bg-asms-orange h-1 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(249,115,22,0.5)]" style={{ width: `${Math.min(100, ((currentDayIndex + 1) / 7) * 100)}%` }} />
+                </div>
+              </div>
+
+              <div className="max-w-3xl mx-auto px-5 py-6">
+                
+                {hasAnyOverlaps && (
+                  <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-2xl p-5 flex items-start gap-3 animate-slide-up backdrop-blur-md">
+                    <AlertCircle size={24} className="text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-white font-bold text-base mb-1">Time Overlaps Detected</h3>
+                      <p className="text-red-300 text-sm">Please adjust overlapping jobs.</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* User Details Block - Show on Day 0 */}
+                {currentDayIndex === 0 && (
+                    <div className="glass-panel rounded-2xl p-6 mb-6 animate-slide-up">
+                        <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-5 pb-3 border-b border-white/5 flex items-center gap-2">
+                        <User size={16} className="text-asms-orange" /> Technician Details
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-2">
+                        <InputField label="First Name" value={userDetails.firstName} onChange={v => setUserDetails({...userDetails, firstName: v})} placeholder="First Name" required isError={showValidation && !userDetails.firstName} />
+                        <InputField label="Last Name" value={userDetails.lastName} onChange={v => setUserDetails({...userDetails, lastName: v})} placeholder="Last Name" required isError={showValidation && !userDetails.lastName} />
+                        </div>
+                        <InputField label="Email" type="email" value={userDetails.email} onChange={v => setUserDetails({...userDetails, email: v})} placeholder="email@asms.ie" icon={Mail} />
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                            <label className="text-sm font-bold text-slate-300 flex items-center gap-2 mb-2"><Calendar size={18} className="text-asms-orange" /> Week Ending (Sunday):</label>
+                            <input type="date" value={weekEndingDate} onChange={handleWeekEndingChange} className="glass-input w-full rounded-xl py-2 px-4 text-sm outline-none transition-all" style={{colorScheme: "dark"}} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Navigation Tabs */}
+                <div className="glass-panel rounded-2xl p-4 mb-6 animate-slide-up overflow-hidden">
+                    <div className="overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar">
+                        <div className="flex justify-between gap-2 min-w-[320px]">
+                            {DISPLAY_WEEK_DAYS.map((dayObj) => {
+                                const isActive = dayObj.offset === currentDayIndex;
+                                const d = new Date(weekStartDate); d.setDate(d.getDate() + dayObj.offset);
+                                const hasData = (timesheetData[formatDate(d)] || []).length > 0;
+                                return (
+                                    <button key={dayObj.name} onClick={() => { if(!validateCurrentPage()) { setShowValidation(true); return; } setShowValidation(false); setCurrentDayIndex(dayObj.offset); }} className="flex flex-col items-center flex-1 min-w-0 active:scale-95 transition-transform">
+                                        <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-sm font-bold mb-1.5 transition-all duration-300 shadow-lg border ${isActive ? 'bg-asms-orange text-white border-orange-400 shadow-orange-900/50 scale-110' : 'bg-slate-900/50 text-slate-500 border-transparent hover:bg-slate-800'}`}>
+                                            {dayObj.name.substr(0,1)}
+                                            {hasData && !isActive && <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-slate-900"></div>}
+                                        </div>
+                                        <div className={`text-[10px] sm:text-xs font-medium ${isActive ? 'text-asms-orange' : 'text-slate-500'}`}>{dayObj.name.substr(0,3)}</div>
+                                    </button>
+                                )
+                            })}
+                            <button onClick={() => { if(!validateCurrentPage()) { setShowValidation(true); return; } setShowValidation(false); setCurrentDayIndex(7); }} className="flex flex-col items-center flex-1 min-w-0 active:scale-95 transition-transform">
+                                <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-sm font-bold mb-1.5 transition-all duration-300 shadow-lg border ${currentDayIndex === 7 ? 'bg-green-600 text-white border-green-400 shadow-green-900/50 scale-110' : 'bg-slate-900/50 text-slate-500 border-transparent hover:bg-slate-800'}`}>
+                                    <FileText size={16} />
+                                </div>
+                                <div className={`text-[10px] sm:text-xs font-medium ${currentDayIndex === 7 ? 'text-green-500' : 'text-slate-500'}`}>Review</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Day Content */}
+                {currentDayIndex < 7 ? (
+                    <div className="mb-6 animate-slide-up">
+                        <div className="flex justify-between items-center mb-5">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">{dateDisplay}</h2>
+                            <span className="bg-asms-orange/20 text-asms-orange border border-asms-orange/30 text-xs px-3 py-1 rounded-full font-bold">{currentJobs.length} Jobs</span>
+                        </div>
+
+                        {currentJobs.length === 0 && (
+                            <div className="text-center py-12 glass-panel rounded-2xl border border-dashed border-slate-600 mb-4">
+                                <Clock size={48} className="mx-auto text-slate-600 mb-4" />
+                                <p className="text-slate-400 mb-4 text-sm">No jobs logged for this day.</p>
+                                <button onClick={handleAddJob} className="bg-asms-orange hover:bg-orange-600 text-white font-bold transition-colors text-sm py-3 px-6 rounded-xl shadow-lg shadow-orange-900/20">+ Add Job Entry</button>
+                            </div>
+                        )}
+
+                        {currentJobs.map((job, idx) => (
+                            <JobRow key={job.id} job={job} index={idx} onChange={handleUpdateJob} onRemove={() => handleRemoveJob(job.id)} hasOverlap={!!jobOverlaps[job.id]} overlapMessage={jobOverlaps[job.id]} showValidation={showValidation} />
+                        ))}
+
+                        {currentJobs.length > 0 && (
+                        <button onClick={handleAddJob} disabled={currentJobs.length >= 10} className="w-full mt-2 py-4 glass-panel border border-white/10 hover:bg-white/5 text-slate-300 font-bold rounded-xl active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50">+ Add Another Job</button>
+                        )}
+                        
+                        <div className="mt-6 glass-panel rounded-2xl p-6 shadow-xl">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2"><Clock size={14} className="text-asms-orange"/> Daily Summary</h3>
+                            <div className="grid grid-cols-2 gap-4 mb-5 pb-5 border-b border-white/5">
+                                <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5"><div className="text-slate-500 text-[10px] uppercase font-bold mb-2">Total Paid</div><div className="text-2xl font-bold text-white">{formatDuration(dailyStats.total)}</div></div>
+                                <div className="bg-asms-orange/10 rounded-xl p-4 border border-asms-orange/20"><div className="text-asms-orange text-[10px] uppercase font-bold mb-2">Normal</div><div className="text-xl font-bold text-white">{formatDuration(dailyStats.normal)}</div></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5"><div className="text-slate-500 text-[10px] uppercase font-bold mb-2">1.5x</div><div className="text-lg font-bold text-slate-300">{formatDuration(dailyStats.ot15)}</div></div>
+                                <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5"><div className="text-slate-500 text-[10px] uppercase font-bold mb-2">2.0x</div><div className="text-lg font-bold text-slate-300">{formatDuration(dailyStats.ot20)}</div></div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* REVIEW & UPLOAD PAGE */
+                    <div className="animate-slide-up">
+                        <form 
+                            ref={jotFormRef}
+                            action="https://eu-submit.jotform.com/submit/260451653361352" 
+                            method="post" 
+                            target="jotform_iframe"
+                            encType="multipart/form-data"
+                            name="form_260451653361352" 
+                            id="260451653361352" 
+                            acceptCharset="utf-8" 
+                            autoComplete="on"
+                        >
+                            <input type="hidden" name="formID" value="260451653361352" />
+                            <input type="hidden" name="simple_spc" value="260451653361352-260451653361352" />
+                            
+                            <input type="hidden" name="q3_name[first]" value={userDetails.firstName} />
+                            <input type="hidden" name="q3_name[last]" value={userDetails.lastName} />
+                            <input type="hidden" name="q10_email" value={userDetails.email} />
+                            <input type="hidden" name="q4_date[day]" value={formDay} />
+                            <input type="hidden" name="q4_date[month]" value={formMonth} />
+                            <input type="hidden" name="q4_date[year]" value={formYear} />
+                            <input type="hidden" name="q6_totalHours" value={formatDurationDecimal(weekStats.total)} />
+                            <input type="hidden" name="q7_normalHours" value={formatDurationDecimal(weekStats.normal)} />
+                            <input type="hidden" name="q8_timeAnd" value={formatDurationDecimal(weekStats.ot15)} />
+                            <input type="hidden" name="q9_doubleTime" value={formatDurationDecimal(weekStats.ot20)} />
+                            
+                            {/* UPDATED: Signature with CORRECT 'q' name */}
+                            <input type="hidden" name="q13_signature" value={signatureData} />
+
+                            {renderHiddenMatrixInputs()}
+
+                            <div className="glass-panel rounded-2xl p-6 mb-6">
+                                <h2 className="text-lg font-bold text-white mb-4">Weekly Summary</h2>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div className="p-4 rounded-xl bg-slate-800/50 border border-white/10">
+                                        <div className="text-slate-400 text-xs font-bold uppercase">Total Jobs</div>
+                                        <div className="text-2xl font-bold text-white">{allWeekJobs.length}</div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-asms-orange/10 border border-asms-orange/20">
+                                        <div className="text-asms-orange text-xs font-bold uppercase">Total Paid Hours</div>
+                                        <div className="text-2xl font-bold text-white">{formatDuration(weekStats.total)}</div>
+                                    </div>
+                                </div>
+                                <div className="text-sm text-slate-400 p-4 bg-slate-900/50 rounded-xl">
+                                    Normal: {formatDuration(weekStats.normal)} • 1.5x: {formatDuration(weekStats.ot15)} • 2.0x: {formatDuration(weekStats.ot20)}
+                                </div>
+                            </div>
+                            
+                            {/* NOTES SECTION - UPDATED NAME TO q12_notes */}
+                            <div className="glass-panel rounded-2xl p-6 mb-6">
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Edit size={18} className="text-asms-orange" />
+                                    Notes
+                                </h3>
+                                <textarea 
+                                    name="q12_notes"
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="Add any additional notes here..."
+                                    className="w-full glass-input rounded-xl p-4 text-sm transition-all placeholder-slate-500 min-h-[100px]"
+                                />
+                            </div>
+
+                            {/* SIGNATURE SECTION */}
+                            <div className={`signature-section glass-panel rounded-2xl p-6 mb-6 ${showValidation && (!signatureData || signatureData.length < 100) ? 'border-red-500/50 bg-red-900/10' : ''}`}>
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Pen size={18} className="text-asms-orange" />
+                                    Technician Signature {showValidation && (!signatureData || signatureData.length < 100) && <span className="text-red-500 text-[10px] normal-case ml-2">(Required)</span>}
+                                </h3>
+                                <SignaturePad onSave={setSignatureData} />
+                                {showValidation && (!signatureData || signatureData.length < 100) && (
+                                    <p className="text-red-400 text-xs mt-2 flex items-center gap-1"><AlertCircle size={12}/> Please sign above to continue</p>
+                                )}
+                            </div>
+
+                            <div className="glass-panel rounded-2xl p-6 mb-24 border border-dashed border-slate-500">
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <UploadCloud size={18} className="text-asms-orange" />
+                                    Upload Receipts / Files
+                                </h3>
+                                <div className="text-center">
+                                    <input 
+                                        type="file" 
+                                        id="input_11" 
+                                        name="q11_fileUpload[]" 
+                                        multiple 
+                                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-asms-orange file:text-white hover:file:bg-orange-600 transition-all cursor-pointer"
+                                        onChange={(e) => setFileCount(e.target.files.length)}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-3">
+                                        {fileCount > 0 ? `${fileCount} file(s) selected` : "Select images or PDFs"}
+                                    </p>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
+              </div>
+
+              {/* Footer */}
+              <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-white/10 p-5 z-30" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+                <div className="max-w-3xl mx-auto flex gap-3">
+                    {currentDayIndex < 7 ? (
+                        <>
+                            {currentDayIndex < 6 && (
+                                <button 
+                                    onClick={handleNext}
+                                    disabled={hasAnyOverlaps}
+                                    className={`flex-1 ${hasAnyOverlaps ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'} text-lg font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 min-h-[56px]`}
+                                >
+                                    <span>Next Day</span>
+                                    <ChevronRight size={22}/>
+                                </button>
+                            )}
+                            <button 
+                                onClick={handleReview}
+                                disabled={hasAnyOverlaps}
+                                className={`flex-1 ${hasAnyOverlaps ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-asms-orange/10 border border-asms-orange/50 hover:bg-asms-orange/20 text-asms-orange'} text-lg font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 min-h-[56px]`}
+                            >
+                                <span>{currentDayIndex === 6 ? 'Review' : 'Review'}</span>
+                                <FileText size={22}/>
+                            </button>
+                        </>
+                    ) : (
+                        <button 
+                            onClick={handleSubmit}
+                            disabled={hasAnyOverlaps || allWeekJobs.length === 0}
+                            className={`flex-1 ${hasAnyOverlaps || allWeekJobs.length === 0 ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-green-600 to-green-500 hover:to-green-400 shadow-lg shadow-green-900/50 text-white'} text-lg font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 min-h-[56px]`}
+                        >
+                             <span>Submit Timesheet</span>
+                             <Send size={22}/>
+                        </button>
+                    )}
+                </div>
+              </div>
+
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
