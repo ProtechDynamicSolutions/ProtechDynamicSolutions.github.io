@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Iron Advance - Power Performance</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Import Map for React and Lucide Icons -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+        }
+    }
+    </script>
+
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        @keyframes drawLine {
+            from { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+            to { stroke-dasharray: 1000; stroke-dashoffset: 0; }
+        }
+        .animate-draw-line {
+            animation: drawLine 2s ease-out forwards;
+        }
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            Sparkles, Zap, Shield, ChevronDown, Check, ArrowRight, 
+            X, Dumbbell, Activity, Users, Flame, Clock, CheckCircle2, 
+            Timer, HeartPulse
+        } from 'lucide-react';
+
+        // --- Components ---
+
+        const AnimatedSplash = ({ color, className, delay = 0 }) => (
+            <div 
+                className={`absolute rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob ${className}`}
+                style={{ 
+                    backgroundColor: color,
+                    animationDelay: `${delay}s`
+                }}
+            />
+        );
+
+        const FadeInSection = ({ children, delay = 0, className = "" }) => {
+            const [isVisible, setIsVisible] = useState(false);
+            const domRef = useRef();
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => setIsVisible(entry.isIntersecting));
+                });
+                if (domRef.current) observer.observe(domRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div
+                    ref={domRef}
+                    className={`transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}
+                    style={{ transitionDelay: `${delay}ms` }}
+                >
+                    {children}
+                </div>
+            );
+        };
+
+        const ScienceSection = () => {
+            const [activeTab, setActiveTab] = useState('iron'); 
+
+            return (
+                <div className="py-16 md:py-20 bg-gradient-to-b from-white to-red-50 relative overflow-hidden">
+                    <div className="max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+                        
+                        <div className="order-2 lg:order-1">
+                            <div className="inline-block px-4 py-1 rounded-full bg-red-100 text-red-700 font-bold text-xs md:text-sm mb-4">
+                                PATENTED TECHNOLOGY
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-orange-500 mb-6">
+                                The Active Difference
+                            </h2>
+                            <div className="space-y-4 mb-6">
+                                <button 
+                                    onClick={() => setActiveTab('iron')}
+                                    className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center gap-4 ${activeTab === 'iron' ? 'bg-red-600 text-white shadow-lg scale-105' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'iron' ? 'bg-white/20' : 'bg-red-100 text-red-600'}`}>1</div>
+                                    <div>
+                                        <h4 className="font-bold text-sm md:text-base">Targeted Iron Delivery</h4>
+                                        <p className="text-xs md:text-sm opacity-90">Targets the DMT-1 receptor for peak absorption.</p>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    onClick={() => setActiveTab('protection')}
+                                    className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex items-center gap-4 ${activeTab === 'protection' ? 'bg-orange-500 text-white shadow-lg scale-105' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'protection' ? 'bg-white/20' : 'bg-orange-100 text-orange-600'}`}>2</div>
+                                    <div>
+                                        <h4 className="font-bold text-sm md:text-base">Gut Protection Matrix</h4>
+                                        <p className="text-xs md:text-sm opacity-90">Prevents oxidative stress and GI distress.</p>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 mb-6">
+                                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <Activity size={18} className="text-red-500" />
+                                    Mechanism of Action:
+                                </h4>
+                                <p className="text-sm md:text-base text-gray-600">
+                                    {activeTab === 'iron' 
+                                        ? "Bypasses the stomach to release exactly where iron is naturally absorbed, yielding clinically proven 2X better absorption of iron sulphate."
+                                        : "The whey protein matrix protects the gut mucosa, ensuring you don't experience the inflammation or nausea that disrupts training blocks."}
+                                </p>
+                            </div>
+
+                            {/* New Performance Lens Panel */}
+                            <div className="bg-gray-900 text-white p-6 rounded-2xl shadow-lg border-l-4 border-orange-500">
+                                <h4 className="font-bold mb-3 flex items-center gap-2">
+                                    <Zap size={18} className="text-yellow-400" />
+                                    Performance Outcomes
+                                </h4>
+                                <ul className="space-y-2">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><Check size={16} className="text-green-400"/> Supports haemoglobin & oxygen transport</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><Check size={16} className="text-green-400"/> Helps reduce unexplained fatigue</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><Check size={16} className="text-green-400"/> Supports aerobic capacity (VO₂ max)</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><Check size={16} className="text-green-400"/> Gentle on gut during high training stress</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Right: SVG Visualization */}
+                        <div className="order-1 lg:order-2 relative h-[450px] md:h-[550px] bg-white rounded-3xl shadow-2xl p-4 md:p-8 flex items-center justify-center border border-gray-100">
+                            <div className="absolute top-4 right-4 bg-gray-50 px-3 py-1 rounded-full text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                Delivery Simulation
+                            </div>
+                            
+                            <svg viewBox="0 0 400 600" className="w-full h-full drop-shadow-xl">
+                                {/* The Gut Path */}
+                                <path 
+                                    d="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550" 
+                                    fill="none" 
+                                    stroke="#E5E7EB" 
+                                    strokeWidth="40" 
+                                    strokeLinecap="round"
+                                />
+                                <path 
+                                    d="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550" 
+                                    fill="none" 
+                                    stroke="#FFF" 
+                                    strokeWidth="30" 
+                                    strokeLinecap="round"
+                                />
+                                
+                                <text x="210" y="150" className="text-xs fill-gray-400 font-sans">Stomach (Bypassed)</text>
+                                <text x="250" y="350" className="text-xs font-bold fill-red-500 font-sans">DMT-1 (Absorption Zone)</text>
+                                <text x="230" y="500" className="text-xs fill-gray-400 font-sans">Lower Intestine</text>
+
+                                {activeTab === 'iron' && (
+                                    <>
+                                        <circle r="8" fill="#DC2626">
+                                            <animateMotion 
+                                                dur="2s" 
+                                                repeatCount="indefinite"
+                                                path="M 150 50 Q 150 150 100 200 Q 50 250 150 350"
+                                                keyPoints="0;1"
+                                                keyTimes="0;1"
+                                                calcMode="spline"
+                                                keySplines="0.4 0 0.2 1"
+                                            />
+                                            <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle cx="150" cy="350" r="0" fill="none" stroke="#DC2626" strokeWidth="3" opacity="0.6">
+                                            <animate attributeName="r" values="0;45" dur="1.5s" begin="1.5s" repeatCount="indefinite" />
+                                            <animate attributeName="opacity" values="0.8;0" dur="1.5s" begin="1.5s" repeatCount="indefinite" />
+                                        </circle>
+                                    </>
+                                )}
+
+                                {activeTab === 'protection' && (
+                                    <>
+                                        <circle r="10" fill="#F97316" opacity="0.8">
+                                            <animateMotion 
+                                                dur="3s" 
+                                                repeatCount="indefinite"
+                                                path="M 150 50 Q 150 150 100 200 Q 50 250 150 350 Q 250 450 200 550"
+                                                keyPoints="0;1"
+                                                keyTimes="0;1"
+                                                calcMode="spline"
+                                                keySplines="0.4 0 0.2 1"
+                                            />
+                                        </circle>
+                                        {/* Shield effect in stomach */}
+                                        <path d="M 80 180 Q 100 220 120 180 Z" fill="none" stroke="#F97316" strokeWidth="2" strokeDasharray="4 4" opacity="0">
+                                            <animate attributeName="opacity" values="0;1;0" dur="3s" begin="0.5s" repeatCount="indefinite" />
+                                        </path>
+                                    </>
+                                )}
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ComparisonTable = () => {
+            return (
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <FadeInSection className="bg-white p-6 rounded-2xl shadow-xl border-t-8 border-red-600 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <Activity size={100} className="text-red-900" />
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <CheckCircle2 className="text-red-600" /> Active Iron Advance
+                        </h3>
+                        <ul className="space-y-4">
+                            {[
+                                "Better absorption during high training load",
+                                "No GI distress pre- or post-training",
+                                "Suitable for daily use during competition blocks",
+                                "Tested in physically active populations",
+                                "Supports optimal oxygen transport"
+                            ].map((item, i) => (
+                                <li key={i} className="flex items-start gap-3 relative z-10">
+                                    <div className="mt-1 bg-red-100 p-1 rounded-full text-red-600 flex-shrink-0"><Check size={14} strokeWidth={3}/></div>
+                                    <span className="text-sm md:text-base text-gray-800 font-bold">{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </FadeInSection>
+
+                    <FadeInSection delay={200} className="bg-gray-100 p-6 rounded-2xl shadow-inner border border-gray-200 opacity-90">
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-500 mb-6 flex items-center gap-2">
+                            Traditional Iron
+                        </h3>
+                        <ul className="space-y-4">
+                            {[
+                                "GI discomfort disrupts training",
+                                "Poor compliance in athletes",
+                                "Inconsistent absorption",
+                                "Often discontinued mid-season",
+                                "Oxidative stress on the gut"
+                            ].map((item, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    <div className="mt-1 bg-gray-200 p-1 rounded-full text-gray-500 flex-shrink-0"><X size={14} strokeWidth={3}/></div>
+                                    <span className="text-sm md:text-base text-gray-500">{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </FadeInSection>
+                </div>
+            );
+        }
+
+        const EnergyChart = () => {
+            return (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-red-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                        <div>
+                            <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase tracking-tight">Sustain Training Intensity</h3>
+                            <p className="text-red-600 font-bold text-sm md:text-base">in just 6 weeks*</p>
+                        </div>
+                        <div className="text-left md:text-right">
+                            <span className="text-3xl md:text-4xl font-black text-orange-500">+94%</span>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Iron Stores Increase</p>
+                        </div>
+                    </div>
+                    
+                    <div className="relative h-48 md:h-64 w-full">
+                        <svg viewBox="0 0 400 200" className="w-full h-full overflow-visible">
+                            <line x1="50" y1="180" x2="380" y2="180" stroke="#f3f4f6" strokeWidth="2" />
+                            <line x1="50" y1="100" x2="380" y2="100" stroke="#f3f4f6" strokeWidth="2" />
+                            <line x1="50" y1="20" x2="380" y2="20" stroke="#f3f4f6" strokeWidth="2" />
+
+                            <text x="30" y="185" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Base</text>
+                            <text x="30" y="25" textAnchor="end" className="text-[10px] fill-gray-400 font-bold">Peak</text>
+
+                            <path 
+                                d="M 50 140 L 215 80 L 380 50" 
+                                fill="none" 
+                                stroke="url(#gradientLine)" 
+                                strokeWidth="5" 
+                                strokeLinecap="round"
+                                className="animate-draw-line"
+                            />
+                            
+                            <defs>
+                                <linearGradient id="gradientLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#dc2626" />
+                                    <stop offset="100%" stopColor="#f97316" />
+                                </linearGradient>
+                            </defs>
+
+                            <circle cx="50" cy="140" r="6" fill="#dc2626" className="animate-pop-in" style={{animationDelay: '0.5s'}} />
+                            <circle cx="215" cy="80" r="6" fill="#ea580c" className="animate-pop-in" style={{animationDelay: '1.0s'}} />
+                            <circle cx="380" cy="50" r="6" fill="#f97316" className="animate-pop-in" style={{animationDelay: '1.5s'}} />
+
+                            <text x="50" y="200" textAnchor="middle" className="text-[10px] md:text-xs font-bold fill-gray-600">Pre-Season</text>
+                            <text x="215" y="200" textAnchor="middle" className="text-[10px] md:text-xs font-bold fill-gray-600">Mid-Block</text>
+                            <text x="380" y="200" textAnchor="middle" className="text-[10px] md:text-xs font-bold fill-gray-600">Peak Phase</text>
+
+                            <g className="animate-pop-in" style={{animationDelay: '1.2s'}}>
+                                <rect x="165" y="35" width="100" height="30" rx="4" fill="#111827" />
+                                <text x="215" y="55" textAnchor="middle" className="text-xs font-bold fill-white">Training Capacity ↑</text>
+                                <path d="M 215 65 L 210 70 L 220 70 Z" fill="#111827" transform="translate(0,-5)" />
+                            </g>
+                        </svg>
+                    </div>
+                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-4 text-center px-4">*Ledwidge, M. et al. PRECISION Study. Int J Clin Pharm (2023)</p>
+                </div>
+            );
+        }
+
+        const ActiveIronPresentation = () => {
+            const [scrolled, setScrolled] = useState(false);
+            const [purchaseType, setPurchaseType] = useState('one-time');
+
+            const basePrice = 24.95;
+            const subPrice = 22.46;
+            const currentPrice = purchaseType === 'sub' ? subPrice : basePrice;
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-red-200 selection:text-red-900 overflow-x-hidden">
+                    
+                    {/* Navigation */}
+                    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-4 md:py-6'}`}>
+                        <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <img 
+                                    src="https://activeiron.com/cdn/shop/files/active_widelogo_color.png?v=1751038955&width=500" 
+                                    alt="Active Iron" 
+                                    className="h-8 md:h-12 w-auto object-contain"
+                                />
+                                <span className="hidden md:inline-block border-l border-gray-300 pl-4 ml-2 text-sm font-bold tracking-widest text-gray-400 uppercase">
+                                    Performance Series
+                                </span>
+                            </div>
+                            <button className="bg-red-600 hover:bg-red-700 text-white px-5 md:px-6 py-2 rounded-full font-bold text-sm md:text-base transition-transform hover:scale-105 shadow-md flex items-center gap-2">
+                                Buy Now €{currentPrice}
+                            </button>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <header className="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden bg-gray-50">
+                        <AnimatedSplash color="#dc2626" className="w-[300px] md:w-[500px] h-[300px] md:h-[500px] top-0 left-0 -translate-x-1/2 -translate-y-1/4" delay={0} />
+                        <AnimatedSplash color="#f97316" className="w-[250px] md:w-[400px] h-[250px] md:h-[400px] bottom-0 right-0 translate-x-1/3 translate-y-1/4" delay={2} />
+                        <AnimatedSplash color="#ea580c" className="w-[200px] md:w-[300px] h-[200px] md:h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" delay={4} />
+
+                        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+                            
+                            <div className="space-y-6 text-center lg:text-left pt-4 lg:pt-0 order-2 lg:order-1">
+                                <div className="inline-block">
+                                    <span className="bg-gradient-to-r from-red-600 to-orange-500 text-white px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase mb-2 md:mb-4 inline-block shadow-lg flex items-center gap-2">
+                                        <HeartPulse size={14} /> Clinically Proven
+                                    </span>
+                                </div>
+                                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight text-gray-900 tracking-tighter uppercase">
+                                    Fuel Oxygen.<br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500">
+                                        Power Performance.
+                                    </span>
+                                </h1>
+                                <p className="text-lg md:text-xl text-gray-700 max-w-lg mx-auto lg:mx-0 leading-relaxed font-medium">
+                                    Iron that works as hard as you do. Clinically proven iron absorption to support endurance, oxygen delivery, and recovery.
+                                </p>
+                                
+                                <div className="max-w-md mx-auto lg:mx-0 bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl border border-red-100 mt-6 md:mt-8">
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
+                                        <button 
+                                            onClick={() => setPurchaseType('one-time')}
+                                            className={`py-3 rounded-xl font-bold text-sm transition-all ${purchaseType === 'one-time' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                                        >
+                                            One-time<br/>
+                                            <span className="font-normal text-xs opacity-80">€{basePrice}</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setPurchaseType('sub')}
+                                            className={`py-3 rounded-xl font-bold text-sm transition-all relative ${purchaseType === 'sub' ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                                        >
+                                            <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">SAVE 10%</span>
+                                            Subscribe<br/>
+                                            <span className="font-normal text-xs opacity-90">€{subPrice}</span>
+                                        </button>
+                                    </div>
+                                    <button className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-black text-lg flex items-center justify-center gap-2 group transition-all shadow-lg uppercase tracking-wide">
+                                        Secure Your Supply - €{currentPrice}
+                                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="relative group mt-4 lg:mt-0 order-1 lg:order-2 flex justify-center">
+                                <div className="relative w-[280px] md:w-[350px] lg:w-[450px] transition-transform duration-500 hover:scale-105 z-20">
+                                    <img 
+                                        src="https://rochespharmacy.ie/image/cache/catalog/product-mains/Active%20Iron%20Advance-187x270.jpg" 
+                                        alt="Active Iron Advance Box" 
+                                        className="w-full h-auto drop-shadow-2xl rounded-xl mix-blend-multiply"
+                                    />
+                                    
+                                    <div className="absolute top-0 right-4 w-24 h-24 md:w-28 md:h-28 rounded-full bg-gray-900 text-white shadow-2xl flex flex-col items-center justify-center text-center p-2 border-4 border-gray-50 animate-blob" style={{animationDuration: '10s'}}>
+                                        <span className="text-2xl md:text-3xl font-black text-orange-400 leading-none">25<span className="text-sm">mg</span></span>
+                                        <span className="text-[9px] md:text-[11px] font-bold text-gray-300 uppercase leading-tight mt-1">High Potency<br/>Iron</span>
+                                    </div>
+                                </div>
+
+                                <div className="absolute -bottom-4 md:-bottom-8 left-1/2 -translate-x-1/2 w-[200px] md:w-[300px] h-8 bg-red-900/30 blur-xl rounded-[100%]"></div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Target Audience Section */}
+                    <section className="py-16 md:py-24 bg-white border-t border-gray-100">
+                        <div className="max-w-7xl mx-auto px-4 md:px-6">
+                            <div className="text-center mb-10 md:mb-16">
+                                <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 uppercase tracking-tight">Built for Athletes Who Demand More</h2>
+                                <p className="text-base md:text-lg text-gray-500 font-medium max-w-2xl mx-auto">Optimised iron support tailored to the rigorous demands of high-performance sport and intense training loads.</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[
+                                    { icon: Timer, color: "text-red-600", bg: "bg-red-50", title: "Endurance Athletes", desc: "Runners, cyclists & triathletes lose iron through sweat and impact." },
+                                    { icon: Users, color: "text-orange-500", bg: "bg-orange-50", title: "Team Sports", desc: "Repeated sprints demand superior oxygen efficiency and fast recovery." },
+                                    { icon: Dumbbell, color: "text-gray-900", bg: "bg-gray-100", title: "Strength & Power", desc: "Iron supports energy metabolism during heavy, demanding training blocks." },
+                                    { icon: Flame, color: "text-red-500", bg: "bg-red-50", title: "High-Training Load", desc: "Essential support for athletes consistently training 5–10+ sessions per week." }
+                                ].map((item, i) => (
+                                    <FadeInSection key={i} delay={i * 100} className="p-6 md:p-8 rounded-2xl bg-white border-2 border-gray-50 shadow-lg hover:border-red-100 hover:shadow-2xl transition-all text-center group">
+                                        <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto rounded-2xl ${item.bg} flex items-center justify-center mb-5 md:mb-6 ${item.color} transform group-hover:scale-110 transition-transform`}>
+                                            <item.icon size={28} strokeWidth={2.5} />
+                                        </div>
+                                        <h3 className="font-black text-lg md:text-xl mb-3 text-gray-900">{item.title}</h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed font-medium">{item.desc}</p>
+                                    </FadeInSection>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <ScienceSection />
+
+                    {/* Comparison & Evidence Section */}
+                    <section className="py-16 md:py-24 bg-gray-50">
+                        <div className="max-w-7xl mx-auto px-4 md:px-6">
+                            <div className="text-center mb-10 md:mb-16">
+                                <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 uppercase tracking-tight">Why Athletes Choose Active Iron</h2>
+                                <p className="text-base md:text-lg text-gray-500 font-medium">Standard iron supplements hold you back. Advance pushes you forward.</p>
+                            </div>
+
+                            <div className="grid lg:grid-cols-2 gap-12 items-center">
+                                <ComparisonTable />
+                                
+                                <div className="space-y-8">
+                                    <EnergyChart />
+                                    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-red-900 p-6 md:p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden border border-gray-700">
+                                        <div className="relative z-10">
+                                            <h3 className="text-2xl md:text-3xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">94% Increase</h3>
+                                            <p className="opacity-90 text-sm md:text-base font-medium">In iron levels within just 6 weeks of consistent use.</p>
+                                            <div className="mt-6 flex items-center gap-4">
+                                                <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+                                                    <Clock size={24} className="text-orange-400" />
+                                                </div>
+                                                <div className="text-sm font-bold uppercase tracking-wider text-gray-300">
+                                                    Clinically Proven<br/>Results
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Flame className="absolute -top-10 -right-10 text-white/5 w-48 h-48" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Ingredients / Composition */}
+                    <section className="py-16 md:py-24 bg-gray-900 text-white relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ef4444 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                        
+                        <div className="max-w-4xl mx-auto px-6 relative z-10">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-4">What's Inside</h2>
+                                <p className="text-gray-400 font-medium">Precision formulation for maximum output.</p>
+                            </div>
+                            
+                            <div className="bg-gray-800/50 backdrop-blur-lg border border-gray-700 p-8 md:p-12 rounded-3xl">
+                                <div className="grid md:grid-cols-2 gap-12 items-center">
+                                    <div className="space-y-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-3 bg-red-900/50 rounded-xl text-red-400 border border-red-800">
+                                                <div className="w-8 h-3 rounded-full bg-red-500"></div>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl md:text-2xl font-black text-white">30 Daily Capsules</h3>
+                                                <p className="text-red-400 font-bold text-sm uppercase tracking-wider mt-1">High Potency Advance Formula</p>
+                                            </div>
+                                        </div>
+                                        <ul className="space-y-4 pl-16">
+                                            <li className="flex items-center gap-3 text-gray-300 font-medium"><Check size={18} className="text-red-500"/> 25mg elemental iron per capsule</li>
+                                            <li className="flex items-center gap-3 text-gray-300 font-medium"><Check size={18} className="text-red-500"/> Whey protein encapsulation</li>
+                                            <li className="flex items-center gap-3 text-gray-300 font-medium"><Check size={18} className="text-red-500"/> Clinically proven 2X absorption</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
+                                        <h4 className="font-bold text-orange-400 mb-4 flex items-center gap-2 uppercase tracking-wide text-sm">
+                                            <Shield size={16} /> Why Athletes Trust This
+                                        </h4>
+                                        <ul className="space-y-3">
+                                            <li className="text-sm text-gray-400 flex items-start gap-2"><span className="text-orange-500 font-bold">✓</span> Suitable for endurance and high-impact sports</li>
+                                            <li className="text-sm text-gray-400 flex items-start gap-2"><span className="text-orange-500 font-bold">✓</span> Training-friendly; gentle on the gut during intense blocks</li>
+                                            <li className="text-sm text-gray-400 flex items-start gap-2"><span className="text-orange-500 font-bold">✓</span> Can be taken without food for fast pre-session routines</li>
+                                            <li className="text-sm text-gray-400 flex items-start gap-2"><span className="text-orange-500 font-bold">✓</span> No known performance-limiting side effects</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-16 text-center">
+                                <h3 className="text-2xl md:text-3xl font-black mb-8 uppercase tracking-tight">Invest in your performance today.</h3>
+                                <button className="bg-red-600 hover:bg-red-500 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl font-black text-lg md:text-xl shadow-lg shadow-red-900/50 transform hover:-translate-y-1 transition-all flex items-center gap-3 mx-auto w-full md:w-auto justify-center uppercase tracking-wide">
+                                    Add to Basket - €{currentPrice} <ArrowRight />
+                                </button>
+                                <p className="mt-6 text-gray-400 text-sm font-medium">Free shipping in Ireland on orders over €50</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<ActiveIronPresentation />);
+    </script>
+</body>
+</html>
