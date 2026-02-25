@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Maher Than Concrete — Formwork Calculators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --yellow:#f2ac1f;
+  --yellow-dk:#111111;
+  --yellow-lt:#fffbf0;
+  --yellow-lt2:#fff3cc;
+  --yglow:rgba(242,172,31,.2);
+  --bg:#f5f5f5;
+  --surface:#ffffff;
+  --card:#ffffff;
+  --card2:#f9f9f9;
+  --border:#e0e0e0;
+  --border2:#ebebeb;
+  --text:#111111;
+  --text2:#333333;
+  --muted:#666666;
+  --muted2:#888888;
+  --green:#1a7a4a;
+  --green-lt:#edf7f2;
+  --red:#c0392b;
+  --header-bg:#ffffff;
+  --ff:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --fm:'JetBrains Mono','Courier New',monospace;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--ff);
+  font-size:15px;
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── HEADER ── */
+.header{
+  position:sticky;top:0;z-index:200;
+  background:var(--header-bg);
+  border-bottom:4px solid var(--yellow);
+  padding:0 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:96px;gap:1rem;
+  box-shadow:0 2px 12px rgba(0,0,0,.08);
+}
+.logo-wrap{
+  height:78px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+}
+.logo-img{
+  height:182px;width:auto;display:block;flex-shrink:0;margin-left:-18px;
+}
+.hbadge{
+  font-family:var(--ff);font-size:.65rem;font-weight:700;
+  color:var(--yellow-dk);
+  border:2px solid var(--yellow);
+  padding:.3rem .7rem;letter-spacing:.08em;white-space:nowrap;flex-shrink:0;
+  background:var(--yellow-lt);border-radius:3px;
+  text-transform:uppercase;
+}
+
+/* ── HERO ── */
+.hero{
+  padding:3rem 1.5rem 2.5rem;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#111111 0%,#1a1a0a 55%,#222200 100%);
+  position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'FORMWORK';position:absolute;right:-1rem;top:50%;
+  transform:translateY(-50%);
+  font-family:var(--ff);font-size:clamp(5rem,16vw,13rem);font-weight:900;
+  color:rgba(255,255,255,.03);pointer-events:none;white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero-eye{
+  font-family:var(--ff);font-size:.7rem;font-weight:600;
+  color:var(--yellow);letter-spacing:.2em;text-transform:uppercase;
+  margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem;
+}
+.hero-eye::before{content:'';display:inline-block;width:2rem;height:2px;background:var(--yellow)}
+.hero-title{
+  font-family:var(--ff);font-size:clamp(2.2rem,6vw,5rem);
+  font-weight:900;line-height:.95;text-transform:uppercase;
+  margin-bottom:.75rem;color:#ffffff;letter-spacing:-.01em;
+}
+.hero-title span{color:var(--yellow)}
+.hero-sub{font-size:.9rem;font-weight:400;color:rgba(255,255,255,.55);max-width:480px;line-height:1.6}
+
+/* ── TABS ── */
+.tabs-wrap{
+  position:sticky;top:96px;z-index:100;
+  background:var(--surface);
+  border-bottom:2px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+.tabs-bar{
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;max-width:960px;margin:0 auto;
+}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+  font-family:var(--ff);font-weight:700;font-size:.72rem;
+  letter-spacing:.05em;text-transform:uppercase;color:#555555;
+  background:none;border:none;padding:1rem 1.25rem;cursor:pointer;
+  position:relative;white-space:nowrap;transition:color .15s;
+  display:flex;align-items:center;gap:.45rem;flex-shrink:0;min-height:50px;
+}
+.tab-btn svg{width:15px;height:15px;flex-shrink:0}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--yellow-dk)}
+.tab-btn.active::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;
+  height:3px;background:var(--yellow);
+}
+
+/* ── MAIN ── */
+main{max-width:960px;margin:0 auto;padding:2rem 1.5rem 5rem}
+
+.sec-hdr{display:flex;align-items:center;gap:.85rem;margin-bottom:1.5rem}
+.sec-num{
+  font-family:var(--fm);font-size:2rem;font-weight:600;
+  color:var(--yellow);line-height:1;opacity:.45;
+}
+.sec-title{
+  font-family:var(--ff);font-size:1.4rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:-.01em;line-height:1;color:var(--text);
+}
+.sec-desc{font-family:var(--ff);font-size:.78rem;font-weight:500;color:#555555;margin-top:.15rem}
+
+/* ── PANEL ── */
+.panel{
+  background:var(--card);border:1px solid var(--border);
+  padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.04);
+  border-radius:4px;
+}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.9rem}
+@media(max-width:580px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .g2.keep,.g3.keep{grid-template-columns:1fr 1fr}
+  .g4.keep{grid-template-columns:1fr 1fr}
+}
+
+/* ── FORM ── */
+.fgroup{display:flex;flex-direction:column;gap:.85rem;margin-bottom:1rem}
+.field{display:flex;flex-direction:column;gap:.35rem}
+
+label{
+  font-family:var(--ff);font-size:.78rem;font-weight:700;
+  letter-spacing:.01em;color:#111111;
+}
+.iw{position:relative;display:flex;align-items:center}
+.iw input,.iw select{
+  width:100%;
+  background:var(--card2);
+  border:1.5px solid var(--border);
+  color:var(--text);
+  font-family:var(--ff);font-size:.95rem;font-weight:500;
+  padding:.65rem 3rem .65rem .85rem;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+  -webkit-appearance:none;appearance:none;
+  border-radius:4px;
+  min-height:46px;
+}
+.iw input:focus,.iw select:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px var(--yglow);
+  background:var(--surface);
+}
+.iw input::placeholder{color:#bbb;font-weight:400}
+.unit{
+  position:absolute;right:.75rem;
+  font-family:var(--ff);font-size:.65rem;font-weight:700;
+  color:#555555;letter-spacing:.03em;
+  pointer-events:none;white-space:nowrap;
+}
+input[type=number]::-webkit-inner-spin-button{opacity:.2}
+select option{font-family:var(--ff);font-size:.9rem}
+
+/* ── RANGE ── */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:5px;
+  background:var(--border2);outline:none;cursor:pointer;border-radius:3px;margin-top:.35rem;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;
+  background:var(--yellow);cursor:pointer;border-radius:50%;
+  box-shadow:0 1px 5px rgba(0,0,0,.2);
+}
+
+/* ── SEGMENT ── */
+.seg{
+  display:flex;border:1.5px solid var(--border);
+  margin-bottom:1.1rem;overflow:hidden;border-radius:4px;
+}
+.seg-b{
+  flex:1;font-family:var(--ff);font-size:.68rem;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;
+  background:var(--card2);border:none;border-right:1px solid var(--border);
+  color:var(--muted);padding:.65rem .4rem;cursor:pointer;
+  transition:all .15s;text-align:center;min-height:42px;
+}
+.seg-b:last-child{border-right:none}
+.seg-b.on{background:var(--yellow);color:#111111;font-weight:800}
+.seg-b:hover:not(.on){background:var(--yellow-lt);color:var(--yellow-dk)}
+
+/* ── RESULT BOX ── */
+.rbox{
+  background:var(--yellow-lt);border:2px solid var(--yellow);
+  padding:1.2rem 1.4rem;margin-top:1.1rem;border-radius:6px;
+}
+.r-lbl{
+  font-family:var(--ff);font-size:.7rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:#111111;margin-bottom:.35rem;
+}
+.r-big{
+  font-family:var(--ff);font-size:clamp(2rem,5vw,2.8rem);
+  font-weight:900;color:var(--text);line-height:1;letter-spacing:-.02em;
+}
+.r-unit{font-family:var(--ff);font-size:.75rem;font-weight:400;color:var(--muted);margin-top:.25rem}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:.9rem}
+@media(max-width:420px){.rgrid{grid-template-columns:1fr}}
+.ri{background:var(--surface);border:1px solid var(--border2);padding:.65rem .9rem;border-radius:4px}
+.ri .rl{font-family:var(--ff);font-size:.76rem;font-weight:600;color:#444444;margin-bottom:.15rem;letter-spacing:.01em}
+.ri .rv{font-family:var(--ff);font-size:1rem;font-weight:700;color:#111111}
+.rv.ac{color:var(--yellow-dk)}.rv.gn{color:var(--green)}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--yellow-lt);border-left:4px solid var(--yellow);
+  padding:.8rem 1rem;margin:.75rem 0;font-size:.82rem;font-weight:400;
+  color:#111111;line-height:1.6;border-radius:0 4px 4px 0;
+}
+.callout strong{color:var(--yellow-dk);font-weight:700}
+
+/* ── PRESSURE DIAGRAM ── */
+.pdiag{
+  width:100%;height:130px;background:var(--card2);
+  border:1.5px solid var(--border);margin:.9rem 0;
+  display:flex;align-items:flex-end;padding:.45rem .45rem 0;
+  gap:3px;position:relative;border-radius:4px;
+}
+.pbar{
+  flex:1;background:linear-gradient(to top,var(--yellow),rgba(242,172,31,.07));
+  transition:height .4s ease;position:relative;min-height:2px;
+  border-radius:2px 2px 0 0;
+}
+.pbar-lbl{
+  position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  font-family:var(--fm);font-size:.42rem;color:rgba(80,60,0,.55);white-space:nowrap;
+}
+.pdiag-label{
+  position:absolute;top:.35rem;left:.7rem;
+  font-family:var(--ff);font-size:.68rem;font-weight:600;color:#555555;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+
+/* ── COST TABLE ── */
+.ctable-wrap{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  margin-top:.9rem;border-radius:4px;border:1px solid var(--border);
+}
+.ctable{width:100%;min-width:400px;border-collapse:collapse;}
+.ctable thead th{
+  text-align:left;padding:.5rem .75rem;
+  font-family:var(--ff);font-size:.65rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  background:var(--card2);border-bottom:1px solid var(--border);
+}
+.ctable tbody td{
+  padding:.55rem .75rem;border-bottom:1px solid var(--border2);
+  font-family:var(--ff);font-size:.88rem;color:#111111;vertical-align:middle;
+}
+.ctable tbody td.desc{font-size:.72rem;color:var(--muted);font-weight:400}
+.ctable tbody tr:hover td{background:var(--yellow-lt)}
+.ctable tfoot td{
+  padding:.65rem .75rem;background:var(--card2);
+  font-family:var(--ff);font-size:.85rem;font-weight:600;
+}
+.ctable tfoot tr:last-child td{background:var(--yellow-lt2)}
+.tr{text-align:right}
+.tc-o{color:var(--yellow-dk);font-weight:700}
+.tc-g{color:var(--green);font-weight:600}
+
+/* ── GST TOGGLE PANEL ── */
+.gst-toggle-wrap{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:4px;padding:1.1rem 1.25rem;margin-bottom:1.25rem;
+}
+.gst-toggle-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;row-gap:.6rem;
+}
+.gst-toggle-title{font-family:var(--ff);font-weight:800;font-size:.95rem;color:var(--text)}
+.gst-toggle-sub{font-family:var(--ff);font-size:.75rem;font-weight:400;color:var(--muted);margin-top:.2rem}
+.toggle-row{display:flex;align-items:center;gap:.65rem;flex-shrink:0}
+.toggle-label{font-family:var(--ff);font-size:.72rem;font-weight:700;color:var(--text2);letter-spacing:.02em}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#ddd;transition:.2s;border-radius:26px}
+.slider::before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.2s;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+input:checked+.slider{background:var(--yellow)}
+input:checked+.slider::before{transform:translateX(20px)}
+.gst-info-box{margin-top:.9rem;padding:.7rem 1rem;border-radius:4px;font-family:var(--ff);font-size:.78rem;font-weight:400;line-height:1.55;color:var(--text2)}
+.gst-info-box.registered{background:var(--green-lt);border-left:3px solid var(--green)}
+.gst-info-box.unregistered{background:#fff8e6;border-left:3px solid #c8860a}
+.gst-info-box strong{font-weight:700}
+
+/* ── REF PANEL ── */
+.ref-panel{
+  background:var(--card);border:1px solid var(--border);
+  padding:1.25rem;border-radius:4px;
+}
+.ref-title{
+  font-family:var(--ff);font-size:.88rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.03em;color:var(--text);
+  margin-bottom:.85rem;padding-bottom:.55rem;
+  border-bottom:2px solid var(--border2);
+}
+.ref-item{display:flex;gap:.5rem;margin-bottom:.55rem;font-size:.8rem;font-weight:400;line-height:1.5}
+.ref-item::before{content:'▸';color:var(--yellow-dk);font-size:.65rem;flex-shrink:0;margin-top:3px}
+.ref-item span{color:#333333}
+
+/* ── MISC ── */
+.ptitle{
+  font-family:var(--ff);font-size:.78rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.04em;
+  margin-bottom:.8rem;color:var(--text);
+  padding-bottom:.4rem;border-bottom:1px solid var(--border2);
+}
+.divider{height:1px;background:var(--border2);margin:.75rem 0}
+.page{display:none}.page.active{display:block}
+
+/* ── FOOTER ── */
+footer{
+  background:#111111;border-top:4px solid var(--yellow);
+  padding:1.5rem 1.5rem;text-align:center;
+  font-family:var(--ff);font-size:.7rem;font-weight:400;
+  color:rgba(255,255,255,.35);line-height:2;letter-spacing:.03em;
+}
+footer span{color:var(--yellow);font-weight:700}
+
+/* ── MOBILE ── */
+@media(max-width:480px){
+  .header{height:86px;padding:0 1rem}
+  .logo-wrap{height:68px}.logo-img{height:158px;margin-left:-16px}
+  .tabs-wrap{top:86px}
+  .hero{padding:2rem 1rem 1.75rem}
+  .panel{padding:1.1rem}
+  main{padding:1.5rem .9rem 5rem}
+  .seg-b{font-size:.6rem;padding:.6rem .2rem}
+  .tab-btn{padding:.85rem .85rem;font-size:.62rem}
+  .gst-toggle-wrap{padding:.9rem 1rem}
+}
+@media(max-width:380px){
+  .header{height:78px}
+  .logo-wrap{height:58px}.logo-img{height:135px;margin-left:-14px}
+  .tabs-wrap{top:78px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo-wrap"><img class="logo-img" src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Maher/Maher%20Than%20concrete.png" alt="Maher Than Concrete — Formwork, Foundations and More"/></div>
+  <div class="hbadge">Celt to Coast</div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eye">Professional Estimation Suite</div>
+    <h1 class="hero-title">Calculate.<br><span>Precisely.</span></h1>
+    <p class="hero-sub">Engineering-grade calculators for concrete volume, formwork pressure, material take-off and project costing — built for Australian construction.</p>
+  </div>
+</section>
+
+<div class="tabs-wrap">
+  <nav class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('concrete',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="14" width="20" height="8" rx="1"/><rect x="4" y="10" width="16" height="4"/><rect x="7" y="6" width="10" height="4"/><rect x="9" y="2" width="6" height="4"/></svg>&nbsp;Concrete</button>
+    <button class="tab-btn" onclick="showTab('pressure',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2v18H3z"/><path d="M5 6h4"/><path d="M5 9h7"/><path d="M5 12h10"/><path d="M5 15h13"/><path d="M5 18h16"/></svg>&nbsp;Pressure</button>
+    <button class="tab-btn" onclick="showTab('rebar',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="6" x2="22" y2="6"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="18" x2="22" y2="18"/><line x1="7" y1="3" x2="7" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="17" y1="3" x2="17" y2="21"/></svg>&nbsp;Rebar</button>
+    <button class="tab-btn" onclick="showTab('cost',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="18" y2="15"/></svg>&nbsp;Costs</button>
+    <button class="tab-btn" onclick="showTab('ref',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></svg>&nbsp;Reference</button>
+  </nav>
+</div>
+
+<main>
+
+<!-- PAGE 1: CONCRETE VOLUME -->
+<div id="page-concrete" class="page active">
+  <div class="sec-hdr">
+    <div class="sec-num">01</div>
+    <div>
+      <div class="sec-title">Concrete Volume</div>
+      <div class="sec-desc">Slab · Wall · Column · Footing — net and order volumes with waste allowance</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="seg" id="shape-seg">
+      <button class="seg-b on" onclick="setShape('slab',this)">Slab</button>
+      <button class="seg-b" onclick="setShape('wall',this)">Wall</button>
+      <button class="seg-b" onclick="setShape('column',this)">Column</button>
+      <button class="seg-b" onclick="setShape('footing',this)">Footing</button>
+    </div>
+
+    <div id="cv-slab" class="fgroup">
+      <div class="g3">
+        <div class="field"><label>Length</label><div class="iw"><input type="number" inputmode="decimal" id="cv-L" placeholder="6000" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Width</label><div class="iw"><input type="number" inputmode="decimal" id="cv-W" placeholder="4000" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Depth / Thickness</label><div class="iw"><input type="number" inputmode="decimal" id="cv-D" placeholder="150" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+      </div>
+    </div>
+    <div id="cv-wall" class="fgroup" style="display:none">
+      <div class="g3">
+        <div class="field"><label>Length</label><div class="iw"><input type="number" inputmode="decimal" id="cv-wL" placeholder="8000" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Height</label><div class="iw"><input type="number" inputmode="decimal" id="cv-wH" placeholder="3000" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Thickness</label><div class="iw"><input type="number" inputmode="decimal" id="cv-wT" placeholder="200" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+      </div>
+    </div>
+    <div id="cv-col" class="fgroup" style="display:none">
+      <div class="g2 keep">
+        <div class="field"><label>Diameter</label><div class="iw"><input type="number" inputmode="decimal" id="cv-cDia" placeholder="450" oninput="calcConcrete()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Height</label><div class="iw"><input type="number" inputmode="decimal" id="cv-cH" placeholder="3.5" oninput="calcConcrete()"><span class="unit">m</span></div></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:1rem">
+      <label id="waste-lbl">Waste Allowance — 10%</label>
+      <input type="range" id="cv-waste" min="5" max="30" value="10"
+        oninput="document.getElementById('waste-lbl').textContent='Waste Allowance — '+this.value+'%';calcConcrete()">
+    </div>
+
+    <div id="cv-result" style="display:none">
+      <div class="rbox">
+        <div class="r-lbl">Net Concrete Volume</div>
+        <div class="r-big" id="cv-net">—</div>
+        <div class="r-unit">cubic metres (m³)</div>
+        <div class="rgrid">
+          <div class="ri"><div class="rl">Order Volume (incl. waste)</div><div class="rv ac" id="cv-order">—</div></div>
+          <div class="ri"><div class="rl">Ready-Mix Trucks (6m³)</div><div class="rv" id="cv-trucks">—</div></div>
+          <div class="ri"><div class="rl">Bagged Concrete — 25 kg</div><div class="rv" id="cv-b25">—</div></div>
+          <div class="ri"><div class="rl">Bagged Concrete — 20 kg</div><div class="rv" id="cv-b20">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="cv-hint" class="callout"><strong>Enter dimensions above</strong> to calculate volume. All inputs in millimetres unless otherwise noted.</div>
+  </div>
+</div>
+
+<!-- PAGE 2: FORMWORK PRESSURE -->
+<div id="page-pressure" class="page">
+  <div class="sec-hdr">
+    <div class="sec-num">02</div>
+    <div>
+      <div class="sec-title">Formwork Pressure</div>
+      <div class="sec-desc">CIRIA C30 / AS 3610 lateral pressure calculation</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="callout"><strong>AS 3610 Formwork Pressure:</strong> Based on the CIRIA C30 method, accounting for pour rate, concrete temperature and chemical admixtures.</div>
+    <div class="seg" id="fp-method-seg">
+      <button class="seg-b on" onclick="setFPMethod('ciria',this)">CIRIA C30 Method</button>
+      <button class="seg-b" onclick="setFPMethod('hydro',this)">Full Hydrostatic</button>
+    </div>
+    <div class="fgroup">
+      <div class="g2 keep">
+        <div class="field"><label>Pour Height</label><div class="iw"><input type="number" inputmode="decimal" id="fp-H" placeholder="3.0" oninput="calcPressure()"><span class="unit">m</span></div></div>
+        <div class="field"><label>Pour Rate</label><div class="iw"><input type="number" inputmode="decimal" id="fp-R" placeholder="1.5" oninput="calcPressure()"><span class="unit">m/hr</span></div></div>
+      </div>
+      <div class="field"><label>Concrete Density (γ)</label>
+        <div class="iw"><select id="fp-gam" onchange="calcPressure()">
+          <option value="2300">2300 kg/m³ — Lightweight</option>
+          <option value="2400" selected>2400 kg/m³ — Normal (Standard)</option>
+          <option value="2500">2500 kg/m³ — Dense</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+    </div>
+    <div id="fp-ciria-fields" class="fgroup">
+      <div class="field"><label>Concrete Temperature</label><div class="iw"><input type="number" inputmode="decimal" id="fp-T" placeholder="15" oninput="calcPressure()"><span class="unit">°C</span></div></div>
+      <div class="field"><label>K1 — Concrete Chemistry Factor</label>
+        <div class="iw"><select id="fp-K1" onchange="calcPressure()">
+          <option value="1.0">1.0 — OPC / no admixtures</option>
+          <option value="1.2">1.2 — GGBS / PFA 50–70%</option>
+          <option value="1.5">1.5 — GGBS &gt; 70%</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+      <div class="field"><label>K2 — Admixture Factor</label>
+        <div class="iw"><select id="fp-K2" onchange="calcPressure()">
+          <option value="1.0">1.0 — None / normal</option>
+          <option value="1.3">1.3 — Retarder present</option>
+          <option value="1.5">1.5 — High-range water reducer</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+    </div>
+    <div class="pdiag" id="fp-diagram"><span class="pdiag-label">Pressure Profile (depth →)</span></div>
+    <div id="fp-result" style="display:none">
+      <div class="rbox">
+        <div class="r-lbl">Max Lateral Pressure</div>
+        <div class="r-big" id="fp-maxP">—</div>
+        <div class="r-unit">kPa (kiloPascals)</div>
+        <div class="rgrid">
+          <div class="ri"><div class="rl">Hydrostatic Maximum</div><div class="rv" id="fp-hydro">—</div></div>
+          <div class="ri"><div class="rl">Force per Metre Width</div><div class="rv ac" id="fp-force">—</div></div>
+          <div class="ri"><div class="rl">Pressure Reduction</div><div class="rv gn" id="fp-red">—</div></div>
+          <div class="ri"><div class="rl">Design Method</div><div class="rv" id="fp-meth">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="fp-hint" class="callout"><strong>Enter pour height and pour rate</strong> to calculate lateral formwork pressure.</div>
+  </div>
+</div>
+
+<!-- PAGE 3: REBAR & MATERIALS -->
+<div id="page-rebar" class="page">
+  <div class="sec-hdr">
+    <div class="sec-num">03</div>
+    <div>
+      <div class="sec-title">Rebar &amp; Materials</div>
+      <div class="sec-desc">Bar schedule · Formply sheets · Tie wire · Props</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ptitle">Slab / Structural Section</div>
+    <div class="fgroup">
+      <div class="g2 keep">
+        <div class="field"><label>Slab Length</label><div class="iw"><input type="number" inputmode="decimal" id="rb-L" placeholder="12.0" oninput="calcRebar()"><span class="unit">m</span></div></div>
+        <div class="field"><label>Slab Width</label><div class="iw"><input type="number" inputmode="decimal" id="rb-W" placeholder="8.0" oninput="calcRebar()"><span class="unit">m</span></div></div>
+      </div>
+      <div class="field"><label>Bar Size</label>
+        <div class="iw"><select id="rb-bar" onchange="calcRebar()">
+          <option value="N10">N10 — ⌀10 mm / 0.617 kg/m</option>
+          <option value="N12">N12 — ⌀12 mm / 0.888 kg/m</option>
+          <option value="N16" selected>N16 — ⌀16 mm / 1.578 kg/m</option>
+          <option value="N20">N20 — ⌀20 mm / 2.466 kg/m</option>
+          <option value="N24">N24 — ⌀24 mm / 3.551 kg/m</option>
+          <option value="N28">N28 — ⌀28 mm / 4.834 kg/m</option>
+          <option value="N32">N32 — ⌀32 mm / 6.313 kg/m</option>
+          <option value="N36">N36 — ⌀36 mm / 7.990 kg/m</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Bar Spacing</label><div class="iw"><input type="number" inputmode="decimal" id="rb-S" placeholder="200" oninput="calcRebar()"><span class="unit">mm</span></div></div>
+        <div class="field"><label>Concrete Cover</label><div class="iw"><input type="number" inputmode="decimal" id="rb-cover" placeholder="40" oninput="calcRebar()"><span class="unit">mm</span></div></div>
+      </div>
+      <div class="field"><label>Reinforcement Layers</label>
+        <div class="iw"><select id="rb-layers" onchange="calcRebar()">
+          <option value="1">1 — Single layer</option>
+          <option value="2" selected>2 — Top and bottom (standard)</option>
+          <option value="3">3 — Three layers</option>
+          <option value="4">4 — Four layers</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+    </div>
+
+    <div class="ptitle">Formwork Materials</div>
+    <div class="fgroup">
+      <div class="field"><label>Formply Area (leave blank to use slab area)</label><div class="iw"><input type="number" inputmode="decimal" id="rb-plyA" placeholder="auto" oninput="calcRebar()"><span class="unit">m²</span></div></div>
+      <div class="field"><label>Formply Thickness</label>
+        <div class="iw"><select id="rb-plyT" onchange="calcRebar()">
+          <option value="12">12 mm Ply</option>
+          <option value="17" selected>17 mm Ply (standard)</option>
+          <option value="19">19 mm Ply</option>
+          <option value="25">25 mm Ply (heavy duty)</option>
+        </select><span class="unit">▼</span></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Props Count</label><div class="iw"><input type="number" inputmode="numeric" id="rb-props" placeholder="0" oninput="calcRebar()"><span class="unit">props</span></div></div>
+        <div class="field"><label>Hire Duration</label><div class="iw"><input type="number" inputmode="numeric" id="rb-propW" placeholder="1" oninput="calcRebar()"><span class="unit">weeks</span></div></div>
+      </div>
+    </div>
+
+    <div id="rb-result" style="display:none">
+      <div class="rbox">
+        <div class="r-lbl">Total Reinforcement Mass</div>
+        <div class="r-big" id="rb-mass">—</div>
+        <div class="r-unit">kilograms (kg)</div>
+        <div class="rgrid">
+          <div class="ri"><div class="rl">Total Bar Length</div><div class="rv ac" id="rb-metres">—</div></div>
+          <div class="ri"><div class="rl">Stock Bars Required</div><div class="rv" id="rb-stockbars">—</div></div>
+          <div class="ri"><div class="rl">Bars — Length Direction</div><div class="rv" id="rb-barsL">—</div></div>
+          <div class="ri"><div class="rl">Bars — Width Direction</div><div class="rv" id="rb-barsW">—</div></div>
+          <div class="ri"><div class="rl">Formply Sheets (1.2 × 2.4 m)</div><div class="rv ac" id="rb-ply">—</div></div>
+          <div class="ri"><div class="rl">Tie Wire (estimated)</div><div class="rv" id="rb-ties">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="rb-hint" class="callout"><strong>Enter slab dimensions above</strong> to calculate rebar and formwork material quantities.</div>
+  </div>
+</div>
+
+<!-- PAGE 4: COST CALCULATOR -->
+<div id="page-cost" class="page">
+  <div class="sec-hdr">
+    <div class="sec-num">04</div>
+    <div>
+      <div class="sec-title">Cost Calculator</div>
+      <div class="sec-desc">Full project estimate with Australian GST options</div>
+    </div>
+  </div>
+
+  <!-- GST TOGGLE -->
+  <div class="gst-toggle-wrap">
+    <div class="gst-toggle-hdr">
+      <div>
+        <div class="gst-toggle-title">GST Registration Status</div>
+        <div class="gst-toggle-sub">GST registration is <strong>required once annual turnover exceeds $75,000</strong></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" id="gst-toggle-label">GST Registered</span>
+        <label class="switch">
+          <input type="checkbox" id="gst-toggle" checked onchange="updateGSTStatus()">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="gst-info-box registered" id="gst-info-box">
+      <strong>GST Registered (turnover &gt; $75,000):</strong> You must charge 10% GST on all taxable supplies, issue valid tax invoices and lodge a BAS each quarter. You can claim input tax credits on GST paid for business purchases.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">Quantities</div>
+    <div class="fgroup">
+      <div class="g2 keep">
+        <div class="field"><label>Concrete Volume</label><div class="iw"><input type="number" inputmode="decimal" id="cc-qConc" placeholder="0" oninput="calcCost()"><span class="unit">m³</span></div></div>
+        <div class="field"><label>Rebar / Steel</label><div class="iw"><input type="number" inputmode="decimal" id="cc-qRebar" placeholder="0" oninput="calcCost()"><span class="unit">kg</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Formply Sheets</label><div class="iw"><input type="number" inputmode="numeric" id="cc-qPly" placeholder="0" oninput="calcCost()"><span class="unit">sheets</span></div></div>
+        <div class="field"><label>Labour Hours</label><div class="iw"><input type="number" inputmode="decimal" id="cc-qLabour" placeholder="0" oninput="calcCost()"><span class="unit">hrs</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Props (quantity)</label><div class="iw"><input type="number" inputmode="numeric" id="cc-qProps" placeholder="0" oninput="calcCost()"><span class="unit">props</span></div></div>
+        <div class="field"><label>Prop Hire Duration</label><div class="iw"><input type="number" inputmode="numeric" id="cc-qPropW" placeholder="1" oninput="calcCost()"><span class="unit">weeks</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Release Agent</label><div class="iw"><input type="number" inputmode="decimal" id="cc-qRelease" placeholder="0" oninput="calcCost()"><span class="unit">litres</span></div></div>
+        <div class="field"><label>Tie Wire Rolls</label><div class="iw"><input type="number" inputmode="numeric" id="cc-qTie" placeholder="0" oninput="calcCost()"><span class="unit">rolls</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Screw / Fixing Packs</label><div class="iw"><input type="number" inputmode="numeric" id="cc-qScrews" placeholder="0" oninput="calcCost()"><span class="unit">packs</span></div></div>
+        <div class="field"><label>Pump Hire</label><div class="iw"><input type="number" inputmode="decimal" id="cc-qPump" placeholder="0" oninput="calcCost()"><span class="unit">hrs</span></div></div>
+      </div>
+    </div>
+
+    <div class="ptitle">Unit Rates (AUD excl. GST)</div>
+    <div class="fgroup">
+      <div class="g2 keep">
+        <div class="field"><label>Concrete ($/m³)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rConc" value="195" oninput="calcCost()"><span class="unit">$/m³</span></div></div>
+        <div class="field"><label>Rebar / Steel ($/kg)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rRebar" value="1.80" step="0.01" oninput="calcCost()"><span class="unit">$/kg</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Formply Sheet ($/sheet)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rPly" value="85" oninput="calcCost()"><span class="unit">$/ea</span></div></div>
+        <div class="field"><label>Labour Rate ($/hr)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rLabour" value="68" oninput="calcCost()"><span class="unit">$/hr</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Prop Hire ($/prop/week)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rProp" value="18" oninput="calcCost()"><span class="unit">$/wk</span></div></div>
+        <div class="field"><label>Release Agent ($/litre)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rRelease" value="4.50" step="0.01" oninput="calcCost()"><span class="unit">$/L</span></div></div>
+      </div>
+      <div class="g2 keep">
+        <div class="field"><label>Tie Wire ($/roll)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rTie" value="28" oninput="calcCost()"><span class="unit">$/roll</span></div></div>
+        <div class="field"><label>Screws / Fixings ($/pack)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rScrews" value="15" oninput="calcCost()"><span class="unit">$/pk</span></div></div>
+      </div>
+      <div class="field"><label>Concrete Pump Hire ($/hr)</label><div class="iw"><input type="number" inputmode="decimal" id="cc-rPump" value="180" oninput="calcCost()"><span class="unit">$/hr</span></div></div>
+    </div>
+
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead>
+          <tr><th>Item</th><th>Description</th><th>Qty</th><th class="tr">Unit Rate</th><th class="tr">Subtotal</th></tr>
+        </thead>
+        <tbody id="cc-tbody">
+          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.75rem;font-size:.8rem">Enter quantities above to build your estimate</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4">Subtotal (excl. GST)</td><td class="tr" id="cc-sub">$0.00</td></tr>
+          <tr id="cc-gst-row"><td colspan="4" class="tc-g">GST (10%)</td><td class="tr tc-g" id="cc-gst">$0.00</td></tr>
+          <tr>
+            <td colspan="4" id="cc-total-label" style="color:var(--yellow-dk);font-weight:800;font-size:.9rem">Total (incl. GST)</td>
+            <td class="tr tc-o" id="cc-total" style="font-size:.95rem">$0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="rgrid" style="margin-top:.9rem">
+      <div class="ri"><div class="rl">Subtotal (excl. GST)</div><div class="rv" id="cc-s2">$0.00</div></div>
+      <div class="ri" id="cc-gst-ri"><div class="rl">GST @ 10%</div><div class="rv gn" id="cc-g2">$0.00</div></div>
+      <div class="ri" style="grid-column:1/-1;border-color:var(--yellow);background:var(--yellow-lt)">
+        <div class="rl" id="cc-total-rl">Total Payable (AUD incl. GST)</div>
+        <div class="rv ac" id="cc-t2" style="font-size:1.5rem">$0.00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: QUICK REFERENCE -->
+<div id="page-ref" class="page">
+  <div class="sec-hdr">
+    <div class="sec-num">05</div>
+    <div>
+      <div class="sec-title">Quick Reference</div>
+      <div class="sec-desc">AS 3610 · AS 1379 · AS/NZS 4671 · ATO GST Rules</div>
+    </div>
+  </div>
+  <div style="display:grid;gap:1rem">
+
+    <div class="ref-panel">
+      <div class="ref-title">AS 3610 — Formwork for Concrete</div>
+      <div class="ref-item"><span>Concrete density for design: 2400 kg/m³ normal, 2300 kg/m³ lightweight.</span></div>
+      <div class="ref-item"><span>Self-weight of formwork: 0.5–1.0 kPa typical for design loads.</span></div>
+      <div class="ref-item"><span>Live load from workers and equipment: minimum 2.4 kPa on formwork.</span></div>
+      <div class="ref-item"><span>Minimum formwork pressure: full hydrostatic ρgH, reducible per CIRIA C30.</span></div>
+      <div class="ref-item"><span>Exposed formwork surfaces must be sealed against concrete paste leakage.</span></div>
+      <div class="ref-item"><span>Check re-propping requirements before stripping upper levels.</span></div>
+    </div>
+
+    <div class="ref-panel">
+      <div class="ref-title">Concrete Mixes — AS 1379</div>
+      <div class="ref-item"><span>N20 — Normal class, general use, 20 MPa at 28 days.</span></div>
+      <div class="ref-item"><span>N25 — Reinforced slabs and beams, 25 MPa at 28 days.</span></div>
+      <div class="ref-item"><span>N32 — Industrial floors, elevated slabs, 32 MPa.</span></div>
+      <div class="ref-item"><span>N40 — High-load columns, transfer structures, 40 MPa.</span></div>
+      <div class="ref-item"><span>S class — Special class; specify when non-standard performance is required.</span></div>
+      <div class="ref-item"><span>Order 5–10% extra volume to allow for waste, spillage and batching variation.</span></div>
+    </div>
+
+    <div class="ref-panel">
+      <div class="ref-title">Rebar Reference — AS/NZS 4671</div>
+      <div class="ref-item"><span>N-grade: fy = 500 MPa, fu = 650 MPa. Deformed bar, normal ductility.</span></div>
+      <div class="ref-item"><span>L-grade: fy = 500 MPa, low ductility. Welded mesh only.</span></div>
+      <div class="ref-item"><span>Standard lap length: 40–60 × bar diameter (varies with class and exposure).</span></div>
+      <div class="ref-item"><span>Hook allowance: 12d (180° standard hook), 6d (90° hook extension).</span></div>
+      <div class="ref-item"><span>Stock lengths: 6 m (N10–N20), 9 m (N20–N28), 12 m (N28–N36).</span></div>
+      <div class="ref-item"><span>Tie wire consumption: approximately 5–8 kg per tonne of reinforcement.</span></div>
+    </div>
+
+    <div class="ref-panel">
+      <div class="ref-title">Australian GST — ATO Rules</div>
+      <div class="ref-item"><span><strong style="color:var(--yellow-dk)">GST registration is mandatory once annual turnover exceeds $75,000.</strong> Voluntary registration is permitted below this threshold.</span></div>
+      <div class="ref-item"><span>GST rate: 10% on all taxable supplies including construction materials and labour.</span></div>
+      <div class="ref-item"><span>An ABN is required to charge and collect GST on invoices.</span></div>
+      <div class="ref-item"><span>Input tax credits (ITCs) allow GST-registered businesses to reclaim GST paid on purchases.</span></div>
+      <div class="ref-item"><span>A valid tax invoice is required for any taxable supply over $82.50 (incl. GST).</span></div>
+      <div class="ref-item"><span>BAS lodgement: quarterly for most businesses, monthly for turnover exceeding $20 million.</span></div>
+      <div class="ref-item"><span>If not registered, you must not charge GST and cannot claim input tax credits.</span></div>
+    </div>
+
+    <div class="ref-panel">
+      <div class="ref-title">Minimum Concrete Cover — AS 3600</div>
+      <div class="g4 keep" style="margin-top:.5rem;gap:.75rem">
+        <div style="text-align:center;padding:.85rem .5rem;background:var(--yellow-lt);border:2px solid var(--yellow);border-radius:6px">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--yellow-dk);font-family:var(--ff)">20 mm</div>
+          <div style="font-size:.7rem;font-weight:600;color:var(--muted);margin-top:.2rem">Interior / Protected</div>
+        </div>
+        <div style="text-align:center;padding:.85rem .5rem;background:var(--yellow-lt);border:2px solid var(--yellow);border-radius:6px">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--yellow-dk);font-family:var(--ff)">30 mm</div>
+          <div style="font-size:.7rem;font-weight:600;color:var(--muted);margin-top:.2rem">Exterior / Exposed</div>
+        </div>
+        <div style="text-align:center;padding:.85rem .5rem;background:#fff8e6;border:2px solid #c8860a;border-radius:6px">
+          <div style="font-size:1.6rem;font-weight:900;color:#c8860a;font-family:var(--ff)">40 mm</div>
+          <div style="font-size:.7rem;font-weight:600;color:var(--muted);margin-top:.2rem">Near Marine</div>
+        </div>
+        <div style="text-align:center;padding:.85rem .5rem;background:#fef0f0;border:2px solid var(--red);border-radius:6px">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--red);font-family:var(--ff)">50 mm</div>
+          <div style="font-size:.7rem;font-weight:600;color:var(--muted);margin-top:.2rem">Marine / Severe</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <span>MAHER THAN CONCRETE</span> — Formwork, Foundations &amp; More<br>
+  Estimates only — always engage a structural engineer for project-critical design &nbsp;·&nbsp; GST $75,000 threshold per current ATO regulations
+</footer>
+
+<script>
+// ── TABS ─────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── HELPERS ──────────────────────────────────────
+function gv(id){var e=document.getElementById(id);return e?parseFloat(e.value)||0:0;}
+function gs(id){var e=document.getElementById(id);return e?e.value:'';}
+function el(id){return document.getElementById(id);}
+function fmt(x,d){if(isNaN(x))return '—';d=d===undefined?2:d;return x.toLocaleString('en-AU',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fmtCur(x){return '$'+x.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// ── GST TOGGLE ───────────────────────────────────
+var gstRegistered=true;
+function updateGSTStatus(){
+  gstRegistered=el('gst-toggle').checked;
+  var box=el('gst-info-box'),lbl=el('gst-toggle-label');
+  if(gstRegistered){
+    lbl.textContent='GST Registered';
+    box.className='gst-info-box registered';
+    box.innerHTML='<strong>GST Registered (turnover &gt; $75,000):</strong> You must charge 10% GST on all taxable supplies, issue valid tax invoices and lodge a BAS each quarter. You can claim input tax credits on GST paid for business purchases.';
+    el('cc-gst-row').style.display='';
+    el('cc-gst-ri').style.display='';
+    el('cc-total-label').textContent='Total (incl. GST)';
+    el('cc-total-rl').textContent='Total Payable (AUD incl. GST)';
+  }else{
+    lbl.textContent='Not Registered';
+    box.className='gst-info-box unregistered';
+    box.innerHTML='<strong>Not GST Registered (turnover &lt; $75,000):</strong> You are not required to charge GST. Do not include GST on invoices — if you do, you must remit it to the ATO. You cannot claim input tax credits on your purchases.';
+    el('cc-gst-row').style.display='none';
+    el('cc-gst-ri').style.display='none';
+    el('cc-total-label').textContent='Total (no GST applicable)';
+    el('cc-total-rl').textContent='Total Payable (AUD — GST not applicable)';
+  }
+  calcCost();
+}
+
+// ── CONCRETE VOLUME ───────────────────────────────
+var cvShape='slab';
+function setShape(s,btn){
+  cvShape=s;
+  document.querySelectorAll('#shape-seg .seg-b').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  el('cv-slab').style.display=(s==='slab'||s==='footing')?'':'none';
+  el('cv-wall').style.display=s==='wall'?'':'none';
+  el('cv-col').style.display=s==='column'?'':'none';
+  calcConcrete();
+}
+function calcConcrete(){
+  var net=0,waste=gv('cv-waste')/100||0.10;
+  if(cvShape==='slab'||cvShape==='footing'){
+    var L=gv('cv-L'),W=gv('cv-W'),D=gv('cv-D');
+    if(L>0&&W>0&&D>0)net=(L*W*D)/1e9;
+  }else if(cvShape==='wall'){
+    var L=gv('cv-wL'),H=gv('cv-wH'),T=gv('cv-wT');
+    if(L>0&&H>0&&T>0)net=(L*H*T)/1e9;
+  }else if(cvShape==='column'){
+    var dia=gv('cv-cDia'),h=gv('cv-cH');
+    if(dia>0&&h>0)net=Math.PI*Math.pow(dia/2000,2)*h;
+  }
+  if(net>0){
+    var ord=net*(1+waste);
+    el('cv-net').textContent=fmt(net,3)+' m³';
+    el('cv-order').textContent=fmt(ord,3)+' m³';
+    el('cv-trucks').textContent=Math.ceil(ord/6)+' × 6 m³ trucks';
+    el('cv-b25').textContent=Math.ceil(ord/0.012).toLocaleString('en-AU')+' bags';
+    el('cv-b20').textContent=Math.ceil(ord/0.009).toLocaleString('en-AU')+' bags';
+    el('cv-result').style.display='';el('cv-hint').style.display='none';
+  }else{el('cv-result').style.display='none';el('cv-hint').style.display='';}
+}
+
+// ── FORMWORK PRESSURE ─────────────────────────────
+var fpMethod='ciria';
+function setFPMethod(m,btn){
+  fpMethod=m;
+  document.querySelectorAll('#fp-method-seg .seg-b').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  el('fp-ciria-fields').style.display=m==='ciria'?'':'none';
+  calcPressure();
+}
+function calcPressure(){
+  var H=gv('fp-H'),R=gv('fp-R'),gam=gv('fp-gam')||2400;
+  if(H<=0){el('fp-result').style.display='none';el('fp-hint').style.display='';updatePDiag([]);return;}
+  var Phydro=(gam*9.81*H)/1000,maxP=Phydro;
+  if(fpMethod==='ciria'&&R>0){
+    var T=gv('fp-T')||15,K1=parseFloat(gs('fp-K1'))||1,K2=parseFloat(gs('fp-K2'))||1;
+    maxP=Math.min(150*K1*K2/(T+16)*Math.sqrt(R),Phydro);
+  }
+  el('fp-maxP').textContent=fmt(maxP,1)+' kPa';
+  el('fp-hydro').textContent=fmt(Phydro,1)+' kPa';
+  el('fp-force').textContent=fmt(maxP*H/2,1)+' kN/m';
+  var red=((Phydro-maxP)/Phydro*100);
+  el('fp-red').textContent=red>0.5?fmt(red,1)+'% vs hydrostatic':'Full hydrostatic governs';
+  el('fp-meth').textContent=fpMethod==='ciria'?'CIRIA C30 / AS 3610':'Full Hydrostatic';
+  var profile=[],T2=gv('fp-T')||15,K1b=parseFloat(gs('fp-K1'))||1,K2b=parseFloat(gs('fp-K2'))||1;
+  for(var i=0;i<10;i++){
+    var d=H*((i+1)/10),Phd=(gam*9.81*d)/1000,p=Phd;
+    if(fpMethod==='ciria'&&R>0){p=Math.min(150*K1b*K2b/(T2+16)*Math.sqrt(R),Phd);}
+    profile.push({pct:p/maxP,kpa:p});
+  }
+  updatePDiag(profile);
+  el('fp-result').style.display='';el('fp-hint').style.display='none';
+}
+function updatePDiag(profile){
+  var diag=el('fp-diagram'),lbl=diag.querySelector('.pdiag-label');
+  diag.innerHTML='';if(lbl)diag.appendChild(lbl);
+  if(!profile||!profile.length)return;
+  profile.forEach(function(p){
+    var bar=document.createElement('div');bar.className='pbar';
+    bar.style.height=Math.max(p.pct*100,2)+'%';
+    var l=document.createElement('span');l.className='pbar-lbl';
+    l.textContent=fmt(p.kpa,0)+'kPa';bar.appendChild(l);diag.appendChild(bar);
+  });
+}
+
+// ── REBAR ─────────────────────────────────────────
+var BAR={
+  N10:{kgM:.617,stockL:6},N12:{kgM:.888,stockL:6},N16:{kgM:1.578,stockL:6},
+  N20:{kgM:2.466,stockL:9},N24:{kgM:3.551,stockL:9},N28:{kgM:4.834,stockL:9},
+  N32:{kgM:6.313,stockL:12},N36:{kgM:7.990,stockL:12}
+};
+function calcRebar(){
+  var L=gv('rb-L'),W=gv('rb-W'),S=gv('rb-S')||200;
+  if(L<=0||W<=0){el('rb-result').style.display='none';el('rb-hint').style.display='';return;}
+  var cover=gv('rb-cover')||40,layers=parseInt(gs('rb-layers'))||2,bar=BAR[gs('rb-bar')||'N16'];
+  var barsL=Math.ceil(W/(S/1000))+1,barsW=Math.ceil(L/(S/1000))+1;
+  var totalM=(barsL*(L+2*cover/1000)+barsW*(W+2*cover/1000))*layers;
+  var totalKg=totalM*bar.kgM,stockBars=Math.ceil(totalM/bar.stockL);
+  var plyA=gv('rb-plyA')||0,plyArea=plyA>0?plyA:L*W,plySheets=Math.ceil((plyArea/2.88)*1.1);
+  var ties=Math.ceil(barsL*barsW*layers/3);
+  el('rb-mass').textContent=fmt(totalKg,0)+' kg';
+  el('rb-metres').textContent=fmt(totalM,0)+' m';
+  el('rb-stockbars').textContent=stockBars+' × '+bar.stockL+' m bars';
+  el('rb-barsL').textContent=barsL+' bars';
+  el('rb-barsW').textContent=barsW+' bars';
+  el('rb-ply').textContent=plySheets+' sheets ('+gs('rb-plyT')+' mm)';
+  el('rb-ties').textContent=fmt(ties,0)+' ties estimated';
+  el('rb-result').style.display='';el('rb-hint').style.display='none';
+}
+
+// ── COST ──────────────────────────────────────────
+function calcCost(){
+  var GST_RATE=gstRegistered?0.10:0;
+  var items=[
+    {label:'Ready-Mix Concrete',qty:gv('cc-qConc'),unit:'m³',rate:gv('cc-rConc'),desc:'Supply and pour'},
+    {label:'Reinforcing Steel',qty:gv('cc-qRebar'),unit:'kg',rate:gv('cc-rRebar'),desc:'Supply and fix'},
+    {label:'Formply Sheets',qty:gv('cc-qPly'),unit:'sheets',rate:gv('cc-rPly'),desc:'17 mm 2400×1200'},
+    {label:'Labour',qty:gv('cc-qLabour'),unit:'hrs',rate:gv('cc-rLabour'),desc:'Skilled labour rate'},
+    {label:'Formwork Props',qty:gv('cc-qProps')*(gv('cc-qPropW')||1),unit:'prop-wks',rate:gv('cc-rProp'),desc:'Hire cost'},
+    {label:'Release Agent',qty:gv('cc-qRelease'),unit:'L',rate:gv('cc-rRelease'),desc:'Form oil'},
+    {label:'Tie Wire',qty:gv('cc-qTie'),unit:'rolls',rate:gv('cc-rTie'),desc:'25 kg roll'},
+    {label:'Screws / Fixings',qty:gv('cc-qScrews'),unit:'packs',rate:gv('cc-rScrews'),desc:'Box of 500'},
+    {label:'Concrete Pump Hire',qty:gv('cc-qPump'),unit:'hrs',rate:gv('cc-rPump'),desc:'Mobile pump'},
+  ].filter(function(i){return i.qty>0&&i.rate>0;});
+
+  var tbody=el('cc-tbody');tbody.innerHTML='';var subtotal=0;
+  if(!items.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.75rem;font-size:.8rem">Enter quantities above to build your estimate</td></tr>';
+  }else{
+    items.forEach(function(item){
+      var line=item.qty*item.rate;subtotal+=line;
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td style="font-weight:600">'+item.label+'</td>'
+        +'<td class="desc">'+item.desc+'</td>'
+        +'<td style="color:var(--muted);font-size:.8rem">'+fmt(item.qty,item.qty<10?2:0)+' '+item.unit+'</td>'
+        +'<td class="tr">'+fmtCur(item.rate)+'</td>'
+        +'<td class="tr tc-o">'+fmtCur(line)+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  var gst=subtotal*GST_RATE,total=subtotal+gst;
+  el('cc-sub').textContent=fmtCur(subtotal);
+  el('cc-gst').textContent=fmtCur(gst);
+  el('cc-total').textContent=fmtCur(total);
+  el('cc-s2').textContent=fmtCur(subtotal);
+  el('cc-g2').textContent=fmtCur(gst);
+  el('cc-t2').textContent=fmtCur(total);
+}
+calcCost();
+</script>
+</body>
+</html>
