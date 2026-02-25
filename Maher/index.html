@@ -1,1 +1,584 @@
-a
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Maher Than Concrete | Formwork & Foundations in Melbourne</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111111'/><text x='50%' y='50%' font-family='system-ui, sans-serif' font-weight='900' font-size='65' fill='%23f2ac1f' text-anchor='middle' dominant-baseline='central' dy='.1em'>M</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --yellow:#f2ac1f;
+  --yellow-dk:#111111;
+  --yellow-lt:#fffbf0;
+  --yglow:rgba(242,172,31,.2);
+  --bg:#f5f5f5;
+  --surface:#ffffff;
+  --card:#ffffff;
+  --card2:#f9f9f9;
+  --border:#e0e0e0;
+  --border2:#ebebeb;
+  --text:#111111;
+  --text2:#333333;
+  --muted:#666666;
+  --muted2:#888888;
+  --header-bg:#ffffff;
+  --ff:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --fm:'JetBrains Mono','Courier New',monospace;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;max-width:100vw;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--ff);
+  font-size:16px;
+  line-height:1.6;
+  min-height:100vh;
+  max-width:100vw;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── HEADER & NAVIGATION ── */
+.header{
+  position:sticky;top:0;z-index:200;
+  background:var(--header-bg);
+  border-bottom:4px solid var(--yellow);
+  padding:0 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:96px;gap:1rem;
+  box-shadow:0 2px 12px rgba(0,0,0,.08);
+}
+.logo-wrap{
+  height:78px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;text-decoration:none;
+}
+.logo-img{
+  height:182px;width:auto;display:block;flex-shrink:0;margin-left:-18px;
+}
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+.nav-link {
+  font-family: var(--ff);
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--text2);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  transition: color 0.2s;
+}
+.nav-link:hover {
+  color: var(--yellow);
+}
+.hbadge{
+  font-family:var(--ff);font-size:.7rem;font-weight:800;
+  color:var(--yellow-dk);
+  border:2px solid var(--yellow);
+  padding:.4rem .9rem;letter-spacing:.08em;white-space:nowrap;flex-shrink:0;
+  background:var(--yellow-lt);border-radius:3px;
+  text-transform:uppercase;
+  text-decoration:none;
+  transition: all 0.2s;
+}
+.hbadge:hover {
+  background: var(--yellow);
+  color: #fff;
+}
+
+/* ── HERO SECTION ── */
+.hero{
+  padding:6rem 1.5rem 6rem;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#111111 0%,#1a1a0a 55%,#222200 100%);
+  position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'CONCRETE';position:absolute;right:-2rem;bottom:-2rem;
+  font-family:var(--ff);font-size:clamp(6rem,20vw,18rem);font-weight:900;
+  color:rgba(255,255,255,.02);pointer-events:none;white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.02em;line-height: 1;
+}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-eye{
+  font-family:var(--ff);font-size:.8rem;font-weight:700;
+  color:var(--yellow);letter-spacing:.2em;text-transform:uppercase;
+  margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;
+}
+.hero-eye::before{content:'';display:inline-block;width:3rem;height:2px;background:var(--yellow)}
+.hero-title{
+  font-family:var(--ff);font-size:clamp(2.8rem,7vw,6rem);
+  font-weight:900;line-height:1;text-transform:uppercase;
+  margin-bottom:1.5rem;color:#ffffff;letter-spacing:-.02em;
+  max-width: 900px;
+}
+.hero-title span{color:var(--yellow)}
+.hero-sub{
+  font-size:1.1rem;font-weight:400;color:rgba(255,255,255,.65);
+  max-width:540px;line-height:1.7;margin-bottom: 2.5rem;
+}
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--yellow); color: var(--yellow-dk);
+  font-family: var(--ff); font-weight: 800; font-size: .9rem;
+  text-transform: uppercase; letter-spacing: .05em;
+  padding: 1rem 2rem; border-radius: 4px; text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid var(--yellow);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--yglow);
+}
+.btn-outline {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: #ffffff;
+  font-family: var(--ff); font-weight: 800; font-size: .9rem;
+  text-transform: uppercase; letter-spacing: .05em;
+  padding: 1rem 2rem; border-radius: 4px; text-decoration: none;
+  transition: all 0.2s;
+  border: 2px solid rgba(255,255,255,.2);
+  margin-left: 1rem;
+}
+.btn-outline:hover {
+  border-color: #ffffff;
+  background: rgba(255,255,255,.05);
+}
+
+/* ── LAYOUT & TYPOGRAPHY ── */
+section.main-sec { padding: 6rem 1.5rem; }
+.container { max-width: 1100px; margin: 0 auto; }
+.sec-hdr{display:flex;align-items:flex-start;gap:1.2rem;margin-bottom:3rem}
+.sec-num{
+  font-family:var(--fm);font-size:3rem;font-weight:600;
+  color:var(--yellow);line-height:.8;opacity:.45;margin-top: 5px;
+}
+.sec-title{
+  font-family:var(--ff);font-size:2.5rem;font-weight:900;
+  text-transform:uppercase;letter-spacing:-.02em;line-height:1.1;color:var(--text);
+  margin-bottom: .5rem;
+}
+.sec-desc{
+  font-family:var(--ff);font-size:1.05rem;font-weight:400;color:var(--muted);
+  max-width: 600px; line-height: 1.6;
+}
+
+/* ── GRIDS & CARDS ── */
+.g3{display:grid;grid-template-columns:repeat(3, 1fr);gap:1.5rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+
+.service-card {
+  background: var(--card); border: 1px solid var(--border);
+  padding: 2.5rem 2rem; border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative; overflow: hidden;
+}
+.service-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+  background: var(--border); transition: background 0.3s ease;
+}
+.service-card:hover {
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  transform: translateY(-5px);
+}
+.service-card:hover::before { background: var(--yellow); }
+.service-icon {
+  width: 50px; height: 50px; color: var(--yellow); margin-bottom: 1.5rem;
+}
+.service-title {
+  font-family: var(--ff); font-size: 1.3rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: -.01em; margin-bottom: 1rem;
+  color: var(--text);
+}
+.service-desc {
+  font-size: .95rem; color: var(--text2); line-height: 1.6;
+}
+
+/* ── ABOUT / STATS SECTION ── */
+.about-wrap {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 4px; display: flex; overflow: hidden;
+}
+.about-img {
+  width: 40%; background: #111; position: relative;
+  background-image: repeating-linear-gradient(45deg, #1a1a1a 25%, transparent 25%, transparent 75%, #1a1a1a 75%, #1a1a1a), repeating-linear-gradient(45deg, #1a1a1a 25%, var(--yellow-dk) 25%, var(--yellow-dk) 75%, #1a1a1a 75%, #1a1a1a);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+  border-right: 4px solid var(--yellow);
+}
+.about-content {
+  width: 60%; padding: 4rem;
+}
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem;
+  padding-top: 2.5rem; border-top: 1px solid var(--border2);
+}
+.stat-item .s-num {
+  font-family: var(--fm); font-size: 2.5rem; font-weight: 700;
+  color: var(--yellow-dk); line-height: 1; margin-bottom: .25rem;
+}
+.stat-item .s-lbl {
+  font-family: var(--ff); font-size: .8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+}
+
+/* ── CONTACT FORM ── */
+.contact-sec { background: var(--surface); border-top: 1px solid var(--border); }
+.contact-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 4rem; }
+.contact-info-panel {
+  background: var(--yellow-lt); border: 2px solid var(--yellow);
+  padding: 3rem 2rem; border-radius: 6px;
+}
+.ci-item { margin-bottom: 2rem; }
+.ci-item:last-child { margin-bottom: 0; }
+.ci-lbl {
+  font-family: var(--ff); font-size: .8rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--yellow-dk);
+  margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem;
+}
+.ci-val { font-size: 1.1rem; font-weight: 500; color: var(--text); word-break: break-word; }
+
+.fgroup{display:flex;flex-direction:column;gap:1.2rem;margin-bottom:1.2rem}
+.field{display:flex;flex-direction:column;gap:.4rem}
+label{
+  font-family:var(--ff);font-size:.85rem;font-weight:700;
+  letter-spacing:.01em;color:#111111;
+}
+.iw{position:relative;display:flex;align-items:center}
+.iw input,.iw select,.iw textarea{
+  width:100%;
+  background:var(--card2);
+  border:1.5px solid var(--border);
+  color:var(--text);
+  font-family:var(--ff);font-size:1rem;font-weight:500;
+  padding:.8rem 1rem;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+  -webkit-appearance:none;appearance:none;
+  border-radius:4px;
+}
+.iw textarea { resize: vertical; min-height: 120px; }
+.iw input:focus,.iw select:focus,.iw textarea:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px var(--yglow);
+  background:var(--surface);
+}
+.iw input::placeholder,.iw textarea::placeholder{color:#bbb;font-weight:400}
+
+/* ── FOOTER ── */
+footer{
+  background:#111111;border-top:4px solid var(--yellow);
+  padding:4rem 1.5rem;
+  font-family:var(--ff);
+}
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 2rem;
+}
+.f-brand { max-width: 300px; }
+.f-logo { color: #fff; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: -.02em; margin-bottom: 1rem; display: block;}
+.f-logo span { color: var(--yellow); }
+.f-desc { color: rgba(255,255,255,.5); font-size: .9rem; line-height: 1.6; }
+.f-links h4 { color: #fff; text-transform: uppercase; font-size: .85rem; letter-spacing: .05em; margin-bottom: 1rem; }
+.f-links ul { list-style: none; }
+.f-links li { margin-bottom: .5rem; }
+.f-links a { color: rgba(255,255,255,.5); text-decoration: none; font-size: .9rem; transition: color 0.2s; }
+.f-links a:hover { color: var(--yellow); }
+.f-bottom {
+  max-width: 1100px; margin: 3rem auto 0; padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  text-align: center; font-size: .8rem; color: rgba(255,255,255,.3);
+}
+
+/* ── MOBILE RESPONSIVENESS ── */
+@media(max-width: 900px) {
+  .nav-links { display: none; }
+  .about-wrap { flex-direction: column; }
+  .about-img { width: 100%; height: 200px; border-right: none; border-bottom: 4px solid var(--yellow); }
+  .about-content { width: 100%; padding: 2.5rem 1.5rem; }
+  .contact-grid { grid-template-columns: 1fr; }
+}
+@media(max-width: 768px) {
+  .g3, .g2 { grid-template-columns: 1fr; }
+  .hero { padding: 4rem 1.5rem; }
+  .hero-title { font-size: 2.5rem; }
+  .btn-outline { margin-left: 0; margin-top: 1rem; display: block; text-align: center;}
+  .btn-primary { display: block; text-align: center; }
+  .sec-hdr { flex-direction: column; gap: 0.5rem; }
+  .sec-num { font-size: 2.5rem; }
+  .stats-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+@media(max-width: 480px) {
+  .header { height: 86px; padding: 0 1rem; gap: .5rem; }
+  .logo-wrap { height: 68px; }
+  .logo-img { height: 158px; margin-left: -16px; }
+  .hbadge { padding: .35rem .6rem; font-size: .65rem; }
+  .hero-title { font-size: 2rem; }
+  .contact-info-panel { padding: 2rem 1.5rem; }
+  .ci-val { font-size: .95rem; }
+}
+@media(max-width: 380px) {
+  .header { height: 78px; padding: 0 .75rem; }
+  .logo-wrap { height: 58px; }
+  .logo-img { height: 135px; margin-left: -14px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="#" class="logo-wrap">
+    <img class="logo-img" src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Maher/Maher%20Than%20concrete.png" alt="Maher Than Concrete — Formwork, Foundations and More"/>
+  </a>
+  <nav class="nav-links">
+    <a href="#services" class="nav-link">Expertise</a>
+    <a href="#about" class="nav-link">About Us</a>
+    <a href="#contact" class="nav-link">Contact</a>
+  </nav>
+  <a href="#contact" class="hbadge">Celt to Coast</a>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eye">Melbourne's Premier Concrete Contractors</div>
+    <h1 class="hero-title">Solid Foundations.<br><span>Precision Formwork.</span></h1>
+    <p class="hero-sub">We're <s style="opacity: 0.6; margin-right: 4px;">More</s> <strong>Maher</strong> than just a concrete company. Specialising in complete structural packages—from engineering-grade formwork and steel reinforcement to precision concrete placement across Melbourne and Victoria.</p>
+    <div style="margin-top: 2rem;">
+      <a href="#contact" class="btn-primary">Request a Quote</a>
+      <a href="#services" class="btn-outline">View Our Services</a>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="main-sec">
+  <div class="container">
+    <div class="sec-hdr">
+      <div class="sec-num">01</div>
+      <div>
+        <div class="sec-title">Core Expertise</div>
+        <div class="sec-desc">Comprehensive structural concrete solutions for commercial, industrial, and high-end residential projects. We don't just pour; we engineer the entire structural envelope.</div>
+      </div>
+    </div>
+
+    <div class="g3">
+      <!-- Service 1 -->
+      <div class="service-card">
+        <svg class="service-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="14" width="20" height="8" rx="1"/><rect x="4" y="10" width="16" height="4"/><rect x="7" y="6" width="10" height="4"/><rect x="9" y="2" width="6" height="4"/></svg>
+        <h3 class="service-title">Architectural Formwork</h3>
+        <p class="service-desc">Custom timber, steel, and modular formwork systems designed to withstand full hydrostatic pressure. From standard walls to complex geometric structures and suspended slabs.</p>
+      </div>
+      <!-- Service 2 -->
+      <div class="service-card">
+        <svg class="service-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2v18H3z"/><path d="M5 6h4"/><path d="M5 9h7"/><path d="M5 12h10"/><path d="M5 15h13"/><path d="M5 18h16"/></svg>
+        <h3 class="service-title">Foundations & Slabs</h3>
+        <p class="service-desc">Precision pouring and finishing for raft slabs, strip footings, and bored piers. We ensure perfect levelling, correct AS 3600 cover depths, and meticulous vibration techniques.</p>
+      </div>
+      <!-- Service 3 -->
+      <div class="service-card">
+        <svg class="service-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="6" x2="22" y2="6"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="18" x2="22" y2="18"/><line x1="7" y1="3" x2="7" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="17" y1="3" x2="17" y2="21"/></svg>
+        <h3 class="service-title">Steel Reinforcement</h3>
+        <p class="service-desc">Expert steel fixing and scheduling in accordance with AS/NZS 4671. Accurate placement of N-grade rebar, meshing, and starter bars to guarantee structural integrity.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="main-sec" style="background: var(--bg);">
+  <div class="container">
+    <div class="sec-hdr">
+      <div class="sec-num">02</div>
+      <div>
+        <div class="sec-title">The Maher Difference</div>
+        <div class="sec-desc">Bringing the robust heritage of Irish construction—our "Celt to Coast" philosophy—to the exacting standards of the Melbourne construction industry.</div>
+      </div>
+    </div>
+
+    <div class="about-wrap">
+      <div class="about-img"></div>
+      <div class="about-content">
+        <h3 style="font-family: var(--ff); font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);">We're <s style="opacity: 0.5; font-weight: 600; margin-right: 6px;">More</s> Maher Than Just Concrete.</h3>
+        <p style="color: var(--text2); margin-bottom: 1.5rem; font-size: 1.05rem;">
+          At Maher Than Concrete, we eliminate the guesswork. Using our proprietary estimation software suites, we calculate precise pour volumes, calculate exact lateral formwork pressures (CIRIA C30), and optimise material take-offs before we even step onto the site. 
+        </p>
+        <p style="color: var(--text2); font-size: 1.05rem;">
+          Based in Melbourne, we pride ourselves on providing highly skilled labour, flawless execution, and completely transparent, GST-compliant project pricing. When you work with us, you get absolute structural reliability.
+        </p>
+
+        <div class="stats-grid" id="stats-section">
+          <div class="stat-item">
+            <div class="s-num"><span class="counter" data-target="20">0</span>+</div>
+            <div class="s-lbl">Years Experience</div>
+          </div>
+          <div class="stat-item">
+            <div class="s-num"><span class="counter" data-target="100">0</span>%</div>
+            <div class="s-lbl">AS 3610 Compliant</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="main-sec contact-sec">
+  <div class="container">
+    <div class="sec-hdr">
+      <div class="sec-num">03</div>
+      <div>
+        <div class="sec-title">Start Your Project</div>
+        <div class="sec-desc">Submit your project details for an accurate, data-backed estimate using our professional calculation suite.</div>
+      </div>
+    </div>
+
+    <div class="contact-grid">
+      <!-- Contact Info -->
+      <div class="contact-info-panel">
+        <div class="ci-item">
+          <div class="ci-lbl">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Melbourne Base
+          </div>
+          <div class="ci-val">Serving all of Greater Melbourne<br>and Regional Victoria</div>
+        </div>
+        <div class="ci-item">
+          <div class="ci-lbl">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            Direct Line
+          </div>
+          <div class="ci-val">Paulie Maher<br><a href="tel:+61424762930" style="color:var(--text);text-decoration:none;">+61 424 762 930</a></div>
+        </div>
+        <div class="ci-item">
+          <div class="ci-lbl">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Estimations
+          </div>
+          <div class="ci-val"><a href="mailto:quotes@maherthanconcrete.com.au" style="color:var(--text);text-decoration:none;word-break:break-all;">quotes@maherthanconcrete.com.au</a></div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form class="contact-form" onsubmit="event.preventDefault(); alert('Thank you. A member of our estimation team will review your requirements and contact you shortly.');">
+        <div class="g2" style="margin-bottom: 1.2rem; gap: 1.2rem;">
+          <div class="field">
+            <label>Full Name / Company</label>
+            <div class="iw"><input type="text" placeholder="John Doe Construction" required></div>
+          </div>
+          <div class="field">
+            <label>Contact Number</label>
+            <div class="iw"><input type="tel" placeholder="04..." required></div>
+          </div>
+        </div>
+        <div class="fgroup">
+          <div class="field">
+            <label>Email Address</label>
+            <div class="iw"><input type="email" placeholder="john@example.com" required></div>
+          </div>
+        </div>
+        <div class="fgroup">
+          <div class="field">
+            <label>Project Type</label>
+            <div class="iw">
+              <select required>
+                <option value="" disabled selected>Select an option...</option>
+                <option value="formwork">Formwork Only</option>
+                <option value="concrete">Concrete Pours & Foundations</option>
+                <option value="steel">Steel Fixing / Rebar</option>
+                <option value="complete">Complete Package (Form, Reo, Pour)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="fgroup">
+          <div class="field">
+            <label>Project Details & Location</label>
+            <div class="iw"><textarea placeholder="Please provide estimated volumes, site location (e.g., Richmond, VIC), and required timelines..." required></textarea></div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem; cursor: pointer;">Request Estimate</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="f-brand">
+      <a href="#" class="f-logo">Maher Than <span>Concrete</span></a>
+      <p class="f-desc">Celt to Coast. Engineering-grade formwork, precise concrete estimation, and flawless execution for Melbourne's construction sector.</p>
+    </div>
+    <div class="f-links">
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#services">Architectural Formwork</a></li>
+        <li><a href="#services">Foundations & Slabs</a></li>
+        <li><a href="#services">Steel Reinforcement</a></li>
+        <li><a href="#about">Project Estimation</a></li>
+      </ul>
+    </div>
+    <div class="f-links">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Trade</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="f-bottom">
+    &copy; 2026 Maher Than Concrete Pty Ltd. All rights reserved. Registered in Victoria, Australia.
+  </div>
+</footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const counters = document.querySelectorAll('.counter');
+    let hasAnimated = false;
+
+    const animateCounters = () => {
+      counters.forEach(counter => {
+        const target = +counter.getAttribute('data-target');
+        const duration = 2000; // Total duration in ms (2 seconds)
+        const frameRate = 30; // ms per frame
+        const totalFrames = duration / frameRate;
+        const increment = target / totalFrames;
+        
+        let currentCount = 0;
+
+        const updateCount = () => {
+          currentCount += increment;
+          if (currentCount < target) {
+            counter.innerText = Math.ceil(currentCount);
+            setTimeout(updateCount, frameRate);
+          } else {
+            counter.innerText = target;
+          }
+        };
+        updateCount();
+      });
+    };
+
+    // Intersection Observer to trigger animation on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasAnimated) {
+          hasAnimated = true;
+          animateCounters();
+        }
+      });
+    }, { threshold: 0.5 }); // Triggers when 50% of the section is visible
+
+    const statsSection = document.getElementById('stats-section');
+    if (statsSection) {
+      observer.observe(statsSection);
+    }
+  });
+</script>
+
+</body>
+</html>
