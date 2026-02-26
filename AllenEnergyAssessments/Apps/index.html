@@ -52,17 +52,27 @@
         .pdf-only { display: none; }
         
         /* PDF specific beautiful layout */
-        .pdf-mode { background-color: white !important; padding: 0 !important; }
+        .pdf-mode { 
+            background-color: white !important; 
+            padding-top: 0 !important; /* Removes the top padding meant for the navbar */
+            max-width: 1024px !important; /* Forces desktop width */
+            width: 1024px !important;
+        }
         .pdf-mode .glass-panel {
             background: white !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
+            border-color: #e2e8f0 !important;
+            /* Padding is intentionally preserved here to keep it beautiful */
         }
-        .pdf-mode .table-container { overflow: visible !important; border: 1px solid #e2e8f0 !important; }
+        .pdf-mode .table-container { 
+            overflow: visible !important; 
+            border: 1px solid #e2e8f0 !important; 
+        }
         .pdf-mode table { min-width: 100% !important; }
+        .pdf-mode th, .pdf-mode td { white-space: normal !important; }
+        
         .pdf-mode .bg-slate-50, .pdf-mode .bg-slate-900, .pdf-mode .bg-blue-900 {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -615,7 +625,7 @@
                 margin:       [15, 15, 20, 15],
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024, letterRendering: true },
+                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024, width: 1024 }, // Added explicit width: 1024
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
@@ -681,6 +691,7 @@
     </script>
 </body>
 </html>
+
 
 
 
