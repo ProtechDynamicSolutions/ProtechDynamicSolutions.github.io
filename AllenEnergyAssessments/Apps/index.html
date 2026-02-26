@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Assessment Tools | Allen Energy</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/AllenEnergyAssessments/AEG.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+
+        /* Subtle Energy Pulse Animation for Logo */
+        @keyframes energyPulse {
+            0% { filter: drop-shadow(0 0 4px rgba(30, 75, 143, 0.2)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 15px rgba(126, 184, 79, 0.6)); transform: scale(1.03); }
+            100% { filter: drop-shadow(0 0 4px rgba(30, 75, 143, 0.2)); transform: scale(1); }
+        }
+        
+        .pulse-logo {
+            animation: energyPulse 4s infinite ease-in-out;
+            will-change: transform, filter;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Hide elements during PDF export */
+        .no-print { display: block; }
+        .pdf-mode .no-print { display: none !important; }
+        .pdf-mode .pdf-only { display: block !important; }
+        .pdf-only { display: none; }
+        
+        /* PDF specific beautiful layout */
+        .pdf-mode { background-color: white !important; padding: 0 !important; }
+        .pdf-mode .glass-panel {
+            background: white !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        .pdf-mode .table-container { overflow: visible !important; border: 1px solid #e2e8f0 !important; }
+        .pdf-mode table { min-width: 100% !important; }
+        .pdf-mode .bg-slate-50, .pdf-mode .bg-slate-900, .pdf-mode .bg-blue-900 {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .pdf-mode section { break-inside: avoid; page-break-inside: avoid; }
+        
+        /* Input styling */
+        .input-field {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            transition: all 0.2s;
+            font-size: 16px; /* Prevents iOS auto-zoom on touch */
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+            background-color: #ffffff;
+        }
+        
+        /* Custom Scrollbar for tables */
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f5f9; rounded: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800">
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-lg text-white font-medium opacity-0 pointer-events-none transition-opacity duration-300 shadow-lg"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-3">
+                    <img 
+                        src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/AllenEnergyAssessments/AEG.png" 
+                        alt="Allen Energy Assessments Logo" 
+                        class="w-12 h-12 object-contain pulse-logo"
+                    >
+                    <div class="flex flex-col">
+                        <span class="text-blue-900 font-bold text-lg leading-tight tracking-tight">Allen Energy</span>
+                        <span class="text-green-600 font-medium text-xs tracking-wider">Internal Tools</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="switchTab('uvalue')" id="tab-uvalue" class="px-4 py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-800">U-Value Calc</button>
+                    <button onclick="switchTab('hli')" id="tab-hli" class="px-4 py-2 rounded-md font-medium text-sm transition-colors text-slate-600 hover:bg-slate-100">HLI Calc</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area (This wrapper will be exported to PDF) -->
+    <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        
+        <!-- Document Header for PDF (Hidden in web view) -->
+        <div id="pdf-header" class="pdf-only mb-8 border-b-2 border-blue-900 pb-4 mt-4">
+            <div class="flex justify-between items-end">
+                <div class="flex items-center gap-4">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/AllenEnergyAssessments/AEG.png" class="w-20 h-20 object-contain" crossorigin="anonymous">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-blue-900 leading-tight">Allen Energy Assessments</h1>
+                        <p class="text-green-600 font-bold text-lg tracking-wide">Technical Assessment Report</p>
+                        <p class="text-slate-500 text-sm mt-1">SEAI Registered Professionals</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-slate-700">Date: <span id="report-date" class="text-blue-800"></span></p>
+                    <p class="text-sm font-semibold text-slate-700">Ref: <span id="report-ref" class="text-blue-800"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="report-content" class="space-y-6">
+            
+            <!-- Project Details -->
+            <section class="glass-panel p-6 rounded-2xl border border-slate-200">
+                <h2 class="text-lg font-bold text-blue-900 mb-4 border-b pb-2 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-5 h-5 text-blue-700"></i> Project Details
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Client Name</label>
+                        <input type="text" id="proj-client" placeholder="e.g. John Doe" class="input-field text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Property Address</label>
+                        <input type="text" id="proj-address" placeholder="e.g. 123 Main St, Cork" class="input-field text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Eircode</label>
+                        <input type="text" id="proj-eircode" placeholder="e.g. T12 AB34" class="input-field text-sm font-medium uppercase">
+                    </div>
+                </div>
+            </section>
+            
+            <!-- U-VALUE CALCULATOR SECTION -->
+            <section id="uvalue-section" class="glass-panel p-6 sm:p-8 rounded-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">U-Value Calculator</h2>
+                        <p class="text-slate-500 text-sm mt-1">Calculate thermal transmittance for building elements.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Element Type</label>
+                        <select id="u-element-type" class="input-field" onchange="updateSurfaceResistances()">
+                            <option value="wall">External Wall</option>
+                            <option value="roof">Roof</option>
+                            <option value="floor">Ground Floor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Internal Rsi (m²K/W)</label>
+                        <input type="number" id="u-rsi" value="0.13" step="0.01" class="input-field" oninput="calculateUValue()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">External Rse (m²K/W)</label>
+                        <input type="number" id="u-rse" value="0.04" step="0.01" class="input-field" oninput="calculateUValue()">
+                    </div>
+                </div>
+
+                <div class="mb-4 flex justify-between items-end">
+                    <h3 class="text-lg font-semibold text-slate-800">Material Layers (Inside to Outside)</h3>
+                    <button onclick="addUValueLayer()" class="no-print text-sm bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-md hover:bg-green-100 font-medium flex items-center gap-1">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Layer
+                    </button>
+                </div>
+
+                <div class="table-container overflow-x-auto border border-slate-200 rounded-xl mb-6">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-3 font-semibold border-b">Material Description</th>
+                                <th class="p-3 font-semibold border-b w-32">Thickness (m)</th>
+                                <th class="p-3 font-semibold border-b w-32">&lambda; (W/mK)</th>
+                                <th class="p-3 font-semibold border-b w-32">R (m²K/W)</th>
+                                <th class="p-3 font-semibold border-b w-12 no-print text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="uvalue-layers">
+                            <!-- Layers will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-blue-900 text-white p-6 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <p class="text-blue-200 text-sm font-medium mb-1">Total Thermal Resistance (R-Value)</p>
+                        <p class="text-2xl font-bold"><span id="total-r">0.000</span> <span class="text-base font-normal text-blue-300">m²K/W</span></p>
+                    </div>
+                    <div class="text-right border-t sm:border-t-0 sm:border-l border-blue-700 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
+                        <p class="text-green-400 text-sm font-bold mb-1 uppercase tracking-wider">Calculated U-Value</p>
+                        <p class="text-4xl font-extrabold"><span id="final-u">0.00</span> <span class="text-lg font-medium text-blue-200">W/m²K</span></p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end no-print">
+                    <button onclick="generateReport('uvalue')" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-md hover:shadow-lg w-full sm:w-auto justify-center text-lg sm:text-base">
+                        <i data-lucide="share-2" class="w-5 h-5"></i> Generate PDF / Share
+                    </button>
+                </div>
+            </section>
+
+            <!-- HEAT LOSS INDICATOR (HLI) SECTION -->
+            <section id="hli-section" class="glass-panel p-6 sm:p-8 rounded-2xl hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Heat Loss Indicator (HLI)</h2>
+                        <p class="text-slate-500 text-sm mt-1">SEAI standard calculation for heat pump readiness.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Total Floor Area (m²)</label>
+                        <input type="number" id="hli-area" value="100" class="input-field" oninput="calculateHLI()">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Building Volume (m³)</label>
+                        <input type="number" id="hli-volume" value="250" class="input-field" oninput="calculateHLI()">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Air Changes (ACH)</label>
+                        <input type="number" id="hli-ach" value="0.5" step="0.1" class="input-field" oninput="calculateHLI()">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Thermal Bridge (Y)</label>
+                        <input type="number" id="hli-y" value="0.15" step="0.01" class="input-field" oninput="calculateHLI()">
+                    </div>
+                </div>
+
+                <div class="mb-4 flex justify-between items-end">
+                    <h3 class="text-lg font-semibold text-slate-800">Building Envelope Elements</h3>
+                    <button onclick="addHLIElement()" class="no-print text-sm bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-md hover:bg-green-100 font-medium flex items-center gap-1">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Element
+                    </button>
+                </div>
+
+                <div class="table-container overflow-x-auto border border-slate-200 rounded-xl mb-6">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-3 font-semibold border-b">Element Type / Name</th>
+                                <th class="p-3 font-semibold border-b w-32">Area (m²)</th>
+                                <th class="p-3 font-semibold border-b w-32">U-Value (W/m²K)</th>
+                                <th class="p-3 font-semibold border-b w-32">Heat Loss (W/K)</th>
+                                <th class="p-3 font-semibold border-b w-12 no-print text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="hli-elements">
+                            <!-- Elements will be populated here -->
+                        </tbody>
+                        <tfoot class="bg-slate-50">
+                            <tr>
+                                <td colspan="3" class="p-3 text-right font-semibold text-slate-600">Total Fabric Heat Loss:</td>
+                                <td class="p-3 font-bold text-slate-800" id="hli-fabric-total">0.00</td>
+                                <td class="no-print"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Breakdown -->
+                    <div class="border border-slate-200 rounded-xl p-5">
+                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wide border-b pb-2 mb-3">Heat Loss Breakdown</h4>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-slate-600">Fabric (Elements)</span>
+                            <span class="font-medium" id="breakdown-fabric">0 W/K</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-slate-600">Thermal Bridging (Y x Area)</span>
+                            <span class="font-medium" id="breakdown-bridge">0 W/K</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-slate-600">Ventilation (0.33 x V x ACH)</span>
+                            <span class="font-medium" id="breakdown-vent">0 W/K</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-200">
+                            <span class="font-bold text-slate-800">Total Heat Loss</span>
+                            <span class="font-bold text-blue-700" id="breakdown-total">0 W/K</span>
+                        </div>
+                    </div>
+
+                    <!-- Final HLI Result -->
+                    <div class="bg-slate-900 rounded-xl p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-600 rounded-full blur-3xl opacity-20"></div>
+                        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-green-500 rounded-full blur-3xl opacity-20"></div>
+                        
+                        <p class="text-slate-300 font-medium mb-2 relative z-10">Heat Loss Indicator (HLI)</p>
+                        <div class="text-5xl font-extrabold text-white mb-3 relative z-10">
+                            <span id="final-hli">0.00</span>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-4 relative z-10">W / K m²</p>
+                        
+                        <div id="hli-badge" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end no-print">
+                    <button onclick="generateReport('hli')" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-md hover:shadow-lg w-full sm:w-auto justify-center text-lg sm:text-base">
+                        <i data-lucide="share-2" class="w-5 h-5"></i> Generate PDF / Share
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Standard notification toast
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notification');
+            toast.textContent = message;
+            
+            if (type === 'error') {
+                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-lg text-white font-medium transition-opacity duration-300 shadow-lg bg-red-600';
+            } else {
+                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-lg text-white font-medium transition-opacity duration-300 shadow-lg bg-slate-800';
+            }
+            
+            toast.style.opacity = '1';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 4000);
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            const uvalueSec = document.getElementById('uvalue-section');
+            const hliSec = document.getElementById('hli-section');
+            const tabUvalue = document.getElementById('tab-uvalue');
+            const tabHli = document.getElementById('tab-hli');
+
+            if (tab === 'uvalue') {
+                uvalueSec.classList.remove('hidden');
+                hliSec.classList.add('hidden');
+                tabUvalue.className = 'px-4 py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-800';
+                tabHli.className = 'px-4 py-2 rounded-md font-medium text-sm transition-colors text-slate-600 hover:bg-slate-100';
+            } else {
+                uvalueSec.classList.add('hidden');
+                hliSec.classList.remove('hidden');
+                tabHli.className = 'px-4 py-2 rounded-md font-medium text-sm transition-colors bg-blue-100 text-blue-800';
+                tabUvalue.className = 'px-4 py-2 rounded-md font-medium text-sm transition-colors text-slate-600 hover:bg-slate-100';
+            }
+        }
+
+        // --- U-VALUE CALCULATOR LOGIC ---
+        const standardSurfaceResistances = {
+            wall: { rsi: 0.13, rse: 0.04 },
+            roof: { rsi: 0.10, rse: 0.04 },
+            floor: { rsi: 0.17, rse: 0.04 }
+        };
+
+        function updateSurfaceResistances() {
+            const type = document.getElementById('u-element-type').value;
+            document.getElementById('u-rsi').value = standardSurfaceResistances[type].rsi.toFixed(2);
+            document.getElementById('u-rse').value = standardSurfaceResistances[type].rse.toFixed(2);
+            calculateUValue();
+        }
+
+        function createUValueLayerRow(name = '', d = '', lambda = '', r = '') {
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-100 hover:bg-slate-50 transition-colors layer-row";
+            tr.innerHTML = `
+                <td class="p-2">
+                    <input type="text" placeholder="e.g. Blockwork" value="${name}" class="input-field text-sm layer-name">
+                </td>
+                <td class="p-2">
+                    <input type="number" step="0.001" placeholder="m" value="${d}" class="input-field text-sm layer-d" oninput="handleLayerInput(this, 'd')">
+                </td>
+                <td class="p-2">
+                    <input type="number" step="0.001" placeholder="W/mK" value="${lambda}" class="input-field text-sm layer-lambda" oninput="handleLayerInput(this, 'lambda')">
+                </td>
+                <td class="p-2">
+                    <input type="number" step="0.001" placeholder="m²K/W" value="${r}" class="input-field text-sm layer-r" oninput="handleLayerInput(this, 'r')">
+                </td>
+                <td class="p-2 text-center no-print">
+                    <button onclick="this.closest('tr').remove(); calculateUValue();" class="text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            `;
+            return tr;
+        }
+
+        function addUValueLayer() {
+            const tbody = document.getElementById('uvalue-layers');
+            tbody.appendChild(createUValueLayerRow());
+            lucide.createIcons();
+            calculateUValue();
+        }
+
+        function handleLayerInput(input, source) {
+            const row = input.closest('tr');
+            const dInput = row.querySelector('.layer-d');
+            const lambdaInput = row.querySelector('.layer-lambda');
+            const rInput = row.querySelector('.layer-r');
+
+            let d = parseFloat(dInput.value);
+            let lambda = parseFloat(lambdaInput.value);
+
+            // Auto calculate R if d and lambda are present, unless user is typing in R directly
+            if (source !== 'r' && !isNaN(d) && !isNaN(lambda) && lambda > 0) {
+                rInput.value = (d / lambda).toFixed(3);
+            }
+
+            calculateUValue();
+        }
+
+        function calculateUValue() {
+            const rsi = parseFloat(document.getElementById('u-rsi').value) || 0;
+            const rse = parseFloat(document.getElementById('u-rse').value) || 0;
+            
+            let totalR = rsi + rse;
+
+            const rows = document.querySelectorAll('#uvalue-layers .layer-row');
+            rows.forEach(row => {
+                const rVal = parseFloat(row.querySelector('.layer-r').value) || 0;
+                totalR += rVal;
+            });
+
+            document.getElementById('total-r').textContent = totalR.toFixed(3);
+
+            if (totalR > 0) {
+                const uValue = 1 / totalR;
+                document.getElementById('final-u').textContent = uValue.toFixed(2);
+            } else {
+                document.getElementById('final-u').textContent = '0.00';
+            }
+        }
+
+        // --- HLI CALCULATOR LOGIC ---
+        function createHLIElementRow(name = '', area = '', uval = '') {
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-100 hover:bg-slate-50 transition-colors hli-row";
+            tr.innerHTML = `
+                <td class="p-2">
+                    <input type="text" placeholder="e.g. Front Wall" value="${name}" class="input-field text-sm hli-name">
+                </td>
+                <td class="p-2">
+                    <input type="number" step="0.1" placeholder="m²" value="${area}" class="input-field text-sm hli-area" oninput="calculateHLI()">
+                </td>
+                <td class="p-2">
+                    <input type="number" step="0.01" placeholder="W/m²K" value="${uval}" class="input-field text-sm hli-u" oninput="calculateHLI()">
+                </td>
+                <td class="p-2 font-medium text-slate-700 hli-row-loss pt-3">0.00</td>
+                <td class="p-2 text-center no-print">
+                    <button onclick="this.closest('tr').remove(); calculateHLI();" class="text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            `;
+            return tr;
+        }
+
+        function addHLIElement() {
+            const tbody = document.getElementById('hli-elements');
+            tbody.appendChild(createHLIElementRow());
+            lucide.createIcons();
+            calculateHLI();
+        }
+
+        function calculateHLI() {
+            const floorArea = parseFloat(document.getElementById('hli-area').value) || 1;
+            const volume = parseFloat(document.getElementById('hli-volume').value) || 0;
+            const ach = parseFloat(document.getElementById('hli-ach').value) || 0;
+            const yFactor = parseFloat(document.getElementById('hli-y').value) || 0;
+
+            let totalElementArea = 0;
+            let fabricLoss = 0;
+
+            const rows = document.querySelectorAll('#hli-elements .hli-row');
+            rows.forEach(row => {
+                const a = parseFloat(row.querySelector('.hli-area').value) || 0;
+                const u = parseFloat(row.querySelector('.hli-u').value) || 0;
+                
+                const loss = a * u;
+                row.querySelector('.hli-row-loss').textContent = loss.toFixed(2);
+                
+                totalElementArea += a;
+                fabricLoss += loss;
+            });
+
+            document.getElementById('hli-fabric-total').textContent = fabricLoss.toFixed(2);
+
+            // SEAI standard formulas
+            const thermalBridgingLoss = totalElementArea * yFactor;
+            const ventilationLoss = 0.33 * volume * ach;
+            
+            const totalHeatLoss = fabricLoss + thermalBridgingLoss + ventilationLoss;
+            const hli = totalHeatLoss / floorArea;
+
+            // Update Breakdown UI
+            document.getElementById('breakdown-fabric').textContent = fabricLoss.toFixed(1) + ' W/K';
+            document.getElementById('breakdown-bridge').textContent = thermalBridgingLoss.toFixed(1) + ' W/K';
+            document.getElementById('breakdown-vent').textContent = ventilationLoss.toFixed(1) + ' W/K';
+            document.getElementById('breakdown-total').textContent = totalHeatLoss.toFixed(1) + ' W/K';
+
+            // Update Final HLI
+            document.getElementById('final-hli').textContent = hli.toFixed(2);
+
+            // Update Target Badge
+            const badge = document.getElementById('hli-badge');
+            if (hli <= 2.0 && hli > 0) {
+                badge.className = 'relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border border-green-500/30 bg-green-500/20 text-green-300';
+                badge.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Heat Pump Ready (&le; 2.0)';
+            } else if (hli > 2.0) {
+                badge.className = 'relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border border-orange-500/30 bg-orange-500/20 text-orange-300';
+                badge.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4"></i> Fabric Upgrade Required';
+            } else {
+                badge.className = 'hidden';
+            }
+            lucide.createIcons();
+        }
+
+        // --- PDF GENERATION & SHARING ---
+        async function generateReport(section) {
+            showNotification("Preparing high-quality PDF...", "success");
+
+            const container = document.getElementById('report-content');
+            const mainEl = document.querySelector('main');
+            
+            // Set date and reference
+            const today = new Date();
+            document.getElementById('report-date').textContent = today.toLocaleDateString('en-IE');
+            
+            const clientName = document.getElementById('proj-client').value || 'Client';
+            const eircode = document.getElementById('proj-eircode').value || 'N/A';
+            document.getElementById('report-ref').textContent = `AEA-${today.getFullYear().toString().substr(-2)}${(today.getMonth()+1).toString().padStart(2, '0')}-${eircode.replace(/\s/g, '').substring(0, 4) || 'XXXX'}`;
+
+            // Apply PDF styling classes
+            mainEl.classList.add('pdf-mode');
+            document.getElementById('pdf-header').classList.remove('pdf-only');
+
+            // Determine what to print based on section
+            const uvalueSec = document.getElementById('uvalue-section');
+            const hliSec = document.getElementById('hli-section');
+            
+            // Keep current view states to restore later
+            const uHidden = uvalueSec.classList.contains('hidden');
+            const hHidden = hliSec.classList.contains('hidden');
+
+            if (section === 'uvalue') {
+                uvalueSec.classList.remove('hidden');
+                hliSec.classList.add('hidden');
+            } else {
+                uvalueSec.classList.add('hidden');
+                hliSec.classList.remove('hidden');
+            }
+
+            // Convert inputs to plain text for better printing layout
+            const inputs = container.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.setAttribute('data-original-val', input.value);
+                const span = document.createElement('span');
+                
+                if (input.tagName.toLowerCase() === 'select') {
+                    span.className = 'pdf-only-text font-bold text-blue-900 bg-slate-50 px-3 py-1.5 rounded border border-slate-200 block w-full text-sm';
+                    span.textContent = input.options[input.selectedIndex].text;
+                } else {
+                    span.className = 'pdf-only-text font-bold text-blue-900 bg-blue-50 px-3 py-1.5 rounded border border-blue-100 block w-full text-sm';
+                    span.textContent = input.value || '-';
+                    if(!input.value) span.className = 'pdf-only-text text-slate-400 block w-full text-sm';
+                }
+                
+                input.parentNode.insertBefore(span, input);
+                input.classList.add('no-print'); // Hide input in PDF
+            });
+
+            // html2pdf options - windowWidth 1024 forces desktop layout for PDF even on mobile
+            const formattedClientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const filename = `Allen_Energy_${section.toUpperCase()}_Report_${formattedClientName}.pdf`;
+
+            const opt = {
+                margin:       [15, 15, 20, 15],
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            try {
+                // Generate PDF as Blob for sharing
+                const pdfBlob = await html2pdf().set(opt).from(mainEl).output('blob');
+                const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+
+                // Try Web Share API first
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Allen Energy Assessment Report',
+                        text: `Please find attached the technical calculation report for ${clientName}.`,
+                        files: [file]
+                    });
+                    showNotification("Report shared successfully.");
+                } else {
+                    // Fallback to Download
+                    html2pdf().set(opt).from(mainEl).save();
+                    showNotification("Report downloaded (Sharing not supported on this browser)");
+                }
+            } catch (error) {
+                console.error("Error generating PDF:", error);
+                if (error.name !== 'AbortError') {
+                    showNotification("Error generating report.", "error");
+                }
+            } finally {
+                // Cleanup and Restore UI
+                mainEl.classList.remove('pdf-mode');
+                document.getElementById('pdf-header').classList.add('pdf-only');
+                
+                // Restore tabs
+                if (uHidden) uvalueSec.classList.add('hidden'); else uvalueSec.classList.remove('hidden');
+                if (hHidden) hliSec.classList.add('hidden'); else hliSec.classList.remove('hidden');
+
+                // Remove spans and restore inputs
+                const spans = container.querySelectorAll('.pdf-only-text');
+                spans.forEach(span => span.remove());
+                inputs.forEach(input => input.classList.remove('no-print'));
+            }
+        }
+
+        // Initialize with default rows
+        window.onload = () => {
+            // Add some default rows to U-Value
+            const uBody = document.getElementById('uvalue-layers');
+            uBody.appendChild(createUValueLayerRow('Plasterboard', '0.012', '0.17', ''));
+            uBody.appendChild(createUValueLayerRow('Cavity Wall Insulation', '0.100', '0.032', ''));
+            uBody.appendChild(createUValueLayerRow('Concrete Block', '0.100', '1.13', ''));
+            calculateUValue();
+
+            // Add some default rows to HLI
+            const hliBody = document.getElementById('hli-elements');
+            hliBody.appendChild(createHLIElementRow('External Walls', '85.0', '0.21'));
+            hliBody.appendChild(createHLIElementRow('Pitched Roof', '50.0', '0.13'));
+            hliBody.appendChild(createHLIElementRow('Ground Floor', '50.0', '0.15'));
+            hliBody.appendChild(createHLIElementRow('Windows', '15.0', '1.20'));
+            calculateHLI();
+            
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
+
+
+
