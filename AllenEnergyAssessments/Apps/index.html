@@ -54,21 +54,31 @@
         /* PDF specific beautiful layout */
         .pdf-mode { 
             background-color: white !important; 
-            padding-top: 0 !important; /* Removes the top padding meant for the navbar */
-            max-width: 1024px !important; /* Forces desktop width */
+            padding: 0 !important; 
+            max-width: 1024px !important; 
             width: 1024px !important;
+        }
+        .pdf-mode #report-content {
+            gap: 1.5rem !important; /* Tighter spacing for PDF */
         }
         .pdf-mode .glass-panel {
             background: white !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             box-shadow: none !important;
-            border-color: #e2e8f0 !important;
-            /* Padding is intentionally preserved here to keep it beautiful */
+            border-color: #cbd5e1 !important;
+            /* CRITICAL FIX: Allow sections to split if needed, prevents massive gaps */
+            break-inside: auto !important; 
+            page-break-inside: auto !important;
+        }
+        .pdf-mode tr {
+            /* Keep table rows together so they don't split halfway across pages */
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
         }
         .pdf-mode .table-container { 
             overflow: visible !important; 
-            border: 1px solid #e2e8f0 !important; 
+            border: 1px solid #cbd5e1 !important; 
         }
         .pdf-mode table { min-width: 100% !important; }
         .pdf-mode th, .pdf-mode td { white-space: normal !important; }
@@ -77,7 +87,6 @@
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        .pdf-mode section { break-inside: avoid; page-break-inside: avoid; }
         
         /* Input styling */
         .input-field {
@@ -98,7 +107,7 @@
         
         /* Custom Scrollbar for tables */
         .table-container::-webkit-scrollbar { height: 8px; }
-        .table-container::-webkit-scrollbar-track { background: #f1f5f9; rounded: 4px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
@@ -108,7 +117,7 @@
     <div id="notification" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-lg text-white font-medium opacity-0 pointer-events-none transition-opacity duration-300 shadow-lg"></div>
 
     <!-- Navigation -->
-    <nav class="fixed w-full z-50 glass-panel border-b border-slate-200">
+    <nav class="fixed w-full z-50 glass-panel border-b border-slate-200 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-3">
                 <div class="flex items-center gap-3">
@@ -134,7 +143,7 @@
     <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         
         <!-- Document Header for PDF (Hidden in web view) -->
-        <div id="pdf-header" class="pdf-only mb-8 border-b-2 border-blue-900 pb-4 mt-4">
+        <div id="pdf-header" class="pdf-only mb-6 border-b-2 border-blue-900 pb-4 mt-2">
             <div class="flex justify-between items-end">
                 <div class="flex items-center gap-4">
                     <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/AllenEnergyAssessments/AEG.png" class="w-20 h-20 object-contain" crossorigin="anonymous">
@@ -576,7 +585,7 @@
             
             const clientName = document.getElementById('proj-client').value || 'Client';
             const eircode = document.getElementById('proj-eircode').value || 'N/A';
-            document.getElementById('report-ref').textContent = `AEA-${today.getFullYear().toString().substr(-2)}${(today.getMonth()+1).toString().padStart(2, '0')}-${eircode.replace(/\s/g, '').substring(0, 4) || 'XXXX'}`;
+            document.getElementById('report-ref').textContent = `AEA-${today.getFullYear().toString().substr(-2)}${(today.getMonth()+1).toString().padStart(2, '0')}-${eircode.replace(/\\s/g, '').substring(0, 4) || 'XXXX'}`;
 
             // Apply PDF styling classes
             mainEl.classList.add('pdf-mode');
@@ -622,12 +631,13 @@
             const filename = `Allen_Energy_${section.toUpperCase()}_Report_${formattedClientName}.pdf`;
 
             const opt = {
-                margin:       [15, 15, 20, 15],
+                margin:       [10, 15, 15, 15], // Reduced top margin slightly
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024, width: 1024 }, // Added explicit width: 1024
+                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024, width: 1024 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                // Changed pagebreak settings to let the browser break naturally
+                pagebreak:    { mode: ['css', 'legacy'] } 
             };
 
             try {
@@ -691,7 +701,5 @@
     </script>
 </body>
 </html>
-
-
 
 
