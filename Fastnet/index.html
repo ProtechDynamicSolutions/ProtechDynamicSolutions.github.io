@@ -71,7 +71,7 @@
 
         const ADVISERS = [
             { name: "Peter Kelleher", phone: "087 627 9456", email: "info@fastnetblinds.ie" },
-            { name: "Keiran Kelleher", phone: "087 627 9456", email: "info@fastnetblinds.ie" },
+            { name: "Kieran Kelleher", phone: "087 627 9456", email: "info@fastnetblinds.ie" },
             { name: "Kimberley McGorry", phone: "087 627 9456", email: "info@fastnetblinds.ie" }
         ];
 
@@ -191,7 +191,7 @@
                     const borderGray = [229, 231, 235];
                     const brandAccent = [2, 132, 199]; // Sky 600
                     
-                    const logoBase64 = await getBase64ImageFromURL("https://fastnetblinds.ie/wp-content/uploads/2024/01/Fastnet-logo.png");
+                    const logoBase64 = await getBase64ImageFromURL("https://corsproxy.io/?https://fastnetblinds.ie/wp-content/uploads/2024/01/Fastnet-logo.png");
 
                     let y = 0;
 
@@ -445,7 +445,7 @@
                     doc.setFont("helvetica", "normal");
                     doc.setFontSize(7.5);
                     doc.setTextColor(...brandGray);
-                    const termsText = "Unless otherwise specified all invoices are due net 30 days from date of Shipment. PRICES INVOICED WILL BE THOSE IN EFFECT AT TIME OF SHIPMENT. All prices are f.o.b. point of manufacture. Seller reserves the right to place a service charge on past due accounts at the highest rate permitted by law.";
+                    const termsText = "Please note: This quotation is based on a single call-out and fit unless otherwise specified. Unless otherwise specified all invoices are due net 30 days from date of Shipment. PRICES INVOICED WILL BE THOSE IN EFFECT AT TIME OF SHIPMENT. All prices are f.o.b. point of manufacture. Seller reserves the right to place a service charge on past due accounts at the highest rate permitted by law.";
                     const termsLines = doc.splitTextToSize(termsText, 80);
                     doc.text(termsLines, 110, footerY + 13);
 
@@ -655,5 +655,6 @@
     </script>
 </body>
 </html>
+
 
 
