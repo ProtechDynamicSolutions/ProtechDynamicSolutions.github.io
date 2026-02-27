@@ -215,11 +215,13 @@
                         
                         y = 15;
                         
+                        let currentLogoHeight = 20; // Default fallback height
+                        
                         // Logo (calculated dynamically to prevent stretching)
                         if (logoObj && logoObj.data) {
-                            const targetWidth = 60;
-                            const targetHeight = (logoObj.h / logoObj.w) * targetWidth;
-                            doc.addImage(logoObj.data, 'PNG', 15, y, targetWidth, targetHeight);
+                            const targetWidth = 45; // Slightly reduced width for better proportion
+                            currentLogoHeight = (logoObj.h / logoObj.w) * targetWidth;
+                            doc.addImage(logoObj.data, 'PNG', 15, y, targetWidth, currentLogoHeight);
                         } else {
                             doc.setFont("helvetica", "bold");
                             doc.setFontSize(22);
@@ -248,7 +250,8 @@
                             doc.text(line, 195, y + 9 + (idx * 4.5), { align: "right" });
                         });
 
-                        y += 35;
+                        // Dynamically adjust Y to push everything down safely past the bottom of the logo
+                        y = y + Math.max(currentLogoHeight, 30) + 8;
                         
                         // Subtle Divider
                         doc.setDrawColor(...borderGray);
@@ -677,5 +680,6 @@
     </script>
 </body>
 </html>
+
 
 
