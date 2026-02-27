@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Fastnet Quote Generator</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,15 +26,20 @@
                     colors: {
                         'fastnet-dark': '#111827',
                         'fastnet-gray': '#4B5563',
-                        'fastnet-accent': '#0284c7', // Professional blue accent
+                        'fastnet-accent': '#0284c7', 
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.2s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
                     },
                     keyframes: {
                         fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(5px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
                         }
                     }
                 }
@@ -48,13 +53,23 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        body { background-color: #f8fafc; color: #1e293b; font-family: system-ui, -apple-system, sans-serif; }
+        body { 
+            background-color: #f8fafc; 
+            color: #1e293b; 
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
         
         .glass-panel {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Prevent zooming on iOS inputs */
+        input[type="text"], input[type="number"], select, textarea {
+            font-size: 16px !important;
         }
     </style>
 </head>
@@ -62,11 +77,11 @@
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, Component } from 'react';
+        import React, { useState, useEffect, Component, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
         import { 
             FileText, Share, Calendar, MapPin, User, Phone, 
-            Mail, Plus, Trash2, Settings, Download, Euro, Home, FileCheck, Percent
+            Mail, Plus, Trash2, Settings, Download, Euro, Home, FileCheck, Percent, X, ChevronDown
         } from 'lucide-react';
 
         const ADVISERS = [
@@ -156,7 +171,13 @@
             };
 
             const addItem = () => {
-                setItems(prev => [...prev, { id: Date.now(), description: '', qty: 1, unitPrice: '' }]);
+                const newId = Date.now();
+                setItems(prev => [...prev, { id: newId, description: '', qty: 1, unitPrice: '' }]);
+                // Small delay to allow React to render then scroll
+                setTimeout(() => {
+                    const el = document.getElementById(`item-${newId}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
             };
 
             const removeItem = (id) => {
@@ -168,10 +189,9 @@
             const discountPerc = parseFloat(formData.discount || 0);
             const discountAmt = subtotal * (discountPerc / 100);
             const netTotal = Math.max(0, subtotal - discountAmt);
-            const vatAmount = formData.includeVat ? netTotal * 0.135 : 0; // 13.5% VAT
+            const vatAmount = formData.includeVat ? netTotal * 0.135 : 0; 
             const grossTotal = netTotal + vatAmount;
 
-            // Updated to fetch actual width and height to calculate perfect aspect ratio
             const getBase64ImageFromURL = (url) => {
                 return new Promise((resolve) => {
                     const img = new Image();
@@ -197,29 +217,25 @@
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     
-                    // Brand Colours
                     const brandBlack = [17, 24, 39];
                     const brandGray = [75, 85, 99];
                     const lightGray = [243, 244, 246];
                     const borderGray = [229, 231, 235];
-                    const brandAccent = [2, 132, 199]; // Sky 600
+                    const brandAccent = [2, 132, 199]; 
                     
                     const logoObj = await getBase64ImageFromURL(LOGO_URL);
 
                     let y = 0;
 
                     const addHeader = (isFirstPage = false) => {
-                        // Top decorative line
                         doc.setFillColor(...brandAccent);
                         doc.rect(0, 0, 210, 4, 'F');
                         
                         y = 15;
+                        let currentLogoHeight = 20; 
                         
-                        let currentLogoHeight = 20; // Default fallback height
-                        
-                        // Logo (calculated dynamically to prevent stretching)
                         if (logoObj && logoObj.data) {
-                            const targetWidth = 45; // Slightly reduced width for better proportion
+                            const targetWidth = 45; 
                             currentLogoHeight = (logoObj.h / logoObj.w) * targetWidth;
                             doc.addImage(logoObj.data, 'PNG', 15, y, targetWidth, currentLogoHeight);
                         } else {
@@ -229,7 +245,6 @@
                             doc.text("FASTNET BLINDS", 15, y + 10);
                         }
 
-                        // Company Details (Top Right)
                         doc.setFont("helvetica", "bold");
                         doc.setFontSize(10);
                         doc.setTextColor(...brandBlack);
@@ -250,10 +265,8 @@
                             doc.text(line, 195, y + 9 + (idx * 4.5), { align: "right" });
                         });
 
-                        // Dynamically adjust Y to push everything down safely past the bottom of the logo
                         y = y + Math.max(currentLogoHeight, 30) + 8;
                         
-                        // Subtle Divider
                         doc.setDrawColor(...borderGray);
                         doc.setLineWidth(0.5);
                         doc.line(15, y, 195, y);
@@ -262,13 +275,11 @@
 
                     addHeader(true);
 
-                    // --- DOCUMENT TITLE & QUOTE INFO ---
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(18);
                     doc.setTextColor(...brandBlack);
                     doc.text("QUOTATION", 15, y);
 
-                    // Quote meta box right
                     doc.setFillColor(...lightGray);
                     doc.roundedRect(125, y - 8, 70, 28, 2, 2, 'F');
                     
@@ -277,26 +288,25 @@
                     let metaY = y - 2;
                     
                     doc.setTextColor(...brandGray); doc.text("Quote Ref:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(quoteRef, metaX + 25, metaY);
+                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(quoteRef, metaX + 35, metaY);
                     
                     metaY += 6;
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(...brandGray); doc.text("Date:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.date.split('-').reverse().join('/'), metaX + 25, metaY);
+                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.date.split('-').reverse().join('/'), metaX + 35, metaY);
                     
                     metaY += 6;
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(...brandGray); doc.text("Account Mgr:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.adviserName, metaX + 25, metaY);
+                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.adviserName, metaX + 35, metaY);
 
                     metaY += 6;
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(...brandGray); doc.text("Valid For:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text("30 Days", metaX + 25, metaY);
+                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text("30 Days", metaX + 35, metaY);
 
                     y += 15;
 
-                    // --- BILL TO SECTION ---
                     doc.setFontSize(9);
                     doc.setTextColor(...brandAccent);
                     doc.setFont("helvetica", "bold");
@@ -317,7 +327,6 @@
                     
                     y += 15;
 
-                    // --- LINE ITEMS TABLE ---
                     const tableCols = [
                         { label: "Description", x: 15, w: 100, align: "left" },
                         { label: "Qty", x: 125, w: 15, align: "center" },
@@ -325,7 +334,6 @@
                         { label: "Total Net", x: 195, w: 20, align: "right" }
                     ];
 
-                    // Table Header
                     doc.setFillColor(...brandBlack);
                     doc.rect(12, y, 186, 8, 'F');
                     doc.setTextColor(255, 255, 255);
@@ -338,7 +346,6 @@
                     
                     y += 8;
 
-                    // Table Rows
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(...brandBlack);
                     let altRow = false;
@@ -348,11 +355,9 @@
                         const descLines = doc.splitTextToSize(item.description || "Item", 95);
                         const rowH = Math.max(8, descLines.length * 5 + 3);
 
-                        // Check page break
                         if (y + rowH > 240) {
                             doc.addPage();
                             addHeader();
-                            
                             doc.setFillColor(...brandBlack);
                             doc.rect(12, y, 186, 8, 'F');
                             doc.setTextColor(255, 255, 255);
@@ -386,7 +391,6 @@
 
                     y += 5;
 
-                    // --- TOTALS SECTION ---
                     const totalsX = 135;
                     const totalsW = 60;
                     
@@ -428,7 +432,6 @@
                     y += 1;
                     drawTotalRow("TOTAL GROSS", grossTotal, true, true);
 
-                    // --- PAYMENT ADVICE & TERMS ---
                     let footerY = Math.max(y + 15, 225); 
                     
                     doc.setFillColor(...lightGray);
@@ -504,7 +507,6 @@
 
                     <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
                         
-                        {/* Header Panel */}
                         <div className="glass-panel p-6 rounded-2xl relative overflow-hidden bg-gradient-to-r from-sky-50 to-white">
                             <h1 className="text-2xl font-bold text-slate-900 mb-1">
                                 Fastnet Quote Generator
@@ -514,7 +516,6 @@
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
-                            {/* Left Column: Details */}
                             <div className="space-y-4">
                                 <div className="glass-panel p-5 rounded-2xl space-y-4">
                                     <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
@@ -565,8 +566,7 @@
                                 </div>
                             </div>
 
-                            {/* Right Column: Line Items & Totals */}
-                            <div className="glass-panel p-5 rounded-2xl flex flex-col h-full">
+                            <div className="glass-panel p-5 rounded-2xl flex flex-col h-full overflow-visible">
                                 <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                                     <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                         <Home size={16} className="text-sky-500"/> Products & Services
@@ -576,29 +576,41 @@
                                     </button>
                                 </div>
                                 
-                                <div className="space-y-3 flex-grow overflow-y-auto max-h-[400px] pr-2">
+                                <div className="space-y-4 flex-grow overflow-y-auto max-h-[600px] pr-2 pb-10">
                                     {items.map((item, idx) => (
-                                        <div key={item.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3 animate-fade-in relative group">
+                                        <div key={item.id} id={`item-${item.id}`} className="bg-slate-50 border border-slate-200 rounded-xl p-3 animate-fade-in relative group overflow-visible">
                                             {items.length > 1 && (
-                                                <button onClick={() => removeItem(item.id)} className="absolute -right-2 -top-2 bg-red-100 text-red-500 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200 z-10">
-                                                    <Trash2 size={12} />
+                                                <button onClick={() => removeItem(item.id)} className="absolute -right-2 -top-2 bg-red-100 text-red-500 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200 z-50">
+                                                    <X size={14} />
                                                 </button>
                                             )}
-                                            <div className="flex flex-col gap-2">
-                                                <div className="relative">
+                                            <div className="flex flex-col gap-2 overflow-visible">
+                                                <div className="relative overflow-visible">
+                                                    <div className="flex items-center gap-1 mb-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Description</span>
+                                                        <ChevronDown size={10} className="text-slate-300" />
+                                                    </div>
                                                     <input 
                                                         type="text" 
-                                                        placeholder="e.g. Supply and fit of Roller Blinds in Living Room" 
+                                                        autoComplete="off"
+                                                        placeholder="Select or type blind type..." 
                                                         value={item.description} 
-                                                        onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                                                        onChange={(e) => {
+                                                            handleItemChange(item.id, 'description', e.target.value);
+                                                            setActiveDropdown(item.id);
+                                                        }}
                                                         onFocus={() => setActiveDropdown(item.id)}
-                                                        onBlur={() => setTimeout(() => setActiveDropdown(null), 200)}
-                                                        className="w-full bg-white border border-slate-200 rounded p-2 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400"
+                                                        className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400 shadow-sm"
                                                     />
+                                                    
                                                     {activeDropdown === item.id && (
-                                                        <div className="absolute z-50 w-full bg-white border border-slate-200 shadow-xl rounded-lg mt-1 max-h-48 overflow-y-auto">
+                                                        <div className="absolute z-[100] w-full bg-white border border-slate-200 shadow-2xl rounded-xl mt-1 max-h-56 overflow-y-auto animate-slide-up ring-4 ring-black/5">
+                                                            <div className="sticky top-0 bg-slate-50 p-2 border-b border-slate-100 flex justify-between items-center">
+                                                                <span className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-tighter">Suggestions</span>
+                                                                <button onMouseDown={(e) => { e.preventDefault(); setActiveDropdown(null); }} className="p-1 hover:bg-slate-200 rounded-full"><X size={12}/></button>
+                                                            </div>
                                                             {BLIND_TYPES
-                                                                .filter(type => !item.description || type.toLowerCase().includes(item.description.toLowerCase()) || item.description.toLowerCase().includes(type.toLowerCase()))
+                                                                .filter(type => !item.description || type.toLowerCase().includes(item.description.toLowerCase()))
                                                                 .map(type => (
                                                                 <div 
                                                                     key={type}
@@ -607,7 +619,7 @@
                                                                         handleItemChange(item.id, 'description', type);
                                                                         setActiveDropdown(null);
                                                                     }}
-                                                                    className="p-3 hover:bg-sky-50 border-b border-slate-100 last:border-0 cursor-pointer text-sm font-medium text-slate-700 transition-colors"
+                                                                    className="p-3.5 hover:bg-sky-50 border-b border-slate-100 last:border-0 cursor-pointer text-sm font-bold text-slate-700 active:bg-sky-100"
                                                                 >
                                                                     {type}
                                                                 </div>
@@ -615,14 +627,19 @@
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <div className="flex-1 flex items-center bg-white border border-slate-200 rounded px-2">
-                                                        <span className="text-xs text-slate-400 font-bold w-8">Qty:</span>
-                                                        <input type="number" min="1" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} className="w-full p-2 text-sm outline-none font-semibold"/>
+                                                <div className="grid grid-cols-2 gap-3 mt-1">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Quantity</span>
+                                                        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
+                                                            <input type="number" min="1" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} className="w-full py-2.5 text-sm outline-none font-bold text-slate-700"/>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 flex items-center bg-white border border-slate-200 rounded px-2">
-                                                        <span className="text-xs text-slate-400 font-bold">€</span>
-                                                        <input type="number" min="0" placeholder="0.00" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} className="w-full p-2 text-sm outline-none font-semibold text-right"/>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Unit Price</span>
+                                                        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
+                                                            <span className="text-xs text-slate-400 font-bold mr-2">€</span>
+                                                            <input type="number" min="0" placeholder="0.00" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} className="w-full py-2.5 text-sm outline-none font-bold text-slate-700 text-right"/>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -630,23 +647,22 @@
                                     ))}
                                 </div>
 
-                                {/* Calculation Summary */}
-                                <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
-                                    <div className="flex justify-between text-sm text-slate-600 font-semibold">
+                                <div className="mt-auto pt-6 border-t border-slate-200 space-y-2.5">
+                                    <div className="flex justify-between text-sm text-slate-500 font-bold">
                                         <span>Subtotal</span>
                                         <span>€{formatCurrency(subtotal)}</span>
                                     </div>
                                     {discountAmt > 0 && (
-                                        <div className="flex justify-between text-sm text-emerald-600 font-semibold">
+                                        <div className="flex justify-between text-sm text-emerald-600 font-bold">
                                             <span>Discount ({discountPerc}%)</span>
                                             <span>-€{formatCurrency(discountAmt)}</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between text-sm text-slate-600 font-semibold">
+                                    <div className="flex justify-between text-sm text-slate-500 font-bold">
                                         <span>VAT {formData.includeVat ? '(13.5%)' : '(0%)'}</span>
                                         <span>€{formatCurrency(vatAmount)}</span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t border-slate-200">
+                                    <div className="flex justify-between text-xl font-black text-slate-900 pt-3 border-t border-slate-300">
                                         <span>Total Gross</span>
                                         <span>€{formatCurrency(grossTotal)}</span>
                                     </div>
@@ -656,18 +672,17 @@
                         </div>
                     </main>
 
-                    {/* Footer Actions */}
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 z-[200] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)]">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
-                            <div className="text-xs font-bold text-sky-600 animate-pulse h-4">
+                            <div className="text-xs font-black text-sky-600 tracking-tighter uppercase animate-pulse">
                                 {statusMsg}
                             </div>
                             <button 
                                 onClick={generatePDF} 
                                 disabled={isGenerating || !formData.clientName} 
-                                className="w-full md:w-auto px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full md:w-auto px-10 py-4 bg-slate-900 hover:bg-black text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                             >
-                                {isGenerating ? <span>Generating...</span> : <><Download size={18} /> Export PDF Quote</>}
+                                {isGenerating ? <span>Formatting...</span> : <><Download size={20} /> Generate & Export</>}
                             </button>
                         </div>
                     </div>
@@ -680,7 +695,4 @@
     </script>
 </body>
 </html>
-
-
-
 
