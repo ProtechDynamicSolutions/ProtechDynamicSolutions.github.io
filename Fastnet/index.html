@@ -327,7 +327,7 @@
 
                     // Table Header
                     doc.setFillColor(...brandBlack);
-                    doc.rect(15, y, 180, 8, 'F');
+                    doc.rect(12, y, 186, 8, 'F');
                     doc.setTextColor(255, 255, 255);
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(8.5);
@@ -354,7 +354,7 @@
                             addHeader();
                             
                             doc.setFillColor(...brandBlack);
-                            doc.rect(15, y, 180, 8, 'F');
+                            doc.rect(12, y, 186, 8, 'F');
                             doc.setTextColor(255, 255, 255);
                             doc.setFont("helvetica", "bold");
                             tableCols.forEach(col => { doc.text(col.label, col.x, y + 5.5, { align: col.align }); });
@@ -365,7 +365,7 @@
 
                         if (altRow) {
                             doc.setFillColor(...lightGray);
-                            doc.rect(15, y, 180, rowH, 'F');
+                            doc.rect(12, y, 186, rowH, 'F');
                         }
 
                         descLines.forEach((line, i) => {
@@ -381,7 +381,7 @@
                         
                         doc.setDrawColor(240, 240, 240);
                         doc.setLineWidth(0.1);
-                        doc.line(15, y, 195, y);
+                        doc.line(12, y, 198, y);
                     });
 
                     y += 5;
@@ -395,20 +395,20 @@
                     const drawTotalRow = (label, value, isBold = false, isHighlight = false) => {
                         if (isHighlight) {
                             doc.setFillColor(...brandBlack);
-                            doc.rect(totalsX, y, totalsW, 9, 'F');
+                            doc.rect(totalsX - 3, y, totalsW + 6, 9, 'F');
                             doc.setTextColor(255, 255, 255);
                         } else {
                             doc.setTextColor(...brandBlack);
                         }
                         
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        doc.text(label, totalsX + 3, y + 6);
-                        doc.text(`€${formatCurrency(value)}`, totalsX + totalsW - 3, y + 6, { align: "right" });
+                        doc.text(label, totalsX, y + 6);
+                        doc.text(`€${formatCurrency(value)}`, totalsX + totalsW, y + 6, { align: "right" });
                         
                         if (!isHighlight) {
                             doc.setDrawColor(...borderGray);
                             doc.setLineWidth(0.2);
-                            doc.line(totalsX, y + 9, totalsX + totalsW, y + 9);
+                            doc.line(totalsX - 3, y + 9, totalsX + totalsW + 3, y + 9);
                         }
                         y += 9;
                     };
@@ -680,6 +680,7 @@
     </script>
 </body>
 </html>
+
 
 
 
