@@ -11,11 +11,6 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Firebase SDKs (Compat versions for maximum reliability) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
@@ -52,8 +47,12 @@
 
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useCallback } = React;
+    <script type="text/babel" data-type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const { useState, useEffect, useMemo, useCallback } = window.React;
 
         const firebaseConfig = {
             apiKey: "AIzaSyDdFKVuP0dXbH4XCw_hLqlIvluJfutYnUQ",
@@ -65,6 +64,11 @@
         };
         const appId = 'teeth2-3f73e';
 
+        // Initialize Firebase Modern Modular SDK
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
         // --- Icons ---
         const TrophyIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
         const ZapIcon = ({ className, fill = "none" }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>);
@@ -75,6 +79,7 @@
         const DiscIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>);
         const ChevronLeftIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>);
         const ShieldIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>);
+        const GoogleIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>);
 
         // --- Bey Graphics ---
         const BlueDiamondIcon = ({ className, spinning }) => (
@@ -130,47 +135,62 @@
             }, []);
 
             useEffect(() => {
-                const initArena = async () => {
-                    if (!window.firebase) return;
-                    try {
-                        const fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-                        const auth = fbApp.auth();
-                        const firestore = fbApp.firestore();
-                        setDb(firestore);
-                        await auth.signInAnonymously();
-                        auth.onAuthStateChanged(u => {
-                            if (u) {
-                                setUser(u);
-                            }
-                        });
-                    } catch (e) {
-                        document.getElementById('error-log').innerText = "System Failure: " + e.message;
+                const firestore = getFirestore(app);
+                setDb(firestore);
+
+                const unsubscribe = onAuthStateChanged(auth, u => {
+                    setUser(u);
+                    if (!u) {
+                        hideLoader();
                     }
-                };
-                initArena();
+                });
+
                 // Safety timer for loader
                 const safety = setTimeout(() => hideLoader(), 5000);
-                return () => clearTimeout(safety);
+                return () => {
+                    unsubscribe();
+                    clearTimeout(safety);
+                };
             }, [hideLoader]);
 
             useEffect(() => {
                 if (!db || !user) return;
-                const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
-                const unsub = docRef.onSnapshot(snap => {
-                    if (snap.exists) setLogs(snap.data());
+                
+                const docRef = doc(db, `artifacts/${appId}/public/data/battle_logs`, 'global_doc');
+                const unsub = onSnapshot(docRef, snap => {
+                    if (snap.exists()) setLogs(snap.data());
                     setIsSyncing(false);
                     hideLoader();
                 }, (err) => {
                     setIsSyncing(false);
                     hideLoader();
+                    console.error(err);
                 });
                 return () => unsub();
             }, [db, user, hideLoader]);
 
+            const handleGoogleLogin = async () => {
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error("Login failed", error);
+                    document.getElementById('error-log').innerText = "Login Failed: " + error.message;
+                }
+            };
+
+            const handleLogout = async () => {
+                try {
+                    await signOut(auth);
+                    setCurrentUser(null);
+                } catch (error) {
+                    console.error("Logout failed", error);
+                }
+            };
+
             const saveLog = async (updated) => {
                 if (!db || !user) return;
-                const docRef = db.doc(`artifacts/${appId}/public/data/battle_logs/global_doc`);
-                try { await docRef.set(updated, { merge: true }); } catch (e) { console.error(e); }
+                const docRef = doc(db, `artifacts/${appId}/public/data/battle_logs`, 'global_doc');
+                try { await setDoc(docRef, updated, { merge: true }); } catch (e) { console.error(e); }
             };
 
             const toggleBurst = (userId, dateObj, slot) => {
@@ -208,13 +228,33 @@
                 return { streak, perfectDays, fullPerfect: perfectDays >= 7 };
             }, [currentUser, logs]);
 
-            if (!user) return null;
-
             const isFriday = new Date().getDay() === 5;
             const rewardReadyToClaim = isFriday && stats.streak >= 6;
 
+            if (!user) {
+                return (
+                    <div className="min-h-screen relative p-4 md:p-8 flex flex-col items-center justify-center">
+                        <div className="fixed inset-0 pointer-events-none opacity-10" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
+                        
+                        <header className="w-full max-w-2xl bg-gradient-to-r from-emerald-800 to-emerald-900 p-10 rounded-[3rem] shadow-2xl mb-12 flex flex-col items-center border-b-8 border-emerald-950 text-center relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="relative mb-6 animate-intro-spin">
+                                <ShieldIcon className="w-20 h-20 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">🦷</span>
+                            </div>
+                            <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter drop-shadow-lg uppercase">Tooth Battle Stadium</h1>
+                            <p className="text-emerald-300 text-xs font-black uppercase tracking-[0.4em] mt-2 opacity-80">Authentication Required</p>
+                        </header>
+
+                        <button onClick={handleGoogleLogin} className="flex items-center gap-4 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl border-4 border-slate-200 animate-in fade-in duration-1000 delay-300">
+                            <GoogleIcon className="w-6 h-6" />
+                            Sign in with Google
+                        </button>
+                    </div>
+                );
+            }
+
             return (
-                <div className="min-h-screen relative p-4 md:p-8 flex flex-col items-center">
+                <div className="min-h-screen relative p-4 md:p-8 flex flex-col items-center pb-24">
                     <div className="fixed inset-0 pointer-events-none opacity-10" style={{backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px'}}></div>
                     
                     {celebration && (
@@ -337,7 +377,7 @@
                         </div>
                     )}
 
-                    <footer className="fixed bottom-0 left-0 w-full p-6 flex justify-center z-50 pointer-events-none">
+                    <footer className="fixed bottom-0 left-0 w-full p-6 flex justify-between items-end z-50 pointer-events-none">
                         <div className={`pointer-events-auto flex items-center gap-6 px-10 py-3 rounded-full border-2 transition-all backdrop-blur-xl shadow-2xl ${adminMode ? 'bg-red-600 border-red-400 text-white' : 'bg-black/80 border-white/10 text-slate-500 opacity-40 hover:opacity-100 translate-y-4 hover:translate-y-0'}`}>
                             {adminMode && (
                                 <button onClick={() => {
@@ -353,6 +393,14 @@
                                 <span className="text-[10px] font-black uppercase tracking-widest">{adminMode ? 'Exit System' : 'System Access'}</span>
                             </button>
                         </div>
+
+                        {user && (
+                            <div className="pointer-events-auto opacity-40 hover:opacity-100 transition-opacity">
+                                <button onClick={handleLogout} className="bg-slate-900/80 text-slate-400 px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-white/10 hover:text-white hover:border-white/30 transition-all shadow-xl backdrop-blur-xl">
+                                    Log Out
+                                </button>
+                            </div>
+                        )}
                     </footer>
                 </div>
             );
@@ -363,4 +411,3 @@
     </script>
 </body>
 </html>
-
