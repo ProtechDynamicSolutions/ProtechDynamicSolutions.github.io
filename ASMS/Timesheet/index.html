@@ -283,11 +283,36 @@
             }
           });
 
-          // 1. DEDUCT LUNCH from Normal Band Hours
-          // If total time accumulated in the Normal Band is > 5 hours, deduct 0.5hr for lunch
+          // 1. DEDUCT LUNCH
+          // If total time accumulated in the day is > 5 hours, deduct 0.5hr for lunch
+          let totalRawHours = dailyNormalRaw + daily15 + daily20;
           let paidNormal = dailyNormalRaw;
-          if (paidNormal > 5) {
-            paidNormal -= 0.5;
+
+          if (totalRawHours > 5) {
+              let toDeduct = 0.5;
+
+              // Priority of deduction based on day type:
+              if (dayIndex >= 1 && dayIndex <= 5) {
+                  // Mon-Fri: Deduct from Normal -> 1.5x -> 2.0x
+                  if (paidNormal >= toDeduct) { paidNormal -= toDeduct; toDeduct = 0; }
+                  else { toDeduct -= paidNormal; paidNormal = 0; }
+
+                  if (toDeduct > 0 && daily15 >= toDeduct) { daily15 -= toDeduct; toDeduct = 0; }
+                  else if (toDeduct > 0) { toDeduct -= daily15; daily15 = 0; }
+
+                  if (toDeduct > 0 && daily20 >= toDeduct) { daily20 -= toDeduct; toDeduct = 0; }
+              } else {
+                  // Sat-Sun: Deduct from 2.0x -> 1.5x -> Normal
+                  // Since lunch is usually around 13:00, which falls into the 2.0x band on Saturdays
+                  // and Sundays are all 2.0x anyway, it makes sense to deduct it here first.
+                  if (daily20 >= toDeduct) { daily20 -= toDeduct; toDeduct = 0; }
+                  else { toDeduct -= daily20; daily20 = 0; }
+
+                  if (toDeduct > 0 && daily15 >= toDeduct) { daily15 -= toDeduct; toDeduct = 0; }
+                  else if (toDeduct > 0) { toDeduct -= daily15; daily15 = 0; }
+
+                  if (toDeduct > 0 && paidNormal >= toDeduct) { paidNormal -= toDeduct; toDeduct = 0; }
+              }
           }
 
           // 2. APPLY STANDARD DAY CAPS
@@ -485,6 +510,7 @@
           
           const durationStr = formatDuration(duration);
           const isInvalid = (field) => showValidation && !job[field];
+          const isME2007 = job.asmsRef.trim().toUpperCase() === 'ME2007';
 
           return (
             <div className={`glass-panel rounded-2xl p-5 mb-4 relative animate-fade-in ${hasOverlap ? 'border-red-500/30 bg-red-900/10' : ''}`}>
@@ -515,39 +541,69 @@
               </div>
 
               <div className="space-y-4 mb-5">
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
-                        ASMS Project Ref <span className="text-asms-orange">*</span>
-                    </label>
-                    <input 
-                        className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('asmsRef') ? 'border-red-500/50 bg-red-900/10' : ''}`}
-                        placeholder="Project Ref"
-                        value={job.asmsRef}
-                        onChange={(e) => onChange(job.id, 'asmsRef', e.target.value)}
-                    />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={`grid gap-4 ${isME2007 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                     <div>
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
-                            HSE PO Number <span className="text-asms-orange">*</span>
+                            ASMS Project Ref <span className="text-asms-orange">*</span>
                         </label>
                         <input 
-                            className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('hsePo') ? 'border-red-500/50 bg-red-900/10' : ''}`}
-                            placeholder="PO Number"
-                            value={job.hsePo}
-                            onChange={(e) => onChange(job.id, 'hsePo', e.target.value)}
+                            className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('asmsRef') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                            placeholder="Project Ref"
+                            value={job.asmsRef}
+                            onChange={(e) => onChange(job.id, 'asmsRef', e.target.value)}
                         />
                     </div>
+                    {isME2007 && (
+                        <div className="animate-fade-in">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                                HSE PO Number <span className="text-asms-orange">*</span>
+                            </label>
+                            <input 
+                                className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('hsePo') ? 'border-red-500/50 bg-red-900/10' : ''}`}
+                                placeholder="PO Number"
+                                value={job.hsePo}
+                                onChange={(e) => onChange(job.id, 'hsePo', e.target.value)}
+                            />
+                        </div>
+                    )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
                              Site / Location <span className="text-asms-orange">*</span>
                          </label>
                         <input 
                             className={`w-full glass-input rounded-lg px-3 py-2.5 text-sm transition-all placeholder-slate-600 ${isInvalid('site') ? 'border-red-500/50 bg-red-900/10' : ''}`}
-                            placeholder="e.g. St. Stephen's Hospital"
+                            placeholder={isME2007 ? "e.g. St. Stephen's Hospital" : "e.g. MTU"}
                             value={job.site}
                             onChange={(e) => onChange(job.id, 'site', e.target.value)}
                         />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                            Status <span className="text-asms-orange">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => onChange(job.id, 'status', 'Complete')}
+                                className={`py-2.5 rounded-lg border-2 font-bold text-xs transition-all ${job.status === 'Complete' ? 'bg-green-500/20 border-green-500 text-green-400' : showValidation && !job.status ? 'border-red-500/50 bg-red-900/10 text-slate-400' : 'border-white/10 bg-slate-900/50 text-slate-400 hover:border-white/20'}`}
+                            >
+                                ✓ Complete
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onChange(job.id, 'status', 'Ongoing')}
+                                className={`py-2.5 rounded-lg border-2 font-bold text-xs transition-all ${job.status === 'Ongoing' ? 'bg-blue-500/20 border-blue-400 text-blue-300' : showValidation && !job.status ? 'border-red-500/50 bg-red-900/10 text-slate-400' : 'border-white/10 bg-slate-900/50 text-slate-400 hover:border-white/20'}`}
+                            >
+                                ⟳ Ongoing
+                            </button>
+                        </div>
+                        {showValidation && !job.status && (
+                            <p className="text-red-400 text-[10px] mt-1 flex items-center gap-1 font-medium">
+                                <AlertCircle size={10} /> Required
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div>
@@ -617,6 +673,8 @@
           // New States
           const [notes, setNotes] = useState('');
           const [signatureData, setSignatureData] = useState('');
+          const [satOnCall, setSatOnCall] = useState(false);
+          const [sunOnCall, setSunOnCall] = useState(false);
 
           const jotFormRef = useRef(null);
           const isSubmittingRef = useRef(false);
@@ -667,7 +725,7 @@
           };
 
           const handleAddJob = () => {
-            const newJob = { id: Date.now(), asmsRef: '', hsePo: '', hseDesc: '', startTime: '', finishTime: '', site: '' };
+            const newJob = { id: Date.now(), asmsRef: '', hsePo: '', hseDesc: '', startTime: '', finishTime: '', site: '', status: '' };
             setTimesheetData(prev => ({
               ...prev,
               [activeDateStr]: [...(prev[activeDateStr] || []), newJob]
@@ -696,7 +754,8 @@
                   return false;
               }
               for (const job of currentJobs) {
-                  if (!job.asmsRef || !job.hsePo || !job.site || !job.hseDesc || !job.startTime || !job.finishTime) {
+                  const needsHsePo = job.asmsRef.trim().toUpperCase() === 'ME2007';
+                  if (!job.asmsRef || (needsHsePo && !job.hsePo) || !job.site || !job.hseDesc || !job.startTime || !job.finishTime || !job.status) {
                       return false;
                   }
               }
@@ -710,7 +769,8 @@
               for (const day of allDays) {
                   const jobs = timesheetData[day];
                   for (const job of jobs) {
-                      if (!job.asmsRef || !job.hsePo || !job.site || !job.hseDesc || !job.startTime || !job.finishTime) {
+                      const needsHsePo = job.asmsRef.trim().toUpperCase() === 'ME2007';
+                      if (!job.asmsRef || (needsHsePo && !job.hsePo) || !job.site || !job.hseDesc || !job.startTime || !job.finishTime || !job.status) {
                           return false; 
                       }
                   }
@@ -828,14 +888,19 @@
                       else if (finish > start) d = finish - start;
                       durationStr = formatDurationDecimal(d);
                   }
-                  inputs.push(<input key={`r${i}c0`} type="hidden" name={`q5_typeA[${i}][0]`} value={formatDateEU(job.date) || ''} />);
-                  inputs.push(<input key={`r${i}c1`} type="hidden" name={`q5_typeA[${i}][1]`} value={job.asmsRef || ''} />);
-                  inputs.push(<input key={`r${i}c2`} type="hidden" name={`q5_typeA[${i}][2]`} value={job.hsePo || ''} />);
+                  
+                  // Reverting back to 0-based index as requested
+                  const rowIdx = i;
+
+                  inputs.push(<input key={`r${i}c0`} type="hidden" name={`q5_typeA[${rowIdx}][0]`} value={formatDateEU(job.date) || ''} />);
+                  inputs.push(<input key={`r${i}c1`} type="hidden" name={`q5_typeA[${rowIdx}][1]`} value={job.asmsRef || ''} />);
+                  inputs.push(<input key={`r${i}c2`} type="hidden" name={`q5_typeA[${rowIdx}][2]`} value={job.hsePo || ''} />);
                   const combinedDesc = job.site ? `${job.site} - ${job.hseDesc || ''}` : (job.hseDesc || '');
-                  inputs.push(<input key={`r${i}c3`} type="hidden" name={`q5_typeA[${i}][3]`} value={combinedDesc} />);
-                  inputs.push(<input key={`r${i}c4`} type="hidden" name={`q5_typeA[${i}][4]`} value={job.startTime || ''} />);
-                  inputs.push(<input key={`r${i}c5`} type="hidden" name={`q5_typeA[${i}][5]`} value={job.finishTime || ''} />);
-                  inputs.push(<input key={`r${i}c6`} type="hidden" name={`q5_typeA[${i}][6]`} value={durationStr} />);
+                  inputs.push(<input key={`r${i}c3`} type="hidden" name={`q5_typeA[${rowIdx}][3]`} value={combinedDesc} />);
+                  inputs.push(<input key={`r${i}c4`} type="hidden" name={`q5_typeA[${rowIdx}][4]`} value={job.status || ''} />);
+                  inputs.push(<input key={`r${i}c5`} type="hidden" name={`q5_typeA[${rowIdx}][5]`} value={job.startTime || ''} />);
+                  inputs.push(<input key={`r${i}c6`} type="hidden" name={`q5_typeA[${rowIdx}][6]`} value={job.finishTime || ''} />);
+                  inputs.push(<input key={`r${i}c7`} type="hidden" name={`q5_typeA[${rowIdx}][7]`} value={durationStr} />);
               }
               return inputs;
           };
@@ -851,7 +916,7 @@
                   <h2 className="text-2xl font-bold text-white mb-2">Timesheet Sent!</h2>
                   <p className="text-slate-400 mb-8">Your timesheet has been successfully submitted to the office.</p>
                   
-                  <button onClick={() => { setShowSuccess(false); setTimesheetData({}); setNotes(''); setSignatureData(''); setCurrentDayIndex(0); setIsSubmitting(false); }} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2"><Clock size={20} />Start New Timesheet</button>
+                  <button onClick={() => { setShowSuccess(false); setTimesheetData({}); setNotes(''); setSignatureData(''); setSatOnCall(false); setSunOnCall(false); setCurrentDayIndex(0); setIsSubmitting(false); }} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2"><Clock size={20} />Start New Timesheet</button>
                 </div>
               </div>
             );
@@ -1003,8 +1068,9 @@
                             <input type="hidden" name="q8_timeAnd" value={formatDurationDecimal(weekStats.ot15)} />
                             <input type="hidden" name="q9_doubleTime" value={formatDurationDecimal(weekStats.ot20)} />
                             
-                            {/* UPDATED: Signature with CORRECT 'q' name */}
                             <input type="hidden" name="q13_signature" value={signatureData} />
+                            {satOnCall && <input type="hidden" name="q14_onCall[]" value="Yes" />}
+                            {sunOnCall && <input type="hidden" name="q433_onCall433[]" value="Yes" />}
 
                             {renderHiddenMatrixInputs()}
 
@@ -1025,7 +1091,6 @@
                                 </div>
                             </div>
                             
-                            {/* NOTES SECTION - UPDATED NAME TO q12_notes */}
                             <div className="glass-panel rounded-2xl p-6 mb-6">
                                 <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <Edit size={18} className="text-asms-orange" />
@@ -1038,6 +1103,36 @@
                                     placeholder="Add any additional notes here..."
                                     className="w-full glass-input rounded-xl p-4 text-sm transition-all placeholder-slate-500 min-h-[100px]"
                                 />
+                            </div>
+
+                            {/* ON CALL SECTION */}
+                            <div className="glass-panel rounded-2xl p-6 mb-6">
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Clock size={18} className="text-asms-orange" />
+                                    On Call (Optional)
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSatOnCall(v => !v)}
+                                        className={`flex items-center justify-center gap-3 py-4 px-4 rounded-xl border-2 font-bold text-sm transition-all ${satOnCall ? 'bg-asms-orange/20 border-asms-orange text-asms-orange shadow-lg shadow-orange-900/20' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/20'}`}
+                                    >
+                                        <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${satOnCall ? 'bg-asms-orange border-asms-orange' : 'border-slate-500'}`}>
+                                            {satOnCall && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                        </span>
+                                        Saturday On Call
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSunOnCall(v => !v)}
+                                        className={`flex items-center justify-center gap-3 py-4 px-4 rounded-xl border-2 font-bold text-sm transition-all ${sunOnCall ? 'bg-asms-orange/20 border-asms-orange text-asms-orange shadow-lg shadow-orange-900/20' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/20'}`}
+                                    >
+                                        <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${sunOnCall ? 'bg-asms-orange border-asms-orange' : 'border-slate-500'}`}>
+                                            {sunOnCall && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                        </span>
+                                        Sunday On Call
+                                    </button>
+                                </div>
                             </div>
 
                             {/* SIGNATURE SECTION */}
