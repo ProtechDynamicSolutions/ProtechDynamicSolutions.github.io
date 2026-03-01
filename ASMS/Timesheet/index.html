@@ -164,6 +164,7 @@
         const UploadCloud = (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></IconBase>;
         const Pen = (props) => <IconBase {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>;
         const Edit = (props) => <IconBase {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></IconBase>;
+        const Euro = (props) => <IconBase {...props}><path d="M4 10h12M4 14h9M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></IconBase>;
 
         // --- Constants ---
         const DISPLAY_WEEK_DAYS = [
@@ -672,6 +673,7 @@
           
           // New States
           const [notes, setNotes] = useState('');
+          const [expenses, setExpenses] = useState(''); // Added Expenses state
           const [signatureData, setSignatureData] = useState('');
           const [satOnCall, setSatOnCall] = useState(false);
           const [sunOnCall, setSunOnCall] = useState(false);
@@ -929,7 +931,7 @@
                   <h2 className="text-2xl font-bold text-white mb-2">Timesheet Sent!</h2>
                   <p className="text-slate-400 mb-8">Your timesheet has been successfully submitted to the office.</p>
                   
-                  <button onClick={() => { setShowSuccess(false); setTimesheetData({}); setNotes(''); setSignatureData(''); setSatOnCall(false); setSunOnCall(false); setCurrentDayIndex(0); setIsSubmitting(false); }} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2"><Clock size={20} />Start New Timesheet</button>
+                  <button onClick={() => { setShowSuccess(false); setTimesheetData({}); setNotes(''); setExpenses(''); setSignatureData(''); setSatOnCall(false); setSunOnCall(false); setCurrentDayIndex(0); setIsSubmitting(false); }} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2"><Clock size={20} />Start New Timesheet</button>
                 </div>
               </div>
             );
@@ -1160,7 +1162,7 @@
                                 )}
                             </div>
 
-                            <div className="glass-panel rounded-2xl p-6 mb-24 border border-dashed border-slate-500">
+                            <div className="glass-panel rounded-2xl p-6 mb-6 border border-dashed border-slate-500">
                                 <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <UploadCloud size={18} className="text-asms-orange" />
                                     Upload Receipts / Files
@@ -1179,6 +1181,33 @@
                                     </p>
                                 </div>
                             </div>
+
+                            {/* EXPENSES SECTION */}
+                            <div className="glass-panel rounded-2xl p-6 mb-24">
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Euro size={18} className="text-asms-orange" />
+                                    Expenses Claim
+                                </h3>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">
+                                        €
+                                    </div>
+                                    <input 
+                                        type="number"
+                                        name="q434_expenses"
+                                        value={expenses}
+                                        onChange={(e) => setExpenses(e.target.value)}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        min="0"
+                                        className="w-full glass-input rounded-xl block py-3.5 pl-10 pr-4 text-sm transition-all placeholder-slate-500"
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-3">
+                                    Enter total expenses in Euros. Ensure relevant receipts are uploaded above (e.g., M50 tolls, parking).
+                                </p>
+                            </div>
+
                         </form>
                     </div>
                 )}
