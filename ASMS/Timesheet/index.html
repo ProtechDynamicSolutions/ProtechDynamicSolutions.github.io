@@ -725,11 +725,24 @@
           };
 
           const handleAddJob = () => {
-            const newJob = { id: Date.now(), asmsRef: '', hsePo: '', hseDesc: '', startTime: '', finishTime: '', site: '', status: '' };
-            setTimesheetData(prev => ({
-              ...prev,
-              [activeDateStr]: [...(prev[activeDateStr] || []), newJob]
-            }));
+            setTimesheetData(prev => {
+              const dayJobs = prev[activeDateStr] || [];
+              let defaultStartTime = '';
+              
+              // Check if there are previous jobs today and grab the last finish time
+              if (dayJobs.length > 0) {
+                  const lastJob = dayJobs[dayJobs.length - 1];
+                  if (lastJob.finishTime) {
+                      defaultStartTime = lastJob.finishTime;
+                  }
+              }
+              
+              const newJob = { id: Date.now(), asmsRef: '', hsePo: '', hseDesc: '', startTime: defaultStartTime, finishTime: '', site: '', status: '' };
+              return {
+                ...prev,
+                [activeDateStr]: [...dayJobs, newJob]
+              };
+            });
             setShowValidation(false); 
           };
 
