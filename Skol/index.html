@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skol Marbella Booking App</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Babel for running React JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <!-- The app will render inside this div -->
+  <div id="root"></div>
+
+  <!-- Main Application Code -->
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18';
+    import { createRoot } from 'https://esm.sh/react-dom@18/client';
+    import {
+      Calendar, Users, Baby, Waves, Coffee, UtensilsCrossed,
+      Sun, Sunset, CheckCircle, XCircle, Lock, LogOut, Mail, 
+      BedDouble, Armchair, MapPin, Sparkles, TreeDeciduous, 
+      ShoppingCart, Store, Wine
+    } from 'https://esm.sh/lucide-react@0.292.0';
+    
+    // Official Firebase SDK Imports
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { 
+      getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+      GoogleAuthProvider, signInWithPopup, signOut
+    } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { 
+      getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc
+    } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // --- Firebase Setup ---
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'skol-booking-app';
+
+    function App() {
+      const [user, setUser] = useState(null);
+      const [bookings, setBookings] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [view, setView] = useState('home');
+
+      useEffect(() => {
+        const initAuth = async () => {
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+          } catch (error) {
+            console.error("Auth Error:", error);
+          }
+        };
+        initAuth();
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+        });
+        return () => unsubscribe();
+      }, []);
+
+      useEffect(() => {
+        if (!user) return;
+
+        const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+        const unsubscribe = onSnapshot(bookingsRef, (snapshot) => {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setBookings(data);
+          setLoading(false);
+        }, (error) => {
+          console.error("Firestore Error:", error);
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      }, [user]);
+
+      if (loading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-slate-50 to-cyan-50/60 font-sans text-slate-800 selection:bg-blue-200">
+          <Navigation setView={setView} view={view} />
+          
+          {view === 'home' && <Home bookings={bookings} user={user} />}
+          {view === 'admin_login' && <AdminLogin setView={setView} />}
+          {view === 'admin_dashboard' && <AdminDashboard bookings={bookings} setView={setView} />}
+
+          <Footer setView={setView} />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // HOME VIEW (Guest Facing)
+    // ==========================================
+    function Home({ bookings, user }) {
+      return (
+        <main>
+          <Hero />
+          <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2 space-y-20">
+              <PropertyDetails />
+              <ImageGallery />
+              <Amenities />
+              <Neighborhood />
+            </div>
+            <div className="lg:col-span-1">
+              <div className="sticky top-28">
+                <BookingWidget bookings={bookings} user={user} />
+              </div>
+            </div>
+          </div>
+        </main>
+      );
+    }
+
+    function Navigation({ setView, view }) {
+      return (
+        <nav className="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-white/60 shadow-sm">
+          <style>{`
+            @keyframes wave-slide {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-wave {
+              animation: wave-slide 3s linear infinite;
+            }
+            .animate-wave-slow {
+              animation: wave-slide 5s linear infinite reverse;
+            }
+          `}</style>
+          <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div 
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => setView('home')}
+            >
+              <div className="relative flex items-center justify-center h-12 w-12 rounded-full overflow-hidden bg-gradient-to-tr from-amber-200 to-orange-400 shadow-lg shadow-orange-500/30 ring-2 ring-white/60 border border-amber-300">
+                {/* Spinning Sun */}
+                <Sun className="absolute top-1.5 h-6 w-6 text-white animate-[spin_12s_linear_infinite]" />
+                
+                {/* Back Wave */}
+                <div className="absolute bottom-[-2px] left-0 w-[200%] flex animate-wave-slow opacity-80 text-cyan-300">
+                  <svg viewBox="0 0 100 20" className="h-5 w-1/2 fill-current" preserveAspectRatio="none">
+                    <path d="M0,10 Q25,0 50,10 T100,10 L100,20 L0,20 Z" />
+                  </svg>
+                  <svg viewBox="0 0 100 20" className="h-5 w-1/2 fill-current" preserveAspectRatio="none">
+                    <path d="M0,10 Q25,0 50,10 T100,10 L100,20 L0,20 Z" />
+                  </svg>
+                </div>
+
+                {/* Front Wave */}
+                <div className="absolute bottom-[-2px] left-0 w-[200%] flex animate-wave opacity-90 text-blue-500">
+                  <svg viewBox="0 0 100 20" className="h-4 w-1/2 fill-current" preserveAspectRatio="none">
+                    <path d="M0,10 Q25,20 50,10 T100,10 L100,20 L0,20 Z" />
+                  </svg>
+                  <svg viewBox="0 0 100 20" className="h-4 w-1/2 fill-current" preserveAspectRatio="none">
+                    <path d="M0,10 Q25,20 50,10 T100,10 L100,20 L0,20 Z" />
+                  </svg>
+                </div>
+              </div>
+              <span className="font-serif text-2xl tracking-wide font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500">
+                Skol Marbella
+              </span>
+            </div>
+            <div>
+              {view === 'admin_dashboard' && (
+                <button 
+                  onClick={async () => {
+                    await signOut(auth);
+                    await signInAnonymously(auth); // Restore guest access so you can still view the site normally
+                    setView('home');
+                  }}
+                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" /> Exit Admin
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+      );
+    }
+
+    function Hero() {
+      return (
+        <div className="relative h-[65vh] min-h-[450px] w-full bg-slate-900 overflow-hidden group">
+          <img 
+            src="https://a0.muscache.com/im/pictures/airflow/Hosting-49455610/original/479c9122-cbc2-4627-badf-785b7eeca1f7.jpg" 
+            alt="Skol Apartments Marbella View" 
+            className="w-full h-full object-cover opacity-70 transform scale-100 group-hover:scale-110 transition-transform duration-[20s] ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 max-w-6xl mx-auto">
+            <div className="flex items-center gap-2 text-amber-300 mb-4 animate-pulse">
+              <span className="text-sm font-semibold tracking-widest uppercase">Premium Sea Views</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 drop-shadow-2xl">
+              Tranquillity by the Sea
+            </h1>
+            <p className="text-lg md:text-2xl text-slate-200 max-w-2xl drop-shadow-lg font-light">
+              A stunning 1-bedroom apartment overlooking beautiful gardens, pools, the promenade, and the Mediterranean Sea.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    function PropertyDetails() {
+      return (
+        <section>
+          <h2 className="text-3xl font-serif font-semibold mb-6 text-slate-800">About the Apartment</h2>
+          <div className="prose prose-lg prose-slate max-w-none text-slate-600 space-y-5 font-light leading-relaxed">
+            <p>
+              Welcome to your perfect getaway at the renowned Skol Apartments in Marbella. 
+              This beautifully presented one-bedroom apartment offers unparalleled views over the expansive, 
+              tranquil gardens, right out to the promenade, beach, and the sparkling sea beyond.
+            </p>
+            <p>
+              Designed for flexibility and comfort, the master bedroom can be configured as a luxurious double bed or two separate singles to suit your needs. The living area features a comfortable pull-out sofa bed that easily converts into a double, allowing the apartment to comfortably accommodate small families or groups. We can also organise a travel cot for our youngest guests upon request.
+            </p>
+            <p>
+              Enjoy your meals in the bright living room dining area, or prepare a snack at the breakfast bar connected to the fully-equipped kitchen (complete with cooker). For the ultimate relaxation, step out onto your private balcony with its own small table and chairs—the perfect spot for a morning coffee or an evening glass of wine whilst taking in the views of the two large adult pools and the dedicated baby pool.
+            </p>
+          </div>
+        </section>
+      );
+    }
+
+    function ImageGallery() {
+      const [activeGalleryImg, setActiveGalleryImg] = useState('living');
+
+      return (
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[auto] md:h-[450px]">
+            {/* Left side - Living & Dining Room */}
+            <div 
+              className="rounded-2xl overflow-hidden relative shadow-md h-[250px] md:h-full cursor-pointer"
+              onClick={() => setActiveGalleryImg('living')}
+            >
+              <img 
+                src="https://l.icdbcdn.com/oh/31232bdc-3214-4847-8cf0-9ccc415a20d7.jpg?w=1920" 
+                alt="Living & Dining Area" 
+                className={`w-full h-full object-cover transform transition-transform duration-700 ${activeGalleryImg === 'living' ? 'scale-105' : 'scale-100'}`}
+              />
+              <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-500 ${activeGalleryImg === 'living' ? 'opacity-100' : 'opacity-0'}`}></div>
+              
+              {/* HTML wrapper pill for the name */}
+              <div className={`absolute bottom-4 left-4 transition-all duration-500 ${activeGalleryImg === 'living' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                  <Armchair className="w-4 h-4 text-emerald-300"/> 
+                  <span className="font-medium text-sm md:text-base tracking-wide">Living & Dining Area</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side - Bedroom & Rotating Pools */}
+            <div className="grid grid-rows-2 gap-4 h-[500px] md:h-full">
+              {/* Top Right - Bedroom */}
+              <div 
+                className="rounded-2xl overflow-hidden relative shadow-md cursor-pointer"
+                onClick={() => setActiveGalleryImg('bedroom')}
+              >
+                <img 
+                  src="https://l.icdbcdn.com/oh/dfade417-c96b-47e9-b702-d86313dc2528.jpg?w=1920" 
+                  alt="Master Bedroom" 
+                  className={`w-full h-full object-cover transform transition-transform duration-700 ${activeGalleryImg === 'bedroom' ? 'scale-105' : 'scale-100'}`}
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-500 ${activeGalleryImg === 'bedroom' ? 'opacity-100' : 'opacity-0'}`}></div>
+                
+                {/* HTML wrapper pill for the name */}
+                <div className={`absolute bottom-4 left-4 transition-all duration-500 ${activeGalleryImg === 'bedroom' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                  <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                    <BedDouble className="w-4 h-4 text-rose-300"/> 
+                    <span className="font-medium text-sm md:text-base tracking-wide">Master Bedroom</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Right - Rotating Pools Slider */}
+              <RotatingPools 
+                isActive={activeGalleryImg === 'pools'} 
+                onClick={() => setActiveGalleryImg('pools')} 
+              />
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function RotatingPools({ isActive, onClick }) {
+      const [currentIndex, setCurrentIndex] = useState(0);
+      
+      const pools = [
+        { src: "https://images.trvl-media.com/lodging/66000000/65710000/65702300/65702262/5123812e.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill", label: "Skol Pools Overview", icon: Waves },
+        { src: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/509238746.jpg?k=a0d0ce1cc6a99741ab1c33e0a33f8a013a1e1d38e7b1e712fc7557269b328e64&o=", label: "Main Adult Pool", icon: Waves },
+        { src: "https://l.icdbcdn.com/oh/5c6104c5-6466-4cbc-9c2c-829f3378ef87.jpg?w=2080", label: "Second Pool", icon: Waves },
+        { src: "https://l.icdbcdn.com/oh/5bcca977-4853-4649-b74c-4985fcc00f9b.jpg", label: "Baby Pool", icon: Baby }
+      ];
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setCurrentIndex((prev) => (prev + 1) % pools.length);
+        }, 4000);
+        return () => clearInterval(timer);
+      }, []);
+
+      return (
+        <div 
+          className="rounded-2xl overflow-hidden relative shadow-md h-full w-full bg-slate-900 cursor-pointer"
+          onClick={onClick}
+        >
+          {pools.map((pool, index) => {
+            const Icon = pool.icon;
+            return (
+              <div 
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+              >
+                <img 
+                  src={pool.src} 
+                  alt={pool.label} 
+                  className={`w-full h-full object-cover transform transition-transform duration-700 ${isActive ? 'scale-105' : 'scale-100'}`}
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-500 ${isActive ? 'opacity-100' : 'opacity-0'}`}></div>
+                
+                {/* HTML wrapper pill for the name */}
+                <div className={`absolute bottom-4 left-4 transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                  <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                    <Icon className="w-4 h-4 text-cyan-300"/> 
+                    <span className="font-medium text-sm md:text-base tracking-wide">{pool.label}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Little dot indicators */}
+          <div className={`absolute bottom-4 right-4 z-20 flex gap-2 transition-opacity duration-500 ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+             {pools.map((_, i) => (
+               <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i === currentIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'}`} />
+             ))}
+          </div>
+        </div>
+      );
+    }
+
+    function Amenities() {
+      const amenities = [
+        { icon: BedDouble, title: "1 Bedroom", desc: "Double or 2 Singles", color: "text-blue-600", bg: "bg-blue-100/50" },
+        { icon: Armchair, title: "Sofa Bed", desc: "Pull-out Double", color: "text-emerald-600", bg: "bg-emerald-100/50" },
+        { icon: Baby, title: "Travel Cot", desc: "Available on request", color: "text-amber-600", bg: "bg-amber-100/50" },
+        { icon: Waves, title: "Swimming", desc: "2 Large & 1 Baby Pool", color: "text-cyan-600", bg: "bg-cyan-100/50" },
+        { icon: Sunset, title: "Balcony", desc: "Sea & Garden Views", color: "text-orange-600", bg: "bg-orange-100/50" },
+        { icon: UtensilsCrossed, title: "Kitchen", desc: "Cooker & Breakfast Bar", color: "text-rose-600", bg: "bg-rose-100/50" },
+        { icon: Coffee, title: "Dining Area", desc: "Comfortable Seating", color: "text-purple-600", bg: "bg-purple-100/50" },
+        { icon: MapPin, title: "Promenade", desc: "Direct Beach Access", color: "text-sky-600", bg: "bg-sky-100/50" },
+      ];
+
+      return (
+        <section>
+          <h2 className="text-3xl font-serif font-semibold mb-8 text-slate-800">What this place offers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {amenities.map((item, idx) => (
+              <div key={idx} className="group flex items-center gap-5 p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-white/80 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_30px_rgb(0,0,0,0.08)] transition-all duration-500 cursor-default">
+                <div className={`relative flex-shrink-0 flex items-center justify-center w-14 h-14 rounded-xl ${item.bg} border border-white shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+                  <item.icon className={`w-6 h-6 ${item.color} group-hover:animate-bounce`} style={{ animationDuration: '2s' }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-800 text-base">{item.title}</h4>
+                  <p className="text-sm text-slate-500 font-light">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    function Neighborhood() {
+      const [activeImg, setActiveImg] = useState('orange'); // Tracks which image shows text
+      
+      const spots = [
+        { icon: TreeDeciduous, title: "Beautiful Parks & Playgrounds", desc: "Enchanting green spaces where little ones can burn off energy.", color: "text-emerald-600", bg: "bg-emerald-100/50" },
+        { icon: UtensilsCrossed, title: "Restaurants & Tapas Bars", desc: "Authentic local dining and family-friendly eateries.", color: "text-orange-600", bg: "bg-orange-100/50" },
+        { icon: ShoppingCart, title: "Supermarkets", desc: "Perfect for grabbing daily essentials and fresh groceries.", color: "text-blue-600", bg: "bg-blue-100/50" },
+        { icon: Store, title: "Shops & Boutiques", desc: "Wander through charming local stores and fashion boutiques.", color: "text-purple-600", bg: "bg-purple-100/50" },
+        { icon: Coffee, title: "Coffee Shops", desc: "Relaxing spots for your morning cappuccino and pastries.", color: "text-amber-600", bg: "bg-amber-100/50" },
+        { icon: Wine, title: "Vibrant Bars", desc: "Enjoy a tranquil evening drink within a stone's throw.", color: "text-rose-600", bg: "bg-rose-100/50" },
+      ];
+
+      return (
+        <section>
+          <h2 className="text-3xl font-serif font-semibold mb-6 text-slate-800">Everything on Your Doorstep</h2>
+          <p className="text-lg text-slate-600 font-light mb-8 leading-relaxed">
+            Leave the car behind! Skol Marbella is perfectly situated so you can stroll to everything you need. From magical playgrounds for the kids to fantastic restaurants and convenient supermarkets, it is all just a short walk away.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            {/* 3-Image Neighborhood Collage */}
+            <div className="grid grid-rows-2 gap-4 h-[450px]">
+              {/* Top: Orange Square */}
+              <div 
+                className="rounded-2xl overflow-hidden relative shadow-md w-full h-full cursor-pointer"
+                onClick={() => setActiveImg('orange')}
+              >
+                <img 
+                  src="https://images.trvl-media.com/place/6067225/bfe1c2dd-e5ad-40c8-844c-6e732dc4eb01.jpg" 
+                  alt="Orange Square Marbella" 
+                  className={`w-full h-full object-cover transform transition-transform duration-700 ${activeImg === 'orange' ? 'scale-105' : 'scale-100'}`}
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-500 ${activeImg === 'orange' ? 'opacity-100' : 'opacity-0'}`}></div>
+                
+                <div className={`absolute bottom-4 left-4 transition-all duration-500 ${activeImg === 'orange' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                  <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                    <Coffee className="w-4 h-4 text-amber-300"/> 
+                    <span className="font-medium text-sm md:text-base tracking-wide">Historic Orange Square</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom: Park and Promenade split */}
+              <div className="grid grid-cols-2 gap-4 h-full">
+                {/* Bottom Left: Park */}
+                <div 
+                  className="rounded-2xl overflow-hidden relative shadow-md w-full h-full cursor-pointer"
+                  onClick={() => setActiveImg('park')}
+                >
+                  <img 
+                    src="https://www.andalusien360.de/sites/default/files/field/image/location/marbella/park-marbella.jpg" 
+                    alt="Marbella Park" 
+                    className={`w-full h-full object-cover transform transition-transform duration-700 ${activeImg === 'park' ? 'scale-105' : 'scale-100'}`}
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-500 ${activeImg === 'park' ? 'opacity-100' : 'opacity-0'}`}></div>
+                  
+                  <div className={`absolute bottom-4 left-4 transition-all duration-500 ${activeImg === 'park' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                      <TreeDeciduous className="w-4 h-4 text-emerald-300"/> 
+                      <span className="font-medium text-sm md:text-base tracking-wide">Parque de la Constitución</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Right: Promenade */}
+                <div 
+                  className="rounded-2xl overflow-hidden relative shadow-md w-full h-full cursor-pointer"
+                  onClick={() => setActiveImg('promenade')}
+                >
+                  <img 
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGhRrQoQ46MMFt8ZbknXk6xcUywc9mP6rF5Hux5qg4V_FoOLxfrmM0eG8&s=10" 
+                    alt="Seafront Promenade" 
+                    className={`w-full h-full object-cover transform transition-transform duration-700 ${activeImg === 'promenade' ? 'scale-105' : 'scale-100'}`}
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-500 ${activeImg === 'promenade' ? 'opacity-100' : 'opacity-0'}`}></div>
+                  
+                  <div className={`absolute bottom-4 left-4 transition-all duration-500 ${activeImg === 'promenade' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="bg-black/50 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 text-white">
+                      <MapPin className="w-4 h-4 text-blue-300"/> 
+                      <span className="font-medium text-sm md:text-base tracking-wide">The Promenade</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {spots.map((spot, idx) => (
+                <div key={idx} className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/60 transition-colors border border-transparent hover:border-white/80">
+                  <div className={`mt-1 flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg ${spot.bg} border border-white shadow-sm`}>
+                    <spot.icon className={`w-5 h-5 ${spot.color}`} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800">{spot.title}</h4>
+                    <p className="text-sm text-slate-500 font-light">{spot.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ==========================================
+    // BOOKING WIDGET & FORM
+    // ==========================================
+    function BookingWidget({ bookings, user }) {
+      const [checkIn, setCheckIn] = useState('');
+      const [checkOut, setCheckOut] = useState('');
+      const [guests, setGuests] = useState(2);
+      const [bedSetup, setBedSetup] = useState('two-singles');
+      const [needsCot, setNeedsCot] = useState(false);
+      const [name, setName] = useState('');
+      const [email, setEmail] = useState('');
+      
+      const [status, setStatus] = useState('idle');
+      const [errorMessage, setErrorMessage] = useState('');
+
+      const blockedDates = useMemo(() => {
+        const dates = new Set();
+        bookings.forEach(b => {
+          if (b.status === 'confirmed' || b.status === 'blocked') {
+            let current = new Date(b.startDate);
+            const end = new Date(b.endDate);
+            while (current <= end) {
+              dates.add(current.toISOString().split('T')[0]);
+              current.setDate(current.getDate() + 1);
+            }
+          }
+        });
+        return dates;
+      }, [bookings]);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!checkIn || !checkOut || !name || !email) {
+          setErrorMessage("Please fill in all required fields.");
+          return;
+        }
+        
+        if (new Date(checkIn) >= new Date(checkOut)) {
+          setErrorMessage("Check-out date must be after check-in date.");
+          return;
+        }
+
+        let current = new Date(checkIn);
+        const end = new Date(checkOut);
+        let overlap = false;
+        while (current <= end) {
+          if (blockedDates.has(current.toISOString().split('T')[0])) {
+            overlap = true;
+            break;
+          }
+          current.setDate(current.getDate() + 1);
+        }
+
+        if (overlap) {
+          setErrorMessage("Selected dates are not available. Please choose different dates.");
+          return;
+        }
+
+        setStatus('checking');
+        setErrorMessage('');
+
+        try {
+          const bookingId = crypto.randomUUID();
+          const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId);
+          
+          await setDoc(bookingRef, {
+            id: bookingId,
+            startDate: checkIn,
+            endDate: checkOut,
+            guestName: name,
+            guestEmail: email,
+            guestsCount: guests,
+            bedSetup: bedSetup,
+            needsCot: needsCot,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            userId: user.uid
+          });
+
+          setStatus('success');
+        } catch (err) {
+          console.error(err);
+          setStatus('error');
+          setErrorMessage("Failed to submit request. Please try again later.");
+        }
+      };
+
+      if (status === 'success') {
+        return (
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-8 border border-white/80 text-center space-y-4">
+            <div className="w-16 h-16 bg-green-100/80 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm shadow-sm border border-green-200">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Request Sent!</h3>
+            <p className="text-slate-600">
+              We are currently checking availability with the owner. You will receive an email shortly confirming your dates or suggesting an alternative.
+            </p>
+            <button 
+              onClick={() => {
+                setStatus('idle');
+                setCheckIn(''); setCheckOut(''); setName(''); setEmail('');
+              }}
+              className="mt-4 w-full py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-xl font-medium transition-colors shadow-sm"
+            >
+              Book Another Date
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-6 lg:p-8 border border-white/80">
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">Book your stay</h3>
+            <p className="text-sm text-slate-500">Prices from €120 / night</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {errorMessage && (
+              <div className="p-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-700 text-sm rounded-xl flex items-start gap-2">
+                <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Check-in</label>
+                <input 
+                  type="date" 
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className="w-full p-3 bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white/80 outline-none transition-all shadow-inner"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Check-out</label>
+                <input 
+                  type="date" 
+                  required
+                  min={checkIn || new Date().toISOString().split('T')[0]}
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className="w-full p-3 bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white/80 outline-none transition-all shadow-inner"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Guests</label>
+              <select 
+                value={guests}
+                onChange={(e) => setGuests(Number(e.target.value))}
+                className="w-full p-3 bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white/80 outline-none transition-all shadow-inner"
+              >
+                <option value={1}>1 Guest</option>
+                <option value={2}>2 Guests</option>
+                <option value={3}>3 Guests</option>
+                <option value={4}>4 Guests</option>
+              </select>
+            </div>
+
+            <div className="p-4 bg-white/40 backdrop-blur-sm rounded-xl border border-white/60 shadow-inner space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Bedroom Setup</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="bed" 
+                      value="two-singles" 
+                      checked={bedSetup === 'two-singles'} 
+                      onChange={() => setBedSetup('two-singles')}
+                      className="text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                    Two Singles
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="bed" 
+                      value="one-double" 
+                      checked={bedSetup === 'one-double'} 
+                      onChange={() => setBedSetup('one-double')}
+                      className="text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                    One Double
+                  </label>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-200/60">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={needsCot} 
+                    onChange={(e) => setNeedsCot(e.target.checked)}
+                    className="text-blue-600 focus:ring-blue-500 h-4 w-4 rounded"
+                  />
+                  Require a travel cot organised
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <input 
+                type="text" 
+                placeholder="Full Name" 
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-3 bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white/80 outline-none transition-all shadow-inner"
+              />
+              <input 
+                type="email" 
+                placeholder="Email Address" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white/80 outline-none transition-all shadow-inner"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={status === 'checking'}
+              className="w-full py-4 mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-[0_8px_20px_rgba(79,70,229,0.25)] transition-all disabled:opacity-70 flex justify-center items-center gap-2 hover:-translate-y-0.5"
+            >
+              {status === 'checking' ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                "Request Booking"
+              )}
+            </button>
+            <p className="text-center text-xs text-slate-500 mt-2">
+              You won't be charged yet. We will verify availability first.
+            </p>
+          </form>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // ADMIN DASHBOARD
+    // ==========================================
+    function AdminLogin({ setView }) {
+      const [error, setError] = useState('');
+      const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+      const handleGoogleLogin = async () => {
+        setError('');
+        setIsLoggingIn(true);
+        try {
+          const provider = new GoogleAuthProvider();
+          const result = await signInWithPopup(auth, provider);
+          
+          // --- SECURITY SETUP ---
+          // To lock this down to JUST you, add your Gmail address inside the quotes.
+          // Example: const allowedEmails = ['owner.marbella@gmail.com'];
+          const allowedEmails = []; 
+          
+          if (allowedEmails.length > 0 && !allowedEmails.includes(result.user.email)) {
+            setError("Unauthorised email address. Owner access denied.");
+            await signOut(auth);
+            await signInAnonymously(auth); // Restore normal guest view
+            setIsLoggingIn(false);
+            return;
+          }
+
+          setView('admin_dashboard');
+        } catch (err) {
+          console.error(err);
+          setError("Failed to sign in. Please try again.");
+        }
+        setIsLoggingIn(false);
+      };
+
+      return (
+        <div className="min-h-[70vh] flex items-center justify-center p-4">
+          <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] w-full max-w-md border border-white/60">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-blue-50/80 rounded-full text-blue-600 shadow-inner">
+                <Lock className="h-8 w-8" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-center mb-2 font-serif">Owner Access</h2>
+            <p className="text-center text-slate-500 text-sm mb-6">Sign in with your admin Google account.</p>
+            
+            <div className="space-y-4">
+              {error && <p className="text-red-500 text-sm text-center font-medium bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
+              
+              <button 
+                onClick={handleGoogleLogin}
+                disabled={isLoggingIn}
+                className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors shadow-lg flex items-center justify-center gap-3 disabled:opacity-70"
+              >
+                {isLoggingIn ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Sign in with Google
+                  </>
+                )}
+              </button>
+            </div>
+            <button 
+              onClick={() => setView('home')}
+              className="w-full mt-4 py-2 text-slate-500 text-sm hover:text-slate-800 transition-colors"
+            >
+              Return to Site
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function AdminDashboard({ bookings, setView }) {
+      const [activeTab, setActiveTab] = useState('requests'); 
+
+      const pending = bookings.filter(b => b.status === 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const confirmed = bookings.filter(b => b.status === 'confirmed').sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+      const blocked = bookings.filter(b => b.status === 'blocked').sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+      const updateStatus = async (id, newStatus) => {
+        try {
+          const ref = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id);
+          await updateDoc(ref, { status: newStatus });
+        } catch (err) {
+          console.error("Error updating status", err);
+        }
+      };
+
+      const deleteRecord = async (id) => {
+        if(window.confirm("Are you sure you want to delete this record?")) {
+          try {
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id);
+            await deleteDoc(ref);
+          } catch (err) {
+            console.error("Error deleting", err);
+          }
+        }
+      };
+
+      return (
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-serif font-bold text-slate-900">Owner Dashboard</h1>
+              <p className="text-slate-500">Manage bookings, approve requests, and block dates.</p>
+            </div>
+            <div className="flex bg-white/60 backdrop-blur-sm rounded-xl p-1.5 shadow-sm border border-white/80">
+              <button 
+                onClick={() => setActiveTab('requests')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'requests' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-white'}`}
+              >
+                Pending Requests ({pending.length})
+              </button>
+              <button 
+                onClick={() => setActiveTab('calendar')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-white'}`}
+              >
+                Confirmed & Blocked
+              </button>
+              <button 
+                onClick={() => setActiveTab('block')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'block' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-white'}`}
+              >
+                Add Manual Booking
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-white/80 p-6 min-h-[500px]">
+            {activeTab === 'requests' && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold mb-4 border-b pb-2">Needs Your Action</h2>
+                {pending.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">No pending booking requests.</div>
+                ) : (
+                  pending.map(req => (
+                    <div key={req.id} className="p-5 border border-orange-200/60 bg-gradient-to-r from-orange-50/50 to-amber-50/30 rounded-2xl flex flex-col md:flex-row justify-between gap-4 shadow-sm">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-lg">{req.guestName}</span>
+                          <a href={`mailto:${req.guestEmail}`} className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                            <Mail className="h-3 w-3" /> {req.guestEmail}
+                          </a>
+                        </div>
+                        <div className="text-sm text-slate-700 grid grid-cols-2 gap-x-8 gap-y-1">
+                          <div><span className="text-slate-500">Dates:</span> {req.startDate} to {req.endDate}</div>
+                          <div><span className="text-slate-500">Guests:</span> {req.guestsCount}</div>
+                          <div><span className="text-slate-500">Beds:</span> {req.bedSetup === 'two-singles' ? '2 Singles' : '1 Double'}</div>
+                          <div><span className="text-slate-500">Cot:</span> {req.needsCot ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-2">Requested: {new Date(req.createdAt).toLocaleString()}</div>
+                      </div>
+                      <div className="flex md:flex-col gap-2 justify-center">
+                        <button 
+                          onClick={() => updateStatus(req.id, 'confirmed')}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
+                        >
+                          Approve Booking
+                        </button>
+                        <button 
+                          onClick={() => deleteRecord(req.id)}
+                          className="px-4 py-2 bg-white hover:bg-red-50 hover:text-red-700 border border-slate-200 hover:border-red-200 text-slate-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
+                        >
+                          Deny / Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === 'calendar' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 border-b pb-2">Confirmed Guests</h2>
+                  {confirmed.length === 0 ? (
+                    <p className="text-slate-500 text-sm">No confirmed bookings.</p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {confirmed.map(req => (
+                        <div key={req.id} className="p-4 bg-white/50 border border-slate-200/60 rounded-2xl flex justify-between items-center shadow-sm">
+                          <div>
+                            <div className="font-semibold">{req.guestName}</div>
+                            <div className="text-sm text-slate-600">{req.startDate} to {req.endDate}</div>
+                            <div className="text-xs text-slate-500">Beds: {req.bedSetup} | Cot: {req.needsCot ? 'Yes' : 'No'}</div>
+                          </div>
+                          <button 
+                            onClick={() => deleteRecord(req.id)}
+                            className="text-slate-400 hover:text-red-600 p-2 transition-colors"
+                            title="Cancel Booking"
+                          >
+                            <XCircle className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 border-b pb-2">Blocked Dates (Owner)</h2>
+                  {blocked.length === 0 ? (
+                    <p className="text-slate-500 text-sm">No dates blocked manually.</p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {blocked.map(req => (
+                        <div key={req.id} className="p-4 bg-slate-50/50 border border-slate-200/60 rounded-2xl flex justify-between items-center shadow-sm">
+                          <div>
+                            <div className="font-semibold">{req.notes || "Owner Block"}</div>
+                            <div className="text-sm text-slate-600">{req.startDate} to {req.endDate}</div>
+                          </div>
+                          <button 
+                            onClick={() => deleteRecord(req.id)}
+                            className="text-slate-400 hover:text-red-600 p-2 transition-colors"
+                            title="Unblock Dates"
+                          >
+                            <XCircle className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'block' && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 border-b pb-2">Add Manual Booking or Block Dates</h2>
+                <p className="text-sm text-slate-500 mb-6 font-light">Use this to block the calendar for your own stays, maintenance, or bookings taken elsewhere.</p>
+                
+                <form 
+                  className="max-w-md space-y-4"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const inDate = form.start.value;
+                    const outDate = form.end.value;
+                    const notes = form.notes.value;
+
+                    if(new Date(inDate) >= new Date(outDate)) {
+                      alert("End date must be after start date.");
+                      return;
+                    }
+
+                    try {
+                      const bookingId = crypto.randomUUID();
+                      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId), {
+                        id: bookingId,
+                        startDate: inDate,
+                        endDate: outDate,
+                        status: 'blocked',
+                        notes: notes || 'Owner Block',
+                        createdAt: new Date().toISOString()
+                      });
+                      form.reset();
+                      alert("Dates successfully blocked.");
+                    } catch(err) {
+                      console.error(err);
+                      alert("Failed to block dates.");
+                    }
+                  }}
+                >
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-slate-700">Start Date</label>
+                    <input type="date" name="start" required className="w-full p-3 bg-white/50 border border-white/60 shadow-inner rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-slate-700">End Date</label>
+                    <input type="date" name="end" required className="w-full p-3 bg-white/50 border border-white/60 shadow-inner rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-slate-700">Notes / Reason (Optional)</label>
+                    <input type="text" name="notes" placeholder="e.g., Family visiting" className="w-full p-3 bg-white/50 border border-white/60 shadow-inner rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <button type="submit" className="w-full py-3 mt-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors shadow-lg">
+                    Block Dates
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // FOOTER (With Hidden Admin Entry)
+    // ==========================================
+    function Footer({ setView }) {
+      let clickCount = 0;
+      let clickTimer;
+
+      const handleFooterClick = () => {
+        clickCount++;
+        if (clickCount === 1) {
+          clickTimer = setTimeout(() => { clickCount = 0; }, 500);
+        } else if (clickCount === 2) {
+          clearTimeout(clickTimer);
+          clickCount = 0;
+          setView('admin_login');
+        }
+      };
+
+      return (
+        <footer className="bg-slate-900 text-slate-400 py-12 mt-16 border-t border-slate-800">
+          <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="text-center md:text-left">
+              <p className="text-slate-300 font-serif font-bold mb-1 text-xl">Skol Apartments Marbella</p>
+              <p className="text-sm font-light">Paseo Marítimo, Marbella, Spain</p>
+            </div>
+            <div className="text-sm">
+              <p 
+                className="cursor-default select-none transition-colors hover:text-slate-300 font-light tracking-wide"
+                onClick={handleFooterClick}
+                title="Double click for admin access"
+              >
+                © {new Date().getFullYear()} Skol Marbella. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </footer>
+      );
+    }
+
+    // --- Boot up the React application ---
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+
