@@ -109,6 +109,10 @@
             animation: moveCadCursorV 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             animation-delay: 0.2s;
         }
+        .cad-line-container.drawing .cad-cursor-v-hide {
+            animation: moveCadCursorVHide 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
 
         /* Horizontal Scroll Lines */
         .cad-line-container-h.drawing .draw-line-h {
@@ -136,6 +140,12 @@
             15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
             100% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
         }
+        @keyframes moveCadCursorVHide {
+            0% { top: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            90% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { top: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+        }
         @keyframes moveCadCursorH {
             0% { left: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
             15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
@@ -155,7 +165,7 @@
                 <!-- Top Animated Vertical Line -->
                 <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
                     <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
-                    <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                    <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v-hide pointer-events-none opacity-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
                             <line x1="12" y1="0" x2="12" y2="24"></line>
                             <line x1="0" y1="12" x2="24" y2="12"></line>
@@ -629,7 +639,7 @@
                     <!-- Footer Animated Divider Line -->
                     <div class="cad-line-container relative h-8 w-[1.5px]">
                         <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
-                        <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                        <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v-hide pointer-events-none opacity-0">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
                                 <line x1="12" y1="0" x2="12" y2="24"></line>
                                 <line x1="0" y1="12" x2="24" y2="12"></line>
