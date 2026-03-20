@@ -461,24 +461,26 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex flex-col lg:flex-row gap-16 items-center">
                 
-                <!-- About Image with CAD line detail -->
+                <!-- About Image (CAD line removed from here) -->
                 <div class="w-full lg:w-1/2 relative reveal">
-                    <div class="cad-line-container relative absolute -left-4 top-10 h-[80%] w-[1.5px]">
-                        <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
-                        <div class="absolute w-4 h-4 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
-                    </div>
                     <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
                 </div>
 
                 <!-- About Text Content -->
                 <div class="w-full lg:w-1/2 reveal delay-200">
-                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Our Studio</h2>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                    <line x1="12" y1="0" x2="12" y2="24"></line>
+                                    <line x1="0" y1="12" x2="24" y2="12"></line>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold">Our Studio</h2>
+                    </div>
                     <h3 class="serif text-4xl mb-8">About OBD Architecture</h3>
                     <div class="space-y-6 text-gray-600 font-light leading-relaxed text-sm md:text-base">
                         <p>
