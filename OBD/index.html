@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBD Architecture | Design & Planning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        copper: '#b87333',
+                        'copper-light': '#d4a76a',
+                        'obd-black': '#111111',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --copper: #b87333;
+            --copper-light: #d4a76a;
+            --obd-black: #111111;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .copper-accent {
+            color: var(--copper);
+        }
+
+        .bg-copper {
+            background-color: var(--copper);
+        }
+
+        .border-copper {
+            border-color: var(--copper);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--copper);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7));
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--copper);
+        }
+
+        /* Smooth reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* -----------------------------------
+           Unified CAD Scroll Animations 
+           ----------------------------------- */
+        .cad-line-container, .cad-line-container-h {
+            position: relative;
+        }
+
+        /* Vertical Scroll Lines */
+        .cad-line-container.drawing .draw-line-v {
+            animation: drawLineHeight 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+        .cad-line-container.drawing .cad-cursor-v {
+            animation: moveCadCursorV 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Horizontal Scroll Lines */
+        .cad-line-container-h.drawing .draw-line-h {
+            animation: drawLineWidth 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+        .cad-line-container-h.drawing .cad-cursor-h {
+            animation: moveCadCursorH 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Keyframes for Line Growth */
+        @keyframes drawLineHeight {
+            0% { height: 0; }
+            100% { height: 100%; }
+        }
+        @keyframes drawLineWidth {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        /* Keyframes for Cursor Movement */
+        @keyframes moveCadCursorV {
+            0% { top: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            90% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { top: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+        }
+        @keyframes moveCadCursorH {
+            0% { left: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            90% { left: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { left: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 overflow-x-hidden">
+
+    <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex justify-between items-center">
+            <div class="flex items-center gap-2 sm:gap-4">
+                <span class="serif text-2xl sm:text-3xl font-bold tracking-tighter">OBD</span>
+                
+                <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
+                    <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                    <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <line x1="12" y1="0" x2="12" y2="24"></line>
+                            <line x1="0" y1="12" x2="24" y2="12"></line>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex flex-col leading-none">
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Architecture</span>
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Design & Planning</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
+                <a href="#projects" class="nav-link">Projects</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#testimonials" class="nav-link">Testimonials</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Start a Project</a>
+            </div>
+
+            <button class="md:hidden p-2 text-gray-900" id="menuToggle" aria-label="Open Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
+        <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
+        <a href="#projects" class="mobile-nav-link hover:text-copper">Projects</a>
+        <a href="#services" class="mobile-nav-link hover:text-copper">Services</a>
+        <a href="#testimonials" class="mobile-nav-link hover:text-copper">Testimonials</a>
+        <a href="#about" class="mobile-nav-link hover:text-copper">About</a>
+        <a href="#contact" class="mobile-nav-link hover:text-copper">Contact</a>
+    </div>
+
+    <section class="relative min-h-[90vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000" alt="Modern Architecture" class="w-full h-full object-cover">
+            <div class="absolute inset-0 hero-gradient"></div>
+        </div>
+        
+        <div class="relative z-10 text-center text-white px-6 mt-12 md:mt-0">
+            <h1 class="serif text-4xl sm:text-5xl md:text-8xl mb-6 opacity-0 translate-y-10 transition-all duration-1000 ease-out" id="heroTitle">
+                Designing <span class="italic text-white">Atmosphere.</span>
+            </h1>
+            <p class="max-w-xl mx-auto text-base sm:text-lg md:text-xl font-light opacity-90 mb-10 tracking-wide leading-relaxed">
+                Bespoke architectural solutions in Ireland, blending contemporary design with functional planning.
+            </p>
+            <div class="flex flex-col items-center gap-6">
+                <a href="#projects" class="px-8 py-4 border border-white text-white text-xs uppercase tracking-[0.3em] font-bold hover:bg-copper hover:border-copper transition-all duration-300 shadow-xl">
+                    View Portfolio
+                </a>
+                
+                <div class="cad-line-container relative mt-4 hidden sm:block h-[80px] w-[2px]">
+                    <div class="absolute top-0 left-0 w-full h-0 draw-line-v" style="background: linear-gradient(to bottom, transparent, var(--copper), transparent);"></div>
+                    <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <line x1="12" y1="0" x2="12" y2="24"></line>
+                            <line x1="0" y1="12" x2="24" y2="12"></line>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="py-20 md:py-32 px-6 bg-[#fafafa]">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                <div class="reveal">
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Selected Works</h2>
+                    <h3 class="serif text-3xl md:text-5xl">Featured Projects</h3>
+                </div>
+                <div class="reveal delay-200">
+                    <p class="text-gray-500 max-w-md text-sm md:text-base">Specialising in high-end residential extensions and comprehensive site planning across Cork and the South of Ireland.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                <div class="group cursor-pointer reveal">
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1200" alt="Cliffside Residence" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                            <span class="text-white border border-white px-6 py-2 uppercase tracking-widest text-[10px] font-bold">View Project</span>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="cad-line-container-h relative w-10 h-[1px]">
+                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                                <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                        <line x1="12" y1="0" x2="12" y2="24"></line>
+                                        <line x1="0" y1="12" x2="24" y2="12"></line>
+                                        <rect x="9" y="9" width="6" height="6"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-widest font-bold text-gray-400">Residential</span>
+                        </div>
+                        <h4 class="serif text-2xl md:text-3xl group-hover:text-copper transition-colors duration-300">The Cliffside Residence</h4>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer reveal delay-300">
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200" alt="Harbour Quarter" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                            <span class="text-white border border-white px-6 py-2 uppercase tracking-widest text-[10px] font-bold">View Project</span>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="cad-line-container-h relative w-10 h-[1px]">
+                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                                <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                        <line x1="12" y1="0" x2="12" y2="24"></line>
+                                        <line x1="0" y1="12" x2="24" y2="12"></line>
+                                        <rect x="9" y="9" width="6" height="6"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-widest font-bold text-gray-400">Planning</span>
+                        </div>
+                        <h4 class="serif text-2xl md:text-3xl group-hover:text-copper transition-colors duration-300">Kinsale Harbour Quarter</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 bg-[#fafafa]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Client Voices</h2>
+                <h3 class="serif text-4xl">Testimonials</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 max-w-5xl mx-auto">
+                <!-- Testimonial 1 -->
+                <div class="reveal">
+                    <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-xl md:text-2xl font-light leading-relaxed text-gray-800 mb-8 italic">"OBD Architecture completely transformed our approach to our coastal site. Their understanding of the landscape and natural light resulted in a home that exceeds all our expectations."</p>
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                    <line x1="12" y1="0" x2="12" y2="24"></line>
+                                    <line x1="0" y1="12" x2="24" y2="12"></line>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Sarah &amp; James O'Connor</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Kinsale, Cork</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="reveal delay-200">
+                    <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-xl md:text-2xl font-light leading-relaxed text-gray-800 mb-8 italic">"Navigating the planning process seemed daunting, but the team's expertise made it seamless. The final design is both incredibly striking and wonderfully liveable."</p>
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                    <line x1="12" y1="0" x2="12" y2="24"></line>
+                                    <line x1="0" y1="12" x2="24" y2="12"></line>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">David Murphy</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">West Cork</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="bg-black text-white py-24 md:py-32 relative overflow-hidden">
+        
+        <!-- Architectural Blueprint Background -->
+        <div class="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center justify-center">
+            <svg viewBox="0 0 1000 600" fill="none" stroke="white" stroke-width="1" class="w-full max-w-5xl h-auto">
+                <!-- Ground Line -->
+                <line x1="50" y1="500" x2="950" y2="500" />
+                <!-- Main Structure -->
+                <path d="M250 500 L250 250 L750 250 L750 500" />
+                <!-- Roof Pitch -->
+                <path d="M200 250 L500 100 L800 250" stroke-dasharray="10 5" />
+                <!-- Large Feature Window -->
+                <rect x="350" y="300" width="300" height="200" />
+                <!-- Measurement Guidelines -->
+                <line x1="250" y1="540" x2="750" y2="540" stroke-width="0.5"/>
+                <line x1="250" y1="530" x2="250" y2="550" stroke-width="0.5"/>
+                <line x1="750" y1="530" x2="750" y2="550" stroke-width="0.5"/>
+                <text x="500" y="565" fill="white" stroke="none" font-family="sans-serif" font-size="12" text-anchor="middle" letter-spacing="0.3em">PROPOSED ELEVATION</text>
+                <!-- Integrated CAD Cursor snapping to corner -->
+                <g transform="translate(750, 250)" stroke="white" stroke-width="1.5">
+                    <line x1="-30" y1="0" x2="30" y2="0" />
+                    <line x1="0" y1="-30" x2="0" y2="30" />
+                    <rect x="-4" y="-4" width="8" height="8" fill="black" />
+                </g>
+            </svg>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="serif text-4xl md:text-6xl mb-12 leading-tight">Begin your <span class="text-copper italic">journey</span> with us.</h2>
+            
+            <div class="flex flex-col md:flex-row gap-6 md:gap-12 justify-center mb-16">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Email Us</span>
+                    <a href="mailto:hello@obdarchitecture.ie" class="text-lg md:text-xl hover:text-copper transition-colors">hello@obdarchitecture.ie</a>
+                </div>
+                <div class="w-px h-10 bg-white/10 hidden md:block"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Office</span>
+                    <p class="text-lg md:text-xl">Cork, Ireland</p>
+                </div>
+            </div>
+
+            <form class="mt-8 max-w-2xl mx-auto text-left space-y-8" onsubmit="event.preventDefault(); alert('Form submitted! We will be in touch shortly.');">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Full Name</label>
+                        <input type="text" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors placeholder-white/30" placeholder="Jane Doe" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Email Address</label>
+                        <input type="email" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors placeholder-white/30" placeholder="jane@example.com" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Project Enquiry</label>
+                    <textarea rows="4" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors resize-none placeholder-white/30" placeholder="Tell us a bit about your site or project..." required></textarea>
+                </div>
+                <div class="text-center pt-8">
+                    <button type="submit" class="border border-white bg-transparent text-white px-10 py-5 uppercase tracking-[0.3em] font-bold text-xs hover:bg-copper hover:border-copper transition-all duration-500 shadow-2xl">
+                        Submit Enquiry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer class="bg-white py-16 px-6 border-t border-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                <div class="flex items-center gap-4">
+                    <span class="serif text-3xl font-bold tracking-tighter">OBD</span>
+                    
+                    <div class="cad-line-container relative h-8 w-[1.5px]">
+                        <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                        <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col leading-none">
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold">Architecture</span>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold">Design & Planning</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-gray-400">
+                    <a href="#" class="hover:text-copper transition-colors">Instagram</a>
+                    <a href="#" class="hover:text-copper transition-colors">LinkedIn</a>
+                    <a href="#" class="hover:text-copper transition-colors">Portfolio</a>
+                </div>
+
+                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-medium">
+                    &copy; 2026 OBD Architecture Design & Planning.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Hero Entrance Animation
+        window.addEventListener('load', () => {
+            const title = document.getElementById('heroTitle');
+            title.classList.remove('opacity-0', 'translate-y-10');
+            
+            // Trigger scroll reveal for already visible elements
+            revealElements();
+        });
+
+        // Mobile Menu Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closeFunc = () => {
+            mobileMenu.classList.add('translate-x-full');
+            document.body.style.overflow = 'auto';
+        };
+
+        closeMenu.addEventListener('click', closeFunc);
+        mobileLinks.forEach(link => link.addEventListener('click', closeFunc));
+
+        // Scroll Reveal logic for general elements
+        function revealElements() {
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", revealElements);
+
+        // Intersection Observer strictly for triggering CAD line drawing
+        const lineObserverOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.2 // Triggers when 20% of the element is visible
+        };
+
+        const lineObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Start the drawing animation
+                    entry.target.classList.add('drawing');
+                    // Stop observing once drawn so it doesn't replay constantly
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, lineObserverOptions);
+
+        // Attach observer to all line containers
+        document.querySelectorAll('.cad-line-container, .cad-line-container-h').forEach(container => {
+            lineObserver.observe(container);
+        });
+
+    </script>
+</body>
+</html>
