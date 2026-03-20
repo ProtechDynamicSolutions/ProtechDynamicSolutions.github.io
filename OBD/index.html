@@ -130,28 +130,29 @@
             100% { width: 100%; }
         }
 
-        /* Keyframes for Cursor Movement */
+        /* Keyframes for Cursor Movement - Opacity stays at 1 at the end so it doesn't disappear */
         @keyframes moveCadCursorV {
             0% { top: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
-            10% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
-            90% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
-            100% { top: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
         }
         @keyframes moveCadCursorH {
             0% { left: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
-            10% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
-            90% { left: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
-            100% { left: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { left: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
         }
     </style>
 </head>
 <body class="bg-white text-gray-900 overflow-x-hidden">
 
+    <!-- Navigation -->
     <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex justify-between items-center">
+            <!-- Logo Section -->
             <div class="flex items-center gap-2 sm:gap-4">
                 <span class="serif text-2xl sm:text-3xl font-bold tracking-tighter">OBD</span>
                 
+                <!-- Top Animated Vertical Line -->
                 <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
                     <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
                     <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
@@ -169,31 +170,36 @@
                 </div>
             </div>
 
+            <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
                 <a href="#projects" class="nav-link">Projects</a>
                 <a href="#services" class="nav-link">Services</a>
-                <a href="#testimonials" class="nav-link">Testimonials</a>
                 <a href="#about" class="nav-link">About</a>
+                <a href="#testimonials" class="nav-link">Testimonials</a>
                 <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Start a Project</a>
             </div>
 
+            <!-- Mobile Toggle -->
             <button class="md:hidden p-2 text-gray-900" id="menuToggle" aria-label="Open Menu">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
         </div>
     </nav>
 
+    <!-- Mobile Menu Overlay -->
     <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
         <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
         <a href="#projects" class="mobile-nav-link hover:text-copper">Projects</a>
         <a href="#services" class="mobile-nav-link hover:text-copper">Services</a>
-        <a href="#testimonials" class="mobile-nav-link hover:text-copper">Testimonials</a>
         <a href="#about" class="mobile-nav-link hover:text-copper">About</a>
+        <a href="#testimonials" class="mobile-nav-link hover:text-copper">Testimonials</a>
         <a href="#contact" class="mobile-nav-link hover:text-copper">Contact</a>
     </div>
 
+    <!-- Hero Section -->
     <section class="relative min-h-[90vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
         <div class="absolute inset-0 z-0">
+            <!-- Background Image -->
             <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000" alt="Modern Architecture" class="w-full h-full object-cover">
             <div class="absolute inset-0 hero-gradient"></div>
         </div>
@@ -210,6 +216,7 @@
                     View Portfolio
                 </a>
                 
+                <!-- Hero Vertical Animated Line -->
                 <div class="cad-line-container relative mt-4 hidden sm:block h-[80px] w-[2px]">
                     <div class="absolute top-0 left-0 w-full h-0 draw-line-v" style="background: linear-gradient(to bottom, transparent, var(--copper), transparent);"></div>
                     <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
@@ -225,6 +232,7 @@
         </div>
     </section>
 
+    <!-- Project Gallery -->
     <section id="projects" class="py-20 md:py-32 px-6 bg-[#fafafa]">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
@@ -238,6 +246,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                <!-- Project 1 -->
                 <div class="group cursor-pointer reveal">
                     <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
                         <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1200" alt="Cliffside Residence" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
@@ -247,6 +256,7 @@
                     </div>
                     <div class="mt-8">
                         <div class="flex items-center gap-3 mb-3">
+                            <!-- Animated Horizontal Line -->
                             <div class="cad-line-container-h relative w-10 h-[1px]">
                                 <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
                                 <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
@@ -263,6 +273,7 @@
                     </div>
                 </div>
 
+                <!-- Project 2 -->
                 <div class="group cursor-pointer reveal delay-300">
                     <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
                         <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200" alt="Harbour Quarter" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
@@ -272,6 +283,7 @@
                     </div>
                     <div class="mt-8">
                         <div class="flex items-center gap-3 mb-3">
+                            <!-- Animated Horizontal Line -->
                             <div class="cad-line-container-h relative w-10 h-[1px]">
                                 <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
                                 <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
@@ -291,8 +303,201 @@
         </div>
     </section>
 
+    <!-- Services Section -->
+    <section id="services" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">What We Do</h2>
+                <h3 class="serif text-4xl mb-6">Expertise & Services</h3>
+                <!-- Editable Overview Paragraph -->
+                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
+                    At OBD Architecture, we offer a comprehensive suite of services tailored to bring your vision to life. Led by Garbhan O'Brien, our team provides meticulous guidance through every phase of the architectural journey. We blend innovative design with rigorous project management to ensure every build is delivered to the highest standard.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Service 1 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">01</span>
+                    <h4 class="serif text-2xl mb-5">Design & Planning</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We navigate complex local regulations and planning permissions with expertise, transforming your initial concepts into viable, approved designs ready for construction.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">02</span>
+                    <h4 class="serif text-2xl mb-5">Custom New Builds</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Tailored strictly to your lifestyle and brief, our bespoke residential and commercial builds are crafted to harmonise perfectly with their natural surroundings.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">03</span>
+                    <h4 class="serif text-2xl mb-5">Extensions and Renovations</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We breathe new life into existing properties, seamlessly blending historic architecture with striking modern extensions to maximise space and natural light.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">04</span>
+                    <h4 class="serif text-2xl mb-5">Landscape Design</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Architecture doesn't stop at the walls. We design beautiful external spaces that integrate flawlessly with the main structure, grounding your building in its context.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">05</span>
+                    <h4 class="serif text-2xl mb-5">3D Printed Models</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">To help you truly visualise spatial volume and layout, we provide tangible, scaled 3D printed models of your project long before ground is broken.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 6 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">06</span>
+                    <h4 class="serif text-2xl mb-5">Building and Site Surveys</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Every successful project begins with precision. Our comprehensive site analysis and measuring services inform the crucial early stages of our design process.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 7 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal lg:col-start-2">
+                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">07</span>
+                    <h4 class="serif text-2xl mb-5">Cost Estimates</h4>
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We provide detailed, realistic financial projections in Euros from day one, ensuring your budget is respected and managed throughout the entire build.</p>
+                    
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 bg-[#fafafa] overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                
+                <!-- About Image with CAD line detail -->
+                <div class="w-full lg:w-1/2 relative reveal">
+                    <div class="cad-line-container relative absolute -left-4 top-10 h-[80%] w-[1.5px]">
+                        <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                        <div class="absolute w-4 h-4 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <line x1="12" y1="0" x2="12" y2="24"></line>
+                                <line x1="0" y1="12" x2="24" y2="12"></line>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                            </svg>
+                        </div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
+                </div>
+
+                <!-- About Text Content -->
+                <div class="w-full lg:w-1/2 reveal delay-200">
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Our Studio</h2>
+                    <h3 class="serif text-4xl mb-8">About OBD Architecture</h3>
+                    <div class="space-y-6 text-gray-600 font-light leading-relaxed text-sm md:text-base">
+                        <p>
+                            OBD Architecture is an innovative design practice based in Cork, Ireland. Led by Principal Designer and Planner Garbhan O'Brien, our studio specialises in crafting bespoke architectural solutions that respect our rich natural landscape while embracing contemporary design principles. Though we operate as a tight-knit, focused team, our collective expertise allows us to deliver projects of exceptional quality and scale.
+                        </p>
+                        <p>
+                            Garbhan brings a wealth of diverse experience to every commission. With a strong background in the rigorous demands of healthcare design and project management, this precision is seamlessly translated into our residential, commercial, and landscape projects. From crafting intimate family homes and dynamic office spaces to designing the landscapes that surround them, we believe that great architecture is the result of a profound dialogue between the site, the brief, and the client.
+                        </p>
+                        <p>
+                            Whether overseeing a complex site planning application or managing a custom new build from initial sketch to final handover, our team is dedicated to guiding you through every step of the journey. We blend meticulous project management with visionary design to create spaces that truly resonate.
+                        </p>
+                    </div>
+                    
+                    <div class="mt-10">
+                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-black hover:text-copper transition-colors">
+                            <span>Get in touch</span>
+                            <div class="cad-line-container-h relative w-12 h-[1px]">
+                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
     <!-- Testimonials Section -->
-    <section id="testimonials" class="py-24 bg-[#fafafa]">
+    <section id="testimonials" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-20 reveal">
                 <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Client Voices</h2>
@@ -347,6 +552,7 @@
         </div>
     </section>
 
+    <!-- Contact Section -->
     <section id="contact" class="bg-black text-white py-24 md:py-32 relative overflow-hidden">
         
         <!-- Architectural Blueprint Background -->
@@ -413,12 +619,14 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer class="bg-white py-16 px-6 border-t border-gray-50">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                 <div class="flex items-center gap-4">
                     <span class="serif text-3xl font-bold tracking-tighter">OBD</span>
                     
+                    <!-- Footer Animated Divider Line -->
                     <div class="cad-line-container relative h-8 w-[1.5px]">
                         <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
                         <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v pointer-events-none opacity-0">
