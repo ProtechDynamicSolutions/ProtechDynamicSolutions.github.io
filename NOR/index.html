@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coaching Framework Presentation</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM for logic and rendering -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel to transpile JSX in the browser -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Optional custom scrollbar to match the clean aesthetic */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 antialiased text-slate-800">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- MATH & SVG HELPERS ---
+        const polarToCartesian = (cx, cy, r, angleInDegrees) => {
+          const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+          return {
+            x: cx + r * Math.cos(angleInRadians),
+            y: cy + r * Math.sin(angleInRadians),
+          };
+        };
+
+        // Generates the perfect nesting chevron arc segment
+        const describeArrowArc = (x, y, r1, r2, startAngle, endAngle, depthDegree) => {
+          const rm = (r1 + r2) / 2;
+          const startOuter = polarToCartesian(x, y, r2, startAngle);
+          const startMid = polarToCartesian(x, y, rm, startAngle + depthDegree);
+          const startInner = polarToCartesian(x, y, r1, startAngle);
+
+          const endOuter = polarToCartesian(x, y, r2, endAngle);
+          const endMid = polarToCartesian(x, y, rm, endAngle + depthDegree);
+          const endInner = polarToCartesian(x, y, r1, endAngle);
+
+          const largeArcFlag = 0;
+
+          return [
+            'M', startInner.x, startInner.y,
+            'L', startMid.x, startMid.y,
+            'L', startOuter.x, startOuter.y,
+            'A', r2, r2, 0, largeArcFlag, 1, endOuter.x, endOuter.y,
+            'L', endMid.x, endMid.y,
+            'L', endInner.x, endInner.y,
+            'A', r1, r1, 0, largeArcFlag, 0, startInner.x, startInner.y,
+            'Z',
+          ].join(' ');
+        };
+
+        // Generates the invisible path for text to follow, with an alignment shift for chevrons
+        const createTextArc = (x, y, r, startAngle, endAngle, shift = 0) => {
+          const s = startAngle + shift;
+          const e = endAngle + shift;
+          const midAngle = (s + e) / 2;
+          const norm = ((midAngle % 360) + 360) % 360;
+          
+          // Determine if text is on the bottom half to keep it upright
+          const isBottom = norm > 90 && norm < 270;
+
+          const sAngle = isBottom ? e : s;
+          const eAngle = isBottom ? s : e;
+          const sweepFlag = isBottom ? 0 : 1;
+
+          const start = polarToCartesian(x, y, r, sAngle);
+          const end = polarToCartesian(x, y, r, eAngle);
+
+          return `M ${start.x} ${start.y} A ${r} ${r} 0 0 ${sweepFlag} ${end.x} ${end.y}`;
+        };
+
+        // --- DATA CONFIGURATION ---
+        const CENTER_DATA = {
+          id: 'center',
+          title: 'PLAYER',
+          color: '#000',
+          detail: "The centre of the entire ecosystem. Every layer of the framework exists to support the player's holistic development, well-being, and performance. We focus on preserving the magic of the game for them while building robust skills.",
+        };
+
+        const INNER_RING = [
+          { id: 'inner-1', title: ['COACHES'], start: 270, end: 90, color: '#F15A24', detail: 'The primary facilitators of growth, responsible for guiding the player\'s journey through structured programmes and intuitive mentorship.' },
+          { id: 'inner-2', title: ['GAME'], start: 90, end: 270, color: '#F15A24', detail: 'The context and the ultimate test of the skills, behaviours, and strategies developed during coaching sessions.' },
+        ];
+
+        const MIDDLE_RING = [
+          { id: 'mid-1', title: ['TRANSITION:', 'PLAYING TO', 'COACHING'], start: 288, end: 360, color: '#A8D03A', detail: 'Navigating the shift from a player mindset to a coaching perspective. This involves acquiring new leadership skills and understanding group dynamics. Initial programme investment typically begins around €2,500.' },
+          { id: 'mid-2', title: ['COACH', 'EXPERIENCE'], start: 0, end: 72, color: '#A8D03A', detail: 'Drawing upon past experiences and continuous learning to build a robust coaching philosophy. Aligned with modern coaching frameworks across Ireland and the UK.' },
+          { id: 'mid-3', title: ['MENTORSHIP'], start: 72, end: 144, color: '#4FA83D', detail: 'Guiding and supporting newer coaches or players, sharing wisdom, and fostering a collaborative culture of mutual growth.' },
+          { id: 'mid-4', title: ['ENVIRONMENT'], start: 144, end: 216, color: '#A8D03A', detail: 'Creating a safe, supportive, and high-performance environment where players feel empowered to take risks, express themselves, and learn.' },
+          { id: 'mid-5', title: ['COACHING', 'PRACTICE'], start: 216, end: 288, color: '#4FA83D', detail: 'The day-to-day application of coaching methodologies, planning detailed sessions, and rigorously evaluating outcomes.' },
+        ];
+
+        const OUTER_RING = [
+          { id: 'out-1', title: ['VALUE'], start: 330, end: 390, color: '#ED1C24', detail: 'Creating meaningful value for both the player\'s long-term development and the overarching objectives of the club or organisation.' },
+          { id: 'out-2', title: ['ENGAGEMENT'], start: 30, end: 90, color: '#FFC20E', detail: 'Fostering deep engagement and commitment from players through interactive, compelling, and enjoyable training sessions.' },
+          { id: 'out-3', title: ['CHALLENGE'], start: 90, end: 150, color: '#0054A6', detail: 'Setting appropriate challenges that stretch the player\'s physical and mental abilities while maintaining their motivation and self-belief.' },
+          { id: 'out-4', title: ['AUTHENTICITY'], start: 150, end: 210, color: '#00AEEF', detail: 'Encouraging authentic leadership and building genuine, trust-based relationships between coaches, staff, and players.' },
+          { id: 'out-5', title: ['FEEDBACK'], start: 210, end: 270, color: '#F37021', detail: 'Providing constructive, timely, and actionable feedback to continuously guide improvement and recognise positive behaviour.' },
+          { id: 'out-6', title: ['COLLABORATION'], start: 270, end: 330, color: '#8DC63F', detail: 'Working seamlessly with other coaches, backroom staff, and the players themselves to achieve shared, cohesive goals.' },
+        ];
+
+        function App() {
+          const [stage, setStage] = useState(0);
+          const [activeNode, setActiveNode] = useState(CENTER_DATA);
+          const [hoveredId, setHoveredId] = useState(null);
+          const cx = 250, cy = 250;
+
+          const startAnimation = () => {
+            setStage(0);
+            setActiveNode(CENTER_DATA);
+            setTimeout(() => setStage(1), 100);
+            setTimeout(() => setStage(2), 700);
+            setTimeout(() => setStage(3), 1300);
+            setTimeout(() => setStage(4), 1900);
+          };
+
+          useEffect(() => {
+            startAnimation();
+          }, []);
+
+          const handleNodeClick = (node) => {
+            setActiveNode({ ...node, title: Array.isArray(node.title) ? node.title.join(' ') : node.title });
+          };
+
+          const getLayerStyle = (layerIndex) => ({
+            opacity: stage >= layerIndex ? 1 : 0,
+            transform: stage >= layerIndex ? 'scale(1)' : 'scale(0.85)',
+            transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transformOrigin: '50% 50%',
+          });
+
+          // Renders standard rings (Middle and Outer)
+          const renderRing = (data, layerIndex, r1, r2, depthDegree, fontSize, letterSpacing) => {
+            return (
+              <g style={getLayerStyle(layerIndex)}>
+                {data.map((seg) => {
+                  const pathData = describeArrowArc(cx, cy, r1, r2, seg.start, seg.end, depthDegree);
+                  const isHovered = hoveredId === seg.id || activeNode?.id === seg.id;
+                  
+                  return (
+                    <g key={seg.id} 
+                       onClick={() => handleNodeClick(seg)}
+                       onMouseEnter={() => setHoveredId(seg.id)}
+                       onMouseLeave={() => setHoveredId(null)}
+                       className="cursor-pointer transition-all duration-300 origin-center"
+                       style={{ transform: isHovered ? `scale(1.02)` : 'scale(1)' }}>
+                      
+                      <path 
+                        d={pathData} 
+                        fill={seg.color} 
+                        stroke="#fff" 
+                        strokeWidth="6"
+                        strokeLinejoin="round"
+                        filter={isHovered ? 'url(#hover-glow)' : ''}
+                        className="transition-all duration-300 hover:brightness-110" 
+                      />
+                      
+                      {seg.title.map((line, lineIdx) => {
+                        const shift = depthDegree / 2;
+                        const midAngle = (seg.start + seg.end + 2 * shift) / 2;
+                        const norm = ((midAngle % 360) + 360) % 360;
+                        const isBottom = norm > 90 && norm < 270;
+                        
+                        const rm = (r1 + r2) / 2;
+                        let rOffset = rm;
+                        
+                        // Line spacing logic to perfectly stack text radially inside the thick rings
+                        if (seg.title.length === 2) {
+                          rOffset = isBottom ? (lineIdx === 0 ? rm - 7 : rm + 7) : (lineIdx === 0 ? rm + 7 : rm - 7);
+                        } else if (seg.title.length === 3) {
+                          if (lineIdx === 0) rOffset = isBottom ? rm - 13 : rm + 13;
+                          else if (lineIdx === 1) rOffset = rm;
+                          else if (lineIdx === 2) rOffset = isBottom ? rm + 13 : rm - 13;
+                        }
+                        
+                        const textPathId = `text-path-${seg.id}-${lineIdx}`;
+                        
+                        return (
+                          <g key={lineIdx}>
+                            <path id={textPathId} d={createTextArc(cx, cy, rOffset, seg.start, seg.end, shift)} fill="none" />
+                            <text fill="white" fontSize={fontSize} fontWeight="bold" letterSpacing={letterSpacing} style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)' }}>
+                              <textPath href={`#${textPathId}`} startOffset="50%" textAnchor="middle">
+                                {line}
+                              </textPath>
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          };
+
+          const isInnerHovered = hoveredId === 'inner-1' || hoveredId === 'inner-2' || activeNode?.id.includes('inner');
+
+          return (
+            <div className="min-h-screen flex flex-col font-sans">
+              <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10">
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Coaching Framework Presentation</h1>
+              </header>
+
+              <main className="flex-1 flex flex-col lg:flex-row w-full max-w-7xl mx-auto overflow-hidden">
+                
+                {/* DIAGRAM SECTION */}
+                <section className="flex-1 p-4 lg:p-8 flex items-center justify-center bg-white lg:bg-transparent lg:border-r border-slate-200">
+                  <div className="w-full max-w-[600px] aspect-square relative drop-shadow-xl">
+                    <svg viewBox="0 0 500 500" className="w-full h-full overflow-visible">
+                      <defs>
+                        <filter id="hover-glow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#000" floodOpacity="0.2"/>
+                        </filter>
+                      </defs>
+
+                      {/* LAYER 1: OUTER RING (Radius 175 to 240, Depth 10) */}
+                      {renderRing(OUTER_RING, 4, 175, 240, 10, "13", "1.2")}
+
+                      {/* LAYER 2: MIDDLE RING (Radius 110 to 175, Depth 12) */}
+                      {renderRing(MIDDLE_RING, 3, 110, 175, 12, "11", "1")}
+
+                      {/* LAYER 3: INNER RING (Solid Ring, Radius 55 to 110) */}
+                      <g style={{ ...getLayerStyle(2), transform: isInnerHovered ? `scale(1.02)` : 'scale(1)', transformOrigin: 'center', transition: 'transform 0.3s' }}>
+                        
+                        {/* Visual Seamless Donut Base */}
+                        <path
+                          d={`
+                            M ${cx} ${cy - 110}
+                            A 110 110 0 1 1 ${cx} ${cy + 110}
+                            A 110 110 0 1 1 ${cx} ${cy - 110}
+                            Z
+                            M ${cx} ${cy - 55}
+                            A 55 55 0 1 0 ${cx} ${cy + 55}
+                            A 55 55 0 1 0 ${cx} ${cy - 55}
+                            Z
+                          `}
+                          fill="#F15A24"
+                          stroke="#fff"
+                          strokeWidth="6"
+                          strokeLinejoin="round"
+                          filter={isInnerHovered ? 'url(#hover-glow)' : ''}
+                          className="transition-all duration-300"
+                          style={{ filter: isInnerHovered ? 'brightness(1.05) url(#hover-glow)' : 'none' }}
+                        />
+
+                        {/* Invisible Top Wedge (COACHES) */}
+                        <path
+                          d={`M ${cx - 110} ${cy} A 110 110 0 0 1 ${cx + 110} ${cy} L ${cx + 55} ${cy} A 55 55 0 0 0 ${cx - 55} ${cy} Z`}
+                          fill="transparent"
+                          className="cursor-pointer"
+                          onClick={() => handleNodeClick(INNER_RING[0])}
+                          onMouseEnter={() => setHoveredId('inner-1')}
+                          onMouseLeave={() => setHoveredId(null)}
+                        />
+
+                        {/* Invisible Bottom Wedge (GAME) */}
+                        <path
+                          d={`M ${cx - 110} ${cy} A 110 110 0 0 0 ${cx + 110} ${cy} L ${cx + 55} ${cy} A 55 55 0 0 1 ${cx - 55} ${cy} Z`}
+                          fill="transparent"
+                          className="cursor-pointer"
+                          onClick={() => handleNodeClick(INNER_RING[1])}
+                          onMouseEnter={() => setHoveredId('inner-2')}
+                          onMouseLeave={() => setHoveredId(null)}
+                        />
+
+                        {/* Perfect Top/Bottom Text Paths */}
+                        <path id="inner-top-text" d={`M ${cx - 82.5} ${cy} A 82.5 82.5 0 0 1 ${cx + 82.5} ${cy}`} fill="none" />
+                        <path id="inner-bottom-text" d={`M ${cx - 82.5} ${cy} A 82.5 82.5 0 0 0 ${cx + 82.5} ${cy}`} fill="none" />
+                        
+                        <text fill="white" fontSize="16" fontWeight="bold" letterSpacing="3" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
+                          <textPath href="#inner-top-text" startOffset="50%" textAnchor="middle">COACHES</textPath>
+                        </text>
+                        
+                        <text fill="white" fontSize="16" fontWeight="bold" letterSpacing="3" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
+                          <textPath href="#inner-bottom-text" startOffset="50%" textAnchor="middle">GAME</textPath>
+                        </text>
+                      </g>
+
+                      {/* LAYER 4: CENTER PLAYER */}
+                      <g onClick={() => handleNodeClick(CENTER_DATA)}
+                         className="cursor-pointer transition-transform duration-300 origin-center"
+                         style={{ ...getLayerStyle(1), transform: activeNode?.id === 'center' ? 'scale(1.05)' : getLayerStyle(1).transform }}>
+                        
+                        {/* 6px stroke matches the ring strokes, ensuring continuous mathematical lines */}
+                        <circle cx={cx} cy={cy} r="55" fill="#fff" stroke="#fff" strokeWidth="6" filter="url(#hover-glow)"/>
+                        <text x={cx} y={cy + 6} fill="#000" fontSize="20" fontWeight="900" textAnchor="middle" letterSpacing="1">
+                          PLAYER
+                        </text>
+                      </g>
+
+                    </svg>
+                  </div>
+                </section>
+
+                {/* DETAILS PANEL SECTION */}
+                <section className="w-full lg:w-[450px] bg-white p-8 border-t lg:border-t-0 border-slate-200 flex flex-col justify-center">
+                  <div className="max-w-md mx-auto w-full transition-opacity duration-500 ease-in-out" style={{ opacity: stage >= 1 ? 1 : 0 }}>
+                    {activeNode ? (
+                      <div className="space-y-6">
+                        <div 
+                          className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-sm font-bold tracking-wider text-white mb-2 shadow-sm"
+                          style={{ backgroundColor: activeNode.color === '#000' ? '#1e293b' : activeNode.color }}
+                        >
+                          {activeNode.id.includes('center') && 'CORE FOCUS'}
+                          {activeNode.id.includes('inner') && 'PRIMARY ELEMENT'}
+                          {activeNode.id.includes('mid') && 'COACH JOURNEY'}
+                          {activeNode.id.includes('out') && 'KEY OUTCOME'}
+                        </div>
+                        
+                        <h2 className="text-4xl font-extrabold text-slate-900 leading-tight">
+                          {Array.isArray(activeNode.title) ? activeNode.title.join(' ') : activeNode.title}
+                        </h2>
+                        
+                        <div className="h-1 w-20 rounded" style={{ backgroundColor: activeNode.color === '#000' ? '#cbd5e1' : activeNode.color }}></div>
+                        
+                        <p className="text-lg text-slate-600 leading-relaxed pt-4">
+                          {activeNode.detail}
+                        </p>
+
+                        {activeNode.id.includes('mid') && (
+                          <div className="mt-8 p-5 bg-slate-50 rounded-xl border border-slate-100">
+                            <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-2">Programme Insight</h4>
+                            <p className="text-sm text-slate-600">Continuously updated to align with the latest psychological and tactical developments in the UK and Ireland.</p>
+                          </div>
+                        )}
+                        
+                      </div>
+                    ) : (
+                      <div className="text-center text-slate-400 py-20">
+                        <p>Select a segment on the diagram to view details.</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+              </main>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
