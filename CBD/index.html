@@ -96,25 +96,33 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
 
-        /* ─── DARK GLASS MIXIN (For Hero) ─── */
+        /* ─── DARK GLASS MIXIN (For Hero & Footer) ─── */
         .glass-dark-panel {
             background: rgba(10, 10, 10, 0.75);
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
+        
+        .glass-footer {
+            background: rgba(0, 0, 0, 0.85); /* Slight transparency */
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-top: 1px solid rgba(212,175,55,0.15);
+        }
 
-        /* ─── NAVIGATION (Dark) ─── */
+        /* ─── NAVIGATION (Transparent Frosted Glass) ─── */
         nav {
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(212,175,55,0.2);
+            background: rgba(0, 0, 0, 0.95); /* Starts dark with just a hint of transparency */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(212,175,55,0.25);
             transition: all 0.4s ease;
         }
         nav.scrolled {
-            background: rgba(0, 0, 0, 0.98);
+            background: rgba(0, 0, 0, 0.85); /* Much darker (85%) to prevent washout over white backgrounds */
             box-shadow: 0 4px 40px rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(212,175,55,0.15);
         }
 
         /* ─── HERO ─── */
@@ -260,7 +268,7 @@
     <!-- Ambient Background -->
     <div class="ambient-bg"></div>
 
-    <!-- ═══ NAVIGATION (Black Header) ═══ -->
+    <!-- ═══ NAVIGATION (Transparent Glass Header) ═══ -->
     <nav id="navbar" class="fixed w-full z-50 transition-all duration-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-24 items-center">
@@ -281,16 +289,16 @@
                 </a>
 
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#home" class="text-gray-300 hover:text-white font-medium tracking-wide transition-colors">Home</a>
-                    <a href="#services" class="text-gray-300 hover:text-white font-medium tracking-wide transition-colors">Services</a>
-                    <a href="#gallery" class="text-gray-300 hover:text-white font-medium tracking-wide transition-colors">Gallery</a>
-                    <a href="#contact" class="text-gray-300 hover:text-white font-medium tracking-wide transition-colors">Contact</a>
+                    <a href="#home" class="text-gray-200 hover:text-white font-medium tracking-wide transition-colors drop-shadow-md">Home</a>
+                    <a href="#services" class="text-gray-200 hover:text-white font-medium tracking-wide transition-colors drop-shadow-md">Services</a>
+                    <a href="#gallery" class="text-gray-200 hover:text-white font-medium tracking-wide transition-colors drop-shadow-md">Gallery</a>
+                    <a href="#contact" class="text-gray-200 hover:text-white font-medium tracking-wide transition-colors drop-shadow-md">Contact</a>
                     <a href="#contact" class="btn-gold gold-foil-bg !py-3 !px-6 !text-sm ml-2">
                         Request a Quote <i data-lucide="arrow-right" class="h-4 w-4"></i>
                     </a>
                 </div>
 
-                <button id="mobile-menu-btn" class="md:hidden text-white hover:text-gray-300 transition-colors">
+                <button id="mobile-menu-btn" class="md:hidden text-white hover:text-gray-300 transition-colors drop-shadow-md">
                     <i data-lucide="menu" class="h-8 w-8"></i>
                 </button>
             </div>
@@ -371,7 +379,8 @@
                         <i data-lucide="hard-hat" class="h-6 w-6 text-gray-900"></i>
                     </div>
                     <div>
-                        <h4 class="text-gray-900 font-bold text-2xl md:text-4xl mb-1">PSCS</h4>
+                        <!-- Added text-scramble animation class here -->
+                        <h4 class="text-gray-900 font-bold text-2xl md:text-4xl mb-1"><span class="text-scramble" data-target="PSCS"></span></h4>
                         <p class="text-gray-900 font-bold text-xs uppercase tracking-widest mb-2">Qualified</p>
                         <p class="text-gray-500 text-sm leading-relaxed">Strong site management and safety-led coordination.</p>
                     </div>
@@ -497,7 +506,6 @@
                 
                 <div class="gallery-item reveal reveal-delay-2 group gold-foil-border hover:shadow-xl">
                     <div class="gallery-img-wrap">
-                        <!-- Updated to requested Kinsale Community Hospital Fire Doors image -->
                         <img src="https://thekccgroup.com/wp-content/uploads/2023/12/Kinsale-Community-Hospital-5_resized.png" alt="Fire Door Works">
                     </div>
                     <div class="p-6">
@@ -627,7 +635,7 @@
     </section>
 
     <!-- ═══ FOOTER ═══ -->
-    <footer class="bg-brand-950 py-10 relative z-10 border-t border-gray-900">
+    <footer class="glass-footer py-10 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <a href="#home" class="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
@@ -645,7 +653,7 @@
                         </div>
                     </div>
                 </a>
-                <div class="text-sm text-gray-500 text-center flex flex-col md:flex-row gap-2 md:gap-6">
+                <div class="text-sm text-gray-400 text-center flex flex-col md:flex-row gap-2 md:gap-6">
                     <span>Company No. 787351</span>
                     <span class="hidden md:inline opacity-30">|</span>
                     <span>&copy; <span id="year"></span> Crafted by Design. All rights reserved.</span>
@@ -712,11 +720,40 @@
             });
         }, { threshold: 0.5 });
         counters.forEach(counter => counterObserver.observe(counter));
+
+        // Text Scramble Animation (for PSCS)
+        const scrambles = document.querySelectorAll('.text-scramble');
+        const scrambleObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const target = entry.target;
+                    const finalWord = target.getAttribute('data-target');
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    let iteration = 0;
+                    const maxIterations = 30; // Matches the rough duration of the counters
+                    
+                    const interval = setInterval(() => {
+                        target.innerText = finalWord.split('').map((letter, index) => {
+                            if(index < Math.floor(iteration / (maxIterations / finalWord.length))) {
+                                return finalWord[index];
+                            }
+                            return chars[Math.floor(Math.random() * 26)];
+                        }).join('');
+                        
+                        iteration++;
+                        if (iteration > maxIterations) {
+                            clearInterval(interval);
+                            target.innerText = finalWord;
+                        }
+                    }, 50);
+                    obs.unobserve(target);
+                }
+            });
+        }, { threshold: 0.5 });
+        scrambles.forEach(scramble => scrambleObserver.observe(scramble));
     </script>
 </body>
 </html>
 
 
-
 ```
-
