@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOR Ireland | Private Access Authority</title>
+    
+    <!-- Google Fonts: Playfair Display (Serif) and Inter (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05120C',    // Ultra-deep green/black
+                            green: '#0D2B1A',   // Aristocratic Irish green
+                            light: '#F4F7F5',   // Cool off-white
+                            sage: '#E3EAE5',    // Soft elegant green
+                            gold: '#B89753',    // Muted, antique champagne gold
+                            goldhover: '#9a7c3e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "linear-gradient(to bottom, rgba(45, 106, 79, 0.7), rgba(5, 18, 12, 0.95)), url('https://images.unsplash.com/photo-1564560548175-7b561c472856?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')",
+                    },
+                    animation: {
+                        'kenburns': 'kenburns 20s ease-out infinite alternate',
+                    },
+                    keyframes: {
+                        kenburns: {
+                            '0%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(1.05)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons & Leaflet JS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body {
+            background-color: #05120C;
+            color: #F4F7F5;
+        }
+        
+        .glass-nav {
+            background: rgba(227, 234, 229, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 0.5px solid rgba(184, 151, 83, 0.2);
+        }
+
+        .img-zoom-container {
+            overflow: hidden;
+            perspective: 1000px;
+        }
+        .img-zoom {
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .img-zoom-container:hover .img-zoom {
+            transform: scale(1.05);
+        }
+
+        /* 3D Tilt utility */
+        .tilt-element {
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-style: preserve-3d;
+        }
+
+        /* Micro-interactions */
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(184, 151, 83, 0.2);
+        }
+
+        /* Cinematic Background container */
+        .bg-cinematic {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-cinematic div {
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* SVG Map Sign Animation */
+        .draw-path {
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+        }
+        .draw-path.active {
+            animation: drawPath 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+        .text-fill {
+            fill: transparent;
+            transition: fill 0.8s ease-out 2.8s;
+        }
+        .text-fill.active {
+            fill: #9a3412; /* Authentic Rust Colour */
+        }
+
+        /* Leaflet Overrides for Luxury Look */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+        .leaflet-container {
+            background: transparent !important;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-gold selection:text-white overflow-x-hidden font-sans text-[13px] leading-[1.8] font-light">
+
+    <!-- Preloader -->
+    <div id="preloader" class="fixed inset-0 z-[100] bg-brand-dark flex flex-col items-center justify-center transition-opacity duration-1000">
+        <h2 id="failte-text" class="font-serif text-brand-gold italic text-4xl md:text-5xl mb-6 opacity-0 transition-opacity duration-1000 tracking-wide">Fáilte</h2>
+        <img id="preloader-logo" src="https://www.jorireland.com/hubfs/joe%20oreilly%20ireland%20dmc%20and%20tour%20operator%20logo%20dark.svg" alt="JOR Ireland DMC" class="h-20 md:h-32 lg:h-40 w-auto max-w-[80vw] object-contain brightness-0 invert opacity-0 transition-opacity duration-1000">
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-[2000ms] py-8 border-b border-transparent">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="#" class="group flex flex-col items-center cursor-pointer audio-trigger">
+                <img id="nav-logo-img" src="https://www.jorireland.com/hubfs/joe%20oreilly%20ireland%20dmc%20and%20tour%20operator%20logo%20dark.svg" alt="JOR Ireland DMC" class="h-12 md:h-16 lg:h-[4.5rem] w-auto max-w-[280px] object-contain transition-all duration-[2000ms] brightness-0 invert">
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center space-x-12">
+                <a href="#expertise" class="text-[11px] font-light text-white/70 hover:text-brand-gold tracking-[0.2em] transition-colors nav-link uppercase">Commissions</a>
+                <a href="#map-journey" class="text-[11px] font-light text-white/70 hover:text-brand-gold tracking-[0.2em] transition-colors nav-link uppercase">The Journey</a>
+                <a href="#collection" class="text-[11px] font-light text-white/70 hover:text-brand-gold tracking-[0.2em] transition-colors nav-link uppercase">Private Collection</a>
+                <a href="#leadership" class="text-[11px] font-light text-white/70 hover:text-brand-gold tracking-[0.2em] transition-colors nav-link uppercase">Legacy</a>
+                <a href="#contact" class="px-6 py-2 border-[0.5px] border-brand-gold/50 text-brand-gold text-[10px] uppercase tracking-[0.25em] transition-all duration-700 hover:bg-brand-gold hover:text-brand-dark btn-glow audio-trigger">
+                    Request Consideration
+                </a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none audio-trigger">
+                <i data-lucide="menu" class="w-6 h-6 stroke-[1.5]"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-brand-dark z-40 transform translate-x-full transition-transform duration-700 flex flex-col items-center justify-center space-y-8 backdrop-blur-xl">
+        <button id="close-menu-btn" class="absolute top-8 right-6 text-brand-gold focus:outline-none audio-trigger">
+            <i data-lucide="x" class="w-8 h-8 stroke-[1]"></i>
+        </button>
+        <a href="#expertise" class="mobile-link text-2xl font-serif text-white hover:text-brand-gold transition-colors italic tracking-wide">Commissions</a>
+        <a href="#map-journey" class="mobile-link text-2xl font-serif text-white hover:text-brand-gold transition-colors italic tracking-wide">The Journey</a>
+        <a href="#collection" class="mobile-link text-2xl font-serif text-white hover:text-brand-gold transition-colors italic tracking-wide">Private Collection</a>
+        <a href="#leadership" class="mobile-link text-2xl font-serif text-white hover:text-brand-gold transition-colors italic tracking-wide">Legacy</a>
+        <a href="#contact" class="mobile-link mt-8 px-8 py-3 border-[0.5px] border-brand-gold text-brand-gold text-[11px] uppercase tracking-[0.2em] audio-trigger">Request Consideration</a>
+    </div>
+
+    <!-- Hero Section (Cinematic) -->
+    <header class="relative w-full h-screen flex items-center justify-center overflow-hidden">
+        <div class="bg-cinematic">
+            <div class="bg-hero-pattern animate-kenburns"></div>
+        </div>
+        
+        <div class="relative z-10 text-center px-6 max-w-6xl mx-auto mt-16 flex flex-col items-center">
+            <p class="text-brand-gold uppercase tracking-[0.4em] text-xs md:text-sm font-medium mb-8 reveal opacity-0 translate-y-8">Ireland's Private Access Authority</p>
+            
+            <div class="reveal opacity-0 translate-y-8 max-w-5xl mx-auto mb-12" style="transition-delay: 200ms;">
+                <h1 class="font-serif text-6xl md:text-7xl lg:text-[7rem] text-white leading-[1.1] mb-10 tracking-tight">
+                    Curating the <br/><span class="italic font-light text-brand-gold">Extraordinary.</span>
+                </h1>
+                
+                <p class="text-white/80 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed">
+                    By invitation or referral, we curate a limited number of bespoke journeys and elite corporate commissions each season.
+                </p>
+            </div>
+
+            <div class="reveal opacity-0 translate-y-8" style="transition-delay: 400ms;">
+                <a href="#expertise" class="inline-flex flex-col items-center gap-4 text-white uppercase tracking-[0.3em] text-[10px] hover:text-brand-gold transition-colors group audio-trigger">
+                    <span>Explore Commissions</span>
+                    <div class="w-px h-12 bg-brand-gold/30 group-hover:h-16 transition-all duration-700"></div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Map Graphic -->
+        <div class="absolute bottom-12 right-12 z-20 hidden lg:block reveal opacity-0" style="transition-delay: 600ms;">
+            <img src="https://www.jorireland.com/hubfs/ireland%20dmc%20map%20to%20office%20locations%20homepage%20call%20to%20action-02-02-02.svg" alt="Ireland Office Locations Map" class="w-56 opacity-50 hover:opacity-100 transition-opacity duration-1000 cursor-pointer">
+        </div>
+    </header>
+
+    <!-- Social Proof / Affiliations -->
+    <section class="bg-brand-sage py-16 text-center border-b border-brand-gold/20">
+        <p class="text-[10px] uppercase tracking-[0.4em] text-brand-dark/50 mb-8 font-medium">Trusted by the World's Leading Consortiums</p>
+        <div class="max-w-5xl mx-auto px-6 flex flex-wrap justify-center gap-12 md:gap-24 opacity-60 grayscale items-center">
+            <span class="font-serif text-xl tracking-widest text-brand-dark">VIRTUOSO</span>
+            <span class="font-serif text-xl tracking-widest text-brand-dark">CONDÉ NAST</span>
+            <span class="font-sans font-light text-lg tracking-[0.3em] text-brand-dark uppercase">Forbes</span>
+            <span class="font-serif text-xl tracking-widest text-brand-dark italic">Michelin</span>
+        </div>
+    </section>
+
+    <!-- Signature Experiences -->
+    <section class="py-24 md:py-32 bg-brand-light relative z-20">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 reveal">
+                <div class="max-w-xl">
+                    <p class="text-brand-gold uppercase tracking-[0.3em] text-[10px] font-medium mb-4">Unpublished Access</p>
+                    <h2 class="font-serif text-4xl md:text-5xl text-brand-dark mb-6">Signature <span class="italic font-light">Experiences.</span></h2>
+                    <p class="text-brand-dark/60">Moments strictly unavailable to the public. Cultivated through decades of deep-rooted relationships.</p>
+                </div>
+                <a href="#contact" class="hidden md:inline-block border-b border-brand-gold pb-1 text-[10px] uppercase tracking-[0.2em] text-brand-dark hover:text-brand-gold transition-colors mt-8 audio-trigger">Enquire Regarding Access</a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Exp 1 -->
+                <div class="group cursor-pointer">
+                    <div class="overflow-hidden aspect-[4/5] mb-6 bg-brand-dark/10">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSavfQXuBtQUXtM4xk6Z9Ei226Nn936d6qZQj8Wa9SCK3SumbSs9p2-3UIV&s=10" alt="Castle Dining" class="color-reveal w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-all duration-[3000ms]">
+                    </div>
+                    <p class="text-[10px] text-brand-gold uppercase tracking-[0.2em] mb-2">Heritage</p>
+                    <h3 class="font-serif text-2xl text-brand-dark mb-3">After-Hours Castle Dining</h3>
+                    <p class="text-brand-dark/60 text-[13px] leading-relaxed">Private culinary experiences curated by Michelin-starred chefs within the closed walls of Ireland's most historic estates.</p>
+                </div>
+                <!-- Exp 2 -->
+                <div class="group cursor-pointer md:mt-16">
+                    <div class="overflow-hidden aspect-[4/5] mb-6 bg-brand-dark/10">
+                        <img src="https://olliestours.com/wp-content/uploads/2024/03/Cliffs-of-Moher_master-1-1024x768.jpg" alt="Aviation" class="color-reveal w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-all duration-[3000ms]">
+                    </div>
+                    <p class="text-[10px] text-brand-gold uppercase tracking-[0.2em] mb-2">Aviation</p>
+                    <h3 class="font-serif text-2xl text-brand-dark mb-3">Cliffs of Moher Heli-Tour</h3>
+                    <p class="text-brand-dark/60 text-[13px] leading-relaxed">Avoid the crowds with chartered private aviation along the rugged Wild Atlantic Way, landing for a secluded coastal toast.</p>
+                </div>
+                <!-- Exp 3 -->
+                <div class="group cursor-pointer">
+                    <div class="overflow-hidden aspect-[4/5] mb-6 bg-brand-dark/10">
+                        <img src="https://assets-eu-01.kc-usercontent.com/aa24ba70-9a12-01ae-259b-7ef588a0b2ef/b8f52e61-74a4-4451-ac19-c42c1cdba78b/midleton-whiskey-distillery.jpg?w=674&q=66&h=364&fit=crop&fm=jpg" alt="Midleton Very Rare" class="color-reveal w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-all duration-[3000ms]">
+                    </div>
+                    <p class="text-[10px] text-brand-gold uppercase tracking-[0.2em] mb-2">Artisan</p>
+                    <h3 class="font-serif text-2xl text-brand-dark mb-3">Midleton Very Rare Experience</h3>
+                    <p class="text-brand-dark/60 text-[13px] leading-relaxed">Access the locked maturation rooms of the Midleton Distillery to taste from exclusive casks and secure your own rare vintage.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Animated Map Journey Section (Integrated from React) -->
+    <section id="map-journey" class="py-24 md:py-32 bg-brand-dark relative z-20 border-t border-brand-gold/20">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+                <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-brand-gold mb-3">
+                    Chart Your Course
+                </p>
+                <h2 class="font-serif text-4xl md:text-5xl text-white">
+                    The Wild Atlantic <span class="italic font-light">Way.</span>
+                </h2>
+            </div>
+
+            <div class="w-full flex flex-col md:flex-row gap-12 items-stretch reveal" style="transition-delay: 200ms;">
+                
+                <!-- Left: The Leaflet Map -->
+                <div class="w-full md:w-3/5 relative h-[400px] md:h-[500px] border-[0.5px] border-white/20 p-2 bg-brand-green/30">
+                    <div id="waw-map" class="w-full h-full grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-1000 z-10"></div>
+                    <div class="absolute top-6 right-6 bg-brand-dark/80 backdrop-blur-md border-[0.5px] border-brand-gold/30 px-4 py-2 text-[9px] font-medium tracking-[0.2em] uppercase text-brand-gold shadow-sm z-[400]">
+                        Charting Route
+                    </div>
+                </div>
+
+                <!-- Right: The Signpost Drawing -->
+                <div id="signpost-container" class="w-full md:w-2/5 flex">
+                    <div class="bg-white p-8 border-[0.5px] border-brand-dark/10 flex flex-col justify-center items-center text-center w-full relative overflow-hidden rounded-sm">
+                        
+                        <!-- Very subtle background texture for the white card -->
+                        <div class="absolute inset-0 opacity-[0.03] bg-[url('https://images.unsplash.com/photo-1604537466158-719b1972027b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover"></div>
+
+                        <div class="relative z-10 flex flex-col items-center">
+                            <p class="text-[9px] font-medium tracking-[0.3em] uppercase text-brand-green mb-2">
+                                Discovery Point
+                            </p>
+                            
+                            <!-- Animated SVG -->
+                            <div id="svg-trigger" class="flex justify-center items-center py-4 transform scale-75 opacity-0 transition-all duration-[1500ms] ease-out">
+                                <svg width="220" height="260" viewBox="0 0 100 100" class="drop-shadow-xl">
+                                    <path d="M 15 90 L 80 90" fill="none" stroke="#9a3412" stroke-width="3" stroke-linecap="square" class="draw-path svg-path"/>
+                                    <path d="M 40 90 L 40 20" fill="none" stroke="#9a3412" stroke-width="4" stroke-linecap="square" class="draw-path svg-path" style="animation-delay: 0.4s"/>
+                                    <path d="M 40 20 L 52 16 L 57 24 L 62 16 L 67 24 L 72 16 L 77 24" fill="none" stroke="#9a3412" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter" class="draw-path svg-path" style="animation-delay: 0.8s"/>
+                                    <path d="M 25 90 L 25 45" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="square" class="draw-path svg-path" style="animation-delay: 1.2s"/>
+                                    <g stroke="#9a3412" stroke-width="0.5" font-size="8" font-family="sans-serif" font-weight="bold" class="draw-path text-fill svg-path" style="animation-delay: 1.6s; text-anchor: middle;">
+                                        <text x="32.5" y="53">C</text>
+                                        <text x="32.5" y="64">O</text>
+                                        <text x="32.5" y="75">R</text>
+                                        <text x="32.5" y="86">K</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            
+                            <p class="text-brand-dark/70 mt-4 max-w-[220px] mx-auto text-[13px] font-light leading-relaxed">
+                                Follow the iconic signposts along 2,500km of breathtaking coastal roads on a private, chauffeur-driven exploration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Expertise Section (3D Tilt Grid) -->
+    <section id="expertise" class="py-24 md:py-32 bg-[#030906] text-white relative border-t border-brand-gold/10">
+        <div class="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-20 reveal">
+                <p class="text-brand-gold uppercase tracking-[0.4em] text-[10px] font-medium mb-4">Our Disciplines</p>
+                <h2 class="font-serif text-4xl md:text-5xl mb-8">Bespoke <span class="italic font-light">Commissions.</span></h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 perspective-container">
+                
+                <!-- Service 1: Luxury F.I.T -->
+                <div class="group relative h-[450px] img-zoom-container reveal cursor-pointer tilt-card">
+                    <img src="https://www.jorireland.com/hubfs/fit-test-24.jpg" alt="Private F.I.T" class="absolute inset-0 w-full h-full object-cover img-zoom grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#05120C] via-[#05120C]/40 to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000"></div>
+                    <div class="absolute inset-0 p-8 flex flex-col justify-end border-[0.5px] border-white/5 m-3 group-hover:border-brand-gold/30 transition-colors duration-1000">
+                        <p class="text-brand-gold text-[9px] uppercase tracking-[0.3em] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">Concierge-Led</p>
+                        <h3 class="font-serif text-2xl mb-2 group-hover:-translate-y-2 transition-transform duration-700">Private F.I.T</h3>
+                    </div>
+                </div>
+
+                <!-- Service 2: Golf Trips -->
+                <div class="group relative h-[450px] img-zoom-container reveal cursor-pointer tilt-card" style="transition-delay: 100ms;">
+                    <img src="https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Elite Golf" class="absolute inset-0 w-full h-full object-cover img-zoom grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#05120C] via-[#05120C]/40 to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000"></div>
+                    <div class="absolute inset-0 p-8 flex flex-col justify-end border-[0.5px] border-white/5 m-3 group-hover:border-brand-gold/30 transition-colors duration-1000">
+                        <p class="text-brand-gold text-[9px] uppercase tracking-[0.3em] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">Championship Links</p>
+                        <h3 class="font-serif text-2xl mb-2 group-hover:-translate-y-2 transition-transform duration-700">Elite Golf</h3>
+                    </div>
+                </div>
+
+                <!-- Service 3: M.I.C.E DMC -->
+                <div class="group relative h-[450px] img-zoom-container reveal cursor-pointer tilt-card" style="transition-delay: 200ms;">
+                    <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Executive M.I.C.E" class="absolute inset-0 w-full h-full object-cover img-zoom grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#05120C] via-[#05120C]/40 to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000"></div>
+                    <div class="absolute inset-0 p-8 flex flex-col justify-end border-[0.5px] border-white/5 m-3 group-hover:border-brand-gold/30 transition-colors duration-1000">
+                        <p class="text-brand-gold text-[9px] uppercase tracking-[0.3em] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">Corporate Strategy</p>
+                        <h3 class="font-serif text-2xl mb-2 group-hover:-translate-y-2 transition-transform duration-700">Executive M.I.C.E</h3>
+                    </div>
+                </div>
+
+                <!-- Service 4: Equestrian -->
+                <div class="group relative h-[450px] img-zoom-container reveal cursor-pointer tilt-card" style="transition-delay: 300ms;">
+                    <img src="https://www.jorireland.com/hubfs/picture-of-equestrian-trip-and-tour-operator-ireland-dmc.jpg" alt="Equestrian" class="absolute inset-0 w-full h-full object-cover img-zoom grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#05120C] via-[#05120C]/40 to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000"></div>
+                    <div class="absolute inset-0 p-8 flex flex-col justify-end border-[0.5px] border-white/5 m-3 group-hover:border-brand-gold/30 transition-colors duration-1000">
+                        <p class="text-brand-gold text-[9px] uppercase tracking-[0.3em] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">The Sport of Kings</p>
+                        <h3 class="font-serif text-2xl mb-2 group-hover:-translate-y-2 transition-transform duration-700">Equestrian</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leadership / Dynasty Section -->
+    <section id="leadership" class="py-24 md:py-32 bg-brand-green relative z-20 border-t border-brand-gold/20">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                <div class="lg:col-span-5 reveal relative">
+                    <div class="aspect-[3/4] overflow-hidden border-[0.5px] border-brand-gold/30">
+                        <img src="https://www.jorireland.com/hs-fs/hubfs/bernard%20oreilly-1.jpg?width=998&height=999&name=bernard%20oreilly-1.jpg" alt="Bernard O'Reilly – CEO" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-[2000ms]">
+                    </div>
+                    <div class="absolute -top-4 -left-4 w-24 h-24 border-t-[0.5px] border-l-[0.5px] border-brand-gold/50 z-10"></div>
+                    <div class="absolute -bottom-4 -right-4 w-24 h-24 border-b-[0.5px] border-r-[0.5px] border-brand-gold/50 z-10"></div>
+                </div>
+                <div class="lg:col-span-7 reveal" style="transition-delay: 200ms;">
+                    <p class="text-brand-gold uppercase tracking-[0.4em] text-[10px] font-medium mb-6">Third Generation Leadership</p>
+                    <h2 class="font-serif text-4xl md:text-5xl text-white mb-2">Bernard O'Reilly</h2>
+                    <p class="text-white/40 tracking-[0.2em] text-[11px] uppercase mb-10">Chief Executive Officer</p>
+                    
+                    <h3 class="font-serif text-2xl text-white mb-8 leading-relaxed italic pr-4">
+                        "True luxury in travel is no longer about opulence; it is about absolute frictionlessness and uncompromising access to the authentic soul of a destination."
+                    </h3>
+                    <p class="text-white/60 leading-loose font-light mb-10 max-w-xl">
+                        Continuing a meticulous legacy established in 1966, Bernard represents the modern era of aristocratic Irish hospitality. Under his stewardship, JOR Ireland does not orchestrate 'tours'—we design highly sensitive, concierge-led commissions for the world's most exacting clientele across six decades.
+                    </p>
+
+                    <!-- Celtic Motif Divider -->
+                    <div class="flex items-center gap-4 opacity-50">
+                        <div class="w-12 h-px bg-brand-gold"></div>
+                        <div class="w-2 h-2 rotate-45 border-[0.5px] border-brand-gold"></div>
+                        <div class="w-12 h-px bg-brand-gold"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Black Card Tier Section -->
+    <section id="collection" class="py-24 md:py-32 bg-[#030906] text-white border-t-[0.5px] border-white/5">
+        <div class="max-w-4xl mx-auto px-6 text-center reveal">
+            <i data-lucide="key" class="w-8 h-8 text-brand-gold mx-auto mb-8 stroke-[1]"></i>
+            <h2 class="font-serif text-3xl md:text-4xl text-brand-gold mb-6 tracking-wide">The JOR Private Collection</h2>
+            <p class="text-white/50 text-[13px] leading-loose max-w-2xl mx-auto mb-10">
+                Our highest echelon of service, strictly reserved for returning clients and vetted referrals. The Private Collection encompasses dedicated full-time concierge support, chartered aviation, and access to Ireland's most heavily guarded private estates.
+            </p>
+            <p class="text-[9px] uppercase tracking-[0.4em] text-white/30">By Invitation Only</p>
+        </div>
+    </section>
+
+    <!-- Elite Social Proof Quote -->
+    <section class="relative py-32 bg-brand-light overflow-hidden flex items-center justify-center border-t border-brand-gold/10">
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center reveal">
+            <h3 class="font-serif text-2xl md:text-4xl text-brand-dark leading-relaxed mb-10 italic">
+                "Their discretion, precision, and ability to secure the impossible makes them the only partner we trust when sending our executive board to Europe."
+            </h3>
+            <p class="text-brand-dark font-medium text-[11px] uppercase tracking-[0.2em]">Managing Director</p>
+            <p class="text-brand-gold text-[10px] uppercase tracking-[0.3em] mt-2">Fortune 500 Financial Institution, New York</p>
+        </div>
+    </section>
+
+    <!-- Concierge Application Form -->
+    <section id="contact" class="py-24 md:py-32 bg-brand-green border-t-[0.5px] border-brand-gold/20">
+        <div class="max-w-3xl mx-auto px-6 reveal">
+            <div class="text-center mb-16">
+                <p class="text-brand-gold text-[10px] tracking-[0.3em] uppercase mb-4">Accepting a limited number of clients for Summer 2026</p>
+                <h2 class="font-serif text-4xl md:text-5xl text-white mb-6">Private <span class="italic text-brand-gold">Consultation.</span></h2>
+                <p class="text-white/60 font-light text-[13px] leading-loose">
+                    Submit your details below to request a private call with our senior curation team. We review all applications within 48 hours.
+                </p>
+            </div>
+
+            <form class="space-y-10" onsubmit="event.preventDefault(); alert('Application received. Our concierge desk will contact you shortly.');">
+                
+                <!-- Custom Radio Buttons for Intention -->
+                <div>
+                    <label class="block text-[10px] text-brand-gold uppercase tracking-[0.2em] mb-4">Nature of Commission</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="type" class="peer sr-only" checked>
+                            <div class="border-[0.5px] border-white/20 text-white/50 py-3 text-center text-[11px] uppercase tracking-widest peer-checked:border-brand-gold peer-checked:text-brand-gold transition-all">Private Journey</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="type" class="peer sr-only">
+                            <div class="border-[0.5px] border-white/20 text-white/50 py-3 text-center text-[11px] uppercase tracking-widest peer-checked:border-brand-gold peer-checked:text-brand-gold transition-all">Executive M.I.C.E</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="type" class="peer sr-only">
+                            <div class="border-[0.5px] border-white/20 text-white/50 py-3 text-center text-[11px] uppercase tracking-widest peer-checked:border-brand-gold peer-checked:text-brand-gold transition-all">Elite Golf</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="type" class="peer sr-only">
+                            <div class="border-[0.5px] border-white/20 text-white/50 py-3 text-center text-[11px] uppercase tracking-widest peer-checked:border-brand-gold peer-checked:text-brand-gold transition-all">Referral</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="relative border-b-[0.5px] border-white/20 focus-within:border-brand-gold transition-colors">
+                        <input type="text" placeholder="Principal Name" class="w-full bg-transparent py-2 outline-none text-[13px] font-light text-white placeholder-white/30" required>
+                    </div>
+                    <div class="relative border-b-[0.5px] border-white/20 focus-within:border-brand-gold transition-colors">
+                        <input type="email" placeholder="Direct Contact Email" class="w-full bg-transparent py-2 outline-none text-[13px] font-light text-white placeholder-white/30" required>
+                    </div>
+                </div>
+                
+                <div class="relative border-b-[0.5px] border-white/20 focus-within:border-brand-gold transition-colors">
+                    <textarea placeholder="Briefly detail your preliminary vision or requirements..." rows="1" class="w-full bg-transparent py-2 outline-none text-[13px] font-light text-white placeholder-white/30 resize-none overflow-hidden" oninput="this.style.height = '';this.style.height = this.scrollHeight + 'px'"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full border-[0.5px] border-brand-gold text-brand-gold py-5 uppercase tracking-[0.3em] text-[10px] hover:bg-brand-gold hover:text-brand-dark transition-colors duration-700 mt-8 btn-glow audio-trigger">
+                    Request Consideration
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark text-white pt-24 pb-12 border-t-[0.5px] border-white/5">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 border-b-[0.5px] border-white/10 pb-12">
+                <a href="#" class="inline-block mb-8 md:mb-0">
+                    <img src="https://www.jorireland.com/hubfs/joe%20oreilly%20ireland%20dmc%20and%20tour%20operator%20logo%20dark.svg" alt="JOR Ireland DMC" class="h-16 md:h-20 lg:h-24 w-auto max-w-[300px] object-contain brightness-0 invert opacity-60 hover:opacity-100 transition-opacity duration-700">
+                </a>
+                <div class="text-left md:text-right">
+                    <p class="font-serif text-xl italic text-white/50 mb-2">Sláinte.</p>
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-brand-gold">Ireland's Private Access Authority</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center text-[10px] text-white/30 font-light tracking-widest uppercase">
+                <p>&copy; 2026 Joe O'Reilly Ireland. All rights reserved.</p>
+                <div class="flex space-x-8 mt-6 md:mt-0">
+                    <a href="#" class="hover:text-brand-gold transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-brand-gold transition-colors">Terms</a>
+                    <a href="#" class="hover:text-brand-gold transition-colors">Concierge Login</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+
+        // Audio Context Setup (Subtle luxury 'click' interaction)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSubtleClick() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0.015, audioCtx.currentTime); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        document.querySelectorAll('.audio-trigger').forEach(el => {
+            el.addEventListener('click', playSubtleClick);
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // Premium Preloader Sequence (Faster, Concurrent Loading)
+            setTimeout(() => {
+                const failte = document.getElementById('failte-text');
+                const logo = document.getElementById('preloader-logo');
+                
+                // Show both instantly
+                failte.style.opacity = '1';
+                logo.style.opacity = '0.8';
+                
+                setTimeout(() => {
+                    const preloader = document.getElementById('preloader');
+                    preloader.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        preloader.style.display = 'none';
+                        
+                        // Initialize Navbar
+                        const navbar = document.getElementById('navbar');
+                        const navLogoImg = document.getElementById('nav-logo-img');
+                        const navLinks = document.querySelectorAll('.nav-link');
+                        const mobileBtn = document.getElementById('mobile-menu-btn');
+                        
+                        window.addEventListener('scroll', () => {
+                            if (window.scrollY > 50) {
+                                navbar.classList.add('glass-nav', 'py-4');
+                                navbar.classList.remove('py-8', 'border-transparent');
+                                if(navLogoImg) navLogoImg.classList.remove('brightness-0', 'invert');
+                                mobileBtn.classList.remove('text-white');
+                                mobileBtn.classList.add('text-brand-dark');
+                                navLinks.forEach(link => {
+                                    link.classList.remove('text-white/70');
+                                    link.classList.add('text-brand-dark/80');
+                                });
+                            } else {
+                                navbar.classList.remove('glass-nav', 'py-4');
+                                navbar.classList.add('py-8', 'border-transparent');
+                                if(navLogoImg) navLogoImg.classList.add('brightness-0', 'invert');
+                                mobileBtn.classList.add('text-white');
+                                mobileBtn.classList.remove('text-brand-dark');
+                                navLinks.forEach(link => {
+                                    link.classList.add('text-white/70');
+                                    link.classList.remove('text-brand-dark/80');
+                                });
+                            }
+                        });
+                    }, 1000);
+                }, 1500); // Only wait 1.5 seconds before hiding
+            }, 100);
+
+            // Scroll Reveal Animation (Intersection Observer)
+            const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-8');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                el.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-1000', 'ease-out');
+                observer.observe(el);
+            });
+
+            // Color Reveal for Signature Experiences
+            const colorObserverOptions = { root: null, rootMargin: '0px 0px -15% 0px', threshold: 0.1 };
+            const colorObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.remove('grayscale', 'opacity-80');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, colorObserverOptions);
+
+            document.querySelectorAll('.color-reveal').forEach(el => {
+                colorObserver.observe(el);
+            });
+
+            // 3D Tilt Effect on Expertise Cards
+            const tiltCards = document.querySelectorAll('.tilt-card');
+            tiltCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -5;
+                    const rotateY = ((x - centerX) / centerX) * 5;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                    card.style.zIndex = "10";
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                    card.style.zIndex = "1";
+                });
+                card.classList.add('tilt-element');
+            });
+
+            // Mobile Menu Logic
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const closeMenuBtn = document.getElementById('close-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+            mobileMenuBtn.addEventListener('click', () => { mobileMenu.classList.remove('translate-x-full'); });
+            const closeMenu = () => { mobileMenu.classList.add('translate-x-full'); };
+            closeMenuBtn.addEventListener('click', closeMenu);
+            mobileLinks.forEach(link => link.addEventListener('click', closeMenu));
+
+
+            // === Leaflet Map & Sign Animation Logic ===
+            let mapInitialized = false;
+
+            const initWAWMap = () => {
+                if (mapInitialized) return;
+                mapInitialized = true;
+
+                // Initialize Leaflet Map
+                const map = L.map('waw-map', {
+                    zoomControl: false,
+                    scrollWheelZoom: false,
+                    dragging: false, // Prevents accidental drag on luxury sites
+                    touchZoom: false
+                });
+
+                // High-End Dark Theme Map (CartoDB Dark Matter)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: ''
+                }).addTo(map);
+
+                const wawRoute = [
+                    [55.38, -7.38], [55.25, -7.26], [55.00, -7.32], [55.13, -7.46], [55.27, -7.63],
+                    [55.04, -7.69], [55.18, -7.97], [55.03, -8.17], [54.83, -8.45], [54.68, -8.74],
+                    [54.63, -8.44], [54.65, -8.11], [54.50, -8.19], [54.45, -8.53], [54.27, -8.47],
+                    [54.28, -8.96], [54.11, -9.15], [54.31, -9.34], [54.22, -10.00], [54.00, -9.88],
+                    [53.96, -10.00], [53.80, -9.52], [53.76, -9.88], [53.59, -9.69], [53.49, -10.02],
+                    [53.39, -9.92], [53.24, -9.30], [53.27, -9.05], [53.14, -8.93], [53.11, -9.14],
+                    [53.01, -9.40], [52.97, -9.43], [52.83, -9.43], [52.68, -9.64], [52.56, -9.93],
+                    [52.61, -9.38], [52.57, -9.37], [52.51, -9.67], [52.26, -9.70], [52.24, -10.01],
+                    [52.14, -10.27], [52.10, -10.45], [52.14, -9.69], [52.10, -9.78], [51.94, -10.22],
+                    [51.88, -10.36], [51.82, -10.17], [51.76, -10.01], [51.88, -9.58], [51.75, -9.54],
+                    [51.65, -9.91], [51.58, -10.16], [51.68, -9.45], [51.60, -9.52], [51.52, -9.53],
+                    [51.45, -9.81], [51.51, -9.37], [51.55, -9.26], [51.52, -9.19], [51.57, -9.00],
+                    [51.62, -8.88], [51.61, -8.53], [51.70, -8.52]
+                ];
+
+                map.fitBounds(L.latLngBounds(wawRoute), { padding: [30, 30] });
+
+                let interpolatedPoints = [];
+                for (let i = 0; i < wawRoute.length - 1; i++) {
+                    const start = wawRoute[i];
+                    const end = wawRoute[i + 1];
+                    const steps = 6; 
+                    for (let j = 0; j < steps; j++) {
+                        interpolatedPoints.push([
+                            start[0] + (end[0] - start[0]) * (j / steps),
+                            start[1] + (end[1] - start[1]) * (j / steps)
+                        ]);
+                    }
+                }
+                interpolatedPoints.push(wawRoute[wawRoute.length - 1]);
+
+                // The Brand Gold Route Line
+                const routeLine = L.polyline([], {
+                    color: '#B89753', // Champagne Gold
+                    weight: 3,
+                    opacity: 0.9,
+                    lineJoin: 'round'
+                }).addTo(map);
+
+                // Start Marker (Gold)
+                L.circleMarker(wawRoute[0], {
+                    radius: 4, fillColor: '#B89753', color: '#05120C', weight: 1, opacity: 1, fillOpacity: 1
+                }).addTo(map);
+
+                let currentIndex = 0;
+                const animateMap = () => {
+                    if (currentIndex < interpolatedPoints.length) {
+                        routeLine.addLatLng(interpolatedPoints[currentIndex]);
+                        currentIndex++;
+                        requestAnimationFrame(animateMap);
+                    } else {
+                        // End Marker
+                        L.circleMarker(wawRoute[wawRoute.length - 1], {
+                            radius: 4, fillColor: '#B89753', color: '#05120C', weight: 1, opacity: 1, fillOpacity: 1
+                        }).addTo(map);
+                    }
+                };
+                
+                // Start map animation immediately upon trigger
+                requestAnimationFrame(animateMap);
+            };
+
+            // 1. Trigger Map Animation when the map comes into view
+            const mapObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        initWAWMap();
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            const mapContainer = document.getElementById('waw-map');
+            if (mapContainer) {
+                mapObserver.observe(mapContainer);
+            }
+
+            // 2. Trigger Signpost Animation ONLY when the signpost comes into view
+            const signObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Trigger SVG CSS animation classes
+                        document.querySelectorAll('.svg-path').forEach(path => {
+                            path.classList.add('active');
+                        });
+
+                        // Trigger Sign Grow Animation
+                        const svgTrigger = document.getElementById('svg-trigger');
+                        if (svgTrigger) {
+                            svgTrigger.classList.remove('scale-75', 'opacity-0');
+                            svgTrigger.classList.add('scale-100', 'opacity-100');
+                        }
+                        
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 }); // Requires 50% of the sign container to be visible before starting
+
+            const signpostContainer = document.getElementById('signpost-container');
+            if (signpostContainer) {
+                signObserver.observe(signpostContainer);
+            }
+        });
+    </script>
+</body>
+</html>
