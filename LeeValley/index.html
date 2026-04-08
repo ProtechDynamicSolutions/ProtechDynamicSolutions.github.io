@@ -110,7 +110,6 @@
 
                 // 3. Smart Auto-Detect: If headers are missing or columns weren't found
                 if (nameIdx === -1 || hcIdx === -1) {
-                    // Look at the first 5 rows of data to guess the columns
                     const sampleRows = rows.slice(dataStartIndex, Math.min(dataStartIndex + 5, rows.length));
                     const maxCols = Math.max(...sampleRows.map(r => r.length));
                     
@@ -121,35 +120,33 @@
                         row.forEach((cell, colIdx) => {
                             if (!cell) return;
                             
-                            // Does it look like a name? (Contains letters, avoids long ID numbers)
+                            // Does it look like a name?
                             if (/[a-zA-Z]/.test(cell) && !/[0-9]{3,}/.test(cell)) {
-                                nameScores[colIdx] += cell.includes(',') ? 2 : 1; // Commas strongly indicate "Surname, Firstname"
+                                nameScores[colIdx] += cell.includes(',') ? 2 : 1; 
                             }
                             
-                            // Does it look like a handicap? (Numbers between -10 and 60)
+                            // Does it look like a handicap?
                             const numStr = cell.replace(/[^0-9.-]+/g, "");
                             if (numStr) {
                                 const num = parseFloat(numStr);
                                 if (!isNaN(num) && num >= -10 && num <= 60) {
-                                    hcScores[colIdx] += cell.includes('.') ? 2 : 1; // Decimals strongly indicate a handicap
+                                    hcScores[colIdx] += cell.includes('.') ? 2 : 1; 
                                 }
                             }
                         });
                     });
 
-                    // Assign columns based on highest scores
                     if (nameIdx === -1) {
                         const maxNameScore = Math.max(...nameScores);
                         nameIdx = maxNameScore > 0 ? nameScores.indexOf(maxNameScore) : 0;
                     }
                     if (hcIdx === -1) {
-                        hcScores[nameIdx] = -1; // Ensure it doesn't pick the name column for handicap
+                        hcScores[nameIdx] = -1; 
                         const maxHcScore = Math.max(...hcScores);
                         hcIdx = maxHcScore > -1 ? hcScores.indexOf(maxHcScore) : (maxCols > 1 ? 1 : 0);
                     }
                 }
 
-                // Extract the final players using our column indices
                 const players = [];
                 
                 for (let i = dataStartIndex; i < rows.length; i++) {
@@ -162,7 +159,6 @@
                     const hcString = hcRaw ? hcRaw.replace(/[^0-9.-]+/g, "") : "";
                     const hc = parseFloat(hcString);
                     
-                    // Only add if we have a valid name and valid number
                     if (name && /[a-zA-Z]/.test(name) && !isNaN(hc)) {
                         players.push({ name: name, handicap: hc });
                     }
@@ -274,8 +270,8 @@
             };
 
             return (
-                <div className="min-h-screen">
-                    <header className="bg-white shadow-sm border-b border-slate-200 py-6">
+                <div className="min-h-screen flex flex-col">
+                    <header className="bg-white shadow-sm border-b border-slate-200 py-6 shrink-0">
                         <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <img 
@@ -311,7 +307,7 @@
                         </div>
                     </header>
 
-                    <main className="max-w-6xl mx-auto px-4 py-8">
+                    <main className="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
                         {appState === 'paste' && (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden max-w-3xl mx-auto">
                                 <div className="p-8 border-b border-slate-100 bg-slate-50/50">
@@ -322,7 +318,7 @@
                                         <h2 className="text-xl font-semibold">Paste Excel Data</h2>
                                     </div>
                                     <p className="text-slate-600 text-sm ml-11">
-                                        Copy the columns from your Excel file (including the header row) and paste them below. The app will automatically find the <strong>Name</strong> and <strong>Handicap</strong> columns.
+                                        Copy the columns from your Excel file and paste them below. The app will automatically detect the <strong>Name</strong> and <strong>Handicap</strong> columns, even if there are no headers.
                                     </p>
                                 </div>
                                 
@@ -535,6 +531,15 @@
                             </div>
                         )}
                     </main>
+
+                    {/* Dave Maher Footer */}
+                    <footer className="w-full bg-white border-t border-slate-200 py-6 mt-auto shrink-0">
+                        <div className="max-w-6xl mx-auto px-4 text-center">
+                            <p className="text-sm text-slate-400 font-medium">
+                                Created by Dave Maher
+                            </p>
+                        </div>
+                    </footer>
                 </div>
             );
         };
