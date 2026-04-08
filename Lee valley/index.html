@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lee Valley Pairings</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (Stable Production Versions) -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (Compiles JSX in the browser) -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+
+    <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react">
+        const { useState, useEffect } = React;
+
+        // --- Inline SVG Icons ---
+        const IconClipboard = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        );
+        const IconUsers = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        );
+        const IconTrash = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        );
+        const IconSpreadsheet = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
+        );
+        const IconSettings = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        );
+        const IconAlert = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        );
+        const IconCheckCircle = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        );
+        const IconUserX = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></svg>
+        );
+        const IconPlus = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        );
+        const IconX = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        );
+
+        const App = () => {
+            const [appState, setAppState] = useState('paste');
+            const [pasteData, setPasteData] = useState('');
+            const [parsedPlayers, setParsedPlayers] = useState([]);
+            const [pairs, setPairs] = useState([]);
+            const [unpaired, setUnpaired] = useState([]);
+            const [exclusions, setExclusions] = useState([]);
+            const [exclP1, setExclP1] = useState('');
+            const [exclP2, setExclP2] = useState('');
+            const [error, setError] = useState('');
+
+            const handleParseData = () => {
+                setError('');
+                
+                if (!pasteData.trim()) {
+                    setError('Please paste some data from Excel first.');
+                    return;
+                }
+
+                // Split by line and tab, then clean up empty rows
+                const rows = pasteData.trim().split('\n')
+                    .map(r => r.split('\t').map(c => c.trim()))
+                    .filter(r => r.length > 0 && r.some(c => c !== ''));
+                
+                if (rows.length === 0) {
+                    setError('No valid data found.');
+                    return;
+                }
+
+                let hasHeaders = false;
+                let nameIdx = -1;
+                let hcIdx = -1;
+
+                // 1. Try to detect a header row
+                const firstRowStr = rows[0].join(' ').toUpperCase();
+                if (firstRowStr.includes('NAME') || firstRowStr.includes('HANDICAP') || firstRowStr.includes('HCP') || firstRowStr.includes('H/C')) {
+                    hasHeaders = true;
+                    const headers = rows[0].map(h => h.toUpperCase());
+                    nameIdx = headers.findIndex(h => h.includes('NAME') || h.includes('PLAYER'));
+                    hcIdx = headers.findIndex(h => h.includes('HANDICAP') || h === 'HCP' || h === 'H/C' || h === 'INDEX');
+                }
+
+                // 2. Determine where the actual player data starts
+                const dataStartIndex = hasHeaders ? 1 : 0;
+                
+                if (rows.length <= dataStartIndex) {
+                    setError('Not enough data rows found.');
+                    return;
+                }
+
+                // 3. Smart Auto-Detect: If headers are missing or columns weren't found
+                if (nameIdx === -1 || hcIdx === -1) {
+                    // Look at the first 5 rows of data to guess the columns
+                    const sampleRows = rows.slice(dataStartIndex, Math.min(dataStartIndex + 5, rows.length));
+                    const maxCols = Math.max(...sampleRows.map(r => r.length));
+                    
+                    let nameScores = Array(maxCols).fill(0);
+                    let hcScores = Array(maxCols).fill(0);
+
+                    sampleRows.forEach(row => {
+                        row.forEach((cell, colIdx) => {
+                            if (!cell) return;
+                            
+                            // Does it look like a name? (Contains letters, avoids long ID numbers)
+                            if (/[a-zA-Z]/.test(cell) && !/[0-9]{3,}/.test(cell)) {
+                                nameScores[colIdx] += cell.includes(',') ? 2 : 1; // Commas strongly indicate "Surname, Firstname"
+                            }
+                            
+                            // Does it look like a handicap? (Numbers between -10 and 60)
+                            const numStr = cell.replace(/[^0-9.-]+/g, "");
+                            if (numStr) {
+                                const num = parseFloat(numStr);
+                                if (!isNaN(num) && num >= -10 && num <= 60) {
+                                    hcScores[colIdx] += cell.includes('.') ? 2 : 1; // Decimals strongly indicate a handicap
+                                }
+                            }
+                        });
+                    });
+
+                    // Assign columns based on highest scores
+                    if (nameIdx === -1) {
+                        const maxNameScore = Math.max(...nameScores);
+                        nameIdx = maxNameScore > 0 ? nameScores.indexOf(maxNameScore) : 0;
+                    }
+                    if (hcIdx === -1) {
+                        hcScores[nameIdx] = -1; // Ensure it doesn't pick the name column for handicap
+                        const maxHcScore = Math.max(...hcScores);
+                        hcIdx = maxHcScore > -1 ? hcScores.indexOf(maxHcScore) : (maxCols > 1 ? 1 : 0);
+                    }
+                }
+
+                // Extract the final players using our column indices
+                const players = [];
+                
+                for (let i = dataStartIndex; i < rows.length; i++) {
+                    const row = rows[i];
+                    const name = row[nameIdx];
+                    const hcRaw = row[hcIdx];
+                    
+                    if (!name && !hcRaw) continue;
+                    
+                    const hcString = hcRaw ? hcRaw.replace(/[^0-9.-]+/g, "") : "";
+                    const hc = parseFloat(hcString);
+                    
+                    // Only add if we have a valid name and valid number
+                    if (name && /[a-zA-Z]/.test(name) && !isNaN(hc)) {
+                        players.push({ name: name, handicap: hc });
+                    }
+                }
+
+                if (players.length === 0) {
+                    setError('Could not extract any valid players. Please check your data format.');
+                    return;
+                }
+
+                setParsedPlayers(players.sort((a, b) => a.name.localeCompare(b.name)));
+                setAppState('config');
+            };
+
+            const addExclusion = () => {
+                if (!exclP1 || !exclP2 || exclP1 === exclP2) return;
+                const exists = exclusions.some(ex =>
+                    (ex.p1 === exclP1 && ex.p2 === exclP2) || (ex.p1 === exclP2 && ex.p2 === exclP1)
+                );
+                if (!exists) {
+                    setExclusions([...exclusions, { p1: exclP1, p2: exclP2 }]);
+                }
+                setExclP1('');
+                setExclP2('');
+            };
+
+            const removeExclusion = (index) => {
+                setExclusions(exclusions.filter((_, i) => i !== index));
+            };
+
+            const generatePairs = () => {
+                let pool = [...parsedPlayers].sort((a, b) => a.handicap - b.handicap);
+                let generatedPairs = [];
+                let leftoverUnpaired = [];
+
+                const isExcluded = (name1, name2) => {
+                    return exclusions.some(ex =>
+                        (ex.p1 === name1 && ex.p2 === name2) || (ex.p1 === name2 && ex.p2 === name1)
+                    );
+                };
+
+                while (pool.length > 0) {
+                    let p1 = pool.shift(); 
+                    let bestMatchIndex = -1;
+                    
+                    for (let i = 0; i < pool.length; i++) {
+                        const combined = Math.round((p1.handicap + pool[i].handicap) * 10) / 10;
+                        
+                        if (combined >= 25) {
+                            if (!isExcluded(p1.name, pool[i].name)) {
+                                bestMatchIndex = i;
+                                break; 
+                            }
+                        }
+                    }
+
+                    if (bestMatchIndex !== -1) {
+                        let p2 = pool.splice(bestMatchIndex, 1)[0];
+                        generatedPairs.push({
+                            p1,
+                            p2,
+                            combinedHandicap: Math.round((p1.handicap + p2.handicap) * 10) / 10
+                        });
+                    } else {
+                        leftoverUnpaired.push(p1);
+                    }
+                }
+
+                generatedPairs.sort((a, b) => a.combinedHandicap - b.combinedHandicap);
+
+                setPairs(generatedPairs);
+                setUnpaired(leftoverUnpaired);
+                setAppState('results');
+            };
+
+            const exportToCSV = () => {
+                let csvContent = "Pair No,Player 1,P1 Handicap,Player 2,P2 Handicap,Combined Handicap\n";
+                
+                pairs.forEach((p, i) => {
+                    csvContent += `${i + 1},"${p.p1.name}",${p.p1.handicap},"${p.p2.name}",${p.p2.handicap},${p.combinedHandicap.toFixed(1)}\n`;
+                });
+
+                if (unpaired.length > 0) {
+                    csvContent += "\nUnpaired Players (Could not reach 25 with remaining players)\n";
+                    csvContent += "Name,Handicap\n";
+                    unpaired.forEach(p => {
+                        csvContent += `"${p.name}",${p.handicap}\n`;
+                    });
+                }
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", "lee_valley_pairings.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const resetApp = () => {
+                setPasteData('');
+                setParsedPlayers([]);
+                setPairs([]);
+                setUnpaired([]);
+                setExclusions([]);
+                setAppState('paste');
+                setError('');
+            };
+
+            return (
+                <div className="min-h-screen">
+                    <header className="bg-white shadow-sm border-b border-slate-200 py-6">
+                        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <img 
+                                    src="https://tablepath.blob.core.windows.net/10184-files/lee-valley-logo-2024.png" 
+                                    alt="Lee Valley Logo" 
+                                    className="h-16 object-contain"
+                                />
+                                <div>
+                                    <h1 className="text-2xl font-bold text-[#004a2f]">Pairing Generator</h1>
+                                    <p className="text-sm text-slate-500">Target: Combined Handicap ≥ 25</p>
+                                </div>
+                            </div>
+                            {appState !== 'paste' && (
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={appState === 'results' ? () => setAppState('config') : resetApp}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                                    >
+                                        {appState === 'results' ? <IconSettings size={18} /> : <IconTrash size={18} />}
+                                        {appState === 'results' ? 'Edit Rules' : 'Start Over'}
+                                    </button>
+                                    {appState === 'results' && (
+                                        <button 
+                                            onClick={exportToCSV}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#004a2f] hover:bg-[#003823] text-white rounded-lg font-medium transition-colors shadow-sm"
+                                        >
+                                            <IconSpreadsheet size={18} />
+                                            Export to Excel
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto px-4 py-8">
+                        {appState === 'paste' && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden max-w-3xl mx-auto">
+                                <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-green-100 text-[#004a2f] rounded-lg">
+                                            <IconClipboard size={24} />
+                                        </div>
+                                        <h2 className="text-xl font-semibold">Paste Excel Data</h2>
+                                    </div>
+                                    <p className="text-slate-600 text-sm ml-11">
+                                        Copy the columns from your Excel file (including the header row) and paste them below. The app will automatically find the <strong>Name</strong> and <strong>Handicap</strong> columns.
+                                    </p>
+                                </div>
+                                
+                                <div className="p-8">
+                                    {error && (
+                                        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-start gap-3">
+                                            <IconAlert className="shrink-0 mt-0.5" size={18} />
+                                            <p className="text-sm font-medium">{error}</p>
+                                        </div>
+                                    )}
+
+                                    <textarea
+                                        value={pasteData}
+                                        onChange={(e) => setPasteData(e.target.value)}
+                                        placeholder="Paste your Excel data here..."
+                                        className="w-full h-64 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#004a2f] focus:border-[#004a2f] outline-none font-mono text-sm resize-none bg-slate-50"
+                                    />
+                                    
+                                    <div className="mt-6 flex items-center justify-end">
+                                        <button
+                                            onClick={handleParseData}
+                                            className="px-6 py-3 bg-[#004a2f] hover:bg-[#003823] text-white font-semibold rounded-xl transition-all shadow-sm flex items-center gap-2"
+                                        >
+                                            <IconSettings size={18} />
+                                            Configure Rules
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {appState === 'config' && (
+                            <div className="max-w-3xl mx-auto space-y-6">
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                        <div>
+                                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                                <IconSettings className="text-[#004a2f]" size={24} />
+                                                Pairing Rules
+                                            </h2>
+                                            <p className="text-slate-600 text-sm mt-1">
+                                                Successfully loaded {parsedPlayers.length} players. Set up any exclusions before generating pairings.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Do Not Pair (Incompatible Players)
+                                            </label>
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <select 
+                                                    value={exclP1} 
+                                                    onChange={(e) => setExclP1(e.target.value)}
+                                                    className="flex-1 p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#004a2f] focus:border-[#004a2f] bg-slate-50"
+                                                >
+                                                    <option value="">Select Player 1...</option>
+                                                    {parsedPlayers.map((p, i) => (
+                                                        <option key={`p1-${i}`} value={p.name}>{p.name} ({p.handicap})</option>
+                                                    ))}
+                                                </select>
+                                                <select 
+                                                    value={exclP2} 
+                                                    onChange={(e) => setExclP2(e.target.value)}
+                                                    className="flex-1 p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#004a2f] focus:border-[#004a2f] bg-slate-50"
+                                                >
+                                                    <option value="">Select Player 2...</option>
+                                                    {parsedPlayers.map((p, i) => (
+                                                        <option key={`p2-${i}`} value={p.name}>{p.name} ({p.handicap})</option>
+                                                    ))}
+                                                </select>
+                                                <button 
+                                                    onClick={addExclusion}
+                                                    disabled={!exclP1 || !exclP2 || exclP1 === exclP2}
+                                                    className="px-4 py-3 bg-slate-800 disabled:bg-slate-300 hover:bg-slate-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0"
+                                                >
+                                                    <IconPlus size={18} /> Add Rule
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {exclusions.length > 0 && (
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <h4 className="text-sm font-semibold text-slate-700 mb-3">Active Exclusions:</h4>
+                                                <ul className="space-y-2">
+                                                    {exclusions.map((ex, idx) => (
+                                                        <li key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                            <span className="text-sm">
+                                                                <span className="font-medium text-slate-800">{ex.p1}</span>
+                                                                <span className="text-slate-400 mx-2">will not be paired with</span>
+                                                                <span className="font-medium text-slate-800">{ex.p2}</span>
+                                                            </span>
+                                                            <button 
+                                                                onClick={() => removeExclusion(idx)}
+                                                                className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50 transition-colors"
+                                                            >
+                                                                <IconX size={16} />
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                                        <button
+                                            onClick={generatePairs}
+                                            className="px-6 py-3 bg-[#004a2f] hover:bg-[#003823] text-white font-semibold rounded-xl transition-all shadow-sm flex items-center gap-2"
+                                        >
+                                            <IconUsers size={18} />
+                                            Generate Final Pairings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {appState === 'results' && (
+                            <div className="space-y-8">
+                                {/* Minimal Summary */}
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-6 items-center justify-between">
+                                    <div className="flex gap-6 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                                        <div className="shrink-0">
+                                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Players</p>
+                                            <p className="text-xl font-bold text-slate-800">{(pairs.length * 2) + unpaired.length}</p>
+                                        </div>
+                                        <div className="w-px h-8 bg-slate-200 hidden md:block"></div>
+                                        <div className="shrink-0">
+                                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Valid Pairs</p>
+                                            <p className="text-xl font-bold text-emerald-600">{pairs.length}</p>
+                                        </div>
+                                        <div className="w-px h-8 bg-slate-200 hidden md:block"></div>
+                                        <div className="shrink-0">
+                                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Unpaired</p>
+                                            <p className="text-xl font-bold text-orange-500">{unpaired.length}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Visual Pairing Cards */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-xl font-bold text-slate-800">Final Pairings</h3>
+                                        <span className="text-xs font-semibold bg-[#004a2f] text-white px-3 py-1 rounded-full shadow-sm">
+                                            Target: 25+
+                                        </span>
+                                    </div>
+                                    
+                                    {pairs.length === 0 ? (
+                                        <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center text-slate-500">
+                                            No valid pairs could be generated that meet the combined handicap rule.
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {pairs.map((pair, idx) => {
+                                                const isPerfect = pair.combinedHandicap >= 25 && pair.combinedHandicap <= 25.5;
+                                                return (
+                                                    <div key={idx} className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-all ${isPerfect ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200 hover:border-[#004a2f]/30'}`}>
+                                                        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                                                            <span className="font-bold text-slate-500 text-sm uppercase tracking-wider">Pair {idx + 1}</span>
+                                                            <div className={`px-3 py-1 rounded-lg font-bold text-sm flex items-center gap-1.5 ${isPerfect ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                                                                Sum: {pair.combinedHandicap.toFixed(1)}
+                                                                {isPerfect && <IconCheckCircle size={14} className="text-emerald-600" />}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="space-y-3">
+                                                            <div className="flex justify-between items-center group">
+                                                                <span className="font-semibold text-slate-800">{pair.p1.name}</span>
+                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium">{pair.p1.handicap.toFixed(1)}</span>
+                                                            </div>
+                                                            <div className="flex justify-between items-center group">
+                                                                <span className="font-semibold text-slate-800">{pair.p2.name}</span>
+                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium">{pair.p2.handicap.toFixed(1)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Unpaired Section */}
+                                {unpaired.length > 0 && (
+                                    <div className="mt-8">
+                                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                                            <IconUserX size={20} className="text-orange-500" />
+                                            Unpaired Players
+                                        </h3>
+                                        <div className="bg-orange-50 rounded-xl border border-orange-200 overflow-hidden shadow-sm">
+                                            <div className="p-4 border-b border-orange-200 bg-orange-100/50">
+                                                <p className="text-sm text-orange-800 font-medium">
+                                                    These players could not be paired with anyone remaining to reach a combined handicap of 25.
+                                                </p>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-0 divide-y md:divide-y-0 md:divide-x divide-orange-200">
+                                                {unpaired.map((player, idx) => (
+                                                    <div key={idx} className="p-4 flex justify-between items-center bg-white/50 hover:bg-white transition-colors">
+                                                        <span className="font-semibold text-slate-800">{player.name}</span>
+                                                        <span className="text-slate-500 font-medium text-sm bg-orange-100/50 px-2.5 py-0.5 rounded">{player.handicap.toFixed(1)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
