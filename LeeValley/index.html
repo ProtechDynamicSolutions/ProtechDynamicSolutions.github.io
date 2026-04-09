@@ -57,6 +57,9 @@
         const IconX = ({ size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
         );
+        const IconPrinter = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        );
 
         const App = () => {
             const [appState, setAppState] = useState('paste');
@@ -189,13 +192,14 @@
                 setExclusions(exclusions.filter((_, i) => i !== index));
             };
 
-            const generatePairs = () => {
+            // Enhanced logic: accepting activeExclusions allows us to instantly update the draw from the results screen
+            const generatePairs = (activeExclusions = exclusions) => {
                 let pool = [...parsedPlayers].sort((a, b) => a.handicap - b.handicap);
                 let generatedPairs = [];
                 let leftoverUnpaired = [];
 
                 const isExcluded = (name1, name2) => {
-                    return exclusions.some(ex =>
+                    return activeExclusions.some(ex =>
                         (ex.p1 === name1 && ex.p2 === name2) || (ex.p1 === name2 && ex.p2 === name1)
                     );
                 };
@@ -234,6 +238,13 @@
                 setAppState('results');
             };
 
+            const handleSplitPair = (p1Name, p2Name) => {
+                // Instantly add to exclusions and recalculate the whole draw
+                const newExclusions = [...exclusions, { p1: p1Name, p2: p2Name }];
+                setExclusions(newExclusions);
+                generatePairs(newExclusions);
+            };
+
             const exportToCSV = () => {
                 let csvContent = "Pair No,Player 1,P1 Handicap,Player 2,P2 Handicap,Combined Handicap\n";
                 
@@ -270,8 +281,8 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    <header className="bg-white shadow-sm border-b border-slate-200 py-6 shrink-0">
+                <div className="min-h-screen flex flex-col print:bg-white">
+                    <header className="bg-white shadow-sm border-b border-slate-200 py-6 shrink-0 print:hidden">
                         <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <img 
@@ -294,20 +305,43 @@
                                         {appState === 'results' ? 'Edit Rules' : 'Start Over'}
                                     </button>
                                     {appState === 'results' && (
-                                        <button 
-                                            onClick={exportToCSV}
-                                            className="flex items-center gap-2 px-4 py-2 bg-[#004a2f] hover:bg-[#003823] text-white rounded-lg font-medium transition-colors shadow-sm"
-                                        >
-                                            <IconSpreadsheet size={18} />
-                                            Export to Excel
-                                        </button>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <button 
+                                                onClick={() => window.print()}
+                                                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium transition-colors shadow-sm"
+                                            >
+                                                <IconPrinter size={18} />
+                                                Save PDF
+                                            </button>
+                                            <button 
+                                                onClick={exportToCSV}
+                                                className="flex items-center gap-2 px-4 py-2 bg-[#004a2f] hover:bg-[#003823] text-white rounded-lg font-medium transition-colors shadow-sm"
+                                            >
+                                                <IconSpreadsheet size={18} />
+                                                Export Excel
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             )}
                         </div>
                     </header>
 
-                    <main className="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
+                    <main className="max-w-6xl mx-auto px-4 py-8 w-full flex-grow print:p-0 print:m-0">
+                        
+                        {/* Print-only Header for the PDF Handout */}
+                        <div className="hidden print:block text-center mb-8 border-b-2 border-slate-300 pb-6">
+                            <img 
+                                src="https://tablepath.blob.core.windows.net/10184-files/lee-valley-logo-2024.png" 
+                                alt="Lee Valley Logo" 
+                                className="h-20 mx-auto mb-4 grayscale"
+                            />
+                            <h2 className="text-3xl font-bold text-slate-800 uppercase tracking-widest">Official Pairings</h2>
+                            <p className="text-slate-500 mt-2 font-medium">
+                                {new Date().toLocaleDateString('en-IE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
+                        </div>
+
                         {appState === 'paste' && (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden max-w-3xl mx-auto">
                                 <div className="p-8 border-b border-slate-100 bg-slate-50/50">
@@ -427,7 +461,7 @@
 
                                     <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
                                         <button
-                                            onClick={generatePairs}
+                                            onClick={() => generatePairs(exclusions)}
                                             className="px-6 py-3 bg-[#004a2f] hover:bg-[#003823] text-white font-semibold rounded-xl transition-all shadow-sm flex items-center gap-2"
                                         >
                                             <IconUsers size={18} />
@@ -441,7 +475,7 @@
                         {appState === 'results' && (
                             <div className="space-y-8">
                                 {/* Minimal Summary */}
-                                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-6 items-center justify-between">
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-6 items-center justify-between print:shadow-none print:border-slate-300">
                                     <div className="flex gap-6 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                                         <div className="shrink-0">
                                             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Players</p>
@@ -474,28 +508,39 @@
                                             No valid pairs could be generated that meet the combined handicap rule.
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:grid-cols-2 print:gap-6">
                                             {pairs.map((pair, idx) => {
                                                 const isPerfect = pair.combinedHandicap >= 25 && pair.combinedHandicap <= 25.5;
                                                 return (
-                                                    <div key={idx} className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-all ${isPerfect ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200 hover:border-[#004a2f]/30'}`}>
-                                                        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                                                    <div key={idx} className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-all print:break-inside-avoid print:shadow-none print:border-slate-300 print:bg-white ${isPerfect ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200 hover:border-[#004a2f]/30'}`}>
+                                                        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 print:border-slate-200">
                                                             <span className="font-bold text-slate-500 text-sm uppercase tracking-wider">Pair {idx + 1}</span>
-                                                            <div className={`px-3 py-1 rounded-lg font-bold text-sm flex items-center gap-1.5 ${isPerfect ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                                                            <div className={`px-3 py-1 rounded-lg font-bold text-sm flex items-center gap-1.5 print:bg-transparent print:text-slate-800 ${isPerfect ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
                                                                 Sum: {pair.combinedHandicap.toFixed(1)}
-                                                                {isPerfect && <IconCheckCircle size={14} className="text-emerald-600" />}
+                                                                {isPerfect && <IconCheckCircle size={14} className="text-emerald-600 print:hidden" />}
                                                             </div>
                                                         </div>
                                                         
                                                         <div className="space-y-3">
                                                             <div className="flex justify-between items-center group">
                                                                 <span className="font-semibold text-slate-800">{pair.p1.name}</span>
-                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium">{pair.p1.handicap.toFixed(1)}</span>
+                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium print:bg-transparent print:border print:border-slate-200">{pair.p1.handicap.toFixed(1)}</span>
                                                             </div>
                                                             <div className="flex justify-between items-center group">
                                                                 <span className="font-semibold text-slate-800">{pair.p2.name}</span>
-                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium">{pair.p2.handicap.toFixed(1)}</span>
+                                                                <span className="text-slate-500 bg-slate-100 group-hover:bg-slate-200 transition-colors px-2.5 py-0.5 rounded text-sm font-medium print:bg-transparent print:border print:border-slate-200">{pair.p2.handicap.toFixed(1)}</span>
                                                             </div>
+                                                        </div>
+
+                                                        {/* Split Pair Button */}
+                                                        <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end print:hidden">
+                                                            <button
+                                                                onClick={() => handleSplitPair(pair.p1.name, pair.p2.name)}
+                                                                title="Split this pair and automatically recalculate"
+                                                                className="text-[11px] font-semibold text-slate-500 hover:text-red-600 flex items-center gap-1 transition-colors px-2 py-1.5 rounded hover:bg-red-50"
+                                                            >
+                                                                <IconUserX size={13} /> Split Pair
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 );
@@ -506,7 +551,7 @@
 
                                 {/* Unpaired Section */}
                                 {unpaired.length > 0 && (
-                                    <div className="mt-8">
+                                    <div className="mt-8 print:break-inside-avoid">
                                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
                                             <IconUserX size={20} className="text-orange-500" />
                                             Unpaired Players
@@ -519,9 +564,9 @@
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-0 divide-y md:divide-y-0 md:divide-x divide-orange-200">
                                                 {unpaired.map((player, idx) => (
-                                                    <div key={idx} className="p-4 flex justify-between items-center bg-white/50 hover:bg-white transition-colors">
+                                                    <div key={idx} className="p-4 flex justify-between items-center bg-white/50 hover:bg-white transition-colors print:bg-white">
                                                         <span className="font-semibold text-slate-800">{player.name}</span>
-                                                        <span className="text-slate-500 font-medium text-sm bg-orange-100/50 px-2.5 py-0.5 rounded">{player.handicap.toFixed(1)}</span>
+                                                        <span className="text-slate-500 font-medium text-sm bg-orange-100/50 px-2.5 py-0.5 rounded print:bg-transparent print:border print:border-slate-200">{player.handicap.toFixed(1)}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -533,7 +578,7 @@
                     </main>
 
                     {/* Dave Maher Footer */}
-                    <footer className="w-full bg-white border-t border-slate-200 py-6 mt-auto shrink-0">
+                    <footer className="w-full bg-white border-t border-slate-200 py-6 mt-auto shrink-0 print:hidden">
                         <div className="max-w-6xl mx-auto px-4 text-center">
                             <p className="text-sm text-slate-400 font-medium">
                                 Created by Dave Maher
