@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACS Maintenance Report</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- SVG Icons to replace Lucide dependency ---
+        const Wrench = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        );
+        const Trash2 = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        );
+        const Printer = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        );
+        const Send = ({ className }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        );
+
+        const SECTIONS = [
+          {
+            title: "Refrigeration Circuit",
+            fields: [
+              { key: 'generalCondition', label: 'General Plant Condition', type: 'text', quickOk: true },
+              { key: 'oilLevels', label: 'Oil Levels', type: 'text', quickOk: true },
+              { key: 'indoorCoil', label: 'Indoor Coil Condition', type: 'text', quickOk: true },
+              { key: 'filter', label: 'Filter Condition', type: 'text', quickOk: true },
+              { key: 'outdoorCoil', label: 'Outdoor Coil Condition', type: 'text', quickOk: true },
+              { key: 'ambient', label: 'Ambient', type: 'number', unit: '°C' },
+              { key: 'leakTest', label: 'Full Leak Test', type: 'text', quickOk: true },
+              { key: 'suctionPressure', label: 'Suction Pressure', type: 'number', unit: 'PSI' },
+              { key: 'dischargePressure', label: 'Discharge Pressure', type: 'number', unit: 'PSI' },
+              { key: 'airTempOn', label: 'Air Temp ON', type: 'number', unit: '°C' },
+              { key: 'airTempOff', label: 'Air Temp OFF', type: 'number', unit: '°C' },
+              { key: 'condenserWaterOn', label: 'Condenser Water/Air ON', type: 'number', unit: '°C' },
+              { key: 'condenserWaterOff', label: 'Condenser Water/Air OFF', type: 'number', unit: '°C' },
+              { key: 'superHeat', label: 'Super Heat', type: 'number', unit: '°C' },
+              { key: 'subcooling', label: 'Subcooling', type: 'number', unit: '°C' },
+              { key: 'pipeVibration', label: 'Pipe Vibration', type: 'text', quickOk: true },
+              { key: 'liquidSGlass', label: 'Liquid S/Glass, Driers', type: 'text', quickOk: true },
+              { key: 'refrigerantCharge', label: 'Refrigerant Charge', type: 'text', quickOk: true },
+              { key: 'pumpDown', label: 'Compressor Pump Down Check', type: 'text', quickOk: true },
+              { key: 'beltCondition', label: 'Belt Condition', type: 'text', quickOk: true },
+              { key: 'dripPan', label: 'Drip Pan & Drain Condition', type: 'text', quickOk: true },
+              { key: 'thermostat', label: 'Thermostat Setting/Actual', type: 'text' },
+              { key: 'unloader', label: 'Unloader Operation', type: 'text' },
+              { key: 'refrigerantCondition', label: 'Refrigerant Condition', type: 'text', quickOk: true },
+              { key: 'hotGas', label: 'Hot Gas Operation', type: 'text' },
+              { key: 'refType', label: 'Refrigerant Type', type: 'text' },
+              { key: 'controllerType', label: 'Controller Type', type: 'text' }
+            ]
+          },
+          {
+            title: "Electrical Section",
+            fields: [
+              { key: 'elecConnections', label: 'Electrical Connections', type: 'text', quickOk: true },
+              { key: 'compAmpsL1', label: 'Compressor Run Amps (1)', type: 'number', unit: 'A' },
+              { key: 'compAmpsL2', label: 'Compressor Run Amps (2)', type: 'number', unit: 'A' },
+              { key: 'compAmpsL3', label: 'Compressor Run Amps (3)', type: 'number', unit: 'A' },
+              { key: 'compOL_L1', label: 'Compressor O/L Settings (1)', type: 'number', unit: 'A' },
+              { key: 'compOL_L2', label: 'Compressor O/L Settings (2)', type: 'number', unit: 'A' },
+              { key: 'compOL_L3', label: 'Compressor O/L Settings (3)', type: 'number', unit: 'A' },
+              { key: 'condAmpsL1', label: 'Condenser Run Amps (1)', type: 'number', unit: 'A' },
+              { key: 'condAmpsL2', label: 'Condenser Run Amps (2)', type: 'number', unit: 'A' },
+              { key: 'condAmpsL3', label: 'Condenser Run Amps (3)', type: 'number', unit: 'A' },
+              { key: 'condOL_L1', label: 'Condenser O/L Settings (1)', type: 'number', unit: 'A' },
+              { key: 'condOL_L2', label: 'Condenser O/L Settings (2)', type: 'number', unit: 'A' },
+              { key: 'condOL_L3', label: 'Condenser O/L Settings (3)', type: 'number', unit: 'A' },
+              { key: 'indoorFanAmpsL1', label: 'Indoor Fan Amps (1)', type: 'number', unit: 'A' },
+              { key: 'indoorFanAmpsL2', label: 'Indoor Fan Amps (2)', type: 'number', unit: 'A' },
+              { key: 'indoorFanAmpsL3', label: 'Indoor Fan Amps (3)', type: 'number', unit: 'A' },
+              { key: 'waterPumpAmps', label: 'Water Pump Amps', type: 'number', unit: 'A' },
+              { key: 'crankcaseAmps', label: 'Crankcase Heater Amps', type: 'number', unit: 'A' },
+            ]
+          },
+          {
+            title: "Heat Pumps",
+            fields: [
+              { key: 'revValve', label: 'Check Reversing Valve', type: 'text', quickOk: true },
+              { key: 'defrostTime', label: 'Defrost Termination Time', type: 'text' },
+              { key: 'defrostTemp', label: 'Defrost Termination Temp', type: 'text' },
+              { key: 'indoorHeatOn', label: 'Indoor ON Heating', type: 'number', unit: '°C' },
+              { key: 'indoorHeatOff', label: 'Indoor OFF Heating', type: 'number', unit: '°C' },
+              { key: 'indoorCoolOn', label: 'Indoor ON Cooling', type: 'number', unit: '°C' },
+              { key: 'indoorCoolOff', label: 'Indoor OFF Cooling', type: 'number', unit: '°C' },
+              { key: 'outdoorHeatOn', label: 'Outdoor ON Heating', type: 'number', unit: '°C' },
+              { key: 'outdoorHeatOff', label: 'Outdoor OFF Heating', type: 'number', unit: '°C' },
+              { key: 'outdoorCoolOn', label: 'Outdoor ON Cooling', type: 'number', unit: '°C' },
+              { key: 'outdoorCoolOff', label: 'Outdoor OFF Cooling', type: 'number', unit: '°C' },
+            ]
+          },
+          {
+            title: "Humidification",
+            fields: [
+              { key: 'rhSetting', label: 'Check RH% Setting', type: 'text' },
+              { key: 'roomTempDb', label: 'Room Temperature DB', type: 'text' },
+              { key: 'roomTempWb', label: 'Room Temperature WB', type: 'text' },
+              { key: 'heaterOp', label: 'Heater Operation', type: 'text' },
+              { key: 'waterTray', label: 'Water Tray', type: 'text', quickOk: true },
+              { key: 'waterDrain', label: 'Water Drain', type: 'text', quickOk: true },
+            ]
+          },
+          {
+            title: "Safety Interlocks",
+            fields: [
+              { key: 'lpCutout', label: 'Low Pressure Cutout', type: 'number', unit: 'PSI' },
+              { key: 'hpCutout', label: 'High Pressure Cutout', type: 'number', unit: 'PSI' },
+              { key: 'oilCutout', label: 'Oil Failure Cutout Setting', type: 'text' },
+              { key: 'safetyCutouts', label: 'Safety Cutouts', type: 'text', quickOk: true },
+            ]
+          },
+          {
+            title: "Miscellaneous & Final Checks",
+            fields: [
+              { key: 'gfChillers', label: 'GF Chillers', type: 'text', quickOk: true },
+              { key: 'quickTest', label: 'Quick Test', type: 'text', quickOk: true },
+              { key: 'phaseCheck', label: 'Phase Check', type: 'text', quickOk: true },
+              { key: 'motorPumpAlign', label: 'Motor/Pump Alignment', type: 'text', quickOk: true },
+              { key: 'condensatePump', label: 'Condensate Pump', type: 'text', quickOk: true },
+              { key: 'condensateDrain', label: 'Condensate Drain', type: 'text', quickOk: true },
+              { key: 'equipClean', label: 'All Equipment Clean and Tidy', type: 'text', quickOk: true },
+            ]
+          },
+          {
+            title: "F-Gas",
+            fields: [
+              { key: 'fgasType', label: 'Refrigerant Type', type: 'text' },
+              { key: 'fgasQuantity', label: 'Refrigerant Quantity', type: 'number', unit: 'kg' },
+              { key: 'fgasCo2', label: 'CO2 Equivalent', type: 'number' },
+              { key: 'fgasLeakCheck', label: 'Leak Check', type: 'text', quickOk: true },
+              { key: 'fgasMethod', label: 'Leak Detector Method', type: 'text' },
+              { key: 'fgasLabelled', label: 'Is system labelled?', type: 'select', options: ['Yes', 'No'] },
+              { key: 'fgasAdded', label: 'Refrigerant added or removed', type: 'number', unit: 'kg' },
+            ]
+          }
+        ];
+
+        const initialData = {
+          header: {
+            client: '', site: '', plantLocation: '',
+            jobNo: '', date: new Date().toISOString().split('T')[0], jobCode: '', engineer: ''
+          },
+          jobType: {
+            major: false, minor: false, commissioning: false, fgas: false
+          },
+          circuit1: { item: '', modelNo: '', serialNo: '', workComplete: '' },
+          circuit2: { item: '', modelNo: '', serialNo: '', workComplete: '' },
+          footer: { materialsUsed: '', materialsRequired: '', customerName: '', remarks: '' }
+        };
+
+        const SignaturePad = () => {
+          const canvasRef = useRef(null);
+          const [isDrawing, setIsDrawing] = useState(false);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#1e3a8a'; // Dark blue ink
+          }, []);
+
+          const getCoordinates = (e, canvas) => {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches.length > 0) {
+              return {
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
+              };
+            }
+            return {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top
+            };
+          };
+
+          const startDrawing = (e) => {
+            const canvas = canvasRef.current;
+            const { x, y } = getCoordinates(e, canvas);
+            const ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            setIsDrawing(true);
+          };
+
+          const draw = (e) => {
+            if (!isDrawing) return;
+            const canvas = canvasRef.current;
+            const { x, y } = getCoordinates(e, canvas);
+            const ctx = canvas.getContext('2d');
+            ctx.lineTo(x, y);
+            ctx.stroke();
+          };
+
+          const stopDrawing = () => setIsDrawing(false);
+
+          const clear = (e) => {
+            e.preventDefault();
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          };
+
+          return (
+            <div className="relative border border-gray-400 rounded-md bg-white print:border-none print:bg-transparent h-24">
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={94}
+                className="w-full h-full cursor-crosshair touch-none"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              <button 
+                onClick={clear} 
+                className="absolute top-1 right-1 text-xs bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-3 py-1.5 rounded shadow-sm transition-colors print-hidden font-medium"
+              >
+                Clear
+              </button>
+              <div className="absolute bottom-1 right-2 text-[10px] text-gray-400 font-medium pointer-events-none print:hidden uppercase tracking-wider">
+                Draw signature here
+              </div>
+            </div>
+          );
+        };
+
+        const InputComponent = ({ field, value, onChange }) => {
+          return (
+            <div className="flex w-full items-stretch">
+              {field.type === 'select' ? (
+                <select 
+                  className="block w-full px-3 py-2 border border-gray-400 bg-white rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm outline-none print:shadow-none print:p-0 print:border-b"
+                  value={value || ''}
+                  onChange={(e) => onChange(e.target.value)}
+                >
+                  <option value=""></option>
+                  {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <div className="flex rounded-md shadow-sm w-full print:shadow-none">
+                  <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    className={`flex-1 block w-full min-w-0 sm:text-sm border-gray-400 bg-white px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none print:p-0 print:border-b print:bg-transparent ${
+                      field.unit || field.quickOk ? 'rounded-none rounded-l-md print:rounded-none' : 'rounded-md print:rounded-none'
+                    }`}
+                    value={value || ''}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={field.unit ? `e.g. 120` : ''}
+                  />
+                  {field.unit && (
+                    <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-400 bg-gray-100 text-gray-700 font-medium sm:text-sm print:border-none print:bg-transparent print:px-1 print:text-black">
+                      {field.unit}
+                    </span>
+                  )}
+                  {!field.unit && field.quickOk && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onChange('OK')}
+                        className="inline-flex items-center px-3 border border-l-0 border-gray-400 bg-green-50 text-green-700 sm:text-sm font-bold hover:bg-green-100 transition-colors print-hidden"
+                        title="Mark as OK"
+                      >
+                        OK
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onChange('N/A')}
+                        className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-400 bg-gray-100 text-gray-600 sm:text-sm font-bold hover:bg-gray-200 transition-colors print-hidden"
+                        title="Mark as N/A"
+                      >
+                        N/A
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        function App() {
+          const [data, setData] = useState(initialData);
+          const [mobileTab, setMobileTab] = useState(0);
+          const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+          useEffect(() => {
+            const saved = localStorage.getItem('ac-form-autosave');
+            if (saved) {
+              try {
+                setData(JSON.parse(saved));
+              } catch (e) {
+                console.error("Failed to load autosave");
+              }
+            }
+          }, []);
+
+          useEffect(() => {
+            localStorage.setItem('ac-form-autosave', JSON.stringify(data));
+          }, [data]);
+
+          const updateHeader = (field, value) => {
+            setData(prev => ({ ...prev, header: { ...prev.header, [field]: value } }));
+          };
+
+          const updateJobType = (field, value) => {
+            setData(prev => ({ ...prev, jobType: { ...prev.jobType, [field]: value } }));
+          };
+
+          const updateCircuit = (circuitName, field, value) => {
+            setData(prev => ({ ...prev, [circuitName]: { ...prev[circuitName], [field]: value } }));
+          };
+
+          const updateFooter = (field, value) => {
+            setData(prev => ({ ...prev, footer: { ...prev.footer, [field]: value } }));
+          };
+
+          const handleReset = () => {
+            setData(initialData);
+            localStorage.removeItem('ac-form-autosave');
+            setShowResetConfirm(false);
+          };
+
+          const handleSubmit = () => {
+            alert("Form data ready to be submitted to Jotform backend.");
+            console.log("Submitting:", data);
+          };
+
+          return (
+            <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8 font-sans print:p-0 print:bg-white text-gray-900 pb-24 print:pb-0">
+              <style>{`
+                @media print {
+                  @page { size: A4; margin: 10mm; }
+                  body { font-size: 11px; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                  .print-hidden { display: none !important; }
+                  /* Form inputs for print */
+                  input[type="text"], input[type="number"], input[type="date"], textarea, select {
+                    border: none !important;
+                    border-bottom: 1px dotted #888 !important;
+                    border-radius: 0 !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    height: 1.5em !important;
+                    min-height: 1.5em !important;
+                  }
+                  textarea {
+                    height: auto !important;
+                    min-height: 3em !important;
+                  }
+                  select {
+                    appearance: none !important;
+                    -webkit-appearance: none !important;
+                  }
+                  input[type="checkbox"] {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    width: 14px;
+                    height: 14px;
+                    border: 1px solid #000 !important;
+                    display: inline-block;
+                    position: relative;
+                    background: transparent;
+                    vertical-align: middle;
+                  }
+                  input[type="checkbox"]:checked::after {
+                    content: 'X';
+                    position: absolute;
+                    top: -2px; left: 2px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: black;
+                  }
+                  .print-grid-cols {
+                    display: grid !important;
+                    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+                  }
+                  .print-block { display: block !important; }
+                  .print-border-b { border-bottom: 1px solid #ddd !important; }
+                  .break-inside-avoid { break-inside: avoid; }
+                }
+              `}</style>
+
+              <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden print:shadow-none print:rounded-none print:border-none">
+                
+                {/* Dark Header with Logo */}
+                <div className="p-4 sm:p-6 bg-slate-800 border-b-4 border-blue-600 text-white flex justify-between items-center print-hidden overflow-hidden relative">
+                  <div className="flex items-center gap-4 sm:gap-6 relative z-10">
+                    <img 
+                      src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                      alt="Air Conditioning Solutions Logo" 
+                      className="h-12 sm:h-16 w-auto object-contain"
+                    />
+                    <h1 className="text-lg sm:text-2xl font-bold tracking-wide text-white drop-shadow-md">
+                      Maintenance Report
+                    </h1>
+                  </div>
+
+                  <div className="relative z-10">
+                    {showResetConfirm ? (
+                      <div className="flex items-center gap-3 bg-red-600 px-4 py-2 rounded shadow text-sm">
+                        <span className="font-semibold">Clear form?</span>
+                        <button onClick={handleReset} className="hover:underline font-bold">Yes</button>
+                        <button onClick={() => setShowResetConfirm(false)} className="hover:underline text-red-200">No</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setShowResetConfirm(true)} className="text-gray-300 hover:text-white hover:bg-slate-700 p-2 rounded transition-colors" title="Clear Form">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Print Only Header */}
+                <div className="hidden print:flex justify-between items-end border-b-2 border-slate-800 pb-4 p-6">
+                  <div className="flex flex-col gap-2">
+                    <img 
+                      src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                      alt="Logo" 
+                      className="h-20 w-auto object-contain mix-blend-multiply"
+                    />
+                    <p className="text-sm font-bold text-gray-600 mt-1 uppercase tracking-widest">Maintenance & Service Report</p>
+                  </div>
+                  <div className="text-right text-xs space-y-1 font-medium">
+                    <p>Tel: 086 2520555</p>
+                    <p>Email: tony@aircs.ie</p>
+                    <p>Midleton, Co. Cork</p>
+                  </div>
+                </div>
+
+                <div className="p-6 print:p-6 print:pt-4">
+                  
+                  {/* Header Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-4 p-5 border border-gray-300 rounded-lg bg-gray-50 shadow-sm print:border-none print:p-0 print:bg-transparent print:shadow-none">
+                       <div>
+                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Client</label>
+                         <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.client} onChange={e => updateHeader('client', e.target.value)} />
+                       </div>
+                       <div>
+                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Site</label>
+                         <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.site} onChange={e => updateHeader('site', e.target.value)} />
+                       </div>
+                       <div>
+                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Plant Location</label>
+                         <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.plantLocation} onChange={e => updateHeader('plantLocation', e.target.value)} />
+                       </div>
+                    </div>
+
+                    <div className="space-y-4 p-5 border border-gray-300 rounded-lg bg-gray-50 shadow-sm print:border-none print:p-0 print:bg-transparent print:shadow-none">
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">No.</label>
+                           <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-bold text-blue-800 print:text-black" value={data.header.jobNo} onChange={e => updateHeader('jobNo', e.target.value)} />
+                         </div>
+                         <div>
+                           <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Date</label>
+                           <input type="date" className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.date} onChange={e => updateHeader('date', e.target.value)} />
+                         </div>
+                       </div>
+                       <div>
+                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Job Code / Ref</label>
+                         <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.jobCode} onChange={e => updateHeader('jobCode', e.target.value)} />
+                       </div>
+                       <div>
+                         <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block print:text-black">Engineer</label>
+                         <input className="w-full border border-gray-400 bg-white rounded p-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none print:p-0 print:border-b print:shadow-none font-medium" value={data.header.engineer} onChange={e => updateHeader('engineer', e.target.value)} />
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Job Type Checkboxes */}
+                  <div className="flex flex-wrap gap-4 md:gap-8 mb-8 p-4 bg-gray-50 border border-gray-300 rounded-lg print:bg-transparent print:border-none print:p-0 print:mb-4">
+                    {Object.keys(data.jobType).map(key => (
+                       <label key={key} className="flex items-center gap-2 cursor-pointer group">
+                         <input 
+                            type="checkbox" 
+                            className="w-5 h-5 text-blue-600 rounded border-gray-400 focus:ring-blue-500 cursor-pointer print:border-black print:rounded-none" 
+                            checked={data.jobType[key]} 
+                            onChange={e => updateJobType(key, e.target.checked)} 
+                         />
+                         <span className="font-semibold text-gray-800 group-hover:text-blue-800 uppercase text-xs sm:text-sm print:text-black">
+                           {key === 'major' ? 'Major Maintenance' : key === 'minor' ? 'Minor Maintenance Only' : key === 'commissioning' ? 'Commissioning Cert' : 'F-gas/ODS Cert'}
+                         </span>
+                       </label>
+                    ))}
+                  </div>
+
+                  {/* Circuits High-Level Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print:grid-cols-2">
+                    {[1, 2].map(num => {
+                      const cName = `circuit${num}`;
+                      const isC1 = num === 1;
+                      return (
+                        <div key={cName} className={`border-2 ${isC1 ? 'border-blue-300 bg-blue-50/40' : 'border-slate-300 bg-slate-50'} rounded-lg p-4 shadow-sm print:border-none print:p-0 print:shadow-none break-inside-avoid`}>
+                           <h3 className={`font-bold text-center border-b-2 ${isC1 ? 'border-blue-200 text-blue-900' : 'border-slate-200 text-slate-800'} pb-2 mb-3 tracking-wider print:border-b print:border-black print:mb-2 print:pb-1`}>CIRCUIT {num}</h3>
+                           <div className="space-y-3">
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                <label className="text-xs font-bold text-gray-600 uppercase w-20 print:text-black">Item</label>
+                                <input className="flex-1 border border-gray-400 bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none rounded p-2 text-sm print:p-0 print:border-b" value={data[cName].item} onChange={e => updateCircuit(cName, 'item', e.target.value)} />
+                             </div>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                <label className="text-xs font-bold text-gray-600 uppercase w-20 print:text-black">Model No.</label>
+                                <input className="flex-1 border border-gray-400 bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none rounded p-2 text-sm print:p-0 print:border-b" value={data[cName].modelNo} onChange={e => updateCircuit(cName, 'modelNo', e.target.value)} />
+                             </div>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                <label className="text-xs font-bold text-gray-600 uppercase w-20 print:text-black">Serial No.</label>
+                                <input className="flex-1 border border-gray-400 bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none rounded p-2 text-sm print:p-0 print:border-b" value={data[cName].serialNo} onChange={e => updateCircuit(cName, 'serialNo', e.target.value)} />
+                             </div>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase w-32 print:text-black">Work Complete?</label>
+                                <select 
+                                  className="flex-1 border border-gray-400 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none rounded p-2 text-sm bg-white font-medium print:bg-transparent print:p-0 print:border-none print:font-bold"
+                                  value={data[cName].workComplete}
+                                  onChange={e => updateCircuit(cName, 'workComplete', e.target.value)}
+                                >
+                                  <option value=""></option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </select>
+                             </div>
+                           </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <hr className="my-8 border-gray-300 print:my-4 print:border-black" />
+
+                  {/* Mobile Tab Toggle for Circuit Details */}
+                  <div className="md:hidden flex rounded-md shadow-sm mb-6 print-hidden">
+                    <button
+                      onClick={() => setMobileTab(0)}
+                      className={`flex-1 py-3 text-sm font-bold tracking-wide rounded-l-md border transition-colors ${mobileTab === 0 ? 'bg-blue-800 text-white border-blue-800' : 'bg-white text-gray-600 border-gray-400 hover:bg-gray-50'}`}
+                    >
+                      Check Circuit 1
+                    </button>
+                    <button
+                      onClick={() => setMobileTab(1)}
+                      className={`flex-1 py-3 text-sm font-bold tracking-wide rounded-r-md border-t border-b border-r transition-colors ${mobileTab === 1 ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-gray-600 border-gray-400 hover:bg-gray-50'}`}
+                    >
+                      Check Circuit 2
+                    </button>
+                  </div>
+
+                  {/* Desktop Checklists Header */}
+                  <div className="hidden md:grid md:grid-cols-12 gap-4 mb-4 px-2 print:grid-cols-12 print-grid-cols items-center">
+                    <div className="col-span-4 font-black text-gray-500 text-xs uppercase tracking-wider print:text-black">System Checklists</div>
+                    <div className="col-span-4 font-bold text-center text-blue-900 bg-blue-100 border border-blue-200 rounded py-2 shadow-sm print:bg-transparent print:text-black print:border-none print:p-0">Circuit 1</div>
+                    <div className="col-span-4 font-bold text-center text-slate-800 bg-slate-200 border border-slate-300 rounded py-2 shadow-sm print:bg-transparent print:text-black print:border-none print:p-0">Circuit 2</div>
+                  </div>
+
+                  {/* Checklist Sections */}
+                  {SECTIONS.map(section => (
+                    <div key={section.title} className="mb-8 break-inside-avoid print:mb-4">
+                      <h4 className="font-bold text-lg text-white bg-slate-700 px-4 py-2 mb-3 rounded-md shadow-sm print:text-black print:bg-gray-200 print:border-b print:border-black uppercase tracking-wider print:text-sm">
+                        {section.title}
+                      </h4>
+                      
+                      <div className="space-y-0 border-2 border-gray-300 rounded-md bg-white overflow-hidden print:border-none shadow-sm">
+                        {section.fields.map((field, idx) => (
+                           <div key={field.key} className={`grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center p-3 hover:bg-blue-50 transition-colors print:p-1 print:py-0 print:border-b-0 ${idx !== section.fields.length - 1 ? 'border-b border-gray-200 print:border-b print:border-gray-300' : ''}`}>
+                             
+                             {/* Label */}
+                             <div className="col-span-1 md:col-span-4 text-sm font-semibold text-gray-700 print:text-xs print:font-medium">
+                               {field.label}
+                             </div>
+                             
+                             {/* Circuit 1 */}
+                             <div className={`col-span-1 md:col-span-4 ${mobileTab === 0 ? 'block' : 'hidden md:block'} print-block md:bg-blue-50/40 md:p-1.5 md:rounded md:border md:border-blue-100 print:border-none print:p-0 print:bg-transparent`}>
+                               <InputComponent 
+                                 field={field} 
+                                 value={data.circuit1[field.key]} 
+                                 onChange={(val) => updateCircuit('circuit1', field.key, val)} 
+                               />
+                             </div>
+                             
+                             {/* Circuit 2 */}
+                             <div className={`col-span-1 md:col-span-4 ${mobileTab === 1 ? 'block' : 'hidden md:block'} print-block md:bg-slate-100/60 md:p-1.5 md:rounded md:border md:border-slate-200 print:border-none print:p-0 print:bg-transparent`}>
+                               <InputComponent 
+                                 field={field} 
+                                 value={data.circuit2[field.key]} 
+                                 onChange={(val) => updateCircuit('circuit2', field.key, val)} 
+                               />
+                             </div>
+
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Footer / Sign-off Section */}
+                  <div className="mt-12 pt-6 border-t-2 border-slate-200 print:mt-6 print:pt-4 print:border-t-2 print:border-black break-inside-avoid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:gap-4">
+                      
+                      <div className="space-y-6 print:space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide print:text-xs print:mb-0">Materials Used:</label>
+                          <textarea 
+                            className="w-full rounded-md border border-gray-400 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-3 text-sm outline-none print:border-0 print:border-b print:p-0" 
+                            rows={3}
+                            value={data.footer.materialsUsed}
+                            onChange={e => updateFooter('materialsUsed', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide print:text-xs print:mb-0">Materials Required:</label>
+                          <textarea 
+                            className="w-full rounded-md border border-gray-400 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-3 text-sm outline-none print:border-0 print:border-b print:p-0" 
+                            rows={3}
+                            value={data.footer.materialsRequired}
+                            onChange={e => updateFooter('materialsRequired', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-6 print:space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide print:text-xs print:mb-0">Remarks & Comments:</label>
+                          <textarea 
+                            className="w-full rounded-md border border-gray-400 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-3 text-sm outline-none print:border-0 print:border-b print:p-0" 
+                            rows={2}
+                            value={data.footer.remarks}
+                            onChange={e => updateFooter('remarks', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide print:text-xs print:mb-0">Customer Print Name:</label>
+                          <input 
+                            type="text"
+                            className="w-full rounded-md border border-gray-400 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-3 text-sm outline-none print:border-0 print:border-b print:p-0"
+                            value={data.footer.customerName}
+                            onChange={e => updateFooter('customerName', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide flex justify-between items-center print:text-xs print:mb-1">
+                            <span>Customer Signature:</span>
+                          </label>
+                          <SignaturePad />
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Action Buttons Footer */}
+                <div className="p-6 bg-gray-50 border-t border-gray-300 flex justify-end gap-4 print-hidden mt-6">
+                   <button 
+                     onClick={() => window.print()} 
+                     className="bg-slate-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-slate-600 hover:shadow-md flex items-center justify-center gap-2 transition-all font-semibold tracking-wide"
+                   >
+                     <Printer className="w-5 h-5" />
+                     <span>Print / Save PDF</span>
+                   </button>
+                   
+                   <button 
+                     onClick={handleSubmit} 
+                     className="bg-blue-600 text-white px-8 py-3 rounded-lg shadow-md hover:bg-blue-500 hover:shadow-lg flex items-center justify-center gap-2 transition-all font-bold tracking-wide"
+                   >
+                     <Send className="w-5 h-5" />
+                     <span>Submit to Jotform</span>
+                   </button>
+                </div>
+
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
