@@ -1,1 +1,719 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACS | Absolute Climate Control</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
+    <style>
+        :root {
+            /* Cold Theme Defaults */
+            --theme-primary: #06b6d4; /* Cyan */
+            --theme-primary-light: #67e8f9;
+            --theme-bg-glow-1: rgba(6, 182, 212, 0.15);
+            --theme-bg-glow-2: rgba(59, 130, 246, 0.10);
+            --theme-shadow: rgba(6, 182, 212, 0.4);
+            --theme-border: rgba(6, 182, 212, 0.2);
+            --theme-border-hover: rgba(6, 182, 212, 0.5);
+        }
+
+        body.hot-mode {
+            /* Hot Theme Overrides */
+            --theme-primary: #f97316; /* Orange */
+            --theme-primary-light: #fb923c;
+            --theme-bg-glow-1: rgba(249, 115, 22, 0.15);
+            --theme-bg-glow-2: rgba(239, 68, 68, 0.10);
+            --theme-shadow: rgba(249, 115, 22, 0.4);
+            --theme-border: rgba(249, 115, 22, 0.2);
+            --theme-border-hover: rgba(249, 115, 22, 0.5);
+        }
+
+        body { 
+            background-color: #050507; 
+            overflow-x: hidden; 
+            color: #f8fafc;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            /* Prevent text selection when dragging dial */
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+
+        body.dragging {
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: grabbing !important;
+        }
+
+        /* Smooth Theme Transitions */
+        .theme-text { color: var(--theme-primary); transition: color 0.8s ease; }
+        .theme-text-light { color: var(--theme-primary-light); transition: color 0.8s ease; }
+        .theme-bg { background-color: var(--theme-primary); transition: background-color 0.8s ease; }
+        .theme-border { border-color: var(--theme-border); transition: border-color 0.8s ease; }
+        .theme-shadow { box-shadow: 0 0 20px var(--theme-shadow); transition: box-shadow 0.8s ease; }
+        .theme-border-hover:hover { border-color: var(--theme-border-hover); transition: border-color 0.5s ease; }
+        
+        .ambient-bg {
+            background: radial-gradient(circle at 80% 20%, var(--theme-bg-glow-1) 0%, transparent 50%), 
+                        radial-gradient(circle at 20% 80%, var(--theme-bg-glow-2) 0%, transparent 50%);
+            transition: background 0.8s ease;
+        }
+
+        /* Noise overlay adds premium architectural texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Premium Glass Panels */
+        .premium-panel {
+            background: rgba(255, 255, 255, 0.015);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .premium-panel:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Scroll Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(4rem) scale(0.9);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Particle Animations */
+        @keyframes drift {
+            0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(100vh) translateX(20vw); opacity: 0; }
+        }
+        @keyframes rise {
+            0% { transform: translateY(100vh) translateX(0) scale(1); opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) translateX(-10vw) scale(1.5); opacity: 0; }
+        }
+
+        .particle-cold {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(6,182,212,0) 70%);
+            border-radius: 50%;
+            animation: drift linear infinite;
+            transition: opacity 0.8s ease;
+        }
+        .particle-hot {
+            position: absolute;
+            background: radial-gradient(circle, rgba(249,115,22,0.6) 0%, rgba(239,68,68,0) 70%);
+            border-radius: 50%;
+            animation: rise linear infinite;
+            filter: blur(3px);
+            transition: opacity 0.8s ease;
+        }
+        body.hot-mode .particle-cold { opacity: 0 !important; pointer-events: none; }
+        body:not(.hot-mode) .particle-hot { opacity: 0 !important; pointer-events: none; }
+        
+        /* Grid */
+        .architectural-grid {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjAxNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==');
+        }
+    </style>
+</head>
+<body class="relative min-h-screen">
+
+    <div class="noise-overlay"></div>
+
+    <!-- Ambient Hot/Cold Effects -->
+    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden ambient-bg" id="particles-container">
+        <!-- Particles generated by JS -->
+        <div class="absolute inset-0 architectural-grid opacity-100 mix-blend-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-500 py-8 bg-transparent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex-shrink-0 cursor-pointer flex flex-col items-start">
+                <img 
+                    src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                    alt="ACS Logo" 
+                    class="h-[4.5rem] sm:h-[5rem] object-cover mix-blend-screen -mb-1 sm:-mb-2 -ml-2" 
+                    style="clip-path: inset(5% 0% 21% 0%)"
+                />
+                <span class="text-[0.55rem] sm:text-[0.65rem] uppercase tracking-[0.35em] font-medium text-slate-200">Air Conditioning Solutions</span>
+            </div>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-10 items-center">
+                <a href="#services" class="text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-white transition-colors">Services</a>
+                <a href="#heat-pumps" class="text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-white transition-colors">Heat Pumps</a>
+                <a href="#maintenance" class="text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-white transition-colors">Maintenance</a>
+                <a href="#about-us" class="text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-white transition-colors">About Us</a>
+                
+                <a href="#contact" class="premium-panel px-7 py-3 rounded-none text-xs uppercase tracking-widest font-semibold text-white transition-all group flex items-center border-l-2 theme-border theme-border-hover hover:bg-white/5">
+                    Get a Quote
+                    <i data-lucide="chevron-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden relative z-50">
+                <button id="mobile-menu-btn" class="text-slate-300 hover:text-white p-2">
+                    <i data-lucide="menu" id="menu-icon" class="w-6 h-6"></i>
+                    <i data-lucide="x" id="close-icon" class="w-6 h-6 hidden"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full premium-panel border-t border-white/5 bg-[#050507]/95 py-6 px-4 flex-col space-y-4 shadow-2xl">
+            <a href="#services" class="mobile-link text-xs uppercase tracking-widest font-medium text-slate-300 hover:text-white px-4 py-3 rounded-sm hover:bg-white/5">Services</a>
+            <a href="#heat-pumps" class="mobile-link text-xs uppercase tracking-widest font-medium text-slate-300 hover:text-white px-4 py-3 rounded-sm hover:bg-white/5">Heat Pumps</a>
+            <a href="#maintenance" class="mobile-link text-xs uppercase tracking-widest font-medium text-slate-300 hover:text-white px-4 py-3 rounded-sm hover:bg-white/5">Maintenance</a>
+            <a href="#about-us" class="mobile-link text-xs uppercase tracking-widest font-medium text-slate-300 hover:text-white px-4 py-3 rounded-sm hover:bg-white/5">About Us</a>
+            <a href="#contact" class="mx-4 mt-4 px-6 py-4 rounded-sm text-xs uppercase tracking-widest font-semibold text-[#050507] theme-bg text-center block">Get a Quote</a>
+        </div>
+    </nav>
+
+    <main class="relative z-10">
+        <!-- Hero Section -->
+        <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col lg:flex-row items-center min-h-[90vh]">
+            <div class="lg:w-1/2 space-y-10 z-10">
+                
+                <!-- Interactive Mode Toggle -->
+                <div class="inline-flex items-center p-1 premium-panel rounded-full border border-white/10 relative">
+                    <div id="toggle-slider" class="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full transition-all duration-500 ease-out theme-bg opacity-20 theme-shadow"></div>
+                    <button onclick="setMode('cold')" id="btn-cold" class="relative z-10 flex items-center px-6 py-2 text-sm font-medium rounded-full transition-colors theme-text">
+                        <i data-lucide="snowflake" class="w-4 h-4 mr-2"></i> Cooling
+                    </button>
+                    <button onclick="setMode('hot')" id="btn-hot" class="relative z-10 flex items-center px-6 py-2 text-sm font-medium rounded-full transition-colors text-slate-400 hover:text-white">
+                        <i data-lucide="flame" class="w-4 h-4 mr-2"></i> Heating
+                    </button>
+                </div>
+                
+                <h1 class="text-5xl lg:text-7xl font-light tracking-tight leading-[1.1] text-white">
+                    Absolute <br/>
+                    <span class="font-bold theme-text theme-shadow inline-block">Climate Control.</span>
+                </h1>
+                
+                <p class="text-lg text-slate-400 max-w-xl leading-relaxed font-light">
+                    Architectural grade heating, ventilation, and air conditioning. We engineer bespoke, invisible comfort for Ireland's most premium residential and commercial spaces.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-6 pt-4">
+                    <a href="#contact" class="premium-panel relative group overflow-hidden px-8 py-4 transition-all text-white font-semibold flex justify-center items-center rounded-sm border-b-2 theme-border theme-border-hover">
+                        <span class="relative z-10 flex items-center text-xs uppercase tracking-widest">
+                            Consultation
+                            <i data-lucide="chevron-right" class="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform"></i>
+                        </span>
+                    </a>
+                    <a href="tel:0211234567" class="px-8 py-4 font-medium text-slate-300 hover:text-white flex justify-center items-center transition-colors text-xs uppercase tracking-widest">
+                        <i data-lucide="phone" class="w-5 h-5 mr-3 theme-text"></i>
+                        021 123 4567
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hero Visual - Premium Architectural Thermostat -->
+            <div class="lg:w-1/2 mt-16 lg:mt-0 relative w-full h-[400px] lg:h-[600px] flex justify-center items-center">
+                <div class="relative w-full max-w-lg aspect-square">
+                    <div class="absolute inset-0 premium-panel rounded-full border border-white/5 overflow-hidden shadow-2xl touch-none">
+                        <!-- Rotating inner rings -->
+                        <div class="absolute inset-8 rounded-full border border-dashed theme-border animate-[spin_40s_linear_infinite] opacity-30 pointer-events-none"></div>
+                        <div class="absolute inset-16 rounded-full border theme-border opacity-20 animate-[spin_30s_linear_infinite_reverse] pointer-events-none"></div>
+                        
+                        <!-- Core temperature element & Interactive Dial -->
+                        <div id="thermostat-container" class="w-full h-full rounded-full flex items-center justify-center relative bg-transparent border-0 animate-on-scroll">
+                            
+                            <!-- Interactive SVG Dial -->
+                            <svg id="thermostat-dial" class="absolute inset-0 w-full h-full overflow-visible z-10 cursor-pointer" viewBox="0 0 200 200" style="touch-action: none;">
+                                <!-- Track Background -->
+                                <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="400.55 534.07" stroke-linecap="round" />
+                                
+                                <!-- Track Progress -->
+                                <circle id="dial-progress" cx="100" cy="100" r="85" fill="none" stroke="var(--theme-primary)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="0 534.07" stroke-linecap="round" style="transition: stroke 0.8s ease;" />
+                                
+                                <!-- Draggable Handle -->
+                                <g id="dial-handle" transform="translate(100, 15)">
+                                    <!-- Invisible hit area for easier touch dragging -->
+                                    <circle cx="0" cy="0" r="24" fill="transparent" class="cursor-grab" />
+                                    <!-- Visible handle -->
+                                    <circle cx="0" cy="0" r="14" class="theme-bg cursor-grab hover:scale-110 transition-transform" stroke="#050507" stroke-width="3" style="transition: background-color 0.8s ease, transform 0.2s;" />
+                                </g>
+                            </svg>
+
+                            <div class="text-center relative z-0 pointer-events-none bg-[#050507] w-[70%] h-[70%] rounded-full flex flex-col justify-center items-center shadow-inner theme-border border">
+                                <div class="text-7xl font-extralight tracking-tighter theme-text-light flex justify-center">
+                                    <span id="thermostat-temp">18</span>°
+                                </div>
+                                <div id="thermostat-status" class="text-xs uppercase tracking-[0.3em] text-slate-500 mt-3 transition-colors duration-500">
+                                    Cooling Active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services" class="py-24 relative border-t border-white/5 scroll-mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-20 animate-on-scroll">
+                    <h2 class="text-sm uppercase tracking-[0.3em] font-semibold text-slate-500 mb-4">Engineering Standards</h2>
+                    <h3 class="text-3xl font-light tracking-tight sm:text-4xl text-white">Uncompromising Quality</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Air Conditioning -->
+                    <div class="premium-panel p-10 group cursor-pointer relative overflow-hidden rounded-sm border-t-2 border-t-transparent theme-border-hover transition-all duration-500 animate-on-scroll" style="transition-delay: 0ms;">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity theme-text">
+                            <i data-lucide="wind" class="w-32 h-32"></i>
+                        </div>
+                        <div class="mb-8 theme-text">
+                            <i data-lucide="wind" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg uppercase tracking-widest font-semibold mb-4 text-white">Air Conditioning</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-8 font-light">
+                            Bespoke cooling solutions ensuring optimal indoor air quality and perfect temperature control for commercial and premium residential properties.
+                        </p>
+                        <span class="inline-flex items-center text-xs uppercase tracking-widest font-medium theme-text">
+                            Explore <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
+                        </span>
+                    </div>
+
+                    <!-- Heat Pumps -->
+                    <div id="heat-pumps" class="premium-panel p-10 group cursor-pointer relative overflow-hidden rounded-sm border-t-2 border-t-transparent theme-border-hover transition-all duration-500 animate-on-scroll scroll-mt-32" style="transition-delay: 150ms;">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity theme-text">
+                            <i data-lucide="thermometer" class="w-32 h-32"></i>
+                        </div>
+                        <div class="mb-8 theme-text">
+                            <i data-lucide="thermometer" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg uppercase tracking-widest font-semibold mb-4 text-white">Heat Pumps</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-8 font-light">
+                            Highly efficient, eco-friendly heating solutions tailored to the Irish climate. Reduce your carbon footprint and energy expenditure.
+                        </p>
+                        <span class="inline-flex items-center text-xs uppercase tracking-widest font-medium theme-text">
+                            Explore <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
+                        </span>
+                    </div>
+
+                    <!-- Maintenance -->
+                    <div id="maintenance" class="premium-panel p-10 group cursor-pointer relative overflow-hidden rounded-sm border-t-2 border-t-transparent hover:border-t-slate-300 transition-all duration-500 animate-on-scroll scroll-mt-32" style="transition-delay: 300ms;">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity text-slate-400">
+                            <i data-lucide="wrench" class="w-32 h-32"></i>
+                        </div>
+                        <div class="mb-8 text-slate-300">
+                            <i data-lucide="wrench" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg uppercase tracking-widest font-semibold mb-4 text-white">Maintenance</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-8 font-light">
+                            Preventative maintenance and rapid-response repair services. Protect your investment with our comprehensive care packages starting from <strong class="text-white font-medium">€149</strong>.
+                        </p>
+                        <span class="inline-flex items-center text-xs uppercase tracking-widest font-medium text-slate-300 group-hover:text-white transition-colors">
+                            Explore <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about-us" class="py-24 relative border-t border-white/5 bg-[#0a0a0c] scroll-mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid md:grid-cols-2 gap-20 items-center">
+                    <div class="animate-on-scroll">
+                        <h2 class="text-sm uppercase tracking-[0.3em] font-semibold text-slate-500 mb-4">The ACS Difference</h2>
+                        <h3 class="text-3xl font-light tracking-tight sm:text-4xl mb-8 text-white">Engineering Excellence</h3>
+                        <p class="text-slate-400 mb-10 leading-relaxed font-light">
+                            With over 15 years of specialised experience in the Irish market, ACS provides uncompromised engineering standards. We partner with world-leading brands to ensure your systems are robust, highly efficient, and beautifully integrated into your environment.
+                        </p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center p-4 border-b border-white/5">
+                                <i data-lucide="shield-check" class="w-5 h-5 mr-6 theme-text"></i>
+                                <span class="font-light tracking-wide text-slate-300 uppercase text-xs">F-Gas Certified Engineers</span>
+                            </div>
+                            <div class="flex items-center p-4 border-b border-white/5">
+                                <i data-lucide="zap" class="w-5 h-5 mr-6 theme-text"></i>
+                                <span class="font-light tracking-wide text-slate-300 uppercase text-xs">Energy Optimisation Experts</span>
+                            </div>
+                            <div class="flex items-center p-4 border-b border-white/5">
+                                <i data-lucide="star" class="w-5 h-5 mr-6 theme-text"></i>
+                                <span class="font-light tracking-wide text-slate-300 uppercase text-xs">5-Star Premium Aftercare</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="premium-panel p-6 rounded-sm flex flex-col justify-center items-center text-center aspect-square animate-on-scroll" data-count-to="15" data-suffix="+" style="transition-delay: 0ms;">
+                            <span class="text-5xl font-extralight text-white mb-4 stat-val">0+</span>
+                            <span class="text-xs uppercase tracking-widest text-slate-500">Years Exp</span>
+                        </div>
+                        <div class="premium-panel p-6 rounded-sm flex flex-col justify-center items-center text-center aspect-square animate-on-scroll" data-count-to="24" data-suffix="/7" style="transition-delay: 200ms;">
+                            <span class="text-5xl font-extralight text-white mb-4 stat-val">0/7</span>
+                            <span class="text-xs uppercase tracking-widest text-slate-500">Support</span>
+                        </div>
+                        <div class="premium-panel p-6 rounded-sm flex flex-col justify-center items-center text-center aspect-square animate-on-scroll" data-count-to="100" data-suffix="%" style="transition-delay: 400ms;">
+                            <span class="text-5xl font-extralight text-white mb-4 stat-val">0%</span>
+                            <span class="text-xs uppercase tracking-widest text-slate-500">Satisfaction</span>
+                        </div>
+                        <div class="premium-panel p-6 rounded-sm flex flex-col justify-center items-center text-center aspect-square animate-on-scroll" style="transition-delay: 600ms;">
+                            <span class="text-5xl font-extralight text-white mb-4 stat-val">A++</span>
+                            <span class="text-xs uppercase tracking-widest text-slate-500">Efficiency</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact CTA -->
+        <section id="contact" class="py-32 relative overflow-hidden border-t border-white/5">
+            <div class="absolute inset-0 opacity-20 bg-gradient-to-b from-transparent theme-bg"></div>
+            
+            <div class="max-w-4xl mx-auto px-4 relative z-10 text-center animate-on-scroll">
+                <h2 class="text-4xl font-light mb-8 text-white tracking-tight">Ready to transform your environment?</h2>
+                <p class="text-lg text-slate-400 mb-12 max-w-2xl mx-auto font-light">
+                    Contact our expert team today for a complimentary site survey and bespoke, transparent quotation.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-6">
+                    <button class="px-10 py-5 font-semibold text-xs uppercase tracking-widest transition-all shadow-lg text-[#050507] theme-bg hover:opacity-90">
+                        Request a Survey
+                    </button>
+                    <a href="mailto:info@acs-ireland.ie" class="premium-panel px-10 py-5 font-semibold text-xs uppercase tracking-widest text-white hover:bg-white/5 transition-colors flex justify-center items-center">
+                        <i data-lucide="mail" class="w-4 h-4 mr-3 theme-text"></i>
+                        info@acs-ireland.ie
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 bg-[#050507] relative z-10 pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex flex-col items-start mb-6">
+                        <img 
+                            src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                            alt="ACS Logo" 
+                            class="h-[4rem] object-cover mix-blend-screen grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-500 -mb-1 -ml-2"
+                            style="clip-path: inset(5% 0% 21% 0%)" 
+                        />
+                        <span class="text-[0.6rem] uppercase tracking-[0.35em] font-medium text-slate-400">Air Conditioning Solutions</span>
+                    </div>
+                    <p class="text-slate-300 text-base max-w-sm leading-relaxed font-light">
+                        Premium Air Conditioning and Heat Pump Solutions for commercial and residential properties across Ireland. Engineered for excellence.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-white text-xs uppercase tracking-[0.2em] font-semibold mb-6">Services</h4>
+                    <ul class="space-y-4 text-base text-slate-300 font-light">
+                        <li><a href="#services" class="hover:text-white transition-colors">Air Conditioning Installation</a></li>
+                        <li><a href="#heat-pumps" class="hover:text-white transition-colors">Heat Pump Systems</a></li>
+                        <li><a href="#services" class="hover:text-white transition-colors">Commercial HVAC</a></li>
+                        <li><a href="#maintenance" class="hover:text-white transition-colors">Preventative Maintenance</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-white text-xs uppercase tracking-[0.2em] font-semibold mb-6">Contact</h4>
+                    <ul class="space-y-4 text-base text-slate-300 font-light">
+                        <li>Cork, Ireland</li>
+                        <li>021 123 4567</li>
+                        <li>info@acs-ireland.ie</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-slate-400 text-sm uppercase tracking-widest">
+                    &copy; <span id="year"></span> ACS Air Conditioning Solutions. All rights reserved.
+                </p>
+                <div class="flex space-x-8 mt-6 md:mt-0 text-sm uppercase tracking-widest text-slate-400">
+                    <a href="#" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Logic -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Dynamic Year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Scroll sticky nav
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('bg-[#050507]/80', 'backdrop-blur-xl', 'border-b', 'border-white/5', 'py-4');
+                navbar.classList.remove('py-8', 'bg-transparent');
+            } else {
+                navbar.classList.remove('bg-[#050507]/80', 'backdrop-blur-xl', 'border-b', 'border-white/5', 'py-4');
+                navbar.classList.add('py-8', 'bg-transparent');
+            }
+        });
+
+        // Mobile Menu Toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        mobileBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('flex');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        });
+
+        document.querySelectorAll('.mobile-link').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            });
+        });
+
+        // Generate Particles
+        const container = document.getElementById('particles-container');
+        for (let i = 0; i < 40; i++) {
+            const cold = document.createElement('div');
+            cold.className = 'particle-cold';
+            cold.style.left = `${Math.random() * 100}vw`;
+            cold.style.width = `${Math.random() * 4 + 2}px`;
+            cold.style.height = cold.style.width;
+            cold.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            cold.style.animationDelay = `-${Math.random() * 20}s`;
+            container.appendChild(cold);
+
+            const hot = document.createElement('div');
+            hot.className = 'particle-hot';
+            hot.style.left = `${Math.random() * 100}vw`;
+            hot.style.width = `${Math.random() * 25 + 10}px`;
+            hot.style.height = hot.style.width;
+            hot.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            hot.style.animationDelay = `-${Math.random() * 20}s`;
+            container.appendChild(hot);
+        }
+
+        // Stats Counting Function
+        function animateValue(obj, start, end, duration, suffix = '') {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const currentVal = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = currentVal + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end + suffix; 
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- INTERACTIVE DIAL LOGIC ---
+        const svgDial = document.getElementById('thermostat-dial');
+        const dialHandle = document.getElementById('dial-handle');
+        const dialProgress = document.getElementById('dial-progress');
+        const tempSpan = document.getElementById('thermostat-temp');
+        const statusText = document.getElementById('thermostat-status');
+
+        const MIN_TEMP = 16;
+        const MAX_TEMP = 30;
+        const MODE_THRESHOLD = 21.5; // Switches to hot at >= 21.5
+        const CIRCUMFERENCE = 2 * Math.PI * 85; // 534.07
+        const TRACK_LENGTH = CIRCUMFERENCE * 0.75; // 270 deg span = 400.55
+
+        let currentMode = 'cold';
+        let currentTemp = 18;
+        let isDragging = false;
+
+        function updateDialUI(temp) {
+            temp = Math.max(MIN_TEMP, Math.min(MAX_TEMP, temp));
+            currentTemp = temp;
+            tempSpan.innerText = Math.round(temp);
+            
+            const pct = (temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP);
+            
+            // Update Progress Bar
+            dialProgress.setAttribute('stroke-dasharray', `${pct * TRACK_LENGTH} ${CIRCUMFERENCE}`);
+            
+            // Update Handle Position (135deg start + pct * 270 span)
+            const angleDeg = 135 + (pct * 270);
+            const angleRad = angleDeg * (Math.PI / 180);
+            const x = 100 + 85 * Math.cos(angleRad);
+            const y = 100 + 85 * Math.sin(angleRad);
+            
+            dialHandle.setAttribute('transform', `translate(${x}, ${y})`);
+        }
+
+        function animateDialTo(targetTemp) {
+            let start = currentTemp;
+            let duration = 1000;
+            let startTime = null;
+            
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = Math.min((timestamp - startTime) / duration, 1);
+                // Ease out Expo
+                let easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                updateDialUI(start + (targetTemp - start) * easeProgress);
+                
+                if (progress < 1) window.requestAnimationFrame(step);
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function checkAutoModeSwitch(temp) {
+            if (temp >= MODE_THRESHOLD && currentMode === 'cold') {
+                window.setMode('hot', true); 
+            } else if (temp < MODE_THRESHOLD && currentMode === 'hot') {
+                window.setMode('cold', true); 
+            }
+        }
+
+        window.setMode = function(mode, fromDial = false) {
+            if (mode === currentMode) return;
+            currentMode = mode;
+            
+            const btnCold = document.getElementById('btn-cold');
+            const btnHot = document.getElementById('btn-hot');
+            const slider = document.getElementById('toggle-slider');
+
+            if (mode === 'hot') {
+                document.body.classList.add('hot-mode');
+                slider.style.transform = 'translateX(calc(100% + 8px))';
+                btnHot.classList.add('theme-text');
+                btnHot.classList.remove('text-slate-400');
+                btnCold.classList.remove('theme-text');
+                btnCold.classList.add('text-slate-400');
+                statusText.innerText = 'Heating Active';
+                if (!fromDial) animateDialTo(23);
+            } else {
+                document.body.classList.remove('hot-mode');
+                slider.style.transform = 'translateX(0)';
+                btnCold.classList.add('theme-text');
+                btnCold.classList.remove('text-slate-400');
+                btnHot.classList.remove('theme-text');
+                btnHot.classList.add('text-slate-400');
+                statusText.innerText = 'Cooling Active';
+                if (!fromDial) animateDialTo(18);
+            }
+        };
+
+        // Dial Drag Events
+        function startDrag(e) {
+            isDragging = true;
+            document.body.classList.add('dragging');
+            handleDrag(e);
+        }
+
+        function endDrag() {
+            isDragging = false;
+            document.body.classList.remove('dragging');
+        }
+
+        function handleDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const rect = svgDial.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            // Calculate Angle from center
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+            let angleFromRight = Math.atan2(dy, dx) * 180 / Math.PI;
+            if (angleFromRight < 0) angleFromRight += 360;
+            
+            // Track starts at 135 deg from standard 0 (right). Normalize mapping.
+            let mappedDeg = angleFromRight - 135; 
+            if (mappedDeg < 0) mappedDeg += 360;
+            
+            // Handle deadzone at bottom (between 270 and 360 mapped degrees)
+            if (mappedDeg > 270) {
+                if (mappedDeg > 315) mappedDeg = 0; 
+                else mappedDeg = 270; 
+            }
+            
+            const pct = mappedDeg / 270;
+            const temp = MIN_TEMP + pct * (MAX_TEMP - MIN_TEMP);
+            
+            updateDialUI(temp);
+            checkAutoModeSwitch(temp);
+        }
+
+        svgDial.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', handleDrag);
+        document.addEventListener('mouseup', endDrag);
+
+        svgDial.addEventListener('touchstart', startDrag, {passive: false});
+        document.addEventListener('touchmove', handleDrag, {passive: false});
+        document.addEventListener('touchend', endDrag);
+
+        // Intersection Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    
+                    if (entry.target.hasAttribute('data-count-to')) {
+                        const target = parseInt(entry.target.getAttribute('data-count-to'));
+                        const suffix = entry.target.getAttribute('data-suffix');
+                        const valElement = entry.target.querySelector('.stat-val');
+                        animateValue(valElement, 0, target, 1500, suffix);
+                        entry.target.removeAttribute('data-count-to'); 
+                    }
+
+                    if (entry.target.id === 'thermostat-container') {
+                        updateDialUI(MIN_TEMP); // Start dial empty
+                        animateDialTo(18); // Animate to default 18
+                        observer.unobserve(entry.target); 
+                    }
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    </script>
+</body>
+</html>
