@@ -233,7 +233,7 @@
             <!-- Hero Visual - Premium Architectural Thermostat -->
             <div class="lg:w-1/2 mt-16 lg:mt-0 relative w-full h-[400px] lg:h-[600px] flex justify-center items-center">
                 <div class="relative w-full max-w-lg aspect-square">
-                    <div class="absolute inset-0 premium-panel rounded-full border border-white/5 overflow-hidden shadow-2xl touch-none">
+                    <div class="absolute inset-0 premium-panel rounded-full border border-white/5 overflow-hidden shadow-2xl">
                         <!-- Rotating inner rings -->
                         <div class="absolute inset-8 rounded-full border border-dashed theme-border animate-[spin_40s_linear_infinite] opacity-30 pointer-events-none"></div>
                         <div class="absolute inset-16 rounded-full border theme-border opacity-20 animate-[spin_30s_linear_infinite_reverse] pointer-events-none"></div>
@@ -242,7 +242,7 @@
                         <div id="thermostat-container" class="w-full h-full rounded-full flex items-center justify-center relative bg-transparent border-0 animate-on-scroll">
                             
                             <!-- Interactive SVG Dial -->
-                            <svg id="thermostat-dial" class="absolute inset-0 w-full h-full overflow-visible z-10" viewBox="0 0 200 200">
+                            <svg id="thermostat-dial" class="absolute inset-0 w-full h-full overflow-visible z-10 pointer-events-none" viewBox="0 0 200 200">
                                 <!-- Track Background -->
                                 <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="400.55 534.07" stroke-linecap="round" />
                                 
@@ -250,7 +250,7 @@
                                 <circle id="dial-progress" cx="100" cy="100" r="85" fill="none" stroke="var(--theme-primary)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="0 534.07" stroke-linecap="round" style="transition: stroke 0.8s ease;" />
                                 
                                 <!-- Draggable Handle -->
-                                <g id="dial-handle" transform="translate(100, 15)" style="touch-action: none; cursor: grab;">
+                                <g id="dial-handle" transform="translate(100, 15)" style="touch-action: none; cursor: grab; pointer-events: auto;">
                                     <!-- Invisible hit area for easier touch dragging -->
                                     <circle cx="0" cy="0" r="24" fill="transparent" />
                                     <!-- Visible handle -->
