@@ -242,7 +242,7 @@
                         <div id="thermostat-container" class="w-full h-full rounded-full flex items-center justify-center relative bg-transparent border-0 animate-on-scroll">
                             
                             <!-- Interactive SVG Dial -->
-                            <svg id="thermostat-dial" class="absolute inset-0 w-full h-full overflow-visible z-10 cursor-pointer" viewBox="0 0 200 200" style="touch-action: none;">
+                            <svg id="thermostat-dial" class="absolute inset-0 w-full h-full overflow-visible z-10" viewBox="0 0 200 200">
                                 <!-- Track Background -->
                                 <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="400.55 534.07" stroke-linecap="round" />
                                 
@@ -250,11 +250,11 @@
                                 <circle id="dial-progress" cx="100" cy="100" r="85" fill="none" stroke="var(--theme-primary)" stroke-width="8" transform="rotate(135 100 100)" stroke-dasharray="0 534.07" stroke-linecap="round" style="transition: stroke 0.8s ease;" />
                                 
                                 <!-- Draggable Handle -->
-                                <g id="dial-handle" transform="translate(100, 15)">
+                                <g id="dial-handle" transform="translate(100, 15)" style="touch-action: none; cursor: grab;">
                                     <!-- Invisible hit area for easier touch dragging -->
-                                    <circle cx="0" cy="0" r="24" fill="transparent" class="cursor-grab" />
+                                    <circle cx="0" cy="0" r="24" fill="transparent" />
                                     <!-- Visible handle -->
-                                    <circle cx="0" cy="0" r="14" class="theme-bg cursor-grab hover:scale-110 transition-transform" stroke="#050507" stroke-width="3" style="transition: background-color 0.8s ease, transform 0.2s;" />
+                                    <circle cx="0" cy="0" r="14" class="theme-bg hover:scale-110 transition-transform" stroke="#050507" stroke-width="3" style="transition: background-color 0.8s ease, transform 0.2s;" />
                                 </g>
                             </svg>
 
@@ -681,11 +681,12 @@
             checkAutoModeSwitch(temp);
         }
 
-        svgDial.addEventListener('mousedown', startDrag);
+        // Attach listeners ONLY to the handle, not the whole SVG
+        dialHandle.addEventListener('mousedown', startDrag);
         document.addEventListener('mousemove', handleDrag);
         document.addEventListener('mouseup', endDrag);
 
-        svgDial.addEventListener('touchstart', startDrag, {passive: false});
+        dialHandle.addEventListener('touchstart', startDrag, {passive: false});
         document.addEventListener('touchmove', handleDrag, {passive: false});
         document.addEventListener('touchend', endDrag);
 
