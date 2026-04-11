@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ACS Oversight Dashboard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles for Scrollbars & Animations -->
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    .animate-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+
+  <!-- ES Module Import Map for React & Icons -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+      }
+    }
+  </script>
+  
+  <!-- Babel Standalone to compile JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-100 antialiased">
+  <div id="root"></div>
+
+  <!-- React Application Logic -->
+  <script type="text/babel" data-type="module">
+    import React, { useState } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { 
+      LayoutDashboard, CalendarDays, Wallet, Download, TrendingUp, 
+      Euro, MapPin, User, Wrench, Clock, ChevronRight, 
+      ClipboardCheck, ShieldAlert, ShieldCheck, Plus 
+    } from 'lucide-react';
+
+    // --- MOCK DATA FOR MANAGEMENT OVERSIGHT ---
+    const JOBS_DATA = [
+      {
+        id: "JOB-2026-089",
+        client: "Cork Airport - Terminal 1",
+        date: "2026-04-10",
+        status: "Completed",
+        type: "Emergency Leak Repair",
+        engineer: "Declan Murphy",
+        financials: { quoted: 850.00, labourCost: 180.00, materialCost: 320.00 }
+      },
+      {
+        id: "JOB-2026-090",
+        client: "Galway Tech Park - Unit 4",
+        date: "2026-04-11",
+        status: "In Progress",
+        type: "Annual Maintenance",
+        engineer: "Sean O'Connor",
+        financials: { quoted: 1200.00, labourCost: 400.00, materialCost: 150.00 }
+      },
+      {
+        id: "JOB-2026-091",
+        client: "Dublin - Google Docks",
+        date: "2026-04-12",
+        status: "Upcoming",
+        type: "Cassette Installation",
+        engineer: "Declan Murphy",
+        financials: { quoted: 5400.00, labourCost: 800.00, materialCost: 2800.00 }
+      }
+    ];
+
+    const TIMESHEETS_DATA = [
+      {
+        id: "TS-001",
+        date: "2026-04-09",
+        employee: "Declan Murphy",
+        site: "Galway Tech Park - Unit 4",
+        reference: "JOB-2026-090",
+        hours: 4.5,
+        materials: ["R32 Refrigerant Gas", "Copper Pipe (15mm)"],
+        notes: "Repaired micro-leak on outdoor unit coil. Re-gassed and tested."
+      }
+    ];
+
+    // F-GAS COMPLIANCE DATA (Sourced from EPA document requirements)
+    const FGAS_HISTORY = [
+      {
+        id: "CERT-5141",
+        date: "2026-01-27",
+        engineer: "Ken",
+        client: "Ballinascartha, Midleton",
+        location: "New Office Block, Elec. Room",
+        equipment: "Mitsubishi Heat Pump ACU-1073",
+        serial: "21406648",
+        refrigerant: "R32",
+        chargeKg: 2.0,
+        co2Eq: 1.35, 
+        leakTest: "Pass",
+        method: "Electronic",
+        addedRemoved: "0 kg",
+        labelled: "Yes",
+        status: "Compliant"
+      },
+      {
+        id: "CERT-5140",
+        date: "2026-01-27",
+        engineer: "Ken",
+        client: "Ballinascartha, Midleton",
+        location: "Canteen 1st Floor VRV",
+        equipment: "Mitsubishi PURY-P250",
+        serial: "36W00577",
+        refrigerant: "R410A",
+        chargeKg: 33.1,
+        co2Eq: 69.12,
+        leakTest: "Pass",
+        method: "Electronic",
+        addedRemoved: "0 kg",
+        labelled: "Yes",
+        status: "Compliant"
+      }
+    ];
+
+    const FGAS_UPCOMING = [
+      {
+        id: "SCHED-01",
+        dueDate: "2026-04-15",
+        client: "Cork Airport - Terminal 1",
+        location: "Server Room 2",
+        equipment: "Daikin RXS50L2V1B",
+        frequency: "6 Months",
+        priority: "High"
+      },
+      {
+        id: "SCHED-02",
+        dueDate: "2026-04-20",
+        client: "Galway Tech Park - Unit 4",
+        location: "Central Labs",
+        equipment: "Mitsubishi PUZ-M250",
+        frequency: "12 Months",
+        priority: "Medium"
+      }
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('overview');
+
+      return (
+        <div className="flex h-screen bg-slate-100 font-sans text-slate-900 overflow-hidden selection:bg-sky-100">
+          
+          {/* DESKTOP SIDEBAR */}
+          <aside className="hidden md:flex flex-col w-64 bg-slate-950 text-slate-300 shadow-xl z-20">
+            <div className="flex items-center justify-center py-6 px-4 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 border-b border-slate-900 shadow-inner">
+              <img 
+                src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                alt="ACS Logo" 
+                className="h-[105px] w-auto object-contain drop-shadow-2xl" 
+              />
+            </div>
+            <nav className="flex-1 p-4 space-y-2">
+              <DesktopNavItem active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<LayoutDashboard />} label="Overview" />
+              <DesktopNavItem active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={<CalendarDays />} label="Schedule" />
+              <DesktopNavItem active={activeTab === 'timesheets'} onClick={() => setActiveTab('timesheets')} icon={<Clock />} label="Timesheets" />
+              <DesktopNavItem active={activeTab === 'financials'} onClick={() => setActiveTab('financials')} icon={<Wallet />} label="Job Costs" />
+              <DesktopNavItem active={activeTab === 'fgas'} onClick={() => setActiveTab('fgas')} icon={<ClipboardCheck />} label="EPA / F-Gas" />
+            </nav>
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
+            
+            {/* Mobile Header */}
+            <header className="md:hidden h-20 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-950 border-b border-slate-900 flex items-center px-4 shrink-0 shadow-md z-10 justify-between">
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                  alt="ACS Logo" 
+                  className="h-[62px] w-auto object-contain drop-shadow-md" 
+                />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold text-xs border border-slate-700 shadow-inner">
+                MG
+              </div>
+            </header>
+
+            {/* Desktop Header */}
+            <header className="hidden md:flex h-20 bg-white border-b border-slate-200 items-center px-8 shrink-0 justify-between">
+              <h1 className="text-2xl font-bold text-slate-800 capitalize">
+                {activeTab === 'financials' ? 'Job Costings & Margins' : 
+                 activeTab === 'fgas' ? 'EPA F-Gas Compliance' : activeTab}
+              </h1>
+              <div className="flex items-center gap-3">
+                 <div className="text-right">
+                    <p className="text-sm font-bold text-slate-800">Management</p>
+                    <p className="text-xs text-slate-500">Admin Account</p>
+                 </div>
+                 <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold border border-sky-200">
+                  MG
+                </div>
+              </div>
+            </header>
+
+            {/* SCROLLABLE VIEW AREA */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50/50">
+              {activeTab === 'overview' && <OverviewTab jobs={JOBS_DATA} />}
+              {activeTab === 'calendar' && <CalendarTab jobs={JOBS_DATA} />}
+              {activeTab === 'timesheets' && <TimesheetsTab timesheets={TIMESHEETS_DATA} />}
+              {activeTab === 'financials' && <FinancialsTab jobs={JOBS_DATA} />}
+              {activeTab === 'fgas' && <FGasTab history={FGAS_HISTORY} upcoming={FGAS_UPCOMING} />}
+            </div>
+
+          </main>
+
+          {/* MOBILE BOTTOM NAVIGATION */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex justify-between items-center px-1 pb-safe z-50 overflow-x-auto">
+            <MobileNavItem active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<LayoutDashboard />} label="Home" />
+            <MobileNavItem active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={<CalendarDays />} label="Sched" />
+            <MobileNavItem active={activeTab === 'timesheets'} onClick={() => setActiveTab('timesheets')} icon={<Clock />} label="Hours" />
+            <MobileNavItem active={activeTab === 'financials'} onClick={() => setActiveTab('financials')} icon={<Wallet />} label="Costs" />
+            <MobileNavItem active={activeTab === 'fgas'} onClick={() => setActiveTab('fgas')} icon={<ClipboardCheck />} label="F-Gas" />
+          </nav>
+
+        </div>
+      );
+    }
+
+    // --- F-GAS TAB ---
+    function FGasTab({ history, upcoming }) {
+      const [view, setView] = useState('upcoming'); 
+
+      return (
+        <div className="p-4 md:p-8 max-w-7xl mx-auto animate-in duration-300 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button onClick={() => setView('upcoming')} className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'upcoming' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>Upcoming Checks</button>
+              <button onClick={() => setView('history')} className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'history' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>Logbook History</button>
+            </div>
+            <button onClick={() => setView('new')} className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-colors shadow-md">
+              <Plus className="w-4 h-4" /> New EPA Checklist
+            </button>
+          </div>
+
+          {view === 'upcoming' && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-amber-500" /> Due for Leak Detection
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {upcoming.map(item => (
+                  <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col sm:flex-row gap-4 justify-between group hover:shadow-md transition-all">
+                    <div>
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md mb-2 inline-block ${item.priority === 'High' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>Due: {item.dueDate}</span>
+                      <h3 className="font-bold text-slate-800 text-lg leading-tight">{item.client}</h3>
+                      <p className="text-sm font-medium text-slate-500 mt-1">{item.equipment}</p>
+                      <div className="flex items-center gap-3 mt-3 text-xs text-slate-400 font-medium">
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {item.location}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {item.frequency} Check</span>
+                      </div>
+                    </div>
+                    <div className="flex sm:flex-col justify-end">
+                       <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors whitespace-nowrap">Log Check</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {view === 'history' && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" /> EPA F-Gas Logbook Database
+              </h2>
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="px-5 py-4">Cert # / Date</th>
+                          <th className="px-5 py-4">Client & Equipment</th>
+                          <th className="px-5 py-4">Gas Type</th>
+                          <th className="px-5 py-4 text-center">Charge / CO2 Eq</th>
+                          <th className="px-5 py-4 text-center">Leak Test</th>
+                          <th className="px-5 py-4 text-center">Added/Rm</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {history.map((record) => (
+                          <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-5 py-4">
+                              <p className="font-black text-slate-800">{record.id}</p>
+                              <p className="text-xs font-medium text-slate-500 mt-0.5">{record.date}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5 uppercase">{record.engineer}</p>
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="font-bold text-slate-800">{record.client}</p>
+                              <p className="text-xs font-medium text-slate-500 mt-0.5 truncate max-w-[200px]">{record.equipment}</p>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="inline-block bg-slate-100 border border-slate-200 text-slate-600 px-2.5 py-1 rounded-md font-bold text-xs">{record.refrigerant}</span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <p className="font-bold text-sky-700">{record.chargeKg} kg</p>
+                              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{record.co2Eq} T</p>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                               <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-bold text-xs">
+                                 {record.leakTest} ({record.method})
+                               </span>
+                            </td>
+                            <td className="px-5 py-4 text-center font-medium text-slate-500">{record.addedRemoved}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {view === 'new' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-8 max-w-4xl mx-auto">
+              <div className="border-b border-slate-200 pb-5 mb-6">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">F-Gas & ODS Certificate</h2>
+                <p className="text-sm font-medium text-slate-500 mt-1">Major/Minor Maintenance & Leak Check Record</p>
+              </div>
+              <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setView('history'); }}>
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4">1. Plant Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Client / Site Name</label>
+                      <input type="text" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="e.g. Ballinascartha, Midleton" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Plant Location</label>
+                      <input type="text" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="e.g. Canteen 1st Floor" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Equipment Make / Model</label>
+                      <input type="text" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="e.g. Mitsubishi PURY-P250" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Serial Number</label>
+                      <input type="text" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="Serial No." required />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-sky-50/50 p-5 rounded-xl border border-sky-100">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-sky-700 mb-4">2. F-Gas Data</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Refrigerant Type</label>
+                      <select className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option>R32</option><option>R410A</option><option>R407C</option><option>R134a</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">System Charge (kg)</label>
+                      <input type="number" step="0.1" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="e.g. 14.5" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">CO2 Equivalent (Tonnes)</label>
+                      <input type="number" step="0.01" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="Calculated T" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Leak Check Result</label>
+                      <select className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white text-emerald-700 font-bold">
+                        <option>OK / Passed</option><option>Failed / Leak Found</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Detection Method</label>
+                      <select className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option>Electronic (Elec)</option><option>Visual / Bubble</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Refrigerant Added/Removed</label>
+                      <input type="text" className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" placeholder="e.g. N/A or 0.5kg added" />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 text-sky-600 rounded" defaultChecked />
+                    <span className="text-sm font-bold text-slate-700">System Labelled</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 text-sky-600 rounded" defaultChecked />
+                    <span className="text-sm font-bold text-slate-700">Filter Condition OK</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 text-sky-600 rounded" defaultChecked />
+                    <span className="text-sm font-bold text-slate-700">Coils Condition OK</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 text-sky-600 rounded" defaultChecked />
+                    <span className="text-sm font-bold text-slate-700">Oil Levels OK</span>
+                  </label>
+                </div>
+                <div className="pt-6 border-t border-slate-200 flex justify-end gap-3">
+                  <button type="button" onClick={() => setView('upcoming')} className="px-5 py-2.5 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100">Cancel</button>
+                  <button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-2.5 rounded-lg text-sm font-bold shadow-md">Save Certificate</button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // --- OVERVIEW TAB ---
+    function OverviewTab({ jobs }) {
+      const totalRevenue = jobs.reduce((sum, job) => sum + job.financials.quoted, 0);
+      const totalLabour = jobs.reduce((sum, job) => sum + job.financials.labourCost, 0);
+      const totalMaterials = jobs.reduce((sum, job) => sum + job.financials.materialCost, 0);
+      const totalCosts = totalLabour + totalMaterials;
+      const grossProfit = totalRevenue - totalCosts;
+      const profitMargin = ((grossProfit / totalRevenue) * 100).toFixed(1);
+
+      const formatCurrency = (amount) => `€${amount.toLocaleString('en-IE', { minimumFractionDigits: 2 })}`;
+
+      return (
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in duration-300">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            <KPICard title="Total Pipeline" amount={formatCurrency(totalRevenue)} subtitle={`${jobs.length} Active Jobs`} icon={<Euro className="w-4 h-4 text-sky-600" />} bg="bg-sky-50" />
+            <KPICard title="Total Costs" amount={formatCurrency(totalCosts)} subtitle="Labour & Materials" icon={<TrendingUp className="w-4 h-4 text-slate-500" />} bg="bg-slate-100" />
+            <KPICard title="Projected Profit" amount={formatCurrency(grossProfit)} subtitle={`${profitMargin}% Margin`} icon={<Wallet className="w-4 h-4 text-sky-400" />} bg="bg-slate-900" highlight={true} />
+            <KPICard title="Upcoming Installs" amount="2" subtitle="Next 7 Days" icon={<Wrench className="w-4 h-4 text-slate-600" />} bg="bg-slate-50" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="font-bold text-slate-800">Recent Job Status</h2>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {jobs.slice(0, 4).map((job) => (
+                <div key={job.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex gap-4 items-center">
+                    <div className={`w-2 h-10 rounded-full ${job.status === 'Completed' ? 'bg-sky-500' : job.status === 'In Progress' ? 'bg-sky-300' : 'bg-slate-300'}`} />
+                    <div>
+                      <h3 className="font-semibold text-slate-800 text-sm md:text-base">{job.client}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                        <span className="flex items-center gap-1"><User className="w-3 h-3" /> {job.engineer}</span>
+                        <span className="hidden md:inline">•</span>
+                        <span className="hidden md:flex items-center gap-1"><Clock className="w-3 h-3" /> {job.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-md mb-1 ${job.status === 'Completed' ? 'bg-sky-50 text-sky-700' : job.status === 'In Progress' ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-500'}`}>
+                      {job.status}
+                    </span>
+                    <span className="text-xs font-medium text-slate-500">{formatCurrency(job.financials.quoted)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- CALENDAR TAB ---
+    function CalendarTab({ jobs }) {
+      const [selectedDate, setSelectedDate] = useState("2026-04-12");
+      const dates = Array.from({length: 14}, (_, i) => {
+        const d = new Date("2026-04-08"); 
+        d.setDate(d.getDate() + i);
+        return d.toISOString().split('T')[0];
+      });
+      const filteredJobs = jobs.filter(j => j.date === selectedDate);
+      const formatDateLabel = (dateStr) => {
+        const date = new Date(dateStr);
+        return { dayName: date.toLocaleDateString('en-IE', { weekday: 'short' }), dayNumber: date.getDate(), isToday: dateStr === "2026-04-10" };
+      };
+
+      return (
+        <div className="flex flex-col h-full animate-in duration-300">
+          <div className="bg-white border-b border-slate-200 py-3 md:py-6 px-4 shrink-0 shadow-sm">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                {dates.map((dateStr) => {
+                  const { dayName, dayNumber, isToday } = formatDateLabel(dateStr);
+                  const isSelected = selectedDate === dateStr;
+                  const hasJobs = jobs.some(j => j.date === dateStr);
+                  return (
+                    <button
+                      key={dateStr} onClick={() => setSelectedDate(dateStr)}
+                      className={`snap-start shrink-0 flex flex-col items-center justify-center w-14 h-16 md:w-20 md:h-24 rounded-2xl transition-all relative ${isSelected ? 'bg-sky-600 text-white shadow-md transform scale-105' : isToday ? 'bg-sky-50 text-sky-900 border border-sky-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+                    >
+                      <span className={`text-[10px] md:text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>{dayName}</span>
+                      <span className="text-xl md:text-3xl font-black mt-0.5">{dayNumber}</span>
+                      {hasJobs && !isSelected && <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-slate-400"></span>}
+                      {hasJobs && isSelected && <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white"></span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
+            <div className="max-w-3xl mx-auto space-y-4">
+              <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Schedule for {new Date(selectedDate).toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h3>
+              {filteredJobs.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl">
+                  <CalendarDays className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium">No jobs scheduled for this date.</p>
+                </div>
+              ) : (
+                filteredJobs.map(job => (
+                  <div key={job.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden group">
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${job.status === 'Completed' ? 'bg-sky-500' : job.status === 'In Progress' ? 'bg-sky-300' : 'bg-slate-400'}`} />
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{job.id}</span>
+                      <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded text-white ${job.status === 'Completed' ? 'bg-sky-500' : job.status === 'In Progress' ? 'bg-slate-400' : 'bg-slate-300'}`}>
+                        {job.status}
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-bold text-slate-800 leading-tight mb-2">{job.client}</h4>
+                    <div className="space-y-2 mt-4">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Wrench className="w-4 h-4 text-slate-400" />
+                        <span className="font-medium">{job.type}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <User className="w-4 h-4 text-slate-400" />
+                        <span>Assigned to: <strong className="text-slate-800">{job.engineer}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- FINANCIALS TAB ---
+    function FinancialsTab({ jobs }) {
+      const formatCurrency = (amount) => `€${amount.toLocaleString('en-IE', { minimumFractionDigits: 2 })}`;
+      const exportFinancials = () => {
+        const headers = ["Job ID", "Client", "Date", "Status", "Quote", "Labour Cost", "Material Cost", "Gross Profit", "Margin %"];
+        const rows = jobs.map(j => {
+          const costs = j.financials.labourCost + j.financials.materialCost;
+          const profit = j.financials.quoted - costs;
+          const margin = ((profit / j.financials.quoted) * 100).toFixed(1) + '%';
+          return [j.id, `"${j.client}"`, j.date, j.status, j.financials.quoted, j.financials.labourCost, j.financials.materialCost, profit, margin];
+        });
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `acs_financials_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      };
+
+      return (
+        <div className="p-4 md:p-8 max-w-7xl mx-auto animate-in duration-300">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <p className="text-slate-500 text-sm md:text-base">Breakdown of costs and profit margins per job.</p>
+            <button onClick={exportFinancials} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 md:py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors shadow-md">
+              <Download className="w-4 h-4" /> Export CSV for QuickBooks
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {jobs.map(job => {
+              const totalCost = job.financials.labourCost + job.financials.materialCost;
+              const profit = job.financials.quoted - totalCost;
+              const margin = ((profit / job.financials.quoted) * 100).toFixed(0);
+              const isLoss = profit < 0;
+              return (
+                <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">{job.id}</span>
+                      <h3 className="font-bold text-slate-800 leading-tight mt-1">{job.client}</h3>
+                    </div>
+                    <div className={`px-2.5 py-1 rounded-lg text-xs font-bold flex flex-col items-end ${isLoss ? 'bg-rose-50 text-rose-700' : 'bg-sky-50 text-sky-700'}`}>
+                      <span>{margin}%</span>
+                      <span className="text-[9px] uppercase tracking-wider opacity-70">Margin</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mt-5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Quoted Price</span><span className="font-bold text-slate-800">{formatCurrency(job.financials.quoted)}</span>
+                    </div>
+                    <div className="h-px bg-slate-100 w-full"></div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Labour Costs</span><span className="font-medium text-slate-700">{formatCurrency(job.financials.labourCost)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Material Costs</span><span className="font-medium text-slate-700">{formatCurrency(job.financials.materialCost)}</span>
+                    </div>
+                    <div className="h-px bg-slate-100 w-full"></div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-sm font-bold text-slate-800">Est. Profit</span>
+                      <span className={`font-bold text-lg ${isLoss ? 'text-rose-600' : 'text-sky-600'}`}>{formatCurrency(profit)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // --- TIMESHEETS TAB ---
+    function TimesheetsTab({ timesheets }) {
+      const exportTimesheetsCSV = () => {
+        const headers = ["Date", "Employee Name", "Customer / Job Site", "Job Reference", "Duration (Hours)", "Materials Consumed", "Description / Notes"];
+        const rows = timesheets.map(ts => [ts.date, `"${ts.employee}"`, `"${ts.site}"`, `"${ts.reference}"`, ts.hours, `"${ts.materials.join(', ')}"`, `"${ts.notes.replace(/"/g, '""')}"`]);
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `acs_timesheets_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      };
+
+      return (
+        <div className="p-4 md:p-8 max-w-7xl mx-auto animate-in duration-300">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">Employee Timesheets</h2>
+              <p className="text-slate-500 text-sm md:text-base">Review logged hours and field notes.</p>
+            </div>
+            <button onClick={exportTimesheetsCSV} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 md:py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors shadow-md">
+              <Download className="w-4 h-4" /> Export Timesheets (CSV)
+            </button>
+          </div>
+
+          <div className="md:hidden space-y-4">
+            {timesheets.map((ts) => (
+              <div key={ts.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-1 rounded">{ts.date}</span>
+                  <span className="font-black text-slate-800">{ts.hours} hrs</span>
+                </div>
+                <h3 className="font-bold text-slate-800 text-sm">{ts.site}</h3>
+                <p className="text-xs text-slate-500 mb-3">{ts.employee} • Ref: {ts.reference}</p>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-3">
+                  <p className="text-xs text-slate-600 italic leading-relaxed">"{ts.notes}"</p>
+                </div>
+                {ts.materials.length > 0 && (
+                  <div className="flex items-start gap-2 text-xs text-slate-500">
+                    <Wrench className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>{ts.materials.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-xs">
+                <tr>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Employee</th>
+                  <th className="px-6 py-4">Site / Reference</th>
+                  <th className="px-6 py-4 text-right">Hours</th>
+                  <th className="px-6 py-4 w-1/3">Notes & Materials</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {timesheets.map((ts) => (
+                  <tr key={ts.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-600">{ts.date}</td>
+                    <td className="px-6 py-4 font-bold text-slate-800">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600">
+                          {ts.employee.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        {ts.employee}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-slate-800">{ts.site}</p>
+                      <p className="text-xs font-medium text-slate-400 mt-0.5">{ts.reference}</p>
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-sky-600 text-base">{ts.hours}</td>
+                    <td className="px-6 py-4 whitespace-normal">
+                      <p className="text-slate-600 text-xs italic leading-relaxed">"{ts.notes}"</p>
+                      {ts.materials.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {ts.materials.map((mat, i) => (
+                            <span key={i} className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">{mat}</span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // --- UTILITY UI COMPONENTS ---
+    function KPICard({ title, amount, subtitle, icon, bg, highlight }) {
+      return (
+        <div className={`rounded-2xl p-4 md:p-5 border ${highlight ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bg} ${highlight ? 'bg-slate-800/50' : ''}`}>{icon}</div>
+            <h3 className={`text-xs md:text-sm font-semibold ${highlight ? 'text-slate-300' : 'text-slate-500'}`}>{title}</h3>
+          </div>
+          <p className={`text-2xl md:text-3xl font-black mb-1 tracking-tight ${highlight ? 'text-white' : 'text-slate-800'}`}>{amount}</p>
+          <p className={`text-xs font-medium ${highlight ? 'text-sky-400' : 'text-slate-400'}`}>{subtitle}</p>
+        </div>
+      );
+    }
+
+    function MobileNavItem({ icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={`flex flex-col items-center justify-center w-16 h-full space-y-1 transition-colors shrink-0 ${active ? 'text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}>
+          {React.cloneElement(icon, { className: `w-5 h-5 md:w-6 md:h-6 ${active ? 'stroke-[2.5px]' : 'stroke-2'}` })}
+          <span className={`text-[10px] font-bold tracking-wide ${active ? 'text-sky-700' : ''}`}>{label}</span>
+        </button>
+      );
+    }
+
+    function DesktopNavItem({ icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-bold text-sm ${active ? 'bg-sky-500/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}>
+          <div className="flex items-center gap-3">{React.cloneElement(icon, { className: "w-5 h-5" })} {label}</div>
+          {active && <ChevronRight className="w-4 h-4 opacity-50" />}
+        </button>
+      );
+    }
+
+    // INITIALIZE REACT
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
