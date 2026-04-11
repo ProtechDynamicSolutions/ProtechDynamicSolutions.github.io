@@ -1,1 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ACS Oversight Dashboard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles for Scrollbars & Animations -->
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    .animate-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+    /* Gantt Chart Grid Pattern */
+    .gantt-grid {
+      background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px);
+      background-size: 60px 100%;
+    }
+  </style>
+
+  <!-- ES Module Import Map for React & Icons -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+      }
+    }
+  </script>
+  
+  <!-- Babel Standalone to compile JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-100 antialiased text-slate-900">
+  <div id="root"></div>
+
+  <!-- React Application Logic -->
+  <script type="text/babel" data-type="module">
+    import React, { useState } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { 
+      LayoutDashboard, CalendarDays, MapPin, User, Wrench, Clock, ChevronRight, 
+      PhoneCall, GanttChartSquare, Calendar as CalendarIcon, Phone, Mail, CheckCircle2, Circle
+    } from 'lucide-react';
+
+    // --- MOCK DATA FOR MANAGEMENT OVERSIGHT ---
+    const JOBS_DATA = [
+      {
+        id: "JOB-2026-089",
+        client: "Cork Airport - Terminal 1",
+        startDate: "2026-04-08",
+        endDate: "2026-04-10",
+        status: "Completed",
+        type: "Emergency Leak Repair",
+        engineer: "Declan Murphy"
+      },
+      {
+        id: "JOB-2026-090",
+        client: "Galway Tech Park - Unit 4",
+        startDate: "2026-04-10",
+        endDate: "2026-04-13",
+        status: "In Progress",
+        type: "Annual Maintenance",
+        engineer: "Sean O'Connor"
+      },
+      {
+        id: "JOB-2026-091",
+        client: "Dublin - Google Docks",
+        startDate: "2026-04-15",
+        endDate: "2026-04-18",
+        status: "Upcoming",
+        type: "Cassette Installation",
+        engineer: "Declan Murphy"
+      },
+      {
+        id: "JOB-2026-092",
+        client: "Cork City Council - Main Office",
+        startDate: "2026-04-12",
+        endDate: "2026-04-13",
+        status: "Upcoming",
+        type: "Filter Replacement",
+        engineer: "Ken"
+      },
+      {
+        id: "JOB-2026-093",
+        client: "UCC - Boole Library",
+        startDate: "2026-04-20",
+        endDate: "2026-04-24",
+        status: "Upcoming",
+        type: "VRV System Commissioning",
+        engineer: "Sean O'Connor"
+      }
+    ];
+
+    const ON_CALL_DATA = [
+      { week: "06 Apr - 12 Apr 2026", primary: "Declan Murphy", primaryPhone: "087 123 4567", backup: "Sean O'Connor", backupPhone: "086 987 6543", active: true },
+      { week: "13 Apr - 19 Apr 2026", primary: "Ken", primaryPhone: "085 555 1234", backup: "Declan Murphy", backupPhone: "087 123 4567", active: false },
+      { week: "20 Apr - 26 Apr 2026", primary: "Sean O'Connor", primaryPhone: "086 987 6543", backup: "Ken", backupPhone: "085 555 1234", active: false },
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('overview');
+
+      return (
+        <div className="flex h-screen bg-slate-100 font-sans text-slate-900 overflow-hidden selection:bg-sky-100">
+          
+          {/* DESKTOP SIDEBAR */}
+          <aside className="hidden md:flex flex-col w-64 bg-slate-950 text-slate-300 shadow-xl z-20">
+            <div className="flex items-center justify-center py-6 px-4 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 border-b border-slate-900 shadow-inner">
+              <img 
+                src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                alt="ACS Logo" 
+                className="h-[105px] w-auto object-contain drop-shadow-2xl" 
+              />
+            </div>
+            <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+              <DesktopNavItem active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<LayoutDashboard />} label="Overview" />
+              <DesktopNavItem active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={<CalendarDays />} label="Calendar" />
+              <DesktopNavItem active={activeTab === 'gantt'} onClick={() => setActiveTab('gantt')} icon={<GanttChartSquare />} label="Gantt Chart" />
+              <DesktopNavItem active={activeTab === 'oncall'} onClick={() => setActiveTab('oncall')} icon={<PhoneCall />} label="On-Call Roster" />
+            </nav>
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
+            
+            {/* Mobile Header */}
+            <header className="md:hidden h-20 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-950 border-b border-slate-900 flex items-center px-4 shrink-0 shadow-md z-10 justify-between">
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/ACS/copilot_image_1775887042404.jpeg" 
+                  alt="ACS Logo" 
+                  className="h-[62px] w-auto object-contain drop-shadow-md" 
+                />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold text-xs border border-slate-700 shadow-inner">
+                MG
+              </div>
+            </header>
+
+            {/* Desktop Header */}
+            <header className="hidden md:flex h-20 bg-white border-b border-slate-200 items-center px-8 shrink-0 justify-between">
+              <h1 className="text-2xl font-bold text-slate-800 capitalize">
+                {activeTab === 'oncall' ? 'On-Call Roster' : activeTab.replace('-', ' ')}
+              </h1>
+              <div className="flex items-center gap-3">
+                 <div className="text-right">
+                    <p className="text-sm font-bold text-slate-800">Management</p>
+                    <p className="text-xs text-slate-500">Admin Account</p>
+                 </div>
+                 <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold border border-sky-200">
+                  MG
+                </div>
+              </div>
+            </header>
+
+            {/* SCROLLABLE VIEW AREA */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50/50">
+              {activeTab === 'overview' && <OverviewTab jobs={JOBS_DATA} />}
+              {activeTab === 'calendar' && <CalendarTab jobs={JOBS_DATA} />}
+              {activeTab === 'gantt' && <GanttTab jobs={JOBS_DATA} />}
+              {activeTab === 'oncall' && <OnCallTab roster={ON_CALL_DATA} />}
+            </div>
+
+          </main>
+
+          {/* MOBILE BOTTOM NAVIGATION */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center px-1 pb-safe z-50 overflow-x-auto snap-x scrollbar-hide">
+            <MobileNavItem active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<LayoutDashboard />} label="Home" />
+            <MobileNavItem active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={<CalendarDays />} label="Sched" />
+            <MobileNavItem active={activeTab === 'gantt'} onClick={() => setActiveTab('gantt')} icon={<GanttChartSquare />} label="Gantt" />
+            <MobileNavItem active={activeTab === 'oncall'} onClick={() => setActiveTab('oncall')} icon={<PhoneCall />} label="On-Call" />
+          </nav>
+
+        </div>
+      );
+    }
+
+    // --- OVERVIEW TAB ---
+    function OverviewTab({ jobs }) {
+      const upcomingJobs = jobs.filter(j => j.status === 'Upcoming').sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+      return (
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in duration-300">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            <KPICard title="Total Jobs" amount={jobs.length} subtitle="All Scheduled Works" icon={<LayoutDashboard className="w-4 h-4 text-sky-600" />} bg="bg-sky-50" />
+            <KPICard title="Upcoming Jobs" amount={upcomingJobs.length} subtitle="Scheduled next 14 days" icon={<CalendarIcon className="w-4 h-4 text-amber-500" />} bg="bg-amber-50" />
+            <KPICard title="Engineers On-Call" amount="1" subtitle="Primary: D. Murphy" icon={<PhoneCall className="w-4 h-4 text-slate-500" />} bg="bg-slate-100" />
+            <KPICard title="In Progress" amount={jobs.filter(j=>j.status==='In Progress').length} subtitle="Active on site" icon={<Wrench className="w-4 h-4 text-sky-400" />} bg="bg-slate-900" highlight={true} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent & Active Jobs */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-sky-600"/> Active & Recent Jobs
+                </h2>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {jobs.filter(j => j.status !== 'Upcoming').slice(0, 4).map((job) => (
+                  <JobListItem key={job.id} job={job} />
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming Jobs */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-amber-50/30">
+                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-amber-600"/> Upcoming Jobs
+                </h2>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {upcomingJobs.length > 0 ? upcomingJobs.map((job) => (
+                  <JobListItem key={job.id} job={job} />
+                )) : (
+                  <div className="p-8 text-center text-slate-500 text-sm">No upcoming jobs scheduled.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function JobListItem({ job }) {
+      return (
+        <div className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+          <div className="flex gap-4 items-center">
+            <div className={`w-2 h-10 rounded-full ${job.status === 'Completed' ? 'bg-sky-500' : job.status === 'In Progress' ? 'bg-amber-400' : 'bg-slate-300'}`} />
+            <div>
+              <h3 className="font-semibold text-slate-800 text-sm md:text-base">{job.client}</h3>
+              <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                <span className="flex items-center gap-1"><User className="w-3 h-3" /> {job.engineer}</span>
+                <span className="hidden md:inline">•</span>
+                <span className="hidden md:flex items-center gap-1"><Clock className="w-3 h-3" /> {job.startDate} to {job.endDate}</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right flex flex-col items-end">
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-md mb-1 uppercase tracking-wider ${job.status === 'Completed' ? 'bg-sky-50 text-sky-700' : job.status === 'In Progress' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>
+              {job.status}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // --- CALENDAR TAB ---
+    function CalendarTab({ jobs }) {
+      const [view, setView] = useState('month'); // 'day' or 'month'
+      const [selectedDate, setSelectedDate] = useState("2026-04-11"); // Current date context
+      
+      const datesForDayPicker = Array.from({length: 14}, (_, i) => {
+        const d = new Date("2026-04-08"); 
+        d.setDate(d.getDate() + i);
+        return d.toISOString().split('T')[0];
+      });
+
+      const filteredDayJobs = jobs.filter(j => {
+        return selectedDate >= j.startDate && selectedDate <= j.endDate;
+      });
+
+      // Simple Month Generation for April 2026 (Starts on Wednesday)
+      const aprilDays = Array.from({length: 30}, (_, i) => {
+        const dayNum = i + 1;
+        const dateStr = `2026-04-${dayNum.toString().padStart(2, '0')}`;
+        const dayJobs = jobs.filter(j => dateStr >= j.startDate && dateStr <= j.endDate);
+        return { dayNum, dateStr, dayJobs };
+      });
+      // Padding for grid (April 1 is Wednesday, so 2 empty slots before it if week starts Monday)
+      const padding = [null, null];
+
+      return (
+        <div className="flex flex-col h-full animate-in duration-300 bg-slate-50">
+          <div className="bg-white border-b border-slate-200 py-3 px-4 shrink-0 shadow-sm flex justify-between items-center">
+            <h2 className="font-bold text-slate-800">Schedule</h2>
+            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <button onClick={() => setView('month')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${view === 'month' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}>Month</button>
+              <button onClick={() => setView('day')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${view === 'day' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}>Day List</button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {view === 'day' ? (
+              <div>
+                <div className="bg-white border-b border-slate-200 py-4 px-4 shadow-sm">
+                  <div className="max-w-7xl mx-auto flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                    {datesForDayPicker.map((dateStr) => {
+                      const dateObj = new Date(dateStr);
+                      const isSelected = selectedDate === dateStr;
+                      const hasJobs = jobs.some(j => dateStr >= j.startDate && dateStr <= j.endDate);
+                      const isToday = dateStr === "2026-04-11";
+                      return (
+                        <button
+                          key={dateStr} onClick={() => setSelectedDate(dateStr)}
+                          className={`snap-start shrink-0 flex flex-col items-center justify-center w-16 h-20 md:w-20 md:h-24 rounded-2xl transition-all relative ${isSelected ? 'bg-sky-600 text-white shadow-md transform scale-105' : isToday ? 'bg-sky-50 text-sky-900 border border-sky-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+                        >
+                          <span className={`text-[10px] md:text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>{dateObj.toLocaleDateString('en-IE', { weekday: 'short' })}</span>
+                          <span className="text-2xl md:text-3xl font-black mt-0.5">{dateObj.getDate()}</span>
+                          {hasJobs && <span className={`absolute bottom-2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-400'}`}></span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-4">
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Jobs active on {new Date(selectedDate).toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </h3>
+                  {filteredDayJobs.length === 0 ? (
+                    <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl">
+                      <CalendarDays className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                      <p className="text-slate-500 font-medium">No jobs active for this date.</p>
+                    </div>
+                  ) : (
+                    filteredDayJobs.map(job => (
+                      <div key={job.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden group">
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${job.status === 'Completed' ? 'bg-sky-500' : job.status === 'In Progress' ? 'bg-amber-400' : 'bg-slate-400'}`} />
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{job.id}</span>
+                          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded text-slate-700 ${job.status === 'Completed' ? 'bg-sky-100' : job.status === 'In Progress' ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                            {job.status}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-800 leading-tight mb-2">{job.client}</h4>
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <Wrench className="w-4 h-4 text-slate-400" />
+                            <span className="font-medium">{job.type}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <User className="w-4 h-4 text-slate-400" />
+                            <span>Assigned to: <strong className="text-slate-800">{job.engineer}</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 md:p-8 max-w-5xl mx-auto">
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-slate-800 text-white text-center py-4">
+                    <h2 className="text-lg font-bold">April 2026</h2>
+                  </div>
+                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                      <div key={day} className="py-2 text-center text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200 last:border-0">{day}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 auto-rows-[100px] md:auto-rows-[120px]">
+                    {padding.map((_, i) => <div key={`pad-${i}`} className="border-b border-r border-slate-100 bg-slate-50/50 p-2"></div>)}
+                    {aprilDays.map((day) => (
+                      <div key={day.dateStr} className={`border-b border-r border-slate-100 p-1 md:p-2 relative overflow-y-auto ${day.dateStr === '2026-04-11' ? 'bg-sky-50/30' : 'bg-white'} hover:bg-slate-50 transition-colors`}>
+                        <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1 ${day.dateStr === '2026-04-11' ? 'bg-sky-600 text-white' : 'text-slate-500'}`}>
+                          {day.dayNum}
+                        </span>
+                        <div className="space-y-1">
+                          {day.dayJobs.map(job => (
+                            <div key={job.id} className="text-[9px] md:text-[10px] bg-slate-100 border border-slate-200 text-slate-700 p-1 rounded truncate font-medium" title={job.client}>
+                              {job.client}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // --- GANTT CHART TAB ---
+    function GanttTab({ jobs }) {
+      const dates = Array.from({length: 21}, (_, i) => {
+        const d = new Date("2026-04-06"); // Start from Monday Apr 6
+        d.setDate(d.getDate() + i);
+        return {
+          full: d.toISOString().split('T')[0],
+          day: d.getDate(),
+          isWeekend: d.getDay() === 0 || d.getDay() === 6
+        };
+      });
+      const chartStartDate = new Date("2026-04-06");
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const colWidth = 60; // px per day
+
+      return (
+        <div className="flex flex-col h-full animate-in duration-300">
+          <div className="bg-white border-b border-slate-200 py-4 px-6 shrink-0 shadow-sm">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Job Programme Timeline</h2>
+              <p className="text-slate-500 text-sm">Visual schedule of ongoing and upcoming works (April 2026).</p>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-auto bg-white m-4 md:m-8 rounded-2xl shadow-sm border border-slate-200">
+            <div className="flex min-w-max">
+              {/* Left Column (Sticky) */}
+              <div className="sticky left-0 bg-white z-20 w-64 md:w-80 border-r border-slate-200 flex-shrink-0 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.1)]">
+                <div className="h-14 border-b border-slate-200 bg-slate-50 p-4 flex items-center">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Client & Job Info</span>
+                </div>
+                {jobs.sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).map(job => (
+                  <div key={job.id} className="h-16 border-b border-slate-100 p-3 flex flex-col justify-center bg-white group hover:bg-slate-50">
+                    <h4 className="text-sm font-bold text-slate-800 truncate" title={job.client}>{job.client}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">{job.engineer} • {job.type}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Right Column (Timeline Grid) */}
+              <div className="flex-1 relative">
+                {/* Header Row (Dates) */}
+                <div className="h-14 border-b border-slate-200 flex bg-slate-50 w-max">
+                  {dates.map(d => (
+                    <div key={d.full} className={`w-[60px] flex-shrink-0 border-r border-slate-200 flex flex-col items-center justify-center ${d.isWeekend ? 'bg-slate-100/80' : ''}`}>
+                      <span className="text-[10px] font-bold text-slate-400">{d.day}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Grid Lines Overlay */}
+                <div className="absolute top-14 bottom-0 left-0 right-0 pointer-events-none gantt-grid w-max opacity-50 z-0" style={{ width: dates.length * colWidth + 'px' }}></div>
+                
+                {/* Data Rows */}
+                <div className="w-max relative z-10" style={{ width: dates.length * colWidth + 'px' }}>
+                  {jobs.map(job => {
+                    const jStart = new Date(job.startDate);
+                    const jEnd = new Date(job.endDate);
+                    const offsetDays = Math.max(0, (jStart - chartStartDate) / msPerDay);
+                    let durationDays = ((jEnd - jStart) / msPerDay) + 1;
+                    
+                    // Cap duration if it goes beyond our grid
+                    if (offsetDays + durationDays > dates.length) {
+                       durationDays = dates.length - offsetDays;
+                    }
+
+                    const isPast = job.status === 'Completed';
+                    const isProgress = job.status === 'In Progress';
+                    const colorClass = isPast ? 'bg-slate-300' : isProgress ? 'bg-sky-500' : 'bg-amber-400';
+
+                    return (
+                      <div key={job.id} className="h-16 border-b border-slate-100 relative group hover:bg-slate-50/50">
+                        {offsetDays < dates.length && (
+                          <div 
+                            className={`absolute top-3 bottom-3 rounded-md shadow-sm flex items-center px-2 text-[10px] font-bold text-white overflow-hidden whitespace-nowrap transition-transform cursor-default ${colorClass}`}
+                            style={{ 
+                              left: `${offsetDays * colWidth + 8}px`, 
+                              width: `${(durationDays * colWidth) - 16}px`,
+                              minWidth: '24px' 
+                            }}
+                            title={`${job.client} (${job.startDate} to ${job.endDate})`}
+                          >
+                            {durationDays > 1 ? job.id : ''}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- ON CALL TAB ---
+    function OnCallTab({ roster }) {
+      return (
+        <div className="p-4 md:p-8 max-w-5xl mx-auto animate-in duration-300">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-800">Engineer On-Call Roster</h2>
+            <p className="text-slate-500 text-sm md:text-base">Out of hours emergency coverage schedule.</p>
+          </div>
+
+          <div className="space-y-4">
+            {roster.map((week, idx) => (
+              <div key={idx} className={`bg-white rounded-2xl shadow-sm border p-5 md:p-6 transition-all ${week.active ? 'border-sky-300 ring-4 ring-sky-50' : 'border-slate-200'}`}>
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                  <h3 className="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5 text-slate-400" /> {week.week}
+                  </h3>
+                  {week.active && (
+                    <span className="bg-sky-100 text-sky-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                      <Circle className="w-2 h-2 fill-current" /> Active Now
+                    </span>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Primary */}
+                  <div className={`p-4 rounded-xl border ${week.active ? 'bg-sky-50/50 border-sky-100' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${week.active ? 'bg-sky-200 text-sky-800' : 'bg-slate-200 text-slate-600'}`}>Primary</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-lg font-black text-slate-600 border-2 border-white shadow-sm">
+                        {week.primary.split(' ').map(n=>n[0]).join('')}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-lg">{week.primary}</h4>
+                        <a href={`tel:${week.primaryPhone}`} className="text-sky-600 font-semibold text-sm flex items-center gap-1.5 mt-0.5 hover:underline">
+                          <Phone className="w-3.5 h-3.5" /> {week.primaryPhone}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Backup */}
+                  <div className="p-4 rounded-xl border bg-white border-slate-100">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Backup</span>
+                    </div>
+                    <div className="flex items-center gap-4 opacity-80">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-black text-slate-500 border-2 border-white shadow-sm">
+                        {week.backup.split(' ').map(n=>n[0]).join('')}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-700">{week.backup}</h4>
+                        <a href={`tel:${week.backupPhone}`} className="text-slate-500 font-medium text-sm flex items-center gap-1.5 mt-0.5 hover:text-slate-800">
+                          <Phone className="w-3 h-3" /> {week.backupPhone}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // --- UTILITY UI COMPONENTS ---
+    function KPICard({ title, amount, subtitle, icon, bg, highlight }) {
+      return (
+        <div className={`rounded-2xl p-4 md:p-5 border ${highlight ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm flex flex-col justify-between h-full`}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${bg} ${highlight ? 'bg-slate-800/50' : ''}`}>{icon}</div>
+            <h3 className={`text-xs md:text-sm font-semibold leading-tight ${highlight ? 'text-slate-300' : 'text-slate-500'}`}>{title}</h3>
+          </div>
+          <div>
+            <p className={`text-2xl md:text-3xl font-black mb-1 tracking-tight ${highlight ? 'text-white' : 'text-slate-800'}`}>{amount}</p>
+            <p className={`text-xs font-medium ${highlight ? 'text-sky-400' : 'text-slate-400'}`}>{subtitle}</p>
+          </div>
+        </div>
+      );
+    }
+
+    function MobileNavItem({ icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={`flex flex-col items-center justify-center w-[72px] h-full space-y-1 transition-colors shrink-0 ${active ? 'text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}>
+          {React.cloneElement(icon, { className: `w-5 h-5 md:w-6 md:h-6 ${active ? 'stroke-[2.5px]' : 'stroke-2'}` })}
+          <span className={`text-[10px] font-bold tracking-wide ${active ? 'text-sky-700' : ''}`}>{label}</span>
+        </button>
+      );
+    }
+
+    function DesktopNavItem({ icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-bold text-sm ${active ? 'bg-sky-500/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}>
+          <div className="flex items-center gap-3">{React.cloneElement(icon, { className: "w-5 h-5" })} {label}</div>
+          {active && <ChevronRight className="w-4 h-4 opacity-50" />}
+        </button>
+      );
+    }
+
+    // INITIALIZE REACT
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
