@@ -54,6 +54,46 @@
       will-change: transform;
     }
 
+    /* 10% Zoomed Out Custom Animation */
+    @keyframes kenBurnsZoomOut {
+      0% { transform: scale(0.9); }
+      100% { transform: scale(1.02); }
+    }
+    .animate-ken-burns-zoom-out {
+      animation: kenBurnsZoomOut 25s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    /* 20% Zoomed Out Custom Animation (An extra 10% for the top photo) */
+    @keyframes kenBurnsZoomOutMore {
+      0% { transform: scale(0.8); }
+      100% { transform: scale(0.92); }
+    }
+    .animate-ken-burns-zoom-out-more {
+      animation: kenBurnsZoomOutMore 25s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    /* 30% Zoomed Out Custom Animation (An extra 10% for both top and bottom photos) */
+    @keyframes kenBurnsZoomOutExtreme {
+      0% { transform: scale(0.7); }
+      100% { transform: scale(0.82); }
+    }
+    .animate-ken-burns-zoom-out-extreme {
+      animation: kenBurnsZoomOutExtreme 25s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    /* 35% Zoomed Out Custom Animation (Shows 5% more top and bottom for the top photo) */
+    @keyframes kenBurnsZoomOutUltra {
+      0% { transform: scale(0.65); }
+      100% { transform: scale(0.77); }
+    }
+    .animate-ken-burns-zoom-out-ultra {
+      animation: kenBurnsZoomOutUltra 25s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
     /* Content fade in to simulate paper settling */
     @keyframes contentFade {
       0% { opacity: 0; transform: translateY(4px); }
@@ -63,6 +103,16 @@
       animation: contentFade 0.8s ease-out forwards;
       animation-delay: 0.1s;
       opacity: 0;
+    }
+
+    /* Highlight Play Button Animation */
+    @keyframes playHint {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 64, 54, 0.4); }
+      50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(74, 64, 54, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 64, 54, 0); }
+    }
+    .animate-play-hint {
+      animation: playHint 2s infinite;
     }
 
     .no-scrollbar::-webkit-scrollbar {
@@ -98,14 +148,10 @@
       "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0038.jpg", // 7: Meet again 2
       "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0035.jpg", // 8: Legacy Top Wide
       "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0014.jpg", // 9: Legacy Bottom Left
-      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Granmum/IMG-20210830-WA0017.jpg"  // 10: Legacy Bottom Right
-    ];
-
-    const readings = [
-      { title: "First Reading / Ecclesiastes 3:1-4", text: "For everything there is a season, and a time for every matter under heaven: a time to be born, and a time to die; a time to plant, and a time to pluck up what is planted..." },
-      { title: "Second Reading / John 14:1-3", text: "Let not your hearts be troubled. Believe in God; believe also in me. In my Father's house are many rooms. If it were not so, would I have told you that I go to prepare a place for you?" },
-      { title: "Third Reading / Psalm 23", text: "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul." },
-      { title: "Fourth Reading / Revelation 21:4", text: "He will wipe away every tear from their eyes, and death shall be no more, neither shall there be mourning, nor crying, nor pain anymore, for the former things have passed away." }
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Granmum/IMG-20210830-WA0017.jpg",  // 10: Legacy Bottom Right
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/0.jpg", // 11: Second Reading Circle
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20220403-WA0053.jpg", // 12: Meet again 3 (Middle)
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20180102-WA0013.jpg"  // 13: Legacy 4th Photo
     ];
 
     const audioUrl = "https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/raw/refs/heads/main/Granmum/NK.mp3";
@@ -141,7 +187,7 @@
                 disabled={!src}
                 className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
                   src ? 'bg-[#4a4036] hover:bg-[#2c2620] text-[#fdfcfb] shadow-md' : 'bg-[#d5cebc] text-[#a8a090] cursor-not-allowed'
-                }`}
+                } ${!isPlaying && src ? 'animate-play-hint' : ''}`}
               >
                 {isPlaying ? <IconPause className="w-4 h-4 sm:w-5 sm:h-5" /> : <IconPlay className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
@@ -278,69 +324,182 @@
             </div>
           </BookletPage>,
 
-          /* PAGE 4: READINGS (1 & 2) */
+          /* PAGE 4: LITURGY OF THE WORD */
           <BookletPage key={4} pageNum={4}>
-            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-6 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">Readings in Remembrance</h2>
+            <h2 className="text-base sm:text-xl md:text-2xl text-center mb-3 sm:mb-4 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-2 shrink-0 uppercase tracking-widest">Liturgy of the Word</h2>
             
-            <div className="w-1/3 sm:w-5/12 aspect-square mx-auto mb-6 sm:mb-8 rounded-full shadow-md overflow-hidden bg-white border-[6px] border-white shrink-0">
+            <div className="w-28 h-28 sm:w-40 sm:h-40 mx-auto mb-3 sm:mb-4 rounded-full shadow-sm overflow-hidden bg-white border-[4px] border-white shrink-0">
                <div className="w-full h-full overflow-hidden rounded-full">
-                <img src={photos[4]} alt="Quiet Moment" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-7s'}} onError={(e) => e.target.src = defaultPhotos[4]}/>
+                <img src={photos[4]} alt="Quiet Moment" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-7s'}} />
                </div>
             </div>
             
-            <div className="space-y-4 sm:space-y-8 flex-1 overflow-hidden flex flex-col justify-center min-h-0 px-2 sm:px-6">
-              <div className="text-center min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[0].title}</h3>
-                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[0].text}"</p>
+            <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col min-h-0 px-2 sm:px-4 space-y-3 sm:space-y-4">
+              {/* First Reading */}
+              <div>
+                <h3 className="font-semibold text-[11px] sm:text-[13px] text-[#4A4036] mb-1 uppercase tracking-wide text-center">First Reading</h3>
+                <p className="text-[9px] sm:text-[11px] text-[#7A6F62] italic text-center mb-1.5">A Reading from the first letter of St. Paul to the Corinthians</p>
+                <div className="text-[10.5px] sm:text-[12px] md:text-[13px] text-[#5A4F42] leading-relaxed space-y-2 text-justify font-serif">
+                  <p>Be ambitious for the higher gifts. And I am going to show you a way that is better than any of them. If I have all the eloquences of men or of angels, but speak without love, I am simply a gong booming or a cymbal clashing. If I have the gift of prophecy, understanding all the mysteries there are, and knowing everything, and if I have faith in all its fullness, to move mountains, but without love, then I am nothing at all. If I give away all that I possess, piece by piece, and I even let them take my body to burn it, but am without love, it will do me no good whatever.</p>
+                  <p>Love is always patient and kind; it is never jealous; love is never boastful or conceited; it is never rude or selfish; it does not take offence, and it is not resentful. Love takes no pleasure in other people’s sins but delights in the truth; it is always ready to excuse, to trust, to hope and to endure whatever comes. Love does not come to an end.</p>
+                </div>
               </div>
-              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
-              <div className="text-center min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[1].title}</h3>
-                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[1].text}"</p>
+              
+              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0 my-2"></div>
+              
+              {/* Psalm */}
+              <div className="text-center">
+                <h3 className="font-semibold text-[11px] sm:text-[13px] text-[#4A4036] mb-0.5 uppercase tracking-wide">Responsorial Psalm</h3>
+                <p className="text-[10.5px] sm:text-[12px] md:text-[13px] text-[#5A4F42] italic font-serif">On Eagle’s Wings</p>
+              </div>
+              
+              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0 my-2"></div>
+
+              {/* Second Reading */}
+              <div>
+                <h3 className="font-semibold text-[11px] sm:text-[13px] text-[#4A4036] mb-1 uppercase tracking-wide text-center">Second Reading</h3>
+                <p className="text-[9px] sm:text-[11px] text-[#7A6F62] italic text-center mb-1.5">A reading from St. Paul to the Philippians</p>
+                <div className="text-[10.5px] sm:text-[12px] md:text-[13px] text-[#5A4F42] leading-relaxed space-y-2 text-justify font-serif">
+                  <p>There is no need to worry; but if there is anything you need, pray for it, asking God for it with heartfelt prayer and thanksgiving, and the peace of God which is so much greater than we can understand, will guard your hearts and your thoughts in Christ Jesus. Finally, sisters and brothers, fill your minds and hearts with everything that is noble, everything that is good and pure, everything that we love and honour, and everything that can be virtuous and worthy of praise.</p>
+                  <p>Keep doing in your life all the things that you learnt from me and have been taught by me and have heard or seen that I do. Then God of peace and love will be forever with you.</p>
+                </div>
+              </div>
+              
+              {/* Circle Photo under Second Reading */}
+              <div className="w-28 h-28 sm:w-40 sm:h-40 mx-auto mt-4 sm:mt-6 mb-2 rounded-full shadow-sm overflow-hidden bg-white border-[4px] border-white shrink-0">
+                 <div className="w-full h-full overflow-hidden rounded-full">
+                  <img src={photos[11]} alt="Second Reading Supplement" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-2s'}} />
+                 </div>
               </div>
             </div>
           </BookletPage>,
 
-          /* PAGE 5: READINGS CONTINUED (3 & 4) */
+          /* PAGE 5: GOSPEL & REFLECTION */
           <BookletPage key={5} pageNum={5}>
-            <div className="space-y-4 sm:space-y-8 flex-1 flex flex-col mt-4 sm:mt-6 min-h-0 px-2 sm:px-6">
-              <div className="text-center min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[2].title}</h3>
-                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[2].text}"</p>
-              </div>
-              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
-              <div className="text-center min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[3].title}</h3>
-                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[3].text}"</p>
-              </div>
+            <h2 className="text-base sm:text-xl md:text-2xl text-center mb-2 sm:mb-3 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-1 sm:pb-2 shrink-0 uppercase tracking-widest">Gospel & Reflection</h2>
+            
+            {/* 2-Column Text Layout to save vertical space */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0 px-1 sm:px-2 mb-2 sm:mb-3">
               
-              <div className="flex-1 mt-6 sm:mt-8 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white max-h-[35%] sm:max-h-[45%] min-h-0 shrink-0">
-                 <div className="w-full h-full overflow-hidden">
-                  <img src={photos[5]} alt="Reading Supplement" className="w-full h-full object-cover object-top animate-ken-burns" style={{animationDelay: '-2s'}} onError={(e) => e.target.src = defaultPhotos[5]}/>
-                 </div>
+              {/* Left Column: Gospel */}
+              <div className="flex flex-col space-y-2">
+                <div className="text-center">
+                  <h3 className="font-semibold text-[10px] sm:text-[11px] text-[#4A4036] mb-0.5 uppercase tracking-wide">Gospel Acclamation</h3>
+                  <p className="text-[9px] sm:text-[10.5px] text-[#5A4F42] leading-tight italic font-serif">
+                    Alleluia, Alleluia<br/>
+                    It is my Father’s will, says the Lord<br/>
+                    That whoever believes in the Son<br/>
+                    Shall have eternal life,<br/>
+                    And that I shall raise him up on the last day.<br/>
+                    Alleluia!
+                  </p>
+                </div>
+
+                <div className="w-8 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
+
+                <div>
+                  <h3 className="font-semibold text-[10px] sm:text-[11px] text-[#4A4036] mb-0.5 uppercase tracking-wide text-center">Gospel</h3>
+                  <p className="text-[8px] sm:text-[9px] text-[#7A6F62] italic text-center mb-1">A reading from the Holy Gospel according to John</p>
+                  <div className="text-[9px] sm:text-[10.5px] text-[#5A4F42] leading-snug space-y-1.5 text-justify font-serif">
+                    <p>Jesus said to his disciples, “Do not let your hearts be troubled. Trust in God still, and trust in me. There are many rooms in my Father’s house; If there were not, I should have told you. I am going now to prepare a place for you. And after I have gone and prepared you a place, I shall return to take you with me; So that where I am, you may be too. You know the way to the place where I am going.”</p>
+                    <p>Thomas said, “Lord, we do not know where you are going, so how can we know the way?”</p>
+                    <p>Jesus said: “I am the Way, the Truth and the Life. No one can come to the Father except through me.”</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Right Column: Reflection */}
+              <div className="flex flex-col space-y-2">
+                <div className="text-center">
+                  <h3 className="font-semibold text-[10px] sm:text-[11px] text-[#4A4036] uppercase tracking-wide">Prayers of the Faithful</h3>
+                </div>
+
+                <div className="w-8 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
+
+                <div className="text-center">
+                  <h3 className="font-semibold text-[10px] sm:text-[11px] text-[#4A4036] mb-0.5 uppercase tracking-wide">Communion Reflection</h3>
+                  <p className="text-[8px] sm:text-[9px] text-[#7A6F62] italic mb-1">Her Journey’s Just Begun</p>
+                  <div className="text-[9px] sm:text-[10.5px] text-[#5A4F42] leading-tight italic font-serif space-y-1.5">
+                    <p>Don’t think of her as gone away, her journey’s just begun<br/>Life holds so many facets, this earth is only one.</p>
+                    <p>Just think of her as resting from the sorrows and tears<br/>In a place of warmth and comfort where there are no days or years.</p>
+                    <p>Think how she must be wishing that we could know today<br/>How nothing but our sadness can really pass away.</p>
+                    <p>And think of her as living in the hearts of those she touched<br/>For nothing loved is ever lost and she was loved so much.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Photo now dynamically fills remaining space and doesn't get cut off. Reverted to object-cover and object-top to remove white side-bars while keeping face in view. */}
+            <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] border-white mb-2 shrink-0 mx-2 sm:mx-6">
+               <div className="w-full h-full overflow-hidden flex items-center justify-center">
+                <img src={photos[5]} alt="Reflection Supplement" className="w-full h-full object-cover object-top animate-ken-burns" style={{animationDelay: '-2s'}} />
+               </div>
             </div>
           </BookletPage>,
 
           /* PAGE 6: UNTIL WE MEET AGAIN (Photos) */
           <BookletPage key={6} pageNum={6}>
-            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-8 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">Until We Meet Again</h2>
-            <div className="flex flex-col gap-4 sm:gap-6 flex-1 min-h-0 px-2 sm:px-4">
-              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
-                 <div className="w-full h-full overflow-hidden">
-                  <img src={photos[6]} alt="Until we meet 1" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-15s'}} onError={(e) => e.target.src = defaultPhotos[6]}/>
+            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-6 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-2 sm:pb-3 shrink-0 uppercase tracking-widest text-sm">Until We Meet Again</h2>
+            <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-h-0 px-2 sm:px-4">
+              {/* Photo 1: flex-1 (0% taller), object-contain, and NO animation so faces are never lost */}
+              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-2 border-white">
+                 <div className="w-full h-full overflow-hidden flex items-center justify-center bg-[#FDFBF7]">
+                  <img src={photos[12]} alt="Until we meet 3" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-4s'}} />
                  </div>
               </div>
-              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
-                 <div className="w-full h-full overflow-hidden">
-                  <img src={photos[7]} alt="Until we meet 2" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-8s'}} onError={(e) => e.target.src = defaultPhotos[7]}/>
+              {/* Photo 2: flex-[0.95] (takes 5% off the height) */}
+              <div className="flex-[0.95] min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-2 border-white">
+                 <div className="w-full h-full overflow-hidden flex items-center justify-center bg-[#FDFBF7]">
+                  <img src={photos[6]} alt="Until we meet 1" className="w-full h-full object-contain object-center" />
+                 </div>
+              </div>
+              {/* Photo 3: flex-[0.95] (takes 5% off the height) */}
+              <div className="flex-[0.95] min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-2 border-white">
+                 <div className="w-full h-full overflow-hidden flex items-center justify-center bg-[#FDFBF7]">
+                  <img src={photos[7]} alt="Until we meet 2" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-8s'}} />
                  </div>
               </div>
             </div>
           </BookletPage>,
 
-          /* PAGE 7: THE SONG LYRICS & AUDIO */
+          /* PAGE 7: GRANMUM'S LEGACY (Was Page 8) */
           <BookletPage key={7} pageNum={7}>
+            <div className="flex flex-col h-full min-h-0 relative">
+              <div className="shrink-0 pt-2">
+                <h2 className="text-lg sm:text-2xl text-center mb-1 sm:mb-2 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-2 sm:pb-3 uppercase tracking-widest text-sm">Granmum's Legacy</h2>
+                <p className="text-center text-[9px] sm:text-[11px] md:text-[13px] text-[#5A4F42] mb-2 sm:mb-4 px-2 sm:px-6 leading-relaxed font-serif">
+                  A life beautifully lived, leaving behind a loving family, wonderful grandchildren, and great-grandchildren who will forever cherish their beloved Granmum.
+                </p>
+              </div>
+
+              {/* 4 Photos Collage Grid */}
+              <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-2 gap-2 sm:gap-3 my-1 sm:my-2 mx-1 sm:mx-4">
+                <div className="min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                  <img src={photos[8]} alt="Legacy 1" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-3s'}} />
+                </div>
+                <div className="min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                  <img src={photos[9]} alt="Legacy 2" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-11s'}} />
+                </div>
+                <div className="min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                  <img src={photos[13]} alt="Legacy 3" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-1s'}} />
+                </div>
+                <div className="min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                  <img src={photos[10]} alt="Legacy 4" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-6s'}} />
+                </div>
+              </div>
+
+              <div className="w-full sm:w-5/6 mx-auto shrink-0 pt-3 sm:pt-4 mt-auto mb-2">
+                <p className="text-[9px] sm:text-[11px] italic text-[#7A6F62] leading-relaxed text-center font-serif">
+                  Catherine’s family wishes to express their deep appreciation for your love, support, and shared memories during this time.
+                </p>
+                <div className="w-8 h-px bg-[#D5CEBC] mx-auto mt-3"></div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 8: A SONG OF FAREWELL (Was Page 7) */
+          <BookletPage key={8} pageNum={8}>
              <div className="flex flex-col h-full">
                 <h2 className="text-xl sm:text-2xl text-center mb-2 sm:mb-4 text-[#3E3832] font-light shrink-0 uppercase tracking-widest text-sm">A Song of Farewell</h2>
                 
@@ -373,46 +532,6 @@
                   </p>
                 </div>
              </div>
-          </BookletPage>,
-
-          /* PAGE 8: GRANMUM'S LEGACY & BACK COVER (Collage Updated) */
-          <BookletPage key={8} pageNum={8}>
-            <div className="flex flex-col h-full min-h-0 relative">
-              <div className="shrink-0 pt-2">
-                <h2 className="text-lg sm:text-2xl text-center mb-1 sm:mb-2 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-2 sm:pb-3 uppercase tracking-widest text-sm">Granmum's Legacy</h2>
-                <p className="text-center text-[9px] sm:text-[11px] md:text-[13px] text-[#5A4F42] mb-2 sm:mb-4 px-2 sm:px-6 leading-relaxed font-serif">
-                  A life beautifully lived, leaving behind a loving family, wonderful grandchildren, and great-grandchildren who will forever cherish their beloved Granmum.
-                </p>
-              </div>
-
-              {/* Multiple Photos Collage Grid */}
-              <div className="flex-1 min-h-0 flex flex-col gap-2 sm:gap-3 my-1 sm:my-2">
-                <div className="flex-[1.5] min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white mx-1 sm:mx-4">
-                   <div className="w-full h-full overflow-hidden">
-                    <img src={photos[8]} alt="Legacy Main" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-3s'}} onError={(e) => e.target.src = defaultPhotos[8]}/>
-                   </div>
-                </div>
-                <div className="flex-1 min-h-0 flex gap-2 sm:gap-3 mx-1 sm:mx-4">
-                  <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
-                     <div className="w-full h-full overflow-hidden">
-                      <img src={photos[9]} alt="Legacy Sub 1" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-11s'}} onError={(e) => e.target.src = defaultPhotos[9]}/>
-                     </div>
-                  </div>
-                  <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
-                     <div className="w-full h-full overflow-hidden">
-                      <img src={photos[10]} alt="Legacy Sub 2" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-6s'}} onError={(e) => e.target.src = defaultPhotos[10]}/>
-                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full sm:w-5/6 mx-auto shrink-0 pt-3 sm:pt-4 mt-auto mb-2">
-                <p className="text-[9px] sm:text-[11px] italic text-[#7A6F62] leading-relaxed text-center font-serif">
-                  Catherine’s family wishes to express their deep appreciation for your love, support, and shared memories during this time.
-                </p>
-                <div className="w-8 h-px bg-[#D5CEBC] mx-auto mt-3"></div>
-              </div>
-            </div>
           </BookletPage>
         ];
 
