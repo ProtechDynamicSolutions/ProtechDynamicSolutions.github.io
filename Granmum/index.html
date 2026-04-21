@@ -1,1 +1,613 @@
 
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorial Booklet</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for JSX -->
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1C1A18;
+    }
+
+    .perspective-container { perspective: 2000px; }
+    
+    @keyframes turnNext {
+      0% { opacity: 0; transform: rotateY(15deg) translateX(40px) scale(0.97); }
+      100% { opacity: 1; transform: rotateY(0deg) translateX(0) scale(1); }
+    }
+    @keyframes turnPrev {
+      0% { opacity: 0; transform: rotateY(-15deg) translateX(-40px) scale(0.97); }
+      100% { opacity: 1; transform: rotateY(0deg) translateX(0) scale(1); }
+    }
+    
+    .page-anim-next {
+      animation: turnNext 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      transform-origin: left center;
+    }
+    .page-anim-prev {
+      animation: turnPrev 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      transform-origin: right center;
+    }
+
+    /* Ken Burns elegant photo animation */
+    @keyframes kenBurns {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.12); }
+    }
+    .animate-ken-burns {
+      animation: kenBurns 25s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    /* Content fade in to simulate paper settling */
+    @keyframes contentFade {
+      0% { opacity: 0; transform: translateY(4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .page-content-fade-in {
+      animation: contentFade 0.8s ease-out forwards;
+      animation-delay: 0.1s;
+      opacity: 0;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    // --- INLINE SVG ICONS ---
+    const IconBookOpen = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+    const IconEdit3 = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
+    const IconImage = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
+    const IconFileText = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
+    const IconInfo = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+    const IconChevronLeft = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>;
+    const IconChevronRight = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>;
+    const IconPlay = ({ className }) => <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+    const IconPause = ({ className }) => <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+    const IconMusic = ({ className }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
+
+    const defaultPhotos = [
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20230430-WA0033.jpg", // 0: Cover
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20201019-WA0000.jpg", // 1: Memory 1
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0026.jpg", // 2: Memory 2
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20210330-WA0020-01.jpg", // 3: Portrait
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20201226-WA0046.jpg", // 4: Small Accent
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20230603-WA0005.jpg", // 5: Portrait 2
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0039.jpg", // 6: Meet again 1
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0038.jpg", // 7: Meet again 2
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0035.jpg", // 8: Legacy Top Wide
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Granmum/IMG-20260421-WA0014.jpg", // 9: Legacy Bottom Left
+      "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/main/Granmum/IMG-20210830-WA0017.jpg"  // 10: Legacy Bottom Right
+    ];
+
+    const defaultReadings = [
+      { title: "First Reading / Ecclesiastes 3:1-4", text: "For everything there is a season, and a time for every matter under heaven: a time to be born, and a time to die; a time to plant, and a time to pluck up what is planted..." },
+      { title: "Second Reading / John 14:1-3", text: "Let not your hearts be troubled. Believe in God; believe also in me. In my Father's house are many rooms. If it were not so, would I have told you that I go to prepare a place for you?" },
+      { title: "Third Reading / Psalm 23", text: "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul." },
+      { title: "Fourth Reading / Revelation 21:4", text: "He will wipe away every tear from their eyes, and death shall be no more, neither shall there be mourning, nor crying, nor pain anymore, for the former things have passed away." }
+    ];
+
+    function App() {
+      const [isEditing, setIsEditing] = useState(false);
+      const [photos, setPhotos] = useState(defaultPhotos);
+      const [readings, setReadings] = useState(defaultReadings);
+      const [audioUrl, setAudioUrl] = useState("https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/raw/refs/heads/main/Granmum/NK.mp3");
+
+      const handlePhotoChange = (index, value) => {
+        const newPhotos = [...photos];
+        newPhotos[index] = value;
+        setPhotos(newPhotos);
+      };
+
+      const handleReadingChange = (index, field, value) => {
+        const newReadings = [...readings];
+        newReadings[index][field] = value;
+        setReadings(newReadings);
+      };
+
+      // --- ELEGANT AUDIO PLAYER COMPONENT ---
+      const ElegantAudioPlayer = ({ src }) => {
+        const audioRef = useRef(null);
+        const [isPlaying, setIsPlaying] = useState(false);
+        const [error, setError] = useState(false);
+
+        const togglePlay = () => {
+          if (!src) return;
+          if (isPlaying) {
+            audioRef.current.pause();
+          } else {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(err => {
+                console.error("Audio playback failed:", err);
+                setError(true);
+              });
+            }
+          }
+          setIsPlaying(!isPlaying);
+        };
+
+        return (
+          <div className="flex flex-col items-center justify-center mt-4 sm:mt-8 mb-4">
+            <div className="w-full max-w-[200px] sm:max-w-[250px] bg-[#f2efe9] rounded-full p-2 flex items-center gap-3 border border-[#d5cebc] shadow-inner">
+              <button 
+                onClick={togglePlay}
+                disabled={!src}
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  src ? 'bg-[#4a4036] hover:bg-[#2c2620] text-[#fdfcfb] shadow-md' : 'bg-[#d5cebc] text-[#a8a090] cursor-not-allowed'
+                }`}
+              >
+                {isPlaying ? <IconPause className="w-4 h-4 sm:w-5 sm:h-5" /> : <IconPlay className="w-4 h-4 sm:w-5 sm:h-5" />}
+              </button>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-[9px] sm:text-[11px] font-sans font-semibold tracking-wider text-[#4a4036] uppercase truncate">Nobody Knows</p>
+                <p className="text-[8px] sm:text-[9px] font-sans text-[#7a6f62] truncate">The Lumineers</p>
+              </div>
+              <IconMusic className="w-4 h-4 text-[#a8a090] mr-2 shrink-0" />
+            </div>
+            {!src && !isEditing && (
+              <p className="text-[8px] text-[#8c7b65] mt-2 italic">Audio not provided. Add MP3 link in Edit Mode.</p>
+            )}
+            {error && (
+              <p className="text-[8px] text-red-500 mt-2 italic">Error playing audio. Ensure the link is a valid direct MP3 URL.</p>
+            )}
+            <audio 
+              ref={audioRef} 
+              src={src} 
+              onEnded={() => setIsPlaying(false)}
+              className="hidden"
+            />
+          </div>
+        );
+      };
+
+      // --- EDIT MODE COMPONENT ---
+      const EditorMode = () => (
+        <div className="max-w-5xl mx-auto p-6 bg-[#fdfcfb] rounded-xl shadow-sm font-sans text-[#2c3e50]">
+          <div className="mb-8 p-5 bg-[#f4f1ea] border border-[#e8e2d2] rounded-lg flex items-start gap-4 shadow-sm">
+            <IconInfo className="w-6 h-6 text-[#8c7b65] flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-[#5a4f42]">
+              <p className="font-semibold mb-2 text-base">How to customise your booklet:</p>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Images:</strong> Paste direct image links (ending in .jpg or .png) into the fields. High-resolution portrait images work best.</li>
+                <li><strong>Audio:</strong> Paste a direct MP3 URL into the Audio Link field to enable the song player.</li>
+                <li><strong>Readings:</strong> Customise the titles and texts for the beautiful readings section.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Media Section */}
+            <div>
+              <h2 className="text-xl font-semibold mb-5 flex items-center gap-2 border-b border-[#e8e2d2] pb-3 text-[#4a4036]">
+                <IconImage className="w-5 h-5 text-[#8c7b65]" /> Media Links
+              </h2>
+              
+              <div className="mb-8 p-4 bg-white rounded-lg border border-[#e8e2d2] shadow-sm">
+                 <label className="block text-sm font-semibold text-[#4a4036] mb-1 flex items-center gap-2">
+                    <IconMusic className="w-4 h-4 text-[#8c7b65]" /> Background Song (MP3 Link)
+                 </label>
+                 <p className="text-xs text-[#8c7b65] mb-2">Provide a direct link to the audio file for "Nobody Knows".</p>
+                 <input
+                    type="text"
+                    value={audioUrl}
+                    onChange={(e) => setAudioUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#d5cebc] rounded-md focus:ring-2 focus:ring-[#8c7b65] focus:border-[#8c7b65] text-sm bg-[#fdfcfb]"
+                    placeholder="https://example.com/nobody-knows.mp3"
+                  />
+              </div>
+
+              <div className="space-y-4">
+                {photos.map((url, i) => (
+                  <div key={`photo-${i}`} className="p-3 bg-white rounded-lg border border-[#e8e2d2] shadow-sm">
+                    <label className="block text-sm font-semibold text-[#4a4036] mb-1">
+                      Photograph {i + 1} 
+                      {i === 0 && <span className="text-[#8c7b65] font-normal italic"> (Cover)</span>} 
+                      {i === 3 && <span className="text-[#8c7b65] font-normal italic"> (Portrait)</span>} 
+                      {i === 4 && <span className="text-[#8c7b65] font-normal italic"> (Small Accent)</span>} 
+                      {i === 5 && <span className="text-[#8c7b65] font-normal italic"> (Portrait)</span>}
+                      {i >= 8 && <span className="text-[#8c7b65] font-normal italic"> (Legacy Collage)</span>}
+                    </label>
+                    <input
+                      type="text"
+                      value={url}
+                      onChange={(e) => handlePhotoChange(i, e.target.value)}
+                      className="w-full px-3 py-2 border border-[#d5cebc] rounded-md focus:ring-2 focus:ring-[#8c7b65] focus:border-[#8c7b65] text-sm bg-[#fdfcfb]"
+                      placeholder="https://..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Readings Section */}
+            <div>
+              <h2 className="text-xl font-semibold mb-5 flex items-center gap-2 border-b border-[#e8e2d2] pb-3 text-[#4a4036]">
+                <IconFileText className="w-5 h-5 text-[#8c7b65]" /> Remembrance Readings
+              </h2>
+              <div className="space-y-5">
+                {readings.map((reading, i) => (
+                  <div key={`reading-${i}`} className="p-5 bg-white rounded-lg border border-[#e8e2d2] shadow-sm">
+                    <label className="block text-sm font-semibold text-[#4a4036] mb-1">Reading {i + 1} Title</label>
+                    <input
+                      type="text"
+                      value={reading.title}
+                      onChange={(e) => handleReadingChange(i, 'title', e.target.value)}
+                      className="w-full px-3 py-2 border border-[#d5cebc] rounded-md focus:ring-2 focus:ring-[#8c7b65] focus:border-[#8c7b65] text-sm mb-4 font-serif text-[#2c3e50]"
+                    />
+                    
+                    <label className="block text-sm font-semibold text-[#4a4036] mb-1">Reading {i + 1} Text</label>
+                    <textarea
+                      value={reading.text}
+                      onChange={(e) => handleReadingChange(i, 'text', e.target.value)}
+                      rows="5"
+                      className="w-full px-3 py-2 border border-[#d5cebc] rounded-md focus:ring-2 focus:ring-[#8c7b65] focus:border-[#8c7b65] text-sm font-serif text-[#2c3e50] leading-relaxed"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      // --- PREMIUM BOOKLET PAGE COMPONENT ---
+      const BookletPage = ({ children, pageNum }) => (
+        <div className="relative w-full h-full bg-gradient-to-br from-[#FDFBF7] to-[#F4F1EA] shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col font-serif text-[#2c3e50] rounded-r-lg rounded-l-[2px] border-l-[12px] border-[#3E3832] border-r border-y border-[#E8E2D2]">
+          {/* Subtle paper texture overlay */}
+          <div className="absolute inset-0 opacity-[0.03] mix-blend-multiply pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }}></div>
+          
+          <div className="relative z-10 flex-1 p-6 pb-10 sm:p-10 sm:pb-14 flex flex-col min-h-0 page-content-fade-in">
+            {children}
+          </div>
+          
+          {/* Elegant Page Number */}
+          <div className="absolute bottom-3 sm:bottom-5 left-0 w-full text-center text-[9px] sm:text-[11px] text-[#A8A090] font-sans tracking-widest z-10">
+            — {pageNum} —
+          </div>
+        </div>
+      );
+
+      // --- BOOKLET MODE COMPONENT (Digital Flipbook) ---
+      const BookletMode = () => {
+        const [currentPage, setCurrentPage] = useState(1);
+        const [direction, setDirection] = useState('next');
+        const totalPages = 8;
+
+        // Swipe handlers
+        const [touchStart, setTouchStart] = useState(null);
+        const [touchEnd, setTouchEnd] = useState(null);
+        const minSwipeDistance = 50;
+
+        const onTouchStart = (e) => {
+          setTouchEnd(null);
+          setTouchStart(e.targetTouches[0].clientX);
+        };
+
+        const onTouchMove = (e) => {
+          setTouchEnd(e.targetTouches[0].clientX);
+        };
+
+        const onTouchEndHandler = () => {
+          if (!touchStart || !touchEnd) return;
+          const distance = touchStart - touchEnd;
+          if (distance > minSwipeDistance) nextPage();
+          if (distance < -minSwipeDistance) prevPage();
+        };
+
+        const nextPage = () => {
+          if (currentPage < totalPages) {
+            setDirection('next');
+            setCurrentPage(p => p + 1);
+          }
+        };
+
+        const prevPage = () => {
+          if (currentPage > 1) {
+            setDirection('prev');
+            setCurrentPage(p => p - 1);
+          }
+        };
+
+        const pages = [
+          /* PAGE 1: COVER */
+          <BookletPage key={1} pageNum={1}>
+            <div className="text-center mt-4 sm:mt-8 flex-1 flex flex-col items-center min-h-0 relative">
+              <div className="absolute inset-0 border border-[#D5CEBC] m-2 pointer-events-none"></div>
+              <div className="absolute inset-0 border border-[#E8E2D2] m-3 pointer-events-none"></div>
+              
+              <div className="relative z-10 flex flex-col items-center w-full h-full p-4 sm:p-6">
+                <p className="text-[10px] sm:text-xs tracking-[0.25em] text-[#8C7B65] uppercase mb-4 sm:mb-6 font-sans">In Loving Memory Of</p>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-light mb-2 sm:mb-3 text-[#3E3832]" style={{ fontFamily: '"Playfair Display", "Georgia", serif' }}>Catherine Paul</h1>
+                <p className="text-[11px] sm:text-sm italic text-[#7A6F62] mb-6 sm:mb-10 font-serif">14th April 1932 – 20th April 2026</p>
+                
+                <div className="w-full flex-1 min-h-0 flex items-center justify-center rounded-sm overflow-hidden shadow-lg shrink border-4 border-white bg-white">
+                  <div className="w-full h-full overflow-hidden">
+                    <img 
+                      src={photos[0]} 
+                      alt="Cover" 
+                      className="w-full h-full object-cover animate-ken-burns"
+                      onError={(e) => e.target.src = defaultPhotos[0]}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 2: FOND MEMORIES */
+          <BookletPage key={2} pageNum={2}>
+            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-8 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">Fond Memories</h2>
+            <div className="flex flex-col gap-4 sm:gap-6 flex-1 min-h-0 px-2 sm:px-4">
+              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[1]} alt="Memory 1" className="w-full h-full object-cover animate-ken-burns" onError={(e) => e.target.src = defaultPhotos[1]}/>
+                 </div>
+              </div>
+              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[2]} alt="Memory 2" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-5s'}} onError={(e) => e.target.src = defaultPhotos[2]}/>
+                 </div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 3: A LIFE LIVED FONDLY */
+          <BookletPage key={3} pageNum={3}>
+            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-8 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">A Life Lived Fondly</h2>
+            <div className="flex-1 min-h-0 p-2 sm:p-4">
+              <div className="w-full h-full rounded-sm shadow-lg overflow-hidden bg-white border-8 border-white flex items-center justify-center relative">
+                 <div className="absolute inset-0 border border-[#E8E2D2] z-10 pointer-events-none"></div>
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[3]} alt="Life Portrait" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-10s'}} onError={(e) => e.target.src = defaultPhotos[3]}/>
+                 </div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 4: READINGS (1 & 2) */
+          <BookletPage key={4} pageNum={4}>
+            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-6 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">Readings in Remembrance</h2>
+            
+            <div className="w-1/3 sm:w-5/12 aspect-square mx-auto mb-6 sm:mb-8 rounded-full shadow-md overflow-hidden bg-white border-[6px] border-white shrink-0">
+               <div className="w-full h-full overflow-hidden rounded-full">
+                <img src={photos[4]} alt="Quiet Moment" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-7s'}} onError={(e) => e.target.src = defaultPhotos[4]}/>
+               </div>
+            </div>
+            
+            <div className="space-y-4 sm:space-y-8 flex-1 overflow-hidden flex flex-col justify-center min-h-0 px-2 sm:px-6">
+              <div className="text-center min-h-0 flex flex-col">
+                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[0].title}</h3>
+                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[0].text}"</p>
+              </div>
+              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
+              <div className="text-center min-h-0 flex flex-col">
+                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[1].title}</h3>
+                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[1].text}"</p>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 5: READINGS CONTINUED (3 & 4) */
+          <BookletPage key={5} pageNum={5}>
+            <div className="space-y-4 sm:space-y-8 flex-1 flex flex-col mt-4 sm:mt-6 min-h-0 px-2 sm:px-6">
+              <div className="text-center min-h-0 flex flex-col">
+                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[2].title}</h3>
+                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[2].text}"</p>
+              </div>
+              <div className="w-12 h-px bg-[#D5CEBC] mx-auto opacity-50 shrink-0"></div>
+              <div className="text-center min-h-0 flex flex-col">
+                <h3 className="font-semibold text-xs sm:text-sm text-[#4A4036] mb-1.5 sm:mb-2 shrink-0 tracking-wide uppercase">{readings[3].title}</h3>
+                <p className="text-[11px] sm:text-[13px] md:text-[15px] text-[#5A4F42] leading-relaxed sm:leading-loose italic overflow-hidden text-ellipsis line-clamp-4 sm:line-clamp-5">"{readings[3].text}"</p>
+              </div>
+              
+              <div className="flex-1 mt-6 sm:mt-8 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white max-h-[35%] sm:max-h-[45%] min-h-0 shrink-0">
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[5]} alt="Reading Supplement" className="w-full h-full object-cover object-top animate-ken-burns" style={{animationDelay: '-2s'}} onError={(e) => e.target.src = defaultPhotos[5]}/>
+                 </div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 6: UNTIL WE MEET AGAIN (Photos) */
+          <BookletPage key={6} pageNum={6}>
+            <h2 className="text-xl sm:text-3xl text-center mb-4 sm:mb-8 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-3 sm:pb-4 shrink-0 uppercase tracking-widest text-sm">Until We Meet Again</h2>
+            <div className="flex flex-col gap-4 sm:gap-6 flex-1 min-h-0 px-2 sm:px-4">
+              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[6]} alt="Until we meet 1" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-15s'}} onError={(e) => e.target.src = defaultPhotos[6]}/>
+                 </div>
+              </div>
+              <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-4 border-white">
+                 <div className="w-full h-full overflow-hidden">
+                  <img src={photos[7]} alt="Until we meet 2" className="w-full h-full object-cover animate-ken-burns" style={{animationDelay: '-8s'}} onError={(e) => e.target.src = defaultPhotos[7]}/>
+                 </div>
+              </div>
+            </div>
+          </BookletPage>,
+
+          /* PAGE 7: THE SONG LYRICS & AUDIO */
+          <BookletPage key={7} pageNum={7}>
+             <div className="flex flex-col h-full">
+                <h2 className="text-xl sm:text-2xl text-center mb-2 sm:mb-4 text-[#3E3832] font-light shrink-0 uppercase tracking-widest text-sm">A Song of Farewell</h2>
+                
+                <ElegantAudioPlayer src={audioUrl} />
+
+                <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col justify-center text-[10px] sm:text-[11.5px] md:text-[13px] leading-relaxed sm:leading-loose text-[#5A4F42] px-2 sm:px-6 space-y-3 sm:space-y-4 text-center items-center font-serif italic">
+                  <p>
+                    Nobody knows how to say goodbye<br/>
+                    It seems so easy 'til you try<br/>
+                    Then the moments pass you by<br/>
+                    Nobody knows how to say goodbye
+                  </p>
+                  <p>
+                    Nobody knows how to get back home<br/>
+                    And we set out so long ago<br/>
+                    Searched the heavens and the earth below<br/>
+                    Nobody knows how to get back home
+                  </p>
+                  <p>
+                    Through the darkness to the dawn<br/>
+                    When I looked back you were gone<br/>
+                    Heard your voice leading me on<br/>
+                    Through the darkness to the dawn
+                  </p>
+                  <p>
+                    Love is deep as the road is long<br/>
+                    It moves my feet to carry on<br/>
+                    Beats my heart when you are gone<br/>
+                    Love is deep as the road is long
+                  </p>
+                </div>
+             </div>
+          </BookletPage>,
+
+          /* PAGE 8: GRANMUM'S LEGACY & BACK COVER (Collage Updated) */
+          <BookletPage key={8} pageNum={8}>
+            <div className="flex flex-col h-full min-h-0 relative">
+              <div className="shrink-0 pt-2">
+                <h2 className="text-lg sm:text-2xl text-center mb-1 sm:mb-2 text-[#3E3832] font-light border-b border-[#D5CEBC] pb-2 sm:pb-3 uppercase tracking-widest text-sm">Granmum's Legacy</h2>
+                <p className="text-center text-[9px] sm:text-[11px] md:text-[13px] text-[#5A4F42] mb-2 sm:mb-4 px-2 sm:px-6 leading-relaxed font-serif">
+                  A life beautifully lived, leaving behind a loving family, wonderful grandchildren, and great-grandchildren who will forever cherish their beloved Granmum.
+                </p>
+              </div>
+
+              {/* Multiple Photos Collage Grid */}
+              <div className="flex-1 min-h-0 flex flex-col gap-2 sm:gap-3 my-1 sm:my-2">
+                <div className="flex-[1.5] min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white mx-1 sm:mx-4">
+                   <div className="w-full h-full overflow-hidden">
+                    <img src={photos[8]} alt="Legacy Main" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-3s'}} onError={(e) => e.target.src = defaultPhotos[8]}/>
+                   </div>
+                </div>
+                <div className="flex-1 min-h-0 flex gap-2 sm:gap-3 mx-1 sm:mx-4">
+                  <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                     <div className="w-full h-full overflow-hidden">
+                      <img src={photos[9]} alt="Legacy Sub 1" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-11s'}} onError={(e) => e.target.src = defaultPhotos[9]}/>
+                     </div>
+                  </div>
+                  <div className="flex-1 min-h-0 rounded-sm shadow-md overflow-hidden bg-white border-[3px] sm:border-[4px] border-white">
+                     <div className="w-full h-full overflow-hidden">
+                      <img src={photos[10]} alt="Legacy Sub 2" className="w-full h-full object-cover object-center animate-ken-burns" style={{animationDelay: '-6s'}} onError={(e) => e.target.src = defaultPhotos[10]}/>
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full sm:w-5/6 mx-auto shrink-0 pt-3 sm:pt-4 mt-auto mb-2">
+                <p className="text-[9px] sm:text-[11px] italic text-[#7A6F62] leading-relaxed text-center font-serif">
+                  Catherine’s family wishes to express their deep appreciation for your love, support, and shared memories during this time.
+                </p>
+                <div className="w-8 h-px bg-[#D5CEBC] mx-auto mt-3"></div>
+              </div>
+            </div>
+          </BookletPage>
+        ];
+
+        return (
+          <div className="bg-[#1C1A18] py-8 px-4 min-h-[calc(100vh-60px)] flex flex-col items-center justify-center perspective-container overflow-hidden">
+            
+            {/* The Current Page */}
+            <div 
+              key={currentPage} 
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEndHandler}
+              className={`w-full max-w-[210mm] aspect-[210/297] ${direction === 'next' ? 'page-anim-next' : 'page-anim-prev'}`}
+            >
+              {pages[currentPage - 1]}
+            </div>
+
+            {/* Elegant Page Navigation Controls */}
+            <div className="mt-8 flex items-center justify-between gap-6 bg-[#2A2622]/80 backdrop-blur-md px-6 py-3 rounded-full border border-[#3E3832] shadow-xl text-[#FDFBF7] w-full max-w-[210mm]">
+              <button 
+                onClick={prevPage} 
+                disabled={currentPage === 1}
+                className={`flex items-center gap-1 p-2 rounded-full transition-all duration-300 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#3E3832] active:scale-95'}`}
+                aria-label="Previous Page"
+              >
+                <IconChevronLeft className="w-5 h-5" />
+                <span className="hidden sm:inline text-xs font-medium tracking-widest uppercase pr-2">Prev</span>
+              </button>
+              
+              <span className="text-xs font-serif italic tracking-widest text-[#D5CEBC]">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button 
+                onClick={nextPage} 
+                disabled={currentPage === totalPages}
+                className={`flex items-center gap-1 p-2 rounded-full transition-all duration-300 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#3E3832] active:scale-95'}`}
+                aria-label="Next Page"
+              >
+                <span className="hidden sm:inline text-xs font-medium tracking-widest uppercase pl-2">Next</span>
+                <IconChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="mt-4 text-[10px] text-[#A8A090] font-sans tracking-widest uppercase sm:hidden opacity-70">Swipe to turn pages</p>
+          </div>
+        );
+      };
+
+      // --- MAIN APP RENDER ---
+      return (
+        <div className="min-h-screen bg-[#1C1A18] font-sans">
+          {/* Sticky Top Navigation Bar */}
+          <nav className="sticky top-0 z-50 bg-[#FDFBF7] shadow-md border-b border-[#E8E2D2] px-6 py-4 flex justify-between items-center transition-all">
+            <h1 className="text-base sm:text-lg font-serif italic text-[#3E3832] tracking-wide">Memorial Booklet for Catherine Paul</h1>
+            <button 
+              onClick={() => setIsEditing(!isEditing)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-sm ${
+                isEditing 
+                  ? 'bg-[#3E3832] text-[#FDFBF7] hover:bg-[#2A2622]' 
+                  : 'bg-white border border-[#D5CEBC] text-[#4A4036] hover:bg-[#F4F1EA]'
+              }`}
+            >
+              {isEditing ? (
+                 <><IconBookOpen className="w-4 h-4" /> View Booklet</>
+              ) : (
+                 <><IconEdit3 className="w-4 h-4" /> Edit Content</>
+              )}
+            </button>
+          </nav>
+
+          {/* Main Content Area */}
+          <main className={isEditing ? 'p-6 sm:p-10 bg-[#FDFBF7] min-h-screen' : ''}>
+            {isEditing ? <EditorMode /> : <BookletMode />}
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
