@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>O'Connor · Memorial Video</title>
+  <!-- Tailwind + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- NoSleep & WebM duration fix -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; width: 100%; min-height: 100%;
+      background: #0b1120;
+      color: #f5f0e8;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1f2e; }
+    ::-webkit-scrollbar-thumb { background: #7b4b9a; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9e6bbf; }
+
+    #render-canvas { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; object-fit: contain; z-index: 40; }
+    .accent-purple { accent-color: #7b4b9a; }
+    .btn-primary { background: #7b4b9a; color: #f5f0e8; font-weight: 600; transition: all 0.2s; border: none; }
+    .btn-primary:hover { background: #9e6bbf; }
+    .btn-outline { border: 1.5px solid #7b4b9a; color: #e0d6f0; background: transparent; }
+    .btn-outline:hover { background: #7b4b9a20; border-color: #9e6bbf; }
+    .logo-glow { filter: drop-shadow(0 4px 12px rgba(123, 75, 154, 0.3)); }
+    .gold-accent { color: #d4b87a; }
+    @media (max-width: 640px) { .setup-card { padding: 1.5rem 1rem !important; } }
+    #wake-lock-status { font-size: 10px; opacity: 0.7; }
+    /* toggle switch styling */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #2a3148;
+      transition: .2s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #7b4b9a;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center p-3 sm:p-4 min-h-screen">
+
+<div id="setup-view" class="w-full max-w-2xl setup-card bg-[#131b2a] rounded-3xl shadow-2xl border border-[#7b4b9a]/40 p-5 sm:p-7 transition-all z-30 backdrop-blur-sm">
+  
+  <!-- LOGO with fallback -->
+  <div class="flex flex-col items-center text-center mb-4">
+    <div class="logo-wrapper mb-3">
+      <img id="main-logo" 
+           src="https://rip.ie/_next/image?url=https%3A%2F%2Fimg-dedicated.rip.ie%2FO%27Connor_Brother_North_Gate_Bridge_320_eeb8d6c65de59a08e84e15bac54d69aaea89ac7074d7385b.png&w=1920&q=75" 
+           alt="O'Connor Brothers Funeral Directors"
+           class="h-20 sm:h-24 w-auto object-contain logo-glow"
+           onerror="this.onerror=null; this.src='https://www.oconnorfuneralcork.ie/wp-content/themes/JointsWP-CSS-master/assets/images/logo-oconnor@2x.png';">
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-light tracking-wide text-[#d9c9f0]">Memorial Video Maker</h1>
+    <div class="w-20 h-0.5 bg-[#7b4b9a]/70 my-3"></div>
+    <p class="text-[#b0b9d0] text-sm sm:text-base max-w-md">Create a 1080p tribute · fully local · no uploads</p>
+  </div>
+
+  <!-- PHOTO SECTION -->
+  <div class="space-y-5">
+    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-images mr-2 text-[#7b4b9a]"></i>Select Photos</label>
+        <div class="flex items-center gap-3">
+          <!-- Shuffle Toggle (button with clear on/off) -->
+          <button id="shuffle-toggle-btn" class="text-xs sm:text-sm px-3 py-1.5 rounded-full btn-outline flex items-center gap-1 transition disabled:opacity-40 disabled:border-gray-500" title="Toggle random order">
+            <i class="fas fa-random"></i> <span id="shuffle-btn-text">Shuffle</span>
+          </button>
+        </div>
+      </div>
+      <input type="file" id="photo-input" multiple accept="image/*" class="block w-full text-sm text-[#cddce6] file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#7b4b9a] file:text-white hover:file:bg-[#9e6bbf] transition-all cursor-pointer" />
+      <div class="flex items-center justify-between mt-3">
+        <div class="flex items-center gap-2">
+          <p id="photo-count" class="text-xs sm:text-sm text-[#b0c6d5] hidden"><i class="far fa-image mr-1"></i> <span id="count-value">0</span> photos</p>
+          <p id="shuffle-indicator" class="text-xs text-[#b89b5e] hidden"><i class="fas fa-check-circle"></i> <span id="indicator-text">order shuffled</span></p>
+        </div>
+        <!-- Remove Duplicates Toggle Switch + Badge -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-[#b0c6d5]"><i class="fas fa-clone mr-1"></i>Remove duplicates</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dedupe-toggle">
+            <span class="slider"></span>
+          </label>
+          <span id="duplicate-badge" class="text-xs bg-[#7b4b9a]/30 text-[#e0d6f0] px-2 py-0.5 rounded-full hidden">0 dupes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIO -->
+    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
+      <label class="block text-[#e0d6f0] font-medium mb-2 text-sm sm:text-base"><i class="fas fa-music mr-2 text-[#7b4b9a]"></i>Background Music (optional)</label>
+      <input type="file" id="audio-input" accept="audio/*" class="block w-full text-sm text-[#cddce6] file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#7b4b9a] file:text-white hover:file:bg-[#9e6bbf] transition-all cursor-pointer" />
+    </div>
+
+    <!-- DURATION -->
+    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="far fa-clock mr-2 text-[#7b4b9a]"></i>Time per photo</label>
+        <span id="duration-label" class="text-[#f5f0e8] font-bold bg-[#0b1120] px-4 py-1 rounded-full text-sm border border-[#7b4b9a]/50">4</span>
+      </div>
+      <input type="range" id="duration-slider" min="3" max="10" value="4" class="w-full h-2 bg-[#2a3148] rounded-lg appearance-none cursor-pointer accent-purple" />
+      <div class="flex justify-between text-xs text-[#9eb7ca] mt-2 px-1"><span>3s</span><span>10s</span></div>
+    </div>
+
+    <!-- RESOLUTION (UPRES) -->
+    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
+      <div class="flex items-center justify-between">
+        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-tv mr-2 text-[#7b4b9a]"></i>Video Resolution</label>
+        <select id="resolution-select" class="bg-[#2a3148] text-[#e0d6f0] border border-[#7b4b9a]/50 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#9e6bbf] cursor-pointer">
+          <option value="1080">1080p (HD)</option>
+          <option value="2160">4K (Ultra HD)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- BLACK & WHITE -->
+    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
+      <div class="flex items-center justify-between">
+        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-magic mr-2 text-[#7b4b9a]"></i>Black & White Effect</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="bw-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div id="error-message" class="text-[#f4a261] text-sm text-center py-1 hidden"></div>
+    <div id="success-message" class="text-[#7b4b9a] text-sm text-center py-1 hidden"></div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+      <button id="preview-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base shadow-md btn-outline"><i class="fas fa-eye"></i> Preview</button>
+      <button id="export-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base shadow-lg btn-primary"><i class="fas fa-file-video"></i> Render & Download</button>
+    </div>
+    <p class="text-[10px] sm:text-xs text-center text-[#8ea9c2] mt-2">
+      ⚡ 1080p · processed entirely in your browser · <span id="wake-lock-status">screen stays awake</span>
+    </p>
+  </div>
+</div>
+
+<canvas id="render-canvas" width="1920" height="1080"></canvas>
+
+<!-- EXPORT OVERLAY (HUD) -->
+<div id="recording-overlay" class="hidden fixed bottom-0 left-0 right-0 top-0 bg-[#0b1120]/95 flex flex-col items-center justify-center z-50 text-center px-4 py-6 backdrop-blur-md h-full">
+  
+  <!-- NEW: Live Preview Video Player (This tricks the OS into staying awake) -->
+  <div class="relative w-full max-w-2xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-[#7b4b9a]/50 mb-6">
+    <video id="live-preview-video" autoplay playsinline muted class="w-full h-full object-contain"></video>
+    <div class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse flex items-center gap-1 shadow-lg">
+      <i class="fas fa-circle text-[8px]"></i> RENDERING
+    </div>
+  </div>
+
+  <div class="w-full max-w-lg bg-[#1e2338] h-3 rounded-full overflow-hidden shadow-inner mb-2"><div id="progress-bar" class="bg-[#7b4b9a] h-full transition-all duration-300" style="width: 0%"></div></div>
+  <p id="progress-text" class="text-[#b0c6d5] text-sm font-mono">0:00 / 0:00</p>
+  
+  <p class="text-[11px] sm:text-xs text-[#f4a261] mt-3 font-semibold animate-pulse">⚠️ Please keep this screen open. Do not lock your phone.</p>
+  <div id="pause-warning" class="hidden mt-2 px-4 py-1 bg-red-500/20 text-red-400 border border-red-500/50 rounded-full text-xs font-bold uppercase tracking-wider">
+    Render Paused - Screen was locked
+  </div>
+
+  <button id="cancel-export-btn" class="mt-6 text-sm px-6 py-2 rounded-full border border-[#b89b5e] text-[#b89b5e] hover:bg-[#b89b5e] hover:text-[#0b1120] transition">Cancel export</button>
+</div>
+
+<!-- PREVIEW STOP -->
+<div id="preview-overlay" class="hidden fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0b1120]/95 to-transparent flex items-center justify-center z-50">
+  <button id="stop-preview-btn" class="text-white px-8 py-4 bg-[#7b4b9a] rounded-full hover:bg-[#9e6bbf] transition shadow-xl flex items-center gap-3 font-semibold"><i class="fas fa-stop"></i> Stop Preview</button>
+</div>
+
+<!-- HARDWARE WAKE LOCK VIDEO -->
+<video id="keep-awake-video" playsinline muted loop style="position:absolute; width:2px; height:2px; opacity:0.01; pointer-events:none; z-index:-1;" src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAGp21kYXQAAAKqBgX//5xCncHxtb3ZfXxc/BwEQwMAAAAAAAAAB+2QAAAAAAB3bW9vdgAAAGxtdmhkAAAAAM/zT3DP809wAAAD6AAABDcAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAzl0cmFrAAAAXHRraGQAAAADz/NPcM/zT3AAAAABAAAAAAAEJwAAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAQAAAAAEAAAAAAhgAAAAAAHhtZGlhAAAAIG1kaGQAAAAAz/NPcM/zT3CAAAAAAB1pAAAAAAA1aGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAIwbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcYnJlZgAAAAx1cmwgAAAAAQAAAAAAAWBzdGJsAAAArHN0c2QAAAAAAAAAAQAAAJxhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQAAAAEAEABIAAAASAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAABRibHRydAAABCgAAAAAAAAD6AAAAHhzdHRzAAAAAAAAAAEAAAABAAAdSQAAABxzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAUc3RzejAAAAAAAAAAOQAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAABRzdHNzAAAAAAAAAAEAAAAB"></video>
+
+<script>
+  (function(){
+    "use strict";
+
+    // DOM
+    const setupView = document.getElementById('setup-view');
+    const canvas = document.getElementById('render-canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const recordingOverlay = document.getElementById('recording-overlay');
+    const previewOverlay = document.getElementById('preview-overlay');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const photoInput = document.getElementById('photo-input');
+    const audioInput = document.getElementById('audio-input');
+    const durationSlider = document.getElementById('duration-slider');
+    const durationLabel = document.getElementById('duration-label');
+    const resolutionSelect = document.getElementById('resolution-select');
+    const bwToggle = document.getElementById('bw-toggle');
+    const errorMsg = document.getElementById('error-message');
+    const successMsg = document.getElementById('success-message');
+    const photoCountDisplay = document.getElementById('photo-count');
+    const countValueSpan = document.getElementById('count-value');
+    const shuffleToggleBtn = document.getElementById('shuffle-toggle-btn');
+    const shuffleBtnText = document.getElementById('shuffle-btn-text');
+    const shuffleIndicator = document.getElementById('shuffle-indicator');
+    const indicatorText = document.getElementById('indicator-text');
+    const dedupeToggle = document.getElementById('dedupe-toggle');
+    const duplicateBadge = document.getElementById('duplicate-badge');
+    const wakeLockStatus = document.getElementById('wake-lock-status');
+    const keepAwakeVideo = document.getElementById('keep-awake-video');
+    const livePreviewVideo = document.getElementById('live-preview-video');
+
+    // State
+    let imageUrls = [], originalFiles = [], slideAnimations = [];
+    const imageCache = new Map();
+    let slideDuration = 4000, transitionDuration = 2000, isShuffled = false;
+    let isRendering = false, isExporting = false, animationFrameId = null, startTime = null, totalTime = 0, exportFinished = false;
+    let mediaRecorder = null, recordedChunks = [], audioEl = null, audioCtx = null;
+    
+    // Engine Time Tracking & Pause State
+    let totalElapsed = 0, lastRafTime = 0, isPaused = false;
+    
+    // Anti-Sleep State
+    let wakeLock = null, wakeLockSupported = false;
+    const noSleep = new NoSleep();
+    const animTypes = ['zoom-in', 'zoom-out', 'pan-right', 'pan-left', 'pan-down'];
+    
+    // Web Audio Anti-Sleep Pinger Variables
+    let antiSleepInterval = null;
+    let silentAudioCtx = null;
+
+    // ----- Extreme Anti-Sleep Pinger Trick -----
+    // Generates a totally silent sound every 10 seconds.
+    // Operating systems rarely put devices to sleep if audio is actively playing.
+    function startAntiSleepPinger() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!silentAudioCtx && AudioContext) {
+          silentAudioCtx = new AudioContext();
+        }
+        if (silentAudioCtx && silentAudioCtx.state === 'suspended') {
+          silentAudioCtx.resume();
+        }
+      } catch(e) {}
+
+      antiSleepInterval = setInterval(() => {
+        // 1. Play silent audio ping
+        if (silentAudioCtx) {
+          try {
+            const osc = silentAudioCtx.createOscillator();
+            const gain = silentAudioCtx.createGain();
+            gain.gain.value = 0; // 0 volume = absolute silence
+            osc.connect(gain);
+            gain.connect(silentAudioCtx.destination);
+            osc.start();
+            osc.stop(silentAudioCtx.currentTime + 0.1); // Stop after 100ms
+          } catch(e) {}
+        }
+
+        // 2. Refresh keep-awake video just in case iOS paused it automatically
+        try { if(keepAwakeVideo.paused) keepAwakeVideo.play(); } catch(e) {}
+
+        // 3. Keep requesting native wake lock if it was dropped
+        if (wakeLockSupported && !wakeLock) {
+           requestWakeLock().catch(()=>{});
+        }
+      }, 10000); // 10 second ping interval
+    }
+
+    function stopAntiSleepPinger() {
+      if (antiSleepInterval) clearInterval(antiSleepInterval);
+      antiSleepInterval = null;
+      if (silentAudioCtx) {
+        try { silentAudioCtx.close(); } catch(e) {}
+        silentAudioCtx = null;
+      }
+    }
+
+    // ----- Wake Lock -----
+    async function requestWakeLock() {
+      try { noSleep.enable(); } catch(e) {} 
+      try { keepAwakeVideo.play(); } catch(e) {}
+      
+      if (!wakeLockSupported) {
+        wakeLockStatus.textContent = 'audio pinger active';
+        return false;
+      }
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLockStatus.textContent = 'screen awake 🔒';
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          wakeLockStatus.textContent = 'audio pinger fallback';
+        });
+        return true;
+      } catch (err) {
+        wakeLockStatus.textContent = 'audio pinger fallback';
+        return false;
+      }
+    }
+
+    async function releaseWakeLock() {
+      try { noSleep.disable(); } catch(e) {} 
+      try { keepAwakeVideo.pause(); } catch(e) {}
+      if (wakeLock) {
+        try { await wakeLock.release(); } catch (e) {}
+        wakeLock = null;
+      }
+      wakeLockStatus.textContent = 'screen may sleep';
+    }
+
+    document.addEventListener('visibilitychange', async () => {
+      if (!isRendering) return;
+      
+      const pauseWarningEl = document.getElementById('pause-warning');
+      
+      if (document.visibilityState === 'visible') {
+        // App is back on screen - RESUME
+        isPaused = false;
+        lastRafTime = performance.now(); // Reset time delta so we don't jump forward
+        
+        if (isExporting && mediaRecorder && mediaRecorder.state === 'paused') {
+          try { mediaRecorder.resume(); } catch(e) {}
+        }
+        if (pauseWarningEl) pauseWarningEl.classList.add('hidden');
+        await requestWakeLock();
+      } else {
+        // App went to background / screen locked - PAUSE
+        isPaused = true;
+        if (isExporting && mediaRecorder && mediaRecorder.state === 'recording') {
+          try { mediaRecorder.pause(); } catch(e) {}
+        }
+        if (pauseWarningEl) pauseWarningEl.classList.remove('hidden');
+      }
+    });
+
+    if ('wakeLock' in navigator) {
+      wakeLockSupported = true;
+      wakeLockStatus.textContent = 'screen stays awake';
+    } else {
+      wakeLockStatus.textContent = 'wake lock not supported';
+    }
+
+    // ----- Deduplication Logic -----
+    function countDuplicates(files) {
+      const seen = new Set();
+      let dupes = 0;
+      for (const f of files) {
+        const key = `${f.name}-${f.size}`;
+        if (seen.has(key)) dupes++;
+        else seen.add(key);
+      }
+      return dupes;
+    }
+
+    function removeDuplicatesFromFiles(files) {
+      const seen = new Set();
+      const unique = [];
+      for (const f of files) {
+        const key = `${f.name}-${f.size}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(f);
+        }
+      }
+      return unique;
+    }
+
+    function applyDedupeIfEnabled(files) {
+      if (dedupeToggle.checked) {
+        const before = files.length;
+        const unique = removeDuplicatesFromFiles(files);
+        const removed = before - unique.length;
+        if (removed > 0) {
+          duplicateBadge.textContent = `${removed} dupe${removed>1?'s':''} removed`;
+          duplicateBadge.classList.remove('hidden');
+          setTimeout(() => duplicateBadge.classList.add('hidden'), 3000);
+        } else {
+          duplicateBadge.classList.add('hidden');
+        }
+        return unique;
+      } else {
+        const dupes = countDuplicates(files);
+        if (dupes > 0) {
+          duplicateBadge.textContent = `${dupes} dupe${dupes>1?'s':''} found`;
+          duplicateBadge.classList.remove('hidden');
+        } else {
+          duplicateBadge.classList.add('hidden');
+        }
+        return files;
+      }
+    }
+
+    function rebuildFromFiles(filesArray) {
+      const processedFiles = applyDedupeIfEnabled(filesArray);
+      imageUrls.forEach(url => URL.revokeObjectURL(url));
+      imageCache.clear();
+      originalFiles = processedFiles;
+      imageUrls = processedFiles.map(file => URL.createObjectURL(file));
+      slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
+      isShuffled = false;
+      shuffleBtnText.textContent = 'Shuffle';
+      shuffleIndicator.classList.add('hidden');
+      updatePhotoCountUI();
+    }
+
+    // ----- Helpers -----
+    function updatePhotoCountUI() {
+      const len = imageUrls.length;
+      if (len > 0) {
+        countValueSpan.textContent = len;
+        photoCountDisplay.classList.remove('hidden');
+        shuffleToggleBtn.disabled = false;
+      } else {
+        photoCountDisplay.classList.add('hidden');
+        shuffleToggleBtn.disabled = true;
+        shuffleIndicator.classList.add('hidden');
+        isShuffled = false;
+        shuffleBtnText.textContent = 'Shuffle';
+      }
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function toggleShuffle() {
+      if (originalFiles.length === 0) {
+        errorMsg.textContent = "Select photos first.";
+        errorMsg.classList.remove('hidden');
+        successMsg.classList.add('hidden');
+        return;
+      }
+      let filesToUse = originalFiles;
+      if (!isShuffled) {
+        filesToUse = shuffleArray([...originalFiles]);
+        isShuffled = true;
+        shuffleBtnText.textContent = 'Unshuffle';
+        indicatorText.textContent = 'order shuffled';
+        shuffleIndicator.classList.remove('hidden');
+      } else {
+        isShuffled = false;
+        shuffleBtnText.textContent = 'Shuffle';
+        shuffleIndicator.classList.add('hidden');
+      }
+      if (dedupeToggle.checked) {
+        const unique = removeDuplicatesFromFiles(filesToUse);
+        filesToUse = unique;
+      }
+      imageUrls.forEach(url => URL.revokeObjectURL(url));
+      imageCache.clear();
+      imageUrls = filesToUse.map(file => URL.createObjectURL(file));
+      slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
+      updatePhotoCountUI();
+      errorMsg.classList.add('hidden');
+      successMsg.classList.add('hidden');
+    }
+
+    dedupeToggle.addEventListener('change', () => {
+      if (originalFiles.length === 0) return;
+      const newFiles = dedupeToggle.checked ? removeDuplicatesFromFiles(originalFiles) : originalFiles;
+      if (newFiles.length !== originalFiles.length) {
+        imageUrls.forEach(url => URL.revokeObjectURL(url));
+        imageCache.clear();
+        originalFiles = newFiles;
+        imageUrls = newFiles.map(file => URL.createObjectURL(file));
+        slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
+        if (isShuffled) {
+          const shuffled = shuffleArray([...originalFiles]);
+          imageUrls = shuffled.map(file => URL.createObjectURL(file));
+          slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
+        }
+        updatePhotoCountUI();
+        const removed = originalFiles.length - newFiles.length;
+        duplicateBadge.textContent = `${removed} dupe${removed>1?'s':''} removed`;
+        duplicateBadge.classList.remove('hidden');
+        setTimeout(() => duplicateBadge.classList.add('hidden'), 2000);
+      } else {
+        duplicateBadge.classList.add('hidden');
+      }
+    });
+
+    // Event listeners
+    durationSlider.addEventListener('input', e => {
+      durationLabel.textContent = e.target.value;
+      slideDuration = parseInt(e.target.value) * 1000;
+    });
+    photoInput.addEventListener('change', e => {
+      const files = Array.from(e.target.files || []);
+      errorMsg.classList.add('hidden');
+      successMsg.classList.add('hidden');
+      if (files.length) {
+        rebuildFromFiles(files);
+      } else {
+        imageUrls.forEach(url => URL.revokeObjectURL(url));
+        imageUrls = []; originalFiles = []; slideAnimations = [];
+        imageCache.clear();
+        updatePhotoCountUI();
+        shuffleToggleBtn.disabled = true;
+        duplicateBadge.classList.add('hidden');
+      }
+    });
+    shuffleToggleBtn.addEventListener('click', toggleShuffle);
+
+    function handleStart(exportMode) {
+      try { keepAwakeVideo.play(); } catch(e) {}
+      try { noSleep.enable(); } catch(e) {}
+      startAntiSleepPinger(); // Start audio pinging trick
+      startEngine(exportMode);
+    }
+
+    document.getElementById('preview-btn').addEventListener('click', () => handleStart(false));
+    document.getElementById('export-btn').addEventListener('click', () => handleStart(true));
+    document.getElementById('stop-preview-btn').addEventListener('click', stopEngine);
+    document.getElementById('cancel-export-btn').addEventListener('click', stopEngine);
+
+    function getImage(index) {
+      if (index < 0 || index >= imageUrls.length) return null;
+      if (imageCache.has(index)) return imageCache.get(index);
+      const img = new Image();
+      img.src = imageUrls[index];
+      imageCache.set(index, img);
+      if (imageCache.size > 6) {
+        const keys = Array.from(imageCache.keys()).sort((a,b)=>a-b);
+        for (let k of keys) if (k < index - 3) imageCache.delete(k);
+      }
+      return img;
+    }
+
+    async function startEngine(exportMode) {
+      if (imageUrls.length === 0) {
+        errorMsg.textContent = "Please select at least one photo.";
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      // Set canvas resolution based on user choice
+      const res = parseInt(resolutionSelect.value);
+      if (res === 2160) {
+        canvas.width = 3840;
+        canvas.height = 2160;
+      } else {
+        canvas.width = 1920;
+        canvas.height = 1080;
+      }
+
+      // Force highest quality image smoothing for upscaling
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      await requestWakeLock();
+      isExporting = exportMode;
+      isRendering = true;
+      exportFinished = false;
+      startTime = null;
+      totalElapsed = 0;
+      lastRafTime = 0;
+      isPaused = false;
+      totalTime = imageUrls.length * slideDuration;
+      setupView.classList.add('hidden');
+      canvas.style.display = 'block';
+      if (isExporting) {
+        recordingOverlay.classList.remove('hidden');
+        previewOverlay.classList.add('hidden');
+        setupExport();
+      } else {
+        previewOverlay.classList.remove('hidden');
+        recordingOverlay.classList.add('hidden');
+        startAudio(false);
+      }
+      animationFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    async function stopEngine() {
+      isRendering = false;
+      stopAntiSleepPinger(); // Stop the audio trick
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (isExporting && mediaRecorder && mediaRecorder.state === 'recording' && !exportFinished) {
+        exportFinished = true;
+        mediaRecorder.stop();
+      }
+      if (audioEl) { audioEl.pause(); audioEl = null; }
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      await releaseWakeLock();
+      canvas.style.display = 'none';
+      setupView.classList.remove('hidden');
+      recordingOverlay.classList.add('hidden');
+      previewOverlay.classList.add('hidden');
+      ctx.fillStyle = '#0b1120';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      return `${Math.floor(totalSec / 60)}:${(totalSec % 60).toString().padStart(2, '0')}`;
+    }
+
+    function renderLoop(timestamp) {
+      if (!isRendering) return;
+      
+      if (!lastRafTime) lastRafTime = timestamp;
+      let delta = timestamp - lastRafTime;
+      
+      // If delta is huge (e.g. > 500ms), the tab was backgrounded or screen locked. 
+      // Cap it to 16ms so we don't skip massive chunks of the video!
+      if (delta > 500) {
+          delta = 16; 
+      }
+      lastRafTime = timestamp;
+
+      // Only advance time if we are not paused
+      if (!isPaused) {
+          totalElapsed += delta;
+      }
+      
+      const elapsed = totalElapsed;
+
+      if (elapsed >= totalTime) {
+        const lastIndex = imageUrls.length - 1;
+        if (lastIndex >= 0) {
+          ctx.fillStyle = '#0b1120';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawSlide(getImage(lastIndex), 1.0, slideAnimations[lastIndex], 1.0, bwToggle.checked);
+        }
+        if (isExporting) {
+          if (!exportFinished) {
+            exportFinished = true;
+            setTimeout(() => {
+              if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+              stopEngine();
+            }, 200);
+          }
+        } else {
+          stopEngine();
+        }
+        return;
+      }
+
+      if (isExporting) {
+        progressBar.style.width = `${Math.min((elapsed / totalTime) * 100, 100)}%`;
+        progressText.textContent = `${formatTime(elapsed)} / ${formatTime(totalTime)}`;
+      }
+
+      const currIndex = Math.floor(elapsed / slideDuration);
+      const prevIndex = currIndex - 1;
+      ctx.fillStyle = '#0b1120';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (prevIndex >= 0 && prevIndex < imageUrls.length) {
+        const prevProgress = (elapsed - (prevIndex * slideDuration)) / (slideDuration + transitionDuration);
+        drawSlide(getImage(prevIndex), prevProgress, slideAnimations[prevIndex], 1.0, bwToggle.checked);
+      }
+      if (currIndex < imageUrls.length) {
+        let alpha = (elapsed - (currIndex * slideDuration)) / transitionDuration;
+        alpha = Math.min(Math.max(alpha, 0), 1.0);
+        if (currIndex === 0) alpha = 1.0;
+        const currProgress = (elapsed - (currIndex * slideDuration)) / (slideDuration + transitionDuration);
+        drawSlide(getImage(currIndex), currProgress, slideAnimations[currIndex], alpha, bwToggle.checked);
+      }
+      animationFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    function drawSlide(img, progress, animType, alpha, isBW) {
+      if (!img || !img.complete || img.naturalWidth === 0) return;
+      const cw = canvas.width, ch = canvas.height;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      let scale = 1.0, tx = 0, ty = 0;
+      if (animType === 'zoom-in') scale = 1.0 + progress * 0.15;
+      else if (animType === 'zoom-out') scale = 1.15 - progress * 0.15;
+      else if (animType === 'pan-right') { scale = 1.1; tx = (progress * 0.04) - 0.02; }
+      else if (animType === 'pan-left') { scale = 1.1; tx = 0.02 - (progress * 0.04); }
+      else if (animType === 'pan-down') { scale = 1.1; ty = (progress * 0.04) - 0.02; }
+      ctx.translate(cw/2 + tx * cw, ch/2 + ty * ch);
+      ctx.scale(scale, scale);
+      ctx.translate(-cw/2, -ch/2);
+      ctx.save();
+      const bgRatio = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const bgW = img.naturalWidth * bgRatio, bgH = img.naturalHeight * bgRatio;
+      ctx.filter = `blur(30px) brightness(0.3) sepia(0.2) ${isBW ? 'grayscale(100%)' : ''}`;
+      ctx.drawImage(img, (cw - bgW)/2, (ch - bgH)/2, bgW, bgH);
+      ctx.restore();
+      const fgRatio = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
+      const fgW = img.naturalWidth * fgRatio, fgH = img.naturalHeight * fgRatio;
+      ctx.filter = isBW ? 'grayscale(100%)' : 'none';
+      ctx.shadowColor = '#0b1120';
+      ctx.shadowBlur = 60;
+      ctx.shadowOffsetY = 12;
+      ctx.drawImage(img, (cw - fgW)/2, (ch - fgH)/2, fgW, fgH);
+      ctx.restore();
+    }
+
+    function startAudio(forExport) {
+      if (audioInput.files.length) {
+        const audioUrl = URL.createObjectURL(audioInput.files[0]);
+        audioEl = new Audio(audioUrl);
+        audioEl.loop = true;
+        if (forExport) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const dest = audioCtx.createMediaStreamDestination();
+          const source = audioCtx.createMediaElementSource(audioEl);
+          source.connect(dest);
+          source.connect(audioCtx.destination);
+          audioEl.play();
+          return dest.stream;
+        } else audioEl.play();
+      }
+      return null;
+    }
+
+    function setupExport() {
+      recordedChunks = [];
+      const canvasStream = canvas.captureStream(30);
+      
+      // NEW: Stream the canvas directly to the visible video player to mimic YouTube!
+      livePreviewVideo.srcObject = canvasStream;
+      
+      let combinedStream = canvasStream;
+      const audioStream = startAudio(true);
+      if (audioStream && audioStream.getAudioTracks().length) {
+        combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
+      }
+      let mime = 'video/mp4';
+      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+      
+      // Dramatically increase video bitrate (10 Mbps for 1080p, 30 Mbps for 4K)
+      const res = parseInt(resolutionSelect.value);
+      const targetBitrate = res === 2160 ? 30000000 : 10000000;
+
+      mediaRecorder = new MediaRecorder(combinedStream, { 
+        mimeType: mime,
+        videoBitsPerSecond: targetBitrate
+      });
+      mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        if (recordedChunks.length) {
+          const rawBlob = new Blob(recordedChunks, { type: mime });
+          const downloadFinalVideo = (finalBlob) => {
+            const url = URL.createObjectURL(finalBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OConnor_Memorial_${new Date().toISOString().slice(0,10)}.${mime.includes('mp4')?'mp4':'webm'}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+          };
+          if (mime.includes('webm') && typeof ysFixWebmDuration === 'function') {
+            ysFixWebmDuration(rawBlob, totalTime, (fixedBlob) => downloadFinalVideo(fixedBlob));
+          } else {
+            downloadFinalVideo(rawBlob);
+          }
+        }
+        
+        // Stop the live preview
+        livePreviewVideo.srcObject = null;
+        stopEngine();
+      };
+      mediaRecorder.start();
+    }
+
+    // Initial UI
+    updatePhotoCountUI();
+    shuffleToggleBtn.disabled = true;
+  })();
+</script>
+</body>
+</html>
