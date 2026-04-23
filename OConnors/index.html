@@ -539,6 +539,17 @@
     function handleStart(exportMode) {
       try { keepAwakeVideo.play(); } catch(e) {}
       try { noSleep.enable(); } catch(e) {}
+
+      // Start Audio Context immediately on user click to satisfy Apple/Chrome security rules
+      if (exportMode && audioInput.files.length) {
+        try {
+          if (!audioCtx || audioCtx.state === 'closed') {
+             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+        } catch(e) {}
+      }
+
       startAntiSleepPinger(); // Start audio pinging trick
       startEngine(exportMode);
     }
@@ -593,15 +604,21 @@
       totalTime = imageUrls.length * slideDuration;
       setupView.classList.add('hidden');
       canvas.style.display = 'block';
+
+      // NEW: Wait for audio to actually load before starting!
+      const audioStream = await startAudio(isExporting);
+
       if (isExporting) {
         recordingOverlay.classList.remove('hidden');
         previewOverlay.classList.add('hidden');
-        setupExport();
+        setupExport(audioStream);
       } else {
         previewOverlay.classList.remove('hidden');
         recordingOverlay.classList.add('hidden');
-        startAudio(false);
       }
+
+      // Reset time properly right before starting the loop so the loading delay isn't counted
+      lastRafTime = performance.now();
       animationFrameId = requestAnimationFrame(renderLoop);
     }
 
@@ -613,8 +630,8 @@
         exportFinished = true;
         mediaRecorder.stop();
       }
-      if (audioEl) { audioEl.pause(); audioEl = null; }
-      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      if (audioEl) { audioEl.pause(); audioEl.removeAttribute('src'); audioEl.load(); audioEl = null; }
+      // do not close audioCtx here so it can be reused smoothly
       await releaseWakeLock();
       canvas.style.display = 'none';
       setupView.classList.remove('hidden');
@@ -725,24 +742,32 @@
     }
 
     function startAudio(forExport) {
-      if (audioInput.files.length) {
+      return new Promise((resolve) => {
+        if (!audioInput.files.length) return resolve(null);
+
         const audioUrl = URL.createObjectURL(audioInput.files[0]);
         audioEl = new Audio(audioUrl);
         audioEl.loop = true;
-        if (forExport) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const dest = audioCtx.createMediaStreamDestination();
-          const source = audioCtx.createMediaElementSource(audioEl);
-          source.connect(dest);
-          source.connect(audioCtx.destination);
-          audioEl.play();
-          return dest.stream;
-        } else audioEl.play();
-      }
-      return null;
+
+        audioEl.oncanplay = () => {
+          if (forExport && audioCtx) {
+            try {
+              const dest = audioCtx.createMediaStreamDestination();
+              const source = audioCtx.createMediaElementSource(audioEl);
+              source.connect(dest);
+              source.connect(audioCtx.destination);
+              audioEl.play().then(() => resolve(dest.stream)).catch(() => resolve(dest.stream));
+            } catch(e) { resolve(null); }
+          } else {
+             audioEl.play().then(() => resolve(null)).catch(() => resolve(null));
+          }
+        };
+        audioEl.onerror = () => resolve(null);
+        audioEl.load();
+      });
     }
 
-    function setupExport() {
+    function setupExport(audioStream) {
       recordedChunks = [];
       const canvasStream = canvas.captureStream(30);
       
@@ -750,13 +775,18 @@
       livePreviewVideo.srcObject = canvasStream;
       
       let combinedStream = canvasStream;
-      const audioStream = startAudio(true);
       if (audioStream && audioStream.getAudioTracks().length) {
         combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
       }
-      let mime = 'video/mp4';
-      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp9';
-      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+
+      // Explicitly ask for audio codecs to prevent "corrupt file" headers
+      const mimeTypes = [
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      let mime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
       
       // Dramatically increase video bitrate (10 Mbps for 1080p, 30 Mbps for 4K)
       const res = parseInt(resolutionSelect.value);
