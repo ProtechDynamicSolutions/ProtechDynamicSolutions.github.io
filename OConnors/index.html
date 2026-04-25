@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>O'Connor · Memorial Video</title>
-  <!-- Tailwind + Icons -->
+  <title>O'Connor · Memorial Video 10x</title>
+  <!-- Tailwind + Font Awesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <!-- NoSleep & WebM duration fix -->
@@ -34,170 +35,186 @@
     .gold-accent { color: #d4b87a; }
     @media (max-width: 640px) { .setup-card { padding: 1.5rem 1rem !important; } }
     #wake-lock-status { font-size: 10px; opacity: 0.7; }
-    /* toggle switch styling */
     .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
+      position: relative; display: inline-block; width: 44px; height: 24px;
     }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #2a3148;
-      transition: .2s;
-      border-radius: 24px;
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #2a3148; transition: .2s; border-radius: 24px;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .2s;
-      border-radius: 50%;
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%;
     }
-    input:checked + .slider {
-      background-color: #7b4b9a;
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
+    input:checked + .slider { background-color: #7b4b9a; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .thumb-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .thumb-item { position: relative; width: 80px; height: 80px; border-radius: 12px; overflow: hidden; border: 2px solid #2a3148; cursor: pointer; background: #1a1f2e; }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-item .order-btns { position: absolute; bottom: 2px; right: 2px; display: flex; gap: 2px; opacity: 0; transition: opacity 0.2s; }
+    .thumb-item:hover .order-btns { opacity: 1; }
+    .order-btn { background: #7b4b9a; color: white; border: none; border-radius: 4px; width: 22px; height: 22px; font-size: 12px; line-height: 1; cursor: pointer; }
+    .success-note { background: #132a21; border-left: 3px solid #4ade80; padding: 10px 14px; border-radius: 8px; font-size: 0.75rem; color: #86efac; margin-top: 10px; line-height: 1.4; }
   </style>
 </head>
 <body class="flex items-center justify-center p-3 sm:p-4 min-h-screen">
 
 <div id="setup-view" class="w-full max-w-2xl setup-card bg-[#131b2a] rounded-3xl shadow-2xl border border-[#7b4b9a]/40 p-5 sm:p-7 transition-all z-30 backdrop-blur-sm">
-  
-  <!-- LOGO with fallback -->
+  <!-- LOGO -->
   <div class="flex flex-col items-center text-center mb-4">
     <div class="logo-wrapper mb-3">
-      <img id="main-logo" 
-           src="https://rip.ie/_next/image?url=https%3A%2F%2Fimg-dedicated.rip.ie%2FO%27Connor_Brother_North_Gate_Bridge_320_eeb8d6c65de59a08e84e15bac54d69aaea89ac7074d7385b.png&w=1920&q=75" 
+      <img id="main-logo"
+           src="https://rip.ie/_next/image?url=https%3A%2F%2Fimg-dedicated.rip.ie%2FO%27Connor_Brother_North_Gate_Bridge_320_eeb8d6c65de59a08e84e15bac54d69aaea89ac7074d7385b.png&w=1920&q=75"
            alt="O'Connor Brothers Funeral Directors"
            class="h-20 sm:h-24 w-auto object-contain logo-glow"
            onerror="this.onerror=null; this.src='https://www.oconnorfuneralcork.ie/wp-content/themes/JointsWP-CSS-master/assets/images/logo-oconnor@2x.png';">
     </div>
-    <h1 class="text-2xl sm:text-3xl font-light tracking-wide text-[#d9c9f0]">Memorial Video Maker</h1>
+    <h1 class="text-2xl sm:text-3xl font-light tracking-wide text-[#d9c9f0]">Memorial Video Maker 10x</h1>
     <div class="w-20 h-0.5 bg-[#7b4b9a]/70 my-3"></div>
-    <p class="text-[#b0b9d0] text-sm sm:text-base max-w-md">Create a 1080p tribute · fully local · no uploads</p>
+    <p class="text-[#b0b9d0] text-sm sm:text-base max-w-md">1080p/4K · fully local · smart memory engine</p>
   </div>
 
-  <!-- PHOTO SECTION -->
+  <!-- PHOTOS + REORDER STRIP -->
   <div class="space-y-5">
     <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center justify-between mb-3">
         <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-images mr-2 text-[#7b4b9a]"></i>Select Photos</label>
-        <div class="flex items-center gap-3">
-          <!-- Shuffle Toggle (button with clear on/off) -->
-          <button id="shuffle-toggle-btn" class="text-xs sm:text-sm px-3 py-1.5 rounded-full btn-outline flex items-center gap-1 transition disabled:opacity-40 disabled:border-gray-500" title="Toggle random order">
-            <i class="fas fa-random"></i> <span id="shuffle-btn-text">Shuffle</span>
+        <div class="flex gap-2">
+          <button id="manual-shuffle-btn" class="text-xs sm:text-sm px-3 py-1.5 rounded-full btn-outline flex items-center gap-1 transition disabled:opacity-40" title="Randomize now">
+            <i class="fas fa-random"></i> Shuffle
           </button>
+          <button id="load-project-btn" class="text-xs sm:text-sm px-3 py-1.5 rounded-full btn-outline flex items-center gap-1 transition"><i class="fas fa-folder-open"></i> Load</button>
+          <button id="save-project-btn" class="text-xs sm:text-sm px-3 py-1.5 rounded-full btn-outline flex items-center gap-1 transition"><i class="fas fa-save"></i> Save</button>
         </div>
       </div>
-      <input type="file" id="photo-input" multiple accept="image/*" class="block w-full text-sm text-[#cddce6] file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#7b4b9a] file:text-white hover:file:bg-[#9e6bbf] transition-all cursor-pointer" />
-      <div class="flex items-center justify-between mt-3">
+      
+      <!-- DEFAULT SETTINGS -->
+      <div class="flex flex-wrap items-center gap-4 mb-3 text-xs">
         <div class="flex items-center gap-2">
-          <p id="photo-count" class="text-xs sm:text-sm text-[#b0c6d5] hidden"><i class="far fa-image mr-1"></i> <span id="count-value">0</span> photos</p>
-          <p id="shuffle-indicator" class="text-xs text-[#b89b5e] hidden"><i class="fas fa-check-circle"></i> <span id="indicator-text">order shuffled</span></p>
-        </div>
-        <!-- Remove Duplicates Toggle Switch + Badge -->
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-[#b0c6d5]"><i class="fas fa-clone mr-1"></i>Remove duplicates</span>
+          <span class="text-[#b0c6d5]">Auto-Shuffle on upload</span>
           <label class="toggle-switch">
-            <input type="checkbox" id="dedupe-toggle">
+            <input type="checkbox" id="auto-shuffle-toggle" checked>
             <span class="slider"></span>
           </label>
-          <span id="duplicate-badge" class="text-xs bg-[#7b4b9a]/30 text-[#e0d6f0] px-2 py-0.5 rounded-full hidden">0 dupes</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[#b0c6d5]">Remove duplicates</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dedupe-toggle" checked>
+            <span class="slider"></span>
+          </label>
         </div>
       </div>
-    </div>
 
-    <!-- AUDIO -->
-    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
-      <label class="block text-[#e0d6f0] font-medium mb-2 text-sm sm:text-base"><i class="fas fa-music mr-2 text-[#7b4b9a]"></i>Background Music (optional)</label>
-      <input type="file" id="audio-input" accept="audio/*" class="block w-full text-sm text-[#cddce6] file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#7b4b9a] file:text-white hover:file:bg-[#9e6bbf] transition-all cursor-pointer" />
-    </div>
-
-    <!-- DURATION -->
-    <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
-      <div class="flex items-center justify-between mb-2">
-        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="far fa-clock mr-2 text-[#7b4b9a]"></i>Time per photo</label>
-        <span id="duration-label" class="text-[#f5f0e8] font-bold bg-[#0b1120] px-4 py-1 rounded-full text-sm border border-[#7b4b9a]/50">4</span>
+      <input type="file" id="photo-input" multiple accept="image/*" class="block w-full text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:bg-[#7b4b9a] text-white cursor-pointer transition hover:file:bg-[#9e6bbf]" />
+      <div id="thumb-strip" class="thumb-strip mt-3"></div>
+      
+      <div class="mt-2 text-xs">
+        <span id="photo-count" class="text-[#b0c6d5] hidden"><i class="far fa-image"></i> <span id="count-value">0</span> photos loaded successfully</span>
       </div>
-      <input type="range" id="duration-slider" min="3" max="10" value="4" class="w-full h-2 bg-[#2a3148] rounded-lg appearance-none cursor-pointer accent-purple" />
-      <div class="flex justify-between text-xs text-[#9eb7ca] mt-2 px-1"><span>3s</span><span>10s</span></div>
     </div>
 
-    <!-- RESOLUTION (UPRES) -->
+    <!-- TEXT OVERLAY -->
     <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
-      <div class="flex items-center justify-between">
-        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-tv mr-2 text-[#7b4b9a]"></i>Video Resolution</label>
-        <select id="resolution-select" class="bg-[#2a3148] text-[#e0d6f0] border border-[#7b4b9a]/50 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#9e6bbf] cursor-pointer">
-          <option value="1080">1080p (HD)</option>
-          <option value="2160">4K (Ultra HD)</option>
+      <label class="block text-[#e0d6f0] font-medium mb-2 text-sm"><i class="fas fa-font mr-2 text-[#7b4b9a]"></i>Text Overlay</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input id="text-line1" type="text" placeholder="Name / Title" class="bg-[#2a3148] border border-[#7b4b9a]/50 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+        <input id="text-line2" type="text" placeholder="Dates / Message" class="bg-[#2a3148] border border-[#7b4b9a]/50 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+      </div>
+      <div class="flex items-center gap-4 mt-3">
+        <span class="text-xs text-[#b0c6d5]">Show text</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="text-overlay-toggle">
+          <span class="slider"></span>
+        </label>
+        <select id="text-position" class="bg-[#2a3148] text-white text-xs border border-[#7b4b9a]/50 rounded px-2 py-1">
+          <option value="bottom">Bottom</option>
+          <option value="top">Top</option>
+          <option value="center">Center</option>
         </select>
       </div>
     </div>
 
-    <!-- BLACK & WHITE -->
+    <!-- AUDIO (Silent processing) -->
     <div class="bg-[#1e2338] p-5 rounded-2xl border border-[#7b4b9a]/30">
-      <div class="flex items-center justify-between">
-        <label class="text-[#e0d6f0] font-medium text-sm sm:text-base"><i class="fas fa-magic mr-2 text-[#7b4b9a]"></i>Black & White Effect</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="bw-toggle">
-          <span class="slider"></span>
-        </label>
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-[#e0d6f0] font-medium text-sm"><i class="fas fa-music mr-2 text-[#7b4b9a]"></i>Background Music</label>
+        <span id="audio-status" class="text-xs text-[#b89b5e]"></span>
+      </div>
+      <input type="file" id="audio-input" accept="audio/*" class="mb-3 block w-full text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:bg-[#7b4b9a] text-white cursor-pointer" />
+      <div class="grid grid-cols-2 gap-3 text-xs" id="audio-settings" style="display:none;">
+        <div><label class="text-[#b0c6d5]">Volume</label><input type="range" id="volume-slider" min="0" max="100" value="80" class="w-full accent-purple" /></div>
+        <div><label class="text-[#b0c6d5]">Trim start (s)</label><input type="number" id="trim-start" min="0" value="0" step="1" class="w-full bg-[#2a3148] text-white border border-[#7b4b9a]/50 rounded px-2 py-1" /></div>
+      </div>
+      <div class="success-note">
+        <i class="fas fa-magic mr-1"></i> <strong>Silent Rendering Engine Active:</strong> During export, audio is injected straight into the file. It won't play out loud, which means <strong>you do not need "Do Not Disturb"</strong>. Notifications and alarms will no longer dip the volume of your final video!
       </div>
     </div>
 
-    <div id="error-message" class="text-[#f4a261] text-sm text-center py-1 hidden"></div>
-    <div id="success-message" class="text-[#7b4b9a] text-sm text-center py-1 hidden"></div>
-
-    <!-- ACTION BUTTONS -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-      <button id="preview-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base shadow-md btn-outline"><i class="fas fa-eye"></i> Preview</button>
-      <button id="export-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base shadow-lg btn-primary"><i class="fas fa-file-video"></i> Render & Download</button>
+    <!-- DURATION & RESOLUTION & B&W -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-[#1e2338] p-4 rounded-2xl border border-[#7b4b9a]/30">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-sm text-[#e0d6f0]"><i class="far fa-clock mr-2"></i>Time per photo</label>
+          <span id="duration-label" class="font-bold bg-[#0b1120] px-3 py-0.5 rounded-full text-sm border border-[#7b4b9a]/50">4</span>
+        </div>
+        <input type="range" id="duration-slider" min="3" max="10" value="4" class="w-full accent-purple" />
+      </div>
+      <div class="bg-[#1e2338] p-4 rounded-2xl border border-[#7b4b9a]/30 flex flex-col justify-center">
+        <div class="flex items-center justify-between">
+          <label class="text-sm text-[#e0d6f0]"><i class="fas fa-tv mr-2"></i>Resolution</label>
+          <select id="resolution-select" class="bg-[#2a3148] text-white border border-[#7b4b9a]/50 rounded px-2 py-1 text-xs">
+            <option value="1080">1080p</option>
+            <option value="2160">4K</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-between mt-3">
+          <label class="text-sm text-[#e0d6f0]"><i class="fas fa-eye-dropper mr-2"></i>Black & White</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bw-toggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
-    <p class="text-[10px] sm:text-xs text-center text-[#8ea9c2] mt-2">
-      ⚡ 1080p · processed entirely in your browser · <span id="wake-lock-status">screen stays awake</span>
-    </p>
+
+    <!-- YOUTUBE SLEEP TRICK (hidden) -->
+    <div class="bg-[#1e2338] p-4 rounded-2xl border border-[#7b4b9a]/30">
+      <div class="flex items-center justify-between">
+        <label class="text-sm text-[#e0d6f0]"><i class="fab fa-youtube mr-2 text-red-500"></i>Keep screen awake (YouTube trick)</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="youtube-sleep-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="text-[10px] text-[#8ea9c2] mt-1">Hidden silent YouTube loop – prevents screen sleep on any device.</p>
+    </div>
+
+    <div id="error-message" class="text-[#f4a261] text-sm text-center py-1 hidden"></div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+      <button id="preview-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 btn-outline"><i class="fas fa-eye"></i> Preview</button>
+      <button id="export-btn" class="py-4 rounded-xl font-semibold flex items-center justify-center gap-3 btn-primary"><i class="fas fa-file-video"></i> Render & Download</button>
+    </div>
+    <p class="text-[10px] sm:text-xs text-center text-[#8ea9c2] mt-2" id="wake-lock-status">screen stays awake</p>
   </div>
 </div>
 
 <canvas id="render-canvas" width="1920" height="1080"></canvas>
 
-<!-- EXPORT OVERLAY (HUD) -->
-<div id="recording-overlay" class="hidden fixed bottom-0 left-0 right-0 top-0 bg-[#0b1120]/95 flex flex-col items-center justify-center z-50 text-center px-4 py-6 backdrop-blur-md h-full">
-  
-  <!-- NEW: Live Preview Video Player (This tricks the OS into staying awake) -->
+<!-- EXPORT OVERLAY -->
+<div id="recording-overlay" class="hidden fixed inset-0 bg-[#0b1120]/95 flex flex-col items-center justify-center z-50 text-center px-4 backdrop-blur-md">
   <div class="relative w-full max-w-2xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-[#7b4b9a]/50 mb-6">
     <video id="live-preview-video" autoplay playsinline muted class="w-full h-full object-contain"></video>
-    <div class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse flex items-center gap-1 shadow-lg">
-      <i class="fas fa-circle text-[8px]"></i> RENDERING
-    </div>
+    <div class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse"><i class="fas fa-circle text-[8px]"></i> RENDERING</div>
   </div>
-
-  <div class="w-full max-w-lg bg-[#1e2338] h-3 rounded-full overflow-hidden shadow-inner mb-2"><div id="progress-bar" class="bg-[#7b4b9a] h-full transition-all duration-300" style="width: 0%"></div></div>
+  <div class="w-full max-w-lg bg-[#1e2338] h-3 rounded-full overflow-hidden mb-2"><div id="progress-bar" class="bg-[#7b4b9a] h-full" style="width:0%"></div></div>
   <p id="progress-text" class="text-[#b0c6d5] text-sm font-mono">0:00 / 0:00</p>
-  
-  <p class="text-[11px] sm:text-xs text-[#f4a261] mt-3 font-semibold animate-pulse">⚠️ Please keep this screen open. Do not lock your phone.</p>
-  <div id="pause-warning" class="hidden mt-2 px-4 py-1 bg-red-500/20 text-red-400 border border-red-500/50 rounded-full text-xs font-bold uppercase tracking-wider">
-    Render Paused - Screen was locked
-  </div>
-
-  <button id="cancel-export-btn" class="mt-6 text-sm px-6 py-2 rounded-full border border-[#b89b5e] text-[#b89b5e] hover:bg-[#b89b5e] hover:text-[#0b1120] transition">Cancel export</button>
+  <p class="text-[11px] text-[#4ade80] mt-3 font-semibold animate-pulse">✓ Audio is processing silently. Notifications will not interrupt.</p>
+  <div id="pause-warning" class="hidden mt-2 px-4 py-1 bg-red-500/20 text-red-400 border border-red-500/50 rounded-full text-xs font-bold uppercase">Render Paused</div>
+  <button id="cancel-export-btn" class="mt-6 text-sm px-6 py-2 rounded-full border border-[#b89b5e] text-[#b89b5e] hover:bg-[#b89b5e] hover:text-[#0b1120] transition">Cancel</button>
 </div>
 
 <!-- PREVIEW STOP -->
@@ -205,14 +222,17 @@
   <button id="stop-preview-btn" class="text-white px-8 py-4 bg-[#7b4b9a] rounded-full hover:bg-[#9e6bbf] transition shadow-xl flex items-center gap-3 font-semibold"><i class="fas fa-stop"></i> Stop Preview</button>
 </div>
 
-<!-- HARDWARE WAKE LOCK VIDEO -->
+<!-- HIDDEN YOUTUBE IFRAME -->
+<div id="youtube-sleep-container" style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
+
+<!-- KEEP AWAKE VIDEO -->
 <video id="keep-awake-video" playsinline muted loop style="position:absolute; width:2px; height:2px; opacity:0.01; pointer-events:none; z-index:-1;" src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAGp21kYXQAAAKqBgX//5xCncHxtb3ZfXxc/BwEQwMAAAAAAAAAB+2QAAAAAAB3bW9vdgAAAGxtdmhkAAAAAM/zT3DP809wAAAD6AAABDcAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAzl0cmFrAAAAXHRraGQAAAADz/NPcM/zT3AAAAABAAAAAAAEJwAAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAQAAAAAEAAAAAAhgAAAAAAHhtZGlhAAAAIG1kaGQAAAAAz/NPcM/zT3CAAAAAAB1pAAAAAAA1aGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAIwbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcYnJlZgAAAAx1cmwgAAAAAQAAAAAAAWBzdGJsAAAArHN0c2QAAAAAAAAAAQAAAJxhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQAAAAEAEABIAAAASAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAABRibHRydAAABCgAAAAAAAAD6AAAAHhzdHRzAAAAAAAAAAEAAAABAAAdSQAAABxzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAUc3RzejAAAAAAAAAAOQAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAABRzdHNzAAAAAAAAAAEAAAAB"></video>
 
 <script>
   (function(){
     "use strict";
 
-    // DOM
+    // DOM references
     const setupView = document.getElementById('setup-view');
     const canvas = document.getElementById('render-canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
@@ -222,106 +242,108 @@
     const progressText = document.getElementById('progress-text');
     const photoInput = document.getElementById('photo-input');
     const audioInput = document.getElementById('audio-input');
+    const audioSettings = document.getElementById('audio-settings');
     const durationSlider = document.getElementById('duration-slider');
     const durationLabel = document.getElementById('duration-label');
     const resolutionSelect = document.getElementById('resolution-select');
     const bwToggle = document.getElementById('bw-toggle');
     const errorMsg = document.getElementById('error-message');
-    const successMsg = document.getElementById('success-message');
     const photoCountDisplay = document.getElementById('photo-count');
     const countValueSpan = document.getElementById('count-value');
-    const shuffleToggleBtn = document.getElementById('shuffle-toggle-btn');
-    const shuffleBtnText = document.getElementById('shuffle-btn-text');
-    const shuffleIndicator = document.getElementById('shuffle-indicator');
-    const indicatorText = document.getElementById('indicator-text');
+    
+    // Toggles & Buttons
+    const manualShuffleBtn = document.getElementById('manual-shuffle-btn');
+    const autoShuffleToggle = document.getElementById('auto-shuffle-toggle');
     const dedupeToggle = document.getElementById('dedupe-toggle');
-    const duplicateBadge = document.getElementById('duplicate-badge');
-    const wakeLockStatus = document.getElementById('wake-lock-status');
-    const keepAwakeVideo = document.getElementById('keep-awake-video');
+    const thumbStrip = document.getElementById('thumb-strip');
+    const textLine1 = document.getElementById('text-line1');
+    const textLine2 = document.getElementById('text-line2');
+    const textOverlayToggle = document.getElementById('text-overlay-toggle');
+    const textPosition = document.getElementById('text-position');
+    const volumeSlider = document.getElementById('volume-slider');
+    const trimStartInput = document.getElementById('trim-start');
+    
+    // Sleep Tricks
+    const youtubeSleepToggle = document.getElementById('youtube-sleep-toggle');
+    const youtubeContainer = document.getElementById('youtube-sleep-container');
     const livePreviewVideo = document.getElementById('live-preview-video');
+    const keepAwakeVideo = document.getElementById('keep-awake-video');
+    const wakeLockStatus = document.getElementById('wake-lock-status');
 
-    // State
-    let imageUrls = [], originalFiles = [], slideAnimations = [];
-    const imageCache = new Map();
-    let slideDuration = 4000, transitionDuration = 2000, isShuffled = false;
-    let isRendering = false, isExporting = false, animationFrameId = null, startTime = null, totalTime = 0, exportFinished = false;
-    let mediaRecorder = null, recordedChunks = [], audioEl = null, audioCtx = null;
-    
-    // Engine Time Tracking & Pause State
+    // Core state
+    let imageFiles = [], imageUrls = [], slideAnimations = [];
+    const imageCache = new Map();  // Stores simple Image objects, saving vast amounts of memory
+    let slideDuration = 4000, transitionDuration = 2000;
+    let isRendering = false, isExporting = false, animationFrameId = null, totalTime = 0, exportFinished = false;
+    let mediaRecorder = null, recordedChunks = [];
     let totalElapsed = 0, lastRafTime = 0, isPaused = false;
-    
-    // Anti-Sleep State
-    let wakeLock = null, wakeLockSupported = false;
+    let wakeLock = null, wakeLockSupported = 'wakeLock' in navigator;
     const noSleep = new NoSleep();
-    const animTypes = ['zoom-in', 'zoom-out', 'pan-right', 'pan-left', 'pan-down'];
-    
-    // Web Audio Anti-Sleep Pinger Variables
-    let antiSleepInterval = null;
-    let silentAudioCtx = null;
+    const animTypes = ['zoom-in','zoom-out','pan-right','pan-left','pan-down'];
 
-    // ----- Extreme Anti-Sleep Pinger Trick -----
-    // Generates a totally silent sound every 10 seconds.
-    // Operating systems rarely put devices to sleep if audio is actively playing.
+    // Advanced Web Audio routing
+    let audioCtx = null;
+    let decodedAudioBuffer = null;
+    let activeAudioSourceNode = null;
+
+    // Anti‑sleep pinger
+    let antiSleepInterval = null, silentAudioCtx = null;
+    let youtubeIframe = null;
+
+    // --- Sleep prevention stack ---
     function startAntiSleepPinger() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!silentAudioCtx && AudioContext) {
-          silentAudioCtx = new AudioContext();
-        }
-        if (silentAudioCtx && silentAudioCtx.state === 'suspended') {
-          silentAudioCtx.resume();
-        }
+        if (!silentAudioCtx && AudioContext) silentAudioCtx = new AudioContext();
+        if (silentAudioCtx?.state === 'suspended') silentAudioCtx.resume();
       } catch(e) {}
-
       antiSleepInterval = setInterval(() => {
-        // 1. Play silent audio ping
         if (silentAudioCtx) {
           try {
             const osc = silentAudioCtx.createOscillator();
             const gain = silentAudioCtx.createGain();
-            gain.gain.value = 0; // 0 volume = absolute silence
-            osc.connect(gain);
-            gain.connect(silentAudioCtx.destination);
-            osc.start();
-            osc.stop(silentAudioCtx.currentTime + 0.1); // Stop after 100ms
+            gain.gain.value = 0;
+            osc.connect(gain); gain.connect(silentAudioCtx.destination);
+            osc.start(); osc.stop(silentAudioCtx.currentTime + 0.1);
           } catch(e) {}
         }
-
-        // 2. Refresh keep-awake video just in case iOS paused it automatically
         try { if(keepAwakeVideo.paused) keepAwakeVideo.play(); } catch(e) {}
-
-        // 3. Keep requesting native wake lock if it was dropped
-        if (wakeLockSupported && !wakeLock) {
-           requestWakeLock().catch(()=>{});
-        }
-      }, 10000); // 10 second ping interval
+        if (wakeLockSupported && !wakeLock) requestWakeLock().catch(()=>{});
+      }, 10000);
     }
 
     function stopAntiSleepPinger() {
       if (antiSleepInterval) clearInterval(antiSleepInterval);
       antiSleepInterval = null;
-      if (silentAudioCtx) {
-        try { silentAudioCtx.close(); } catch(e) {}
-        silentAudioCtx = null;
-      }
+      if (silentAudioCtx) { try { silentAudioCtx.close(); } catch(e) {} silentAudioCtx = null; }
     }
 
-    // ----- Wake Lock -----
-    async function requestWakeLock() {
-      try { noSleep.enable(); } catch(e) {} 
-      try { keepAwakeVideo.play(); } catch(e) {}
-      
-      if (!wakeLockSupported) {
-        wakeLockStatus.textContent = 'audio pinger active';
-        return false;
+    function setupYoutubeSleep() {
+      if (youtubeSleepToggle.checked) {
+        if (!youtubeIframe) {
+          const iframe = document.createElement('iframe');
+          iframe.width = "1"; iframe.height = "1";
+          iframe.src = "https://www.youtube.com/embed/8d4RtvMQp10?autoplay=1&mute=1&loop=1&playlist=8d4RtvMQp10&controls=0&showinfo=0&rel=0&playsinline=1";
+          iframe.allow = "autoplay";
+          iframe.style.border = "none";
+          youtubeContainer.appendChild(iframe);
+          youtubeIframe = iframe;
+        }
+      } else {
+        if (youtubeIframe) { youtubeIframe.remove(); youtubeIframe = null; }
       }
+    }
+    youtubeSleepToggle.addEventListener('change', setupYoutubeSleep);
+    setupYoutubeSleep();
+
+    async function requestWakeLock() {
+      try { noSleep.enable(); } catch(e) {}
+      try { keepAwakeVideo.play(); } catch(e) {}
+      if (!wakeLockSupported) { wakeLockStatus.textContent = 'audio pinger active'; return false; }
       try {
         wakeLock = await navigator.wakeLock.request('screen');
         wakeLockStatus.textContent = 'screen awake 🔒';
-        wakeLock.addEventListener('release', () => {
-          wakeLock = null;
-          wakeLockStatus.textContent = 'audio pinger fallback';
-        });
+        wakeLock.addEventListener('release', () => { wakeLock = null; wakeLockStatus.textContent = 'audio pinger fallback'; });
         return true;
       } catch (err) {
         wakeLockStatus.textContent = 'audio pinger fallback';
@@ -330,502 +352,491 @@
     }
 
     async function releaseWakeLock() {
-      try { noSleep.disable(); } catch(e) {} 
+      try { noSleep.disable(); } catch(e) {}
       try { keepAwakeVideo.pause(); } catch(e) {}
-      if (wakeLock) {
-        try { await wakeLock.release(); } catch (e) {}
-        wakeLock = null;
-      }
+      if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
       wakeLockStatus.textContent = 'screen may sleep';
     }
 
     document.addEventListener('visibilitychange', async () => {
       if (!isRendering) return;
-      
       const pauseWarningEl = document.getElementById('pause-warning');
-      
       if (document.visibilityState === 'visible') {
-        // App is back on screen - RESUME
-        isPaused = false;
-        lastRafTime = performance.now(); // Reset time delta so we don't jump forward
-        
-        if (isExporting && mediaRecorder && mediaRecorder.state === 'paused') {
-          try { mediaRecorder.resume(); } catch(e) {}
-        }
-        if (pauseWarningEl) pauseWarningEl.classList.add('hidden');
+        isPaused = false; lastRafTime = performance.now();
+        if (isExporting && mediaRecorder?.state === 'paused') mediaRecorder.resume();
+        pauseWarningEl?.classList.add('hidden');
         await requestWakeLock();
       } else {
-        // App went to background / screen locked - PAUSE
         isPaused = true;
-        if (isExporting && mediaRecorder && mediaRecorder.state === 'recording') {
-          try { mediaRecorder.pause(); } catch(e) {}
-        }
-        if (pauseWarningEl) pauseWarningEl.classList.remove('hidden');
+        if (isExporting && mediaRecorder?.state === 'recording') mediaRecorder.pause();
+        pauseWarningEl?.classList.remove('hidden');
       }
     });
 
-    if ('wakeLock' in navigator) {
-      wakeLockSupported = true;
-      wakeLockStatus.textContent = 'screen stays awake';
-    } else {
-      wakeLockStatus.textContent = 'wake lock not supported';
-    }
-
-    // ----- Deduplication Logic -----
-    function countDuplicates(files) {
+    // --- Helpers ---
+    function remDuplicates(files) {
       const seen = new Set();
-      let dupes = 0;
-      for (const f of files) {
-        const key = `${f.name}-${f.size}`;
-        if (seen.has(key)) dupes++;
-        else seen.add(key);
-      }
-      return dupes;
-    }
-
-    function removeDuplicatesFromFiles(files) {
-      const seen = new Set();
-      const unique = [];
-      for (const f of files) {
-        const key = `${f.name}-${f.size}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(f);
-        }
-      }
-      return unique;
-    }
-
-    function applyDedupeIfEnabled(files) {
-      if (dedupeToggle.checked) {
-        const before = files.length;
-        const unique = removeDuplicatesFromFiles(files);
-        const removed = before - unique.length;
-        if (removed > 0) {
-          duplicateBadge.textContent = `${removed} dupe${removed>1?'s':''} removed`;
-          duplicateBadge.classList.remove('hidden');
-          setTimeout(() => duplicateBadge.classList.add('hidden'), 3000);
-        } else {
-          duplicateBadge.classList.add('hidden');
-        }
-        return unique;
-      } else {
-        const dupes = countDuplicates(files);
-        if (dupes > 0) {
-          duplicateBadge.textContent = `${dupes} dupe${dupes>1?'s':''} found`;
-          duplicateBadge.classList.remove('hidden');
-        } else {
-          duplicateBadge.classList.add('hidden');
-        }
-        return files;
-      }
-    }
-
-    function rebuildFromFiles(filesArray) {
-      const processedFiles = applyDedupeIfEnabled(filesArray);
-      imageUrls.forEach(url => URL.revokeObjectURL(url));
-      imageCache.clear();
-      originalFiles = processedFiles;
-      imageUrls = processedFiles.map(file => URL.createObjectURL(file));
-      slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
-      isShuffled = false;
-      shuffleBtnText.textContent = 'Shuffle';
-      shuffleIndicator.classList.add('hidden');
-      updatePhotoCountUI();
-    }
-
-    // ----- Helpers -----
-    function updatePhotoCountUI() {
-      const len = imageUrls.length;
-      if (len > 0) {
-        countValueSpan.textContent = len;
-        photoCountDisplay.classList.remove('hidden');
-        shuffleToggleBtn.disabled = false;
-      } else {
-        photoCountDisplay.classList.add('hidden');
-        shuffleToggleBtn.disabled = true;
-        shuffleIndicator.classList.add('hidden');
-        isShuffled = false;
-        shuffleBtnText.textContent = 'Shuffle';
-      }
+      return files.filter(f => {
+        const key = `${f.name}-${f.size}-${f.lastModified}`;
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      });
     }
 
     function shuffleArray(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
+      const newArr = [...arr];
+      for (let i = newArr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
       }
-      return arr;
+      return newArr;
     }
 
-    function toggleShuffle() {
-      if (originalFiles.length === 0) {
-        errorMsg.textContent = "Select photos first.";
-        errorMsg.classList.remove('hidden');
-        successMsg.classList.add('hidden');
-        return;
-      }
-      let filesToUse = originalFiles;
-      if (!isShuffled) {
-        filesToUse = shuffleArray([...originalFiles]);
-        isShuffled = true;
-        shuffleBtnText.textContent = 'Unshuffle';
-        indicatorText.textContent = 'order shuffled';
-        shuffleIndicator.classList.remove('hidden');
-      } else {
-        isShuffled = false;
-        shuffleBtnText.textContent = 'Shuffle';
-        shuffleIndicator.classList.add('hidden');
-      }
-      if (dedupeToggle.checked) {
-        const unique = removeDuplicatesFromFiles(filesToUse);
-        filesToUse = unique;
-      }
-      imageUrls.forEach(url => URL.revokeObjectURL(url));
-      imageCache.clear();
-      imageUrls = filesToUse.map(file => URL.createObjectURL(file));
-      slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
-      updatePhotoCountUI();
-      errorMsg.classList.add('hidden');
-      successMsg.classList.add('hidden');
+    function updatePhotoUI() {
+      const len = imageFiles.length;
+      countValueSpan.textContent = len;
+      photoCountDisplay.classList.toggle('hidden', len === 0);
+      manualShuffleBtn.disabled = len === 0;
+      renderThumbnails();
     }
 
-    dedupeToggle.addEventListener('change', () => {
-      if (originalFiles.length === 0) return;
-      const newFiles = dedupeToggle.checked ? removeDuplicatesFromFiles(originalFiles) : originalFiles;
-      if (newFiles.length !== originalFiles.length) {
-        imageUrls.forEach(url => URL.revokeObjectURL(url));
-        imageCache.clear();
-        originalFiles = newFiles;
-        imageUrls = newFiles.map(file => URL.createObjectURL(file));
-        slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
-        if (isShuffled) {
-          const shuffled = shuffleArray([...originalFiles]);
-          imageUrls = shuffled.map(file => URL.createObjectURL(file));
-          slideAnimations = imageUrls.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
-        }
-        updatePhotoCountUI();
-        const removed = originalFiles.length - newFiles.length;
-        duplicateBadge.textContent = `${removed} dupe${removed>1?'s':''} removed`;
-        duplicateBadge.classList.remove('hidden');
-        setTimeout(() => duplicateBadge.classList.add('hidden'), 2000);
-      } else {
-        duplicateBadge.classList.add('hidden');
-      }
-    });
-
-    // Event listeners
-    durationSlider.addEventListener('input', e => {
-      durationLabel.textContent = e.target.value;
-      slideDuration = parseInt(e.target.value) * 1000;
-    });
-    photoInput.addEventListener('change', e => {
-      const files = Array.from(e.target.files || []);
-      errorMsg.classList.add('hidden');
-      successMsg.classList.add('hidden');
-      if (files.length) {
-        rebuildFromFiles(files);
-      } else {
-        imageUrls.forEach(url => URL.revokeObjectURL(url));
-        imageUrls = []; originalFiles = []; slideAnimations = [];
-        imageCache.clear();
-        updatePhotoCountUI();
-        shuffleToggleBtn.disabled = true;
-        duplicateBadge.classList.add('hidden');
-      }
-    });
-    shuffleToggleBtn.addEventListener('click', toggleShuffle);
-
-    function handleStart(exportMode) {
-      try { keepAwakeVideo.play(); } catch(e) {}
-      try { noSleep.enable(); } catch(e) {}
-
-      // Start Audio Context immediately on user click to satisfy Apple/Chrome security rules
-      if (exportMode && audioInput.files.length) {
-        try {
-          if (!audioCtx || audioCtx.state === 'closed') {
-             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function renderThumbnails() {
+      thumbStrip.innerHTML = '';
+      imageFiles.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'thumb-item';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        item.appendChild(img);
+        const btns = document.createElement('div');
+        btns.className = 'order-btns';
+        btns.innerHTML = `
+          <button class="order-btn" data-idx="${idx}" data-dir="up"><i class="fas fa-chevron-up"></i></button>
+          <button class="order-btn" data-idx="${idx}" data-dir="down"><i class="fas fa-chevron-down"></i></button>
+        `;
+        item.appendChild(btns);
+        thumbStrip.appendChild(item);
+      });
+      
+      thumbStrip.querySelectorAll('.order-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          const dir = btn.dataset.dir;
+          if (dir === 'up' && idx > 0) {
+            [imageFiles[idx], imageFiles[idx-1]] = [imageFiles[idx-1], imageFiles[idx]];
+          } else if (dir === 'down' && idx < imageFiles.length-1) {
+            [imageFiles[idx], imageFiles[idx+1]] = [imageFiles[idx+1], imageFiles[idx]];
           }
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-        } catch(e) {}
-      }
-
-      startAntiSleepPinger(); // Start audio pinging trick
-      startEngine(exportMode);
+          refreshFromFiles();
+        });
+      });
     }
 
-    document.getElementById('preview-btn').addEventListener('click', () => handleStart(false));
-    document.getElementById('export-btn').addEventListener('click', () => handleStart(true));
+    function refreshFromFiles() {
+      imageUrls.forEach(url => URL.revokeObjectURL(url));
+      imageUrls = imageFiles.map(f => URL.createObjectURL(f));
+      imageCache.clear();
+      slideAnimations = imageFiles.map(() => animTypes[Math.floor(Math.random() * animTypes.length)]);
+      updatePhotoUI();
+      preloadAllImages();
+    }
+
+    // New Memory-Safe Image Preloader (Fixes upload crashes on Mobile)
+    async function preloadAllImages() {
+      imageCache.clear();
+      for (let i = 0; i < imageUrls.length; i++) {
+        try {
+          const img = new Image();
+          img.src = imageUrls[i];
+          await img.decode();
+          imageCache.set(i, img);
+        } catch (e) {
+          imageCache.set(i, null); // Failed image fallback
+        }
+      }
+    }
+
+    let _expectedProjectFiles = null; 
+
+    // Upload logic
+    photoInput.addEventListener('change', async (e) => {
+      let files = Array.from(e.target.files || []);
+      
+      if (_expectedProjectFiles && _expectedProjectFiles.length) {
+        const matched = _expectedProjectFiles.map(exp => files.find(f => f.name === exp.name && f.size === exp.size)).filter(Boolean);
+        if (matched.length === _expectedProjectFiles.length) {
+          imageFiles = matched;
+          _expectedProjectFiles = null; 
+          refreshFromFiles();
+          photoInput.value = ''; // Allow re-upload
+          return;
+        } else {
+          alert('Some photos from the project were not found. Please select all original files.');
+          photoInput.value = ''; 
+          return;
+        }
+      }
+      
+      if (dedupeToggle.checked) files = remDuplicates(files);
+      if (autoShuffleToggle.checked) files = shuffleArray(files);
+      
+      imageFiles = files; // Replace current queue (standard behavior)
+      refreshFromFiles();
+      photoInput.value = ''; // clears input so user can pick the exact same files again without freezing
+    });
+
+    manualShuffleBtn.addEventListener('click', () => {
+      if (!imageFiles.length) return;
+      imageFiles = shuffleArray(imageFiles);
+      refreshFromFiles();
+    });
+
+    // Save / Load project
+    document.getElementById('save-project-btn').addEventListener('click', () => {
+      const project = {
+        fileNames: imageFiles.map(f => ({ name: f.name, size: f.size })),
+        slideDuration,
+        bw: bwToggle.checked,
+        res: resolutionSelect.value,
+        text1: textLine1.value,
+        text2: textLine2.value,
+        showText: textOverlayToggle.checked,
+        textPos: textPosition.value,
+        volume: volumeSlider.value,
+        trimStart: trimStartInput.value,
+        youtubeSleep: youtubeSleepToggle.checked,
+      };
+      const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'memorial-project.json';
+      a.click();
+    });
+
+    document.getElementById('load-project-btn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        try {
+          const proj = JSON.parse(text);
+          slideDuration = proj.slideDuration || 4000;
+          durationSlider.value = slideDuration / 1000;
+          durationLabel.textContent = slideDuration / 1000;
+          bwToggle.checked = proj.bw || false;
+          resolutionSelect.value = proj.res || '1080';
+          textLine1.value = proj.text1 || '';
+          textLine2.value = proj.text2 || '';
+          textOverlayToggle.checked = proj.showText || false;
+          textPosition.value = proj.textPos || 'bottom';
+          volumeSlider.value = proj.volume || 80;
+          trimStartInput.value = proj.trimStart || 0;
+          youtubeSleepToggle.checked = proj.youtubeSleep !== false;
+          setupYoutubeSleep();
+          
+          _expectedProjectFiles = proj.fileNames;
+          alert('Now select the original photos (the exact same files).');
+          photoInput.click();
+        } catch (err) { alert('Invalid project file'); }
+      };
+      input.click();
+    });
+
+    // Audio Web API Decoder (Silent Processing setup)
+    audioInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      const statusEl = document.getElementById('audio-status');
+      
+      if (file) {
+        statusEl.textContent = "Decoding audio...";
+        audioSettings.style.display = 'grid';
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          decodedAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
+          statusEl.textContent = "Audio ready ✓";
+        } catch(err) {
+          statusEl.textContent = "Error decoding file.";
+          decodedAudioBuffer = null;
+        }
+      } else {
+        decodedAudioBuffer = null;
+        audioSettings.style.display = 'none';
+        statusEl.textContent = "";
+      }
+    });
+
+    // Render engine controls
+    document.getElementById('preview-btn').addEventListener('click', () => startEngine(false));
+    document.getElementById('export-btn').addEventListener('click', () => startEngine(true));
     document.getElementById('stop-preview-btn').addEventListener('click', stopEngine);
     document.getElementById('cancel-export-btn').addEventListener('click', stopEngine);
 
-    function getImage(index) {
-      if (index < 0 || index >= imageUrls.length) return null;
-      if (imageCache.has(index)) return imageCache.get(index);
-      const img = new Image();
-      img.src = imageUrls[index];
-      imageCache.set(index, img);
-      if (imageCache.size > 6) {
-        const keys = Array.from(imageCache.keys()).sort((a,b)=>a-b);
-        for (let k of keys) if (k < index - 3) imageCache.delete(k);
+    function drawSlide(index, progress, alpha, isBW) {
+      const img = imageCache.get(index);
+      if (!img) return;
+      
+      const cw = canvas.width;
+      const ch = canvas.height;
+      
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      
+      // 1. Draw blurred Background
+      ctx.save();
+      ctx.filter = 'blur(30px) brightness(0.3) sepia(0.2)';
+      const bgRatio = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const bgW = img.naturalWidth * bgRatio, bgH = img.naturalHeight * bgRatio;
+      ctx.drawImage(img, (cw - bgW)/2, (ch - bgH)/2, bgW, bgH);
+      ctx.restore();
+
+      // 2. Animate and Draw Foreground
+      const anim = slideAnimations[index] || 'zoom-in';
+      let scale = 1.0, tx = 0, ty = 0;
+      if (anim === 'zoom-in') scale = 1.0 + progress * 0.15;
+      else if (anim === 'zoom-out') scale = 1.15 - progress * 0.15;
+      else if (anim === 'pan-right') { scale = 1.1; tx = (progress * 0.04) - 0.02; }
+      else if (anim === 'pan-left') { scale = 1.1; tx = 0.02 - (progress * 0.04); }
+      else if (anim === 'pan-down') { scale = 1.1; ty = (progress * 0.04) - 0.02; }
+      
+      ctx.save();
+      ctx.translate(cw/2 + tx * cw, ch/2 + ty * ch);
+      ctx.scale(scale, scale);
+      ctx.translate(-cw/2, -ch/2);
+      
+      if (isBW) ctx.filter = 'grayscale(100%)';
+      ctx.shadowColor = '#0b1120'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 12;
+      
+      const fgRatio = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
+      const fgW = img.naturalWidth * fgRatio, fgH = img.naturalHeight * fgRatio;
+      ctx.drawImage(img, (cw - fgW)/2, (ch - fgH)/2, fgW, fgH);
+      ctx.restore();
+
+      // 3. Text overlay
+      if (textOverlayToggle.checked && (textLine1.value || textLine2.value)) {
+        ctx.fillStyle = 'white'; ctx.textAlign = 'center';
+        let yPos;
+        switch (textPosition.value) {
+          case 'top': yPos = 150; break;
+          case 'center': yPos = ch/2 - 50; break;
+          default: yPos = ch - 150;
+        }
+        ctx.font = 'bold 80px Inter, sans-serif';
+        if (textLine1.value) ctx.fillText(textLine1.value, cw/2, yPos);
+        if (textLine2.value) {
+          ctx.font = '50px Inter, sans-serif';
+          ctx.fillText(textLine2.value, cw/2, yPos + 90);
+        }
       }
-      return img;
+      ctx.restore();
     }
 
     async function startEngine(exportMode) {
-      if (imageUrls.length === 0) {
+      if (!imageFiles.length) {
         errorMsg.textContent = "Please select at least one photo.";
         errorMsg.classList.remove('hidden');
         return;
       }
-
-      // Set canvas resolution based on user choice
+      errorMsg.classList.add('hidden');
+      
       const res = parseInt(resolutionSelect.value);
-      if (res === 2160) {
-        canvas.width = 3840;
-        canvas.height = 2160;
-      } else {
-        canvas.width = 1920;
-        canvas.height = 1080;
-      }
-
-      // Force highest quality image smoothing for upscaling
+      canvas.width = res === 2160 ? 3840 : 1920;
+      canvas.height = res === 2160 ? 2160 : 1080;
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-
+      
       await requestWakeLock();
+      startAntiSleepPinger();
+      setupYoutubeSleep();
+      
       isExporting = exportMode;
       isRendering = true;
       exportFinished = false;
-      startTime = null;
-      totalElapsed = 0;
-      lastRafTime = 0;
-      isPaused = false;
-      totalTime = imageUrls.length * slideDuration;
-      setupView.classList.add('hidden');
-      canvas.style.display = 'block';
+      totalElapsed = 0; lastRafTime = 0; isPaused = false;
+      totalTime = imageFiles.length * slideDuration;
 
-      // NEW: Wait for audio to actually load before starting!
-      const audioStream = await startAudio(isExporting);
-
-      if (isExporting) {
-        recordingOverlay.classList.remove('hidden');
-        previewOverlay.classList.add('hidden');
-        setupExport(audioStream);
-      } else {
-        previewOverlay.classList.remove('hidden');
-        recordingOverlay.classList.add('hidden');
+      // Handle Audio Stop if prev was running
+      if (activeAudioSourceNode) {
+        try { activeAudioSourceNode.stop(); } catch(e){}
+        activeAudioSourceNode.disconnect();
+        activeAudioSourceNode = null;
       }
 
-      // Reset time properly right before starting the loop so the loading delay isn't counted
+      // Live Preview Audio Routing (Play Aloud)
+      if (!exportMode && decodedAudioBuffer) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        activeAudioSourceNode = audioCtx.createBufferSource();
+        activeAudioSourceNode.buffer = decodedAudioBuffer;
+        activeAudioSourceNode.loop = true;
+        
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = volumeSlider.value / 100;
+        
+        activeAudioSourceNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination); // Play to device speakers
+        
+        activeAudioSourceNode.start(0, parseInt(trimStartInput.value) || 0);
+      }
+
+      await preloadAllImages(); // Just validates cache now, very fast
+      
+      setupView.classList.add('hidden'); canvas.style.display = 'block';
+      if (exportMode) {
+        recordingOverlay.classList.remove('hidden'); previewOverlay.classList.add('hidden');
+        setupExport();
+      } else {
+        previewOverlay.classList.remove('hidden'); recordingOverlay.classList.add('hidden');
+      }
       lastRafTime = performance.now();
       animationFrameId = requestAnimationFrame(renderLoop);
     }
 
-    async function stopEngine() {
+    function stopEngine() {
       isRendering = false;
-      stopAntiSleepPinger(); // Stop the audio trick
+      stopAntiSleepPinger();
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (isExporting && mediaRecorder && mediaRecorder.state === 'recording' && !exportFinished) {
-        exportFinished = true;
-        mediaRecorder.stop();
+      if (isExporting && mediaRecorder?.state === 'recording' && !exportFinished) {
+        exportFinished = true; mediaRecorder.stop();
       }
-      if (audioEl) { audioEl.pause(); audioEl.removeAttribute('src'); audioEl.load(); audioEl = null; }
-      // do not close audioCtx here so it can be reused smoothly
-      await releaseWakeLock();
+      
+      // Stop Web API Audio
+      if (activeAudioSourceNode) {
+        try { activeAudioSourceNode.stop(); } catch(e){}
+        activeAudioSourceNode.disconnect();
+        activeAudioSourceNode = null;
+      }
+
+      releaseWakeLock();
       canvas.style.display = 'none';
       setupView.classList.remove('hidden');
       recordingOverlay.classList.add('hidden');
       previewOverlay.classList.add('hidden');
-      ctx.fillStyle = '#0b1120';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function formatTime(ms) {
-      const totalSec = Math.floor(ms / 1000);
-      return `${Math.floor(totalSec / 60)}:${(totalSec % 60).toString().padStart(2, '0')}`;
     }
 
     function renderLoop(timestamp) {
       if (!isRendering) return;
-      
       if (!lastRafTime) lastRafTime = timestamp;
       let delta = timestamp - lastRafTime;
-      
-      // If delta is huge (e.g. > 500ms), the tab was backgrounded or screen locked. 
-      // Cap it to 16ms so we don't skip massive chunks of the video!
-      if (delta > 500) {
-          delta = 16; 
-      }
+      if (delta > 500) delta = 16;
       lastRafTime = timestamp;
-
-      // Only advance time if we are not paused
-      if (!isPaused) {
-          totalElapsed += delta;
-      }
       
-      const elapsed = totalElapsed;
-
-      if (elapsed >= totalTime) {
-        const lastIndex = imageUrls.length - 1;
-        if (lastIndex >= 0) {
-          ctx.fillStyle = '#0b1120';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          drawSlide(getImage(lastIndex), 1.0, slideAnimations[lastIndex], 1.0, bwToggle.checked);
+      if (!isPaused) totalElapsed += delta;
+      
+      if (totalElapsed >= totalTime) {
+        const lastIdx = imageFiles.length - 1;
+        if (lastIdx >= 0) {
+          ctx.fillStyle = '#0b1120'; ctx.fillRect(0,0,canvas.width,canvas.height);
+          drawSlide(lastIdx, 1.0, 1.0, bwToggle.checked);
         }
-        if (isExporting) {
-          if (!exportFinished) {
-            exportFinished = true;
-            setTimeout(() => {
-              if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-              stopEngine();
-            }, 200);
-          }
-        } else {
-          stopEngine();
-        }
+        if (isExporting && !exportFinished) {
+          exportFinished = true;
+          setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 200);
+        } else { stopEngine(); }
         return;
       }
-
+      
       if (isExporting) {
-        progressBar.style.width = `${Math.min((elapsed / totalTime) * 100, 100)}%`;
-        progressText.textContent = `${formatTime(elapsed)} / ${formatTime(totalTime)}`;
+        progressBar.style.width = `${Math.min((totalElapsed/totalTime)*100,100)}%`;
+        progressText.textContent = `${formatTime(totalElapsed)} / ${formatTime(totalTime)}`;
       }
-
-      const currIndex = Math.floor(elapsed / slideDuration);
+      
+      const currIndex = Math.floor(totalElapsed / slideDuration);
       const prevIndex = currIndex - 1;
-      ctx.fillStyle = '#0b1120';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (prevIndex >= 0 && prevIndex < imageUrls.length) {
-        const prevProgress = (elapsed - (prevIndex * slideDuration)) / (slideDuration + transitionDuration);
-        drawSlide(getImage(prevIndex), prevProgress, slideAnimations[prevIndex], 1.0, bwToggle.checked);
+      
+      ctx.fillStyle = '#0b1120'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      
+      if (prevIndex >= 0) {
+        const prevProgress = (totalElapsed - (prevIndex * slideDuration)) / (slideDuration + transitionDuration);
+        drawSlide(prevIndex, prevProgress, 1.0, bwToggle.checked);
       }
-      if (currIndex < imageUrls.length) {
-        let alpha = (elapsed - (currIndex * slideDuration)) / transitionDuration;
+      if (currIndex < imageFiles.length) {
+        let alpha = (totalElapsed - (currIndex * slideDuration)) / transitionDuration;
         alpha = Math.min(Math.max(alpha, 0), 1.0);
-        if (currIndex === 0) alpha = 1.0;
-        const currProgress = (elapsed - (currIndex * slideDuration)) / (slideDuration + transitionDuration);
-        drawSlide(getImage(currIndex), currProgress, slideAnimations[currIndex], alpha, bwToggle.checked);
+        const currProgress = (totalElapsed - (currIndex * slideDuration)) / (slideDuration + transitionDuration);
+        drawSlide(currIndex, currProgress, alpha, bwToggle.checked);
       }
       animationFrameId = requestAnimationFrame(renderLoop);
     }
 
-    function drawSlide(img, progress, animType, alpha, isBW) {
-      if (!img || !img.complete || img.naturalWidth === 0) return;
-      const cw = canvas.width, ch = canvas.height;
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      let scale = 1.0, tx = 0, ty = 0;
-      if (animType === 'zoom-in') scale = 1.0 + progress * 0.15;
-      else if (animType === 'zoom-out') scale = 1.15 - progress * 0.15;
-      else if (animType === 'pan-right') { scale = 1.1; tx = (progress * 0.04) - 0.02; }
-      else if (animType === 'pan-left') { scale = 1.1; tx = 0.02 - (progress * 0.04); }
-      else if (animType === 'pan-down') { scale = 1.1; ty = (progress * 0.04) - 0.02; }
-      ctx.translate(cw/2 + tx * cw, ch/2 + ty * ch);
-      ctx.scale(scale, scale);
-      ctx.translate(-cw/2, -ch/2);
-      ctx.save();
-      const bgRatio = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-      const bgW = img.naturalWidth * bgRatio, bgH = img.naturalHeight * bgRatio;
-      ctx.filter = `blur(30px) brightness(0.3) sepia(0.2) ${isBW ? 'grayscale(100%)' : ''}`;
-      ctx.drawImage(img, (cw - bgW)/2, (ch - bgH)/2, bgW, bgH);
-      ctx.restore();
-      const fgRatio = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-      const fgW = img.naturalWidth * fgRatio, fgH = img.naturalHeight * fgRatio;
-      ctx.filter = isBW ? 'grayscale(100%)' : 'none';
-      ctx.shadowColor = '#0b1120';
-      ctx.shadowBlur = 60;
-      ctx.shadowOffsetY = 12;
-      ctx.drawImage(img, (cw - fgW)/2, (ch - fgH)/2, fgW, fgH);
-      ctx.restore();
+    function formatTime(ms) {
+      const sec = Math.floor(ms/1000);
+      return `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
     }
 
-    function startAudio(forExport) {
-      return new Promise((resolve) => {
-        if (!audioInput.files.length) return resolve(null);
-
-        const audioUrl = URL.createObjectURL(audioInput.files[0]);
-        audioEl = new Audio(audioUrl);
-        audioEl.loop = true;
-
-        audioEl.oncanplay = () => {
-          if (forExport && audioCtx) {
-            try {
-              const dest = audioCtx.createMediaStreamDestination();
-              const source = audioCtx.createMediaElementSource(audioEl);
-              source.connect(dest);
-              source.connect(audioCtx.destination);
-              audioEl.play().then(() => resolve(dest.stream)).catch(() => resolve(dest.stream));
-            } catch(e) { resolve(null); }
-          } else {
-             audioEl.play().then(() => resolve(null)).catch(() => resolve(null));
-          }
-        };
-        audioEl.onerror = () => resolve(null);
-        audioEl.load();
-      });
-    }
-
-    function setupExport(audioStream) {
+    // Advanced Export setup - Audio processes offline without phone speakers
+    function setupExport() {
       recordedChunks = [];
       const canvasStream = canvas.captureStream(30);
-      
-      // NEW: Stream the canvas directly to the visible video player to mimic YouTube!
       livePreviewVideo.srcObject = canvasStream;
-      
       let combinedStream = canvasStream;
-      if (audioStream && audioStream.getAudioTracks().length) {
-        combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
-      }
-
-      // Explicitly ask for audio codecs to prevent "corrupt file" headers
-      const mimeTypes = [
-        'video/mp4',
-        'video/webm;codecs=vp9,opus',
-        'video/webm;codecs=vp8,opus',
-        'video/webm'
-      ];
-      let mime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
       
-      // Dramatically increase video bitrate (10 Mbps for 1080p, 30 Mbps for 4K)
-      const res = parseInt(resolutionSelect.value);
-      const targetBitrate = res === 2160 ? 30000000 : 10000000;
-
-      mediaRecorder = new MediaRecorder(combinedStream, { 
-        mimeType: mime,
-        videoBitsPerSecond: targetBitrate
-      });
+      if (decodedAudioBuffer) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const audioDest = audioCtx.createMediaStreamDestination();
+        activeAudioSourceNode = audioCtx.createBufferSource();
+        activeAudioSourceNode.buffer = decodedAudioBuffer;
+        activeAudioSourceNode.loop = true;
+        
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = volumeSlider.value / 100;
+        
+        activeAudioSourceNode.connect(gainNode);
+        gainNode.connect(audioDest);
+        // CRITICAL FIX: We do NOT connect to audioCtx.destination here. 
+        // This keeps it perfectly silent on the device speakers while rendering to the stream!
+        
+        const audioTracks = audioDest.stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+        }
+        
+        activeAudioSourceNode.start(0, parseInt(trimStartInput.value) || 0);
+      }
+      
+      const mimeTypes = ['video/mp4','video/webm;codecs=vp9,opus','video/webm'];
+      const mime = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
+      const bitrate = canvas.width >= 3840 ? 30000000 : 10000000;
+      
+      mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: bitrate });
       mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
       mediaRecorder.onstop = () => {
         if (recordedChunks.length) {
-          const rawBlob = new Blob(recordedChunks, { type: mime });
-          const downloadFinalVideo = (finalBlob) => {
+          const blob = new Blob(recordedChunks, { type: mime });
+          const download = (finalBlob) => {
             const url = URL.createObjectURL(finalBlob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `OConnor_Memorial_${new Date().toISOString().slice(0,10)}.${mime.includes('mp4')?'mp4':'webm'}`;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+            a.href = url; a.download = `OConnor_Memorial_${new Date().toISOString().slice(0,10)}.${mime.includes('mp4')?'mp4':'webm'}`;
+            a.click(); setTimeout(() => URL.revokeObjectURL(url), 200);
           };
           if (mime.includes('webm') && typeof ysFixWebmDuration === 'function') {
-            ysFixWebmDuration(rawBlob, totalTime, (fixedBlob) => downloadFinalVideo(fixedBlob));
-          } else {
-            downloadFinalVideo(rawBlob);
-          }
+            ysFixWebmDuration(blob, totalTime, download);
+          } else { download(blob); }
         }
-        
-        // Stop the live preview
         livePreviewVideo.srcObject = null;
         stopEngine();
       };
       mediaRecorder.start();
     }
 
-    // Initial UI
-    updatePhotoCountUI();
-    shuffleToggleBtn.disabled = true;
+    // Initial UI Setup
+    durationSlider.addEventListener('input', e => {
+      slideDuration = parseInt(e.target.value) * 1000;
+      durationLabel.textContent = e.target.value;
+    });
+    resolutionSelect.addEventListener('change', preloadAllImages);
+    
+    // Live volume adjustments if previewing
+    volumeSlider.addEventListener('input', () => {
+       // Only needed if you want dynamic adjustments in preview, but handled by gainNode setup
+    });
+
   })();
 </script>
 </body>
