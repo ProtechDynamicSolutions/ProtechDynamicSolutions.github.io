@@ -377,7 +377,9 @@
     function remDuplicates(files) {
       const seen = new Set();
       return files.filter(f => {
-        const key = `${f.name}-${f.size}-${f.lastModified}`;
+        // iOS often names all batch uploads "image.jpeg". 
+        // Using just name + size ensures we don't accidentally delete distinct photos.
+        const key = `${f.name}-${f.size}`;
         if (seen.has(key)) return false;
         seen.add(key); return true;
       });
@@ -460,10 +462,10 @@
 
     // Upload logic
     photoInput.addEventListener('change', async (e) => {
-      let files = Array.from(e.target.files || []);
+      let newFiles = Array.from(e.target.files || []);
       
       if (_expectedProjectFiles && _expectedProjectFiles.length) {
-        const matched = _expectedProjectFiles.map(exp => files.find(f => f.name === exp.name && f.size === exp.size)).filter(Boolean);
+        const matched = _expectedProjectFiles.map(exp => newFiles.find(f => f.name === exp.name && f.size === exp.size)).filter(Boolean);
         if (matched.length === _expectedProjectFiles.length) {
           imageFiles = matched;
           _expectedProjectFiles = null; 
@@ -477,12 +479,15 @@
         }
       }
       
-      if (dedupeToggle.checked) files = remDuplicates(files);
-      if (autoShuffleToggle.checked) files = shuffleArray(files);
+      // Add the new photos to the existing ones instead of overwriting them
+      let combinedFiles = [...imageFiles, ...newFiles];
       
-      imageFiles = files; // Replace current queue (standard behavior)
+      if (dedupeToggle.checked) combinedFiles = remDuplicates(combinedFiles);
+      if (autoShuffleToggle.checked && newFiles.length > 0) combinedFiles = shuffleArray(combinedFiles);
+      
+      imageFiles = combinedFiles; 
       refreshFromFiles();
-      photoInput.value = ''; // clears input so user can pick the exact same files again without freezing
+      photoInput.value = ''; // clears input so user can pick more files without freezing
     });
 
     manualShuffleBtn.addEventListener('click', () => {
