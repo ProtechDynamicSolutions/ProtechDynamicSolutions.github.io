@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Acquisition & Retention Strategy</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0F3D2E; }
+        
+        .slide-enter {
+            animation: slideIn 0.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .slide-exit {
+            animation: slideOut 0.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px) scale(0.98); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0) scale(1); }
+            to { opacity: 0; transform: translateX(-50px) scale(0.98); }
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(#C6A75E 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // --- ICONS ---
+        const Icon = ({ name, className }) => {
+            const svgs = {
+                ChevronLeft: <><path d="m15 18-6-6 6-6"/></>,
+                ChevronRight: <><path d="m9 18 6-6-6-6"/></>,
+                Users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+                ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
+                TrendingUp: <><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></>,
+                Euro: <><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></>,
+                Key: <><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></>,
+                RefreshCw: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></>,
+                Laptop: <><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {svgs[name]}
+                </svg>
+            );
+        };
+
+        // --- PRESENTATION DATA ---
+        const SLIDES = [
+            {
+                id: 'intro',
+                type: 'title',
+                title: "The Dual-Portal Strategy",
+                subtitle: "A framework for acquiring high-value members and maximising lifetime retention.",
+                content: "Presented for Executive Review"
+            },
+            {
+                id: 'the-problem',
+                type: 'split',
+                title: "The Membership Challenge",
+                icon: "Users",
+                leftContent: (
+                    <div className="space-y-6">
+                        <p className="text-xl text-gray-300 font-light leading-relaxed">
+                            Traditional membership programmes suffer from two major disconnects:
+                        </p>
+                        <ul className="space-y-4">
+                            <li className="flex items-start">
+                                <span className="bg-[#5B1E2D] text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">1</span>
+                                <div>
+                                    <strong className="text-white block mb-1">Friction in Acquisition</strong>
+                                    <span className="text-gray-400 text-sm">Outdated paper forms, unclear benefits, and a lack of premium digital branding deter modern prospects.</span>
+                                </div>
+                            </li>
+                            <li className="flex items-start">
+                                <span className="bg-[#5B1E2D] text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">2</span>
+                                <div>
+                                    <strong className="text-white block mb-1">Reactive Retention</strong>
+                                    <span className="text-gray-400 text-sm">Administrators only realise a member has lapsed after the revenue is lost. No proactive tracking or automated reminders.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                ),
+                rightContent: (
+                    <div className="bg-[#154a3a] border border-[#1a5743] p-8 rounded-sm h-full flex flex-col justify-center relative overflow-hidden">
+                        <Icon name="TrendingUp" className="absolute -bottom-10 -right-10 w-64 h-64 text-[#0F3D2E] opacity-50" />
+                        <h3 className="font-['Playfair_Display'] text-3xl text-[#C6A75E] mb-4 relative z-10">The Result?</h3>
+                        <p className="text-xl text-white font-light relative z-10">High churn rates, stagnant growth, and thousands of Euros lost annually in uncollected dues.</p>
+                    </div>
+                )
+            },
+            {
+                id: 'the-solution',
+                type: 'center',
+                title: "The Ecosystem Solution",
+                subtitle: "Two distinct portals working in perfect harmony.",
+                content: (
+                    <div className="grid grid-cols-2 gap-12 mt-12 w-full max-w-4xl mx-auto">
+                        <div className="bg-[#F4F1EC] p-8 rounded-sm text-center shadow-2xl transform hover:-translate-y-2 transition-transform border-t-4 border-[#C6A75E]">
+                            <div className="bg-[#0F3D2E] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Icon name="Laptop" className="w-8 h-8 text-[#C6A75E]" />
+                            </div>
+                            <h3 className="font-['Playfair_Display'] text-2xl text-[#0F3D2E] font-bold mb-3">1. The Member Portal</h3>
+                            <p className="text-gray-600 text-sm mb-4">A premium, user-facing experience designed to attract, onboard, and engage.</p>
+                            <span className="inline-block px-3 py-1 bg-[#1a5743] text-white text-xs font-bold rounded-full">Acquisition & Engagement</span>
+                        </div>
+                        <div className="bg-[#F4F1EC] p-8 rounded-sm text-center shadow-2xl transform hover:-translate-y-2 transition-transform border-t-4 border-[#5B1E2D]">
+                            <div className="bg-[#0F3D2E] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Icon name="ShieldCheck" className="w-8 h-8 text-[#C6A75E]" />
+                            </div>
+                            <h3 className="font-['Playfair_Display'] text-2xl text-[#0F3D2E] font-bold mb-3">2. The Admin Hub</h3>
+                            <p className="text-gray-600 text-sm mb-4">A powerful analytics dashboard for the committee to monitor health and revenue.</p>
+                            <span className="inline-block px-3 py-1 bg-[#5B1E2D] text-white text-xs font-bold rounded-full">Retention & Analytics</span>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'acquisition',
+                type: 'split',
+                title: "Phase 1: Frictionless Acquisition",
+                icon: "Key",
+                leftContent: (
+                    <div className="space-y-6">
+                        <h4 className="text-2xl text-[#C6A75E] font-['Playfair_Display']">Selling the Prestige</h4>
+                        <p className="text-gray-300 font-light leading-relaxed">
+                            The Member Portal acts as your digital front door. By presenting a bespoke, highly polished landing page, we immediately elevate the perceived value of the membership.
+                        </p>
+                        <ul className="space-y-3 mt-6">
+                            <li className="flex items-center text-white"><Icon name="ShieldCheck" className="w-5 h-5 mr-3 text-[#C6A75E]" /> Streamlined online application forms.</li>
+                            <li className="flex items-center text-white"><Icon name="ShieldCheck" className="w-5 h-5 mr-3 text-[#C6A75E]" /> Instant digital verification of credentials.</li>
+                            <li className="flex items-center text-white"><Icon name="ShieldCheck" className="w-5 h-5 mr-3 text-[#C6A75E]" /> Secure, automated initial payments.</li>
+                        </ul>
+                    </div>
+                ),
+                rightContent: (
+                    <div className="bg-[#F4F1EC] p-2 rounded-sm shadow-2xl border border-gray-700">
+                        <div className="bg-[#0F3D2E] h-8 flex items-center px-4 rounded-t-sm">
+                            <div className="flex space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+                        <div className="p-6 text-center border-b border-gray-200 bg-white">
+                            <h2 className="font-['Playfair_Display'] text-2xl text-[#0F3D2E] font-bold">Membership Application</h2>
+                            <p className="text-xs text-gray-500 mt-2">Submit your details for committee review.</p>
+                            <button className="mt-6 w-full bg-[#0F3D2E] text-[#C6A75E] py-2 rounded-sm font-bold text-sm">Submit Application</button>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'engagement',
+                type: 'split',
+                title: "Phase 2: Driving Engagement",
+                icon: "RefreshCw",
+                leftContent: (
+                    <div className="space-y-6">
+                        <h4 className="text-2xl text-[#C6A75E] font-['Playfair_Display']">The 'Sticky' Dashboard</h4>
+                        <p className="text-gray-300 font-light leading-relaxed">
+                            Members need a reason to log in regularly. The portal creates "stickiness" by gating essential club utility behind the secure login.
+                        </p>
+                        <div className="bg-[#154a3a] p-5 rounded-sm border-l-4 border-[#C6A75E]">
+                            <h5 className="font-bold text-white mb-2">Key Retention Features:</h5>
+                            <ul className="text-sm text-gray-300 space-y-2">
+                                <li>• Weekly rotating door access codes.</li>
+                                <li>• Exclusive committee notices and event updates.</li>
+                                <li>• One-click self-service renewals via credit card.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                rightContent: (
+                    <div className="bg-[#F4F1EC] p-2 rounded-sm shadow-2xl border border-gray-700">
+                        <div className="bg-[#0F3D2E] h-8 flex items-center px-4 rounded-t-sm">
+                            <div className="flex space-x-2"><div className="w-3 h-3 rounded-full bg-gray-400"></div></div>
+                        </div>
+                        <div className="p-6 bg-white h-full flex flex-col justify-center items-center">
+                            <p className="text-sm font-bold text-[#C6A75E] uppercase mb-2">Weekly Door Access</p>
+                            <div className="bg-[#F4F1EC] px-8 py-4 rounded-sm shadow-inner mb-4">
+                                <span className="font-['Inter'] text-4xl font-black text-[#2B2B2B] tracking-[0.2em]">8294</span>
+                            </div>
+                            <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">Status: Active</span>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'admin',
+                type: 'split',
+                title: "Phase 3: Proactive Admin Analytics",
+                icon: "Euro",
+                leftContent: (
+                    <div className="space-y-6">
+                        <h4 className="text-2xl text-[#C6A75E] font-['Playfair_Display']">Data-Driven Management</h4>
+                        <p className="text-gray-300 font-light leading-relaxed">
+                            The Admin Portal provides the committee with real-time financial reporting and membership health tracking. Stop guessing, start measuring.
+                        </p>
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div className="bg-white p-4 rounded-sm">
+                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Active Members</p>
+                                <p className="text-2xl font-bold text-green-700">132</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-sm">
+                                <p className="text-xs text-gray-500 font-bold uppercase mb-1">Revenue YTD</p>
+                                <p className="text-2xl font-bold text-[#C6A75E]">€33,000</p>
+                            </div>
+                        </div>
+                    </div>
+                ),
+                rightContent: (
+                    <div className="space-y-4">
+                        <div className="bg-[#154a3a] border border-[#1a5743] p-6 rounded-sm">
+                            <h5 className="text-white font-bold mb-3 flex items-center">
+                                <Icon name="TrendingUp" className="w-5 h-5 text-[#C6A75E] mr-2" />
+                                Automated Retention Triggers
+                            </h5>
+                            <p className="text-sm text-gray-300 mb-4">
+                                The system identifies the 24 members whose subscriptions have lapsed and allows for one-click reminder emails.
+                            </p>
+                            <div className="w-full bg-[#0F3D2E] rounded-full h-2 mb-2">
+                                <div className="bg-[#5B1E2D] h-2 rounded-full" style={{ width: '15%' }}></div>
+                            </div>
+                            <p className="text-xs text-gray-400 text-right">15% Pending Renewal</p>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'conclusion',
+                type: 'center',
+                title: "The Financial Impact",
+                subtitle: "Streamlining operations directly impacts the bottom line.",
+                content: (
+                    <div className="mt-8">
+                        <div className="grid grid-cols-3 gap-6 text-center max-w-5xl mx-auto">
+                            <div>
+                                <div className="text-5xl font-['Playfair_Display'] text-[#C6A75E] mb-2 font-bold">-40%</div>
+                                <p className="text-white font-bold">Admin Workload</p>
+                                <p className="text-sm text-gray-400 mt-2">Through self-service renewals and automated reporting.</p>
+                            </div>
+                            <div>
+                                <div className="text-5xl font-['Playfair_Display'] text-[#C6A75E] mb-2 font-bold">+25%</div>
+                                <p className="text-white font-bold">Retention Rate</p>
+                                <p className="text-sm text-gray-400 mt-2">Achieved via proactive reminders and gated portal utility.</p>
+                            </div>
+                            <div>
+                                <div className="text-5xl font-['Playfair_Display'] text-[#C6A75E] mb-2 font-bold">€12k+</div>
+                                <p className="text-white font-bold">Recovered Dues</p>
+                                <p className="text-sm text-gray-400 mt-2">By making it instantly easy for lapsed members to pay via credit card.</p>
+                            </div>
+                        </div>
+                        <div className="mt-16 border-t border-[#1a5743] pt-12">
+                            <h3 className="font-['Playfair_Display'] text-3xl text-white mb-6">Ready to modernise your club?</h3>
+                            <button className="bg-[#C6A75E] text-[#0F3D2E] px-10 py-4 rounded-sm font-bold text-lg hover:bg-white transition-colors shadow-lg">
+                                Review Implementation Plan
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        ];
+
+        function App() {
+            const [currentSlide, setCurrentSlide] = useState(0);
+            const [animating, setAnimating] = useState(false);
+
+            const nextSlide = useCallback(() => {
+                if (animating || currentSlide === SLIDES.length - 1) return;
+                setAnimating(true);
+                setCurrentSlide(prev => prev + 1);
+                setTimeout(() => setAnimating(false), 500);
+            }, [currentSlide, animating]);
+
+            const prevSlide = useCallback(() => {
+                if (animating || currentSlide === 0) return;
+                setAnimating(true);
+                setCurrentSlide(prev => prev - 1);
+                setTimeout(() => setAnimating(false), 500);
+            }, [currentSlide, animating]);
+
+            const goToSlide = (index) => {
+                if (animating || index === currentSlide) return;
+                setAnimating(true);
+                setCurrentSlide(index);
+                setTimeout(() => setAnimating(false), 500);
+            };
+
+            // Keyboard navigation
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+                    if (e.key === 'ArrowLeft') prevSlide();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [nextSlide, prevSlide]);
+
+            const SlideContent = ({ slide }) => {
+                if (slide.type === 'title') {
+                    return (
+                        <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                            <div className="w-20 h-20 mb-8 rounded-full border-2 border-[#C6A75E] flex items-center justify-center">
+                                <Icon name="ShieldCheck" className="w-10 h-10 text-[#C6A75E]" />
+                            </div>
+                            <h1 className="font-['Playfair_Display'] text-5xl md:text-7xl text-white font-bold mb-6 tracking-tight leading-tight">
+                                {slide.title}
+                            </h1>
+                            <p className="font-['Inter'] text-xl md:text-2xl text-[#C6A75E] max-w-3xl font-light leading-relaxed mb-12">
+                                {slide.subtitle}
+                            </p>
+                            <div className="mt-8 pt-8 border-t border-[#1a5743] text-gray-400 font-['Inter'] text-sm tracking-widest uppercase">
+                                {slide.content}
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (slide.type === 'split') {
+                    return (
+                        <div className="flex flex-col justify-center h-full max-w-6xl mx-auto px-8 py-12">
+                            <div className="flex items-center mb-12">
+                                <div className="p-3 bg-[#1a5743] rounded-sm mr-4">
+                                    <Icon name={slide.icon} className="w-8 h-8 text-[#C6A75E]" />
+                                </div>
+                                <h2 className="font-['Playfair_Display'] text-4xl md:text-5xl text-white font-bold">
+                                    {slide.title}
+                                </h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center flex-grow">
+                                <div className="font-['Inter']">
+                                    {slide.leftContent}
+                                </div>
+                                <div className="h-full">
+                                    {slide.rightContent}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (slide.type === 'center') {
+                    return (
+                        <div className="flex flex-col items-center justify-center h-full max-w-6xl mx-auto px-8 py-12 text-center">
+                            <h2 className="font-['Playfair_Display'] text-4xl md:text-6xl text-white font-bold mb-6">
+                                {slide.title}
+                            </h2>
+                            <p className="font-['Inter'] text-xl text-[#C6A75E] max-w-3xl font-light mb-8">
+                                {slide.subtitle}
+                            </p>
+                            <div className="w-full flex-grow flex items-center justify-center">
+                                {slide.content}
+                            </div>
+                        </div>
+                    );
+                }
+            };
+
+            return (
+                <div className="w-screen h-screen bg-[#0F3D2E] relative font-['Inter'] flex flex-col selection:bg-[#C6A75E] selection:text-[#0F3D2E] overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 bg-pattern z-0 pointer-events-none"></div>
+
+                    {/* Header/Logo Mini */}
+                    <div className="absolute top-6 left-8 z-50 flex items-center opacity-70">
+                        <Icon name="ShieldCheck" className="w-6 h-6 text-[#C6A75E] mr-2" />
+                        <span className="text-white font-['Playfair_Display'] tracking-widest uppercase text-xs">Strategy Overview</span>
+                    </div>
+
+                    {/* Main Slide Area */}
+                    <main className="flex-grow relative z-10">
+                        {SLIDES.map((slide, index) => (
+                            <div 
+                                key={slide.id}
+                                className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${index === currentSlide ? 'opacity-100 z-20 slide-enter' : 'opacity-0 z-0'}`}
+                                style={{ display: Math.abs(index - currentSlide) <= 1 ? 'block' : 'none' }} // Render optimization
+                            >
+                                {index === currentSlide && <SlideContent slide={slide} />}
+                            </div>
+                        ))}
+                    </main>
+
+                    {/* Footer Controls */}
+                    <footer className="h-20 border-t border-[#1a5743] relative z-50 flex items-center justify-between px-8 bg-[#0F3D2E] bg-opacity-95">
+                        
+                        {/* Slide Indicator Dots */}
+                        <div className="flex space-x-2">
+                            {SLIDES.map((_, index) => (
+                                <button 
+                                    key={index}
+                                    onClick={() => goToSlide(index)}
+                                    className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide ? 'w-8 bg-[#C6A75E]' : 'w-2 bg-[#1a5743] hover:bg-gray-400'}`}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Navigation Buttons */}
+                        <div className="flex items-center space-x-4">
+                            <span className="text-gray-500 text-sm mr-4 hidden md:block">
+                                {currentSlide + 1} / {SLIDES.length}
+                            </span>
+                            <button 
+                                onClick={prevSlide}
+                                disabled={currentSlide === 0}
+                                className={`p-2 rounded-sm border ${currentSlide === 0 ? 'border-[#1a5743] text-[#1a5743] cursor-not-allowed' : 'border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-[#0F3D2E]'} transition-colors`}
+                            >
+                                <Icon name="ChevronLeft" className="w-6 h-6" />
+                            </button>
+                            <button 
+                                onClick={nextSlide}
+                                disabled={currentSlide === SLIDES.length - 1}
+                                className={`p-2 rounded-sm border ${currentSlide === SLIDES.length - 1 ? 'border-[#1a5743] text-[#1a5743] cursor-not-allowed' : 'border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-[#0F3D2E]'} transition-colors`}
+                            >
+                                <Icon name="ChevronRight" className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
