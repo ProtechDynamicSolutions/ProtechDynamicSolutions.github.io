@@ -134,7 +134,7 @@
             100% { width: 100%; }
         }
 
-        /* Keyframes for Cursor Movement - Opacity stays at 1 at the end so it doesn't disappear */
+        /* Keyframes for Cursor Movement */
         @keyframes moveCadCursorV {
             0% { top: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
             15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
@@ -242,10 +242,10 @@
         </div>
     </section>
 
-    <!-- Project Gallery -->
+    <!-- Project Gallery Section -->
     <section id="projects" class="py-20 md:py-32 px-6 bg-[#fafafa]">
         <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
                 <div class="reveal">
                     <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Selected Works</h2>
                     <h3 class="serif text-3xl md:text-5xl">Featured Projects</h3>
@@ -255,61 +255,94 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-                <!-- Project 1 -->
-                <div class="group cursor-pointer reveal">
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
-                        <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1200" alt="Cliffside Residence" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                            <span class="text-white border border-white px-6 py-2 uppercase tracking-widest text-[10px] font-bold">View Project</span>
-                        </div>
+            <!-- ============================================== -->
+            <!-- PROJECT 1: COURTYARD HOUSE                     -->
+            <!-- ============================================== -->
+            <div class="mb-24 reveal">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="cad-line-container-h relative w-12 h-[1px]">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
                     </div>
-                    <div class="mt-8">
-                        <div class="flex items-center gap-3 mb-3">
-                            <!-- Animated Horizontal Line -->
-                            <div class="cad-line-container-h relative w-10 h-[1px]">
-                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                                <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                        <line x1="12" y1="0" x2="12" y2="24"></line>
-                                        <line x1="0" y1="12" x2="24" y2="12"></line>
-                                        <rect x="9" y="9" width="6" height="6"></rect>
-                                    </svg>
-                                </div>
-                            </div>
-                            <span class="text-[10px] uppercase tracking-widest font-bold text-gray-400">Residential</span>
-                        </div>
-                        <h4 class="serif text-2xl md:text-3xl group-hover:text-copper transition-colors duration-300">The Cliffside Residence</h4>
-                    </div>
+                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Courtyard House</h4>
                 </div>
-
-                <!-- Project 2 -->
-                <div class="group cursor-pointer reveal delay-300">
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200">
-                        <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200" alt="Harbour Quarter" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                            <span class="text-white border border-white px-6 py-2 uppercase tracking-widest text-[10px] font-bold">View Project</span>
-                        </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <!-- Photo 1 -->
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                        <!-- Note: The 'onerror' attribute loads a placeholder temporarily if you haven't uploaded the local file yet. -->
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/1.JPG" alt="Courtyard House" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
                     </div>
-                    <div class="mt-8">
-                        <div class="flex items-center gap-3 mb-3">
-                            <!-- Animated Horizontal Line -->
-                            <div class="cad-line-container-h relative w-10 h-[1px]">
-                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                                <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                        <line x1="12" y1="0" x2="12" y2="24"></line>
-                                        <line x1="0" y1="12" x2="24" y2="12"></line>
-                                        <rect x="9" y="9" width="6" height="6"></rect>
-                                    </svg>
-                                </div>
-                            </div>
-                            <span class="text-[10px] uppercase tracking-widest font-bold text-gray-400">Planning</span>
-                        </div>
-                        <h4 class="serif text-2xl md:text-3xl group-hover:text-copper transition-colors duration-300">Kinsale Harbour Quarter</h4>
-                    </div>
+                    
+                    <!-- TO ADD MORE PHOTOS FOR COURTYARD HOUSE: 
+                         Copy the <div> block above, paste it below this comment, 
+                         and change the 'src' from '1.JPG' to '2.JPG', '3.JPG' etc. -->
                 </div>
             </div>
+
+            <!-- ============================================== -->
+            <!-- PROJECT 2: LACKENROE                           -->
+            <!-- ============================================== -->
+            <div class="mb-24 reveal delay-100">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="cad-line-container-h relative w-12 h-[1px]">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Lackenroe</h4>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Photo 1 -->
+                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/1.JPG" alt="Lackenroe View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    <!-- Photo 2 -->
+                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/2.JPG" alt="Lackenroe View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    <!-- Photo 3 -->
+                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/3.JPG" alt="Lackenroe View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    <!-- Photo 4 -->
+                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/4.jpg" alt="Lackenroe View 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    
+                    <!-- TO ADD MORE PHOTOS FOR LACKENROE: 
+                         Copy one of the <div> blocks above and change the number to 5.jpg, 6.jpg etc. -->
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- PROJECT 3: CANTILEVER HOUSE                    -->
+            <!-- ============================================== -->
+            <div class="reveal delay-200">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="cad-line-container-h relative w-12 h-[1px]">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Cantilever House</h4>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <!-- Photo 1 -->
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/1.jpg" alt="Cantilever House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    <!-- Photo 2 -->
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/2.jpg" alt="Cantilever House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    <!-- Photo 3 -->
+                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/3.jpg" alt="Cantilever House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                    </div>
+                    
+                    <!-- TO ADD MORE PHOTOS FOR CANTILEVER HOUSE: 
+                         Copy one of the <div> blocks above and change the number to 4.jpg, 5.jpg etc. -->
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -319,28 +352,35 @@
             <div class="text-center mb-20 reveal">
                 <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">What We Do</h2>
                 <h3 class="serif text-4xl mb-6">Expertise & Services</h3>
-                <!-- Editable Overview Paragraph -->
+                
+                <!-- ========================================================================= -->
+                <!-- EDITABLE OVERVIEW PARAGRAPH -->
+                <!-- Edit the text between the <p> tags below to change the services overview. -->
+                <!-- ========================================================================= -->
                 <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
                     At OBD Architecture, we offer a comprehensive suite of services tailored to bring your vision to life. Led by Garbhan O'Brien, our team provides meticulous guidance through every phase of the architectural journey. We blend innovative design with rigorous project management to ensure every build is delivered to the highest standard.
                 </p>
+                <!-- ========================================================================= -->
+
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
                 <!-- Service 1 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">01</span>
                     <h4 class="serif text-2xl mb-5">Design & Planning</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We navigate complex local regulations and planning permissions with expertise, transforming your initial concepts into viable, approved designs ready for construction.</p>
+                    
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        We navigate complex local regulations and planning permissions with expertise, transforming your initial concepts into viable, approved designs ready for construction.
+                    </p>
+                    <!-- ========================================================================= -->
                     
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -348,17 +388,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">02</span>
                     <h4 class="serif text-2xl mb-5">Custom New Builds</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Tailored strictly to your lifestyle and brief, our bespoke residential and commercial builds are crafted to harmonise perfectly with their natural surroundings.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        Tailored strictly to your lifestyle and brief, our bespoke residential and commercial builds are crafted to harmonise perfectly with their natural surroundings.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -366,17 +406,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">03</span>
                     <h4 class="serif text-2xl mb-5">Extensions and Renovations</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We breathe new life into existing properties, seamlessly blending historic architecture with striking modern extensions to maximise space and natural light.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        We breathe new life into existing properties, seamlessly blending historic architecture with striking modern extensions to maximise space and natural light.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -384,17 +424,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">04</span>
                     <h4 class="serif text-2xl mb-5">Landscape Design</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Architecture doesn't stop at the walls. We design beautiful external spaces that integrate flawlessly with the main structure, grounding your building in its context.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        Architecture doesn't stop at the walls. We design beautiful external spaces that integrate flawlessly with the main structure, grounding your building in its context.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -402,17 +442,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">05</span>
                     <h4 class="serif text-2xl mb-5">3D Printed Models</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">To help you truly visualise spatial volume and layout, we provide tangible, scaled 3D printed models of your project long before ground is broken.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        To help you truly visualise spatial volume and layout, we provide tangible, scaled 3D printed models of your project long before ground is broken.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -420,17 +460,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">06</span>
                     <h4 class="serif text-2xl mb-5">Building and Site Surveys</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">Every successful project begins with precision. Our comprehensive site analysis and measuring services inform the crucial early stages of our design process.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        Every successful project begins with precision. Our comprehensive site analysis and measuring services inform the crucial early stages of our design process.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -438,17 +478,17 @@
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal lg:col-start-2">
                     <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">07</span>
                     <h4 class="serif text-2xl mb-5">Cost Estimates</h4>
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">We provide detailed, realistic financial projections in Euros from day one, ensuring your budget is respected and managed throughout the entire build.</p>
                     
+                    <!-- ========================================================================= -->
+                    <!-- EDITABLE SERVICE SENTENCES -->
+                    <!-- ========================================================================= -->
+                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                        We provide detailed, realistic financial projections in Euros from day one, ensuring your budget is respected and managed throughout the entire build.
+                    </p>
+                    <!-- ========================================================================= -->
+
                     <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
                         <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <line x1="12" y1="0" x2="12" y2="24"></line>
-                                <line x1="0" y1="12" x2="24" y2="12"></line>
-                                <rect x="9" y="9" width="6" height="6"></rect>
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
@@ -461,7 +501,7 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex flex-col lg:flex-row gap-16 items-center">
                 
-                <!-- About Image (CAD line removed from here) -->
+                <!-- About Image -->
                 <div class="w-full lg:w-1/2 relative reveal">
                     <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
                 </div>
