@@ -151,6 +151,15 @@
             15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
             100% { left: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
         }
+
+        /* Hide Scrollbar for Horizontal Galleries */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900 overflow-x-hidden">
@@ -259,18 +268,23 @@
             <!-- PROJECT 1: COURTYARD HOUSE                     -->
             <!-- ============================================== -->
             <div class="mb-24 reveal">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="cad-line-container-h relative w-12 h-[1px]">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
+                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Courtyard House</h4>
                     </div>
-                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Courtyard House</h4>
+                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div class="flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar">
                     <!-- Photo 1 -->
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
-                        <!-- Note: The 'onerror' attribute loads a placeholder temporarily if you haven't uploaded the local file yet. -->
+                    <div class="flex-none w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/1.JPG" alt="Courtyard House" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     
                     <!-- TO ADD MORE PHOTOS FOR COURTYARD HOUSE: 
@@ -283,29 +297,44 @@
             <!-- PROJECT 2: LACKENROE                           -->
             <!-- ============================================== -->
             <div class="mb-24 reveal delay-100">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="cad-line-container-h relative w-12 h-[1px]">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
+                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Lackenroe</h4>
                     </div>
-                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Lackenroe</h4>
+                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar">
                     <!-- Photo 1 -->
-                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/1.JPG" alt="Lackenroe View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     <!-- Photo 2 -->
-                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/2.JPG" alt="Lackenroe View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     <!-- Photo 3 -->
-                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/3.JPG" alt="Lackenroe View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     <!-- Photo 4 -->
-                    <div class="relative overflow-hidden aspect-square md:aspect-[4/5] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/4.jpg" alt="Lackenroe View 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     
                     <!-- TO ADD MORE PHOTOS FOR LACKENROE: 
@@ -317,25 +346,37 @@
             <!-- PROJECT 3: CANTILEVER HOUSE                    -->
             <!-- ============================================== -->
             <div class="reveal delay-200">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="cad-line-container-h relative w-12 h-[1px]">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
+                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Cantilever House</h4>
                     </div>
-                    <h4 class="serif text-3xl md:text-4xl text-gray-900">Cantilever House</h4>
+                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div class="flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar">
                     <!-- Photo 1 -->
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/1.jpg" alt="Cantilever House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     <!-- Photo 2 -->
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/2.jpg" alt="Cantilever House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     <!-- Photo 3 -->
-                    <div class="relative overflow-hidden aspect-[4/3] bg-gray-200 group">
+                    <div class="flex-none w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-center cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/3.jpg" alt="Cantilever House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
                     </div>
                     
                     <!-- TO ADD MORE PHOTOS FOR CANTILEVER HOUSE: 
@@ -709,6 +750,12 @@
         </div>
     </footer>
 
+    <!-- Fullscreen Image Lightbox -->
+    <div id="lightbox" class="fixed inset-0 z-[200] bg-black/95 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white text-4xl hover:text-copper transition-colors z-[210]">&times;</button>
+        <img id="lightboxImg" src="" alt="Full size image" class="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl">
+    </div>
+
     <script>
         // Hero Entrance Animation
         window.addEventListener('load', () => {
@@ -773,6 +820,36 @@
         // Attach observer to all line containers
         document.querySelectorAll('.cad-line-container, .cad-line-container-h').forEach(container => {
             lineObserver.observe(container);
+        });
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+
+        function openLightbox(imageSrc) {
+            lightboxImg.src = imageSrc;
+            lightbox.classList.remove('hidden');
+            // Small delay to allow display:block to apply before fading in
+            setTimeout(() => {
+                lightbox.classList.remove('opacity-0');
+            }, 10);
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                lightboxImg.src = '';
+                document.body.style.overflow = 'auto'; // Restore background scrolling
+            }, 300); // match transition duration
+        }
+
+        // Close lightbox on clicking outside the image
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
         });
 
     </script>
