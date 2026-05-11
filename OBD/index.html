@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
@@ -195,11 +196,12 @@
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
-                <a href="#projects" class="nav-link">Projects</a>
+                <a href="#" onclick="window.location.reload(); return false;" class="nav-link">Home</a>
+                <a href="#practice" class="nav-link">Practice</a>
                 <a href="#services" class="nav-link">Services</a>
-                <a href="#about" class="nav-link">About</a>
+                <a href="#work" class="nav-link">Work</a>
                 <a href="#testimonials" class="nav-link">Testimonials</a>
-                <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Start a Project</a>
+                <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Contact</a>
             </div>
 
             <!-- Mobile Toggle -->
@@ -212,9 +214,10 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
         <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
-        <a href="#projects" class="mobile-nav-link hover:text-copper">Projects</a>
+        <a href="#" onclick="window.location.reload(); return false;" class="mobile-nav-link hover:text-copper">Home</a>
+        <a href="#practice" class="mobile-nav-link hover:text-copper">Practice</a>
         <a href="#services" class="mobile-nav-link hover:text-copper">Services</a>
-        <a href="#about" class="mobile-nav-link hover:text-copper">About</a>
+        <a href="#work" class="mobile-nav-link hover:text-copper">Work</a>
         <a href="#testimonials" class="mobile-nav-link hover:text-copper">Testimonials</a>
         <a href="#contact" class="mobile-nav-link hover:text-copper">Contact</a>
     </div>
@@ -235,7 +238,7 @@
                 Bespoke architectural solutions in Ireland, blending contemporary design with functional planning.
             </p>
             <div class="flex flex-col items-center gap-6">
-                <a href="#projects" class="px-8 py-4 border border-white text-white text-xs uppercase tracking-[0.3em] font-bold hover:bg-copper hover:border-copper transition-all duration-300 shadow-xl">
+                <a href="#work" class="px-8 py-4 border border-white text-white text-xs uppercase tracking-[0.3em] font-bold hover:bg-copper hover:border-copper transition-all duration-300 shadow-xl">
                     View Portfolio
                 </a>
                 
@@ -255,21 +258,189 @@
         </div>
     </section>
 
-    <!-- Project Gallery Section -->
-    <section id="projects" class="py-20 md:py-32 px-6 bg-[#fafafa]">
+    <!-- Practice Section -->
+    <section id="practice" class="py-24 bg-[#fafafa] overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                
+                <!-- Practice Image -->
+                <div class="w-full lg:w-1/2 relative reveal">
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
+                </div>
+
+                <!-- Practice Text Content -->
+                <div class="w-full lg:w-1/2 reveal delay-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                    <line x1="12" y1="0" x2="12" y2="24"></line>
+                                    <line x1="0" y1="12" x2="24" y2="12"></line>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold">Practice</h2>
+                    </div>
+                    <h3 class="serif text-4xl mb-12">About OBD Architecture</h3>
+                    
+                    <div class="space-y-10 text-gray-600 font-light leading-relaxed text-sm md:text-base">
+                        
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">What we do</h4>
+                            <p>
+                                We work closely with clients to ensure beautifully crafted design that provides natural light and space to promote well-being, whilst effortlessly enhancing flow and connection with the outdoors.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">How we do it</h4>
+                            <p>
+                                Each project is custom designed around the client's needs, taking account of site conditions, budget and environmental factors. We draw upon our vast experience to ensure each client receives honest and informed advice ensuring a design solution that they will love.
+                            </p>
+                        </div>
+
+                    </div>
+                    
+                    <div class="mt-12">
+                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-black hover:text-copper transition-colors">
+                            <span>Get in touch</span>
+                            <div class="cad-line-container-h relative w-12 h-[1px]">
+                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">What We Do</h2>
+                <h3 class="serif text-4xl mb-6">Expertise & Services</h3>
+                
+                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
+                    At OBD Architecture, we offer a comprehensive suite of services tailored to bring your vision to life. Led by Garbhan O'Brien, our team provides meticulous guidance through every phase of the architectural journey.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Service 1 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Design and Planning</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Whether you are looking to simply improve the internal layout of your existing home or build a brand new home from scratch, OBD Architecture can provided tailored design solutions to your make your vision a reality.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Bespoke New Builds</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Client focused, considered design solutions that blend seamlessly into their surroundings while maximising site potential.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Extensions and Renovation</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            As life moves on, so do your requirements of your home. We specialise in optimising and adapting homes to meet the needs of the 'now' whilst also planning for the future.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Landscape Design</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            OBD Architecture's expertise doesn't stop at the external walls. We provide elegant and natural outdoor spaces that connect thoughtfully with your home and lifestyle.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">3D Printed Models</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            We can provide physical scale models as part of our design process, enabling you to visualise your dream long before works commence on site.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 6 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Building and Site Surveys</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            All successful projects rely on accurate base point data. We provide building and site surveys to ensure an optimal design solution whilst also mitigating the risk of a mishap on site.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 7 -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal lg:col-start-2 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Cost Estimates</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            At OBD Architecture, we recognise that cost is one of the primary drivers of any project. We can provide detailed cost estimates to ensure cost certainty and budget control.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Work Gallery Section -->
+    <section id="work" class="py-20 md:py-32 px-6 bg-[#fafafa] overflow-hidden">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
                 <div class="reveal">
-                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Selected Works</h2>
-                    <h3 class="serif text-3xl md:text-5xl">Featured Projects</h3>
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Selected Portfolio</h2>
+                    <h3 class="serif text-3xl md:text-5xl">Work</h3>
                 </div>
                 <div class="reveal delay-200">
-                    <p class="text-gray-500 max-w-md text-sm md:text-base">Specialising in high-end residential extensions and comprehensive site planning across Cork and the South of Ireland.</p>
+                    <p class="text-gray-500 max-w-md text-sm md:text-base">Showcasing high-end residential extensions and comprehensive site planning across Ireland.</p>
                 </div>
             </div>
 
             <!-- ============================================== -->
-            <!-- PROJECT 1: COURTYARD HOUSE                     -->
+            <!-- PROJECT 1: CANTILEVER HOUSE                    -->
             <!-- ============================================== -->
             <div class="mb-24 reveal">
                 <div class="flex items-center justify-between mb-8">
@@ -277,9 +448,46 @@
                         <div class="cad-line-container-h relative w-12 h-[1px]">
                             <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
                         </div>
+                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Cantilever House</h4>
+                    </div>
+                </div>
+                
+                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
+                    <!-- Photo 1 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/1.jpg" alt="Cantilever House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                    <!-- Photo 2 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/2.jpg" alt="Cantilever House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                    <!-- Photo 3 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/3.jpg" alt="Cantilever House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- PROJECT 2: COURTYARD HOUSE                     -->
+            <!-- ============================================== -->
+            <div class="mb-24 reveal delay-100">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
                         <h4 class="serif text-3xl md:text-4xl text-gray-900">Courtyard House</h4>
                     </div>
-                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
                 </div>
                 
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
@@ -322,17 +530,16 @@
             </div>
 
             <!-- ============================================== -->
-            <!-- PROJECT 2: LACKENROE                           -->
+            <!-- PROJECT 3: LACKENROE                           -->
             <!-- ============================================== -->
-            <div class="mb-24 reveal delay-100">
+            <div class="reveal delay-200">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-4">
                         <div class="cad-line-container-h relative w-12 h-[1px]">
                             <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
                         </div>
-                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Lackenroe</h4>
+                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Lackenroe, Glounthaune</h4>
                     </div>
-                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
                 </div>
                 
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
@@ -364,256 +571,9 @@
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    
-                    <!-- TO ADD MORE PHOTOS FOR LACKENROE: 
-                         Copy one of the <div> blocks above and change the number to 5.jpg, 6.jpg etc. -->
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- PROJECT 3: CANTILEVER HOUSE                    -->
-            <!-- ============================================== -->
-            <div class="reveal delay-200">
-                <div class="flex items-center justify-between mb-8">
-                    <div class="flex items-center gap-4">
-                        <div class="cad-line-container-h relative w-12 h-[1px]">
-                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                        </div>
-                        <h4 class="serif text-3xl md:text-4xl text-gray-900">Cantilever House</h4>
-                    </div>
-                    <span class="text-[10px] uppercase tracking-widest text-gray-400 hidden sm:block">Scroll &#8594;</span>
-                </div>
-                
-                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
-                    <!-- Photo 1 -->
-                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
-                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/1.jpg" alt="Cantilever House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
-                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
-                        </div>
-                    </div>
-                    <!-- Photo 2 -->
-                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
-                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/2.jpg" alt="Cantilever House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
-                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
-                        </div>
-                    </div>
-                    <!-- Photo 3 -->
-                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
-                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/3.jpg" alt="Cantilever House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
-                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
-                        </div>
-                    </div>
-                    
-                    <!-- TO ADD MORE PHOTOS FOR CANTILEVER HOUSE: 
-                         Copy one of the <div> blocks above and change the number to 4.jpg, 5.jpg etc. -->
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">What We Do</h2>
-                <h3 class="serif text-4xl mb-6">Expertise & Services</h3>
-                
-                <!-- ========================================================================= -->
-                <!-- EDITABLE OVERVIEW PARAGRAPH -->
-                <!-- Edit the text between the <p> tags below to change the services overview. -->
-                <!-- ========================================================================= -->
-                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
-                    At OBD Architecture, we offer a comprehensive suite of services tailored to bring your vision to life. Led by Garbhan O'Brien, our team provides meticulous guidance through every phase of the architectural journey. We blend innovative design with rigorous project management to ensure every build is delivered to the highest standard.
-                </p>
-                <!-- ========================================================================= -->
-
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
-                <!-- Service 1 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">01</span>
-                    <h4 class="serif text-2xl mb-5">Design & Planning</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        We navigate complex local regulations and planning permissions with expertise, transforming your initial concepts into viable, approved designs ready for construction.
-                    </p>
-                    <!-- ========================================================================= -->
-                    
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 2 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">02</span>
-                    <h4 class="serif text-2xl mb-5">Custom New Builds</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        Tailored strictly to your lifestyle and brief, our bespoke residential and commercial builds are crafted to harmonise perfectly with their natural surroundings.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 3 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">03</span>
-                    <h4 class="serif text-2xl mb-5">Extensions and Renovations</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        We breathe new life into existing properties, seamlessly blending historic architecture with striking modern extensions to maximise space and natural light.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 4 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">04</span>
-                    <h4 class="serif text-2xl mb-5">Landscape Design</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        Architecture doesn't stop at the walls. We design beautiful external spaces that integrate flawlessly with the main structure, grounding your building in its context.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 5 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-100">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">05</span>
-                    <h4 class="serif text-2xl mb-5">3D Printed Models</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        To help you truly visualise spatial volume and layout, we provide tangible, scaled 3D printed models of your project long before ground is broken.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 6 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal delay-200">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">06</span>
-                    <h4 class="serif text-2xl mb-5">Building and Site Surveys</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        Every successful project begins with precision. Our comprehensive site analysis and measuring services inform the crucial early stages of our design process.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-                <!-- Service 7 -->
-                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-2xl transition-all duration-500 group reveal lg:col-start-2">
-                    <span class="serif text-6xl text-gray-50 group-hover:text-copper/10 transition-colors block mb-8 font-bold">07</span>
-                    <h4 class="serif text-2xl mb-5">Cost Estimates</h4>
-                    
-                    <!-- ========================================================================= -->
-                    <!-- EDITABLE SERVICE SENTENCES -->
-                    <!-- ========================================================================= -->
-                    <p class="text-gray-500 leading-relaxed mb-8 text-sm">
-                        We provide detailed, realistic financial projections in Euros from day one, ensuring your budget is respected and managed throughout the entire build.
-                    </p>
-                    <!-- ========================================================================= -->
-
-                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
-                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="py-24 bg-[#fafafa] overflow-hidden">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col lg:flex-row gap-16 items-center">
-                
-                <!-- About Image -->
-                <div class="w-full lg:w-1/2 relative reveal">
-                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
-                </div>
-
-                <!-- About Text Content -->
-                <div class="w-full lg:w-1/2 reveal delay-200">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="cad-line-container-h relative w-12 h-[1px]">
-                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                            <div class="absolute w-4 h-4 text-black top-1/2 cad-cursor-h pointer-events-none opacity-0">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                    <line x1="12" y1="0" x2="12" y2="24"></line>
-                                    <line x1="0" y1="12" x2="24" y2="12"></line>
-                                    <rect x="9" y="9" width="6" height="6"></rect>
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold">Our Studio</h2>
-                    </div>
-                    <h3 class="serif text-4xl mb-8">About OBD Architecture</h3>
-                    <div class="space-y-6 text-gray-600 font-light leading-relaxed text-sm md:text-base">
-                        <p>
-                            OBD Architecture is an innovative design practice based in Cork, Ireland. Led by Principal Designer and Planner Garbhan O'Brien, our studio specialises in crafting bespoke architectural solutions that respect our rich natural landscape while embracing contemporary design principles. Though we operate as a tight-knit, focused team, our collective expertise allows us to deliver projects of exceptional quality and scale.
-                        </p>
-                        <p>
-                            Garbhan brings a wealth of diverse experience to every commission. With a strong background in the rigorous demands of healthcare design and project management, this precision is seamlessly translated into our residential, commercial, and landscape projects. From crafting intimate family homes and dynamic office spaces to designing the landscapes that surround them, we believe that great architecture is the result of a profound dialogue between the site, the brief, and the client.
-                        </p>
-                        <p>
-                            Whether overseeing a complex site planning application or managing a custom new build from initial sketch to final handover, our team is dedicated to guiding you through every step of the journey. We blend meticulous project management with visionary design to create spaces that truly resonate.
-                        </p>
-                    </div>
-                    
-                    <div class="mt-10">
-                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-black hover:text-copper transition-colors">
-                            <span>Get in touch</span>
-                            <div class="cad-line-container-h relative w-12 h-[1px]">
-                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-
-            </div>
         </div>
     </section>
 
@@ -629,7 +589,7 @@
                 <!-- Testimonial 1 -->
                 <div class="reveal">
                     <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                    <p class="serif text-xl md:text-2xl font-light leading-relaxed text-gray-800 mb-8 italic">"OBD Architecture completely transformed our approach to our coastal site. Their understanding of the landscape and natural light resulted in a home that exceeds all our expectations."</p>
+                    <p class="serif text-lg md:text-xl font-light leading-relaxed text-gray-800 mb-8 italic">"We worked with Garbhan to design and secure planning permission for an attic conversion. He was a pleasure to work with throughout the process, taking on board what we wanted, advising us on what was feasible and creating a design that met all our needs. He also oversaw the planning application process seamlessly, while making sure we were kept up to date throughout. I would highly recommend OBD Architecture."</p>
                     <div class="flex items-center gap-4">
                         <div class="cad-line-container-h relative w-12 h-[1px]">
                             <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
@@ -642,8 +602,8 @@
                             </div>
                         </div>
                         <div>
-                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Sarah &amp; James O'Connor</p>
-                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Kinsale, Cork</p>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Noreen O'Leary</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Glanmire</p>
                         </div>
                     </div>
                 </div>
@@ -651,7 +611,7 @@
                 <!-- Testimonial 2 -->
                 <div class="reveal delay-200">
                     <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                    <p class="serif text-xl md:text-2xl font-light leading-relaxed text-gray-800 mb-8 italic">"Navigating the planning process seemed daunting, but the team's expertise made it seamless. The final design is both incredibly striking and wonderfully liveable."</p>
+                    <p class="serif text-lg md:text-xl font-light leading-relaxed text-gray-800 mb-8 italic">"We worked with Garbhan on a project for our home, which involved a new extension and landscaping design and were very impressed with the results. He brought great clarity and creativity to the design, producing detailed, well-considered drawings and a landscape design that ties beautifully with the house. The final outcome feels cohesive, practical, and thoughtfully designed. Garbhan was professional, approachable, and easy to work with throughout. We would highly recommend him."</p>
                     <div class="flex items-center gap-4">
                         <div class="cad-line-container-h relative w-12 h-[1px]">
                             <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
@@ -664,8 +624,8 @@
                             </div>
                         </div>
                         <div>
-                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">David Murphy</p>
-                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">West Cork</p>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Christine Sutton</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Glounthaune</p>
                         </div>
                     </div>
                 </div>
@@ -859,6 +819,51 @@
             lineObserver.observe(container);
         });
 
+        // Gallery Auto-Scroll Logic
+        document.querySelectorAll('.horizontal-gallery').forEach(gallery => {
+            let autoScrollTimer;
+            let isHovering = false;
+
+            const autoScroll = () => {
+                if(!isHovering) {
+                    // Check if we reached the end
+                    if (gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 10) {
+                        gallery.scrollTo({left: 0, behavior: 'smooth'}); // loop back to start
+                    } else {
+                        // scroll by one image roughly
+                        gallery.scrollBy({ left: window.innerWidth * 0.7, behavior: 'smooth' }); 
+                    }
+                }
+            };
+
+            const startTimer = () => {
+                autoScrollTimer = setInterval(autoScroll, 4000); // Trigger a scroll every 4 seconds
+            };
+
+            const stopTimer = () => {
+                if(autoScrollTimer) clearInterval(autoScrollTimer);
+            };
+
+            // Pause interactions
+            gallery.addEventListener('mouseenter', () => { isHovering = true; stopTimer(); });
+            gallery.addEventListener('mouseleave', () => { isHovering = false; startTimer(); });
+            gallery.addEventListener('touchstart', () => { isHovering = true; stopTimer(); }, {passive:true});
+            gallery.addEventListener('touchend', () => { isHovering = false; startTimer(); }, {passive:true});
+
+            // Only run timer when the gallery is on-screen
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        startTimer();
+                    } else {
+                        stopTimer();
+                    }
+                });
+            });
+            observer.observe(gallery);
+        });
+
+
         // Lightbox Logic
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
@@ -972,3 +977,4 @@
     </script>
 </body>
 </html>
+
