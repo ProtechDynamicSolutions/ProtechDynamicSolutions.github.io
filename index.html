@@ -223,7 +223,7 @@
     <header class="nav-luxury sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-12" role="navigation" aria-label="Main navigation">
             <div class="flex justify-between items-center h-28 sm:h-32">
-                <a href="#home" class="logo-container group transition-all" aria-label="Protech Dynamic Solutions - Home">
+                <a href="#home" class="logo-container group transition-all mt-3 sm:mt-4" aria-label="Protech Dynamic Solutions - Home">
                     <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions Logo" class="h-16 sm:h-24 w-auto max-w-none object-contain transform scale-125 sm:scale-[1.35] origin-left transition-transform group-hover:scale-[1.3] sm:group-hover:scale-[1.4]" loading="eager" onerror="this.src='https://placehold.co/340x80/0f1115/cd7f32?text=Protech+Dynamic+Solutions';">
                 </a>
                 <div class="hidden md:flex md:items-center md:space-x-8 lg:space-x-10">
@@ -516,8 +516,36 @@
                     </p>
                 </div>
                 <div class="max-w-4xl mx-auto">
-                    <div class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl border border-slate-200">
-                        <iframe id="JotFormIFrame-253023065536047" title="Contact Form - Protech Dynamic Solutions" allowtransparency="true" allow="geolocation; microphone; camera; fullscreen; payment" src="https://form.jotform.com/253023065536047" frameborder="0" style="min-width:100%;max-width:100%;height:700px;border:none;background:transparent;" scrolling="no"></iframe>
+                    <div class="bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-slate-200">
+                        <!-- Custom Native Form (Replace action="#" with Formspree or Web3Forms endpoint) -->
+                        <form action="#" method="POST" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">Full Name <span class="text-copper-DEFAULT">*</span></label>
+                                    <input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400" placeholder="e.g. Oisín Murphy" required>
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">Business Email <span class="text-copper-DEFAULT">*</span></label>
+                                    <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400" placeholder="oisin@company.ie" required>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="company" class="block text-sm font-semibold text-slate-700 mb-2">Company Name</label>
+                                <input type="text" id="company" name="company" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400" placeholder="Your Organisation">
+                            </div>
+
+                            <div>
+                                <label for="message" class="block text-sm font-semibold text-slate-700 mb-2">Project Details <span class="text-copper-DEFAULT">*</span></label>
+                                <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400 resize-y" placeholder="Briefly describe your current processes and where you'd like to see automation or improvements..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full ultra-btn py-4 rounded-xl text-lg font-bold tracking-wider uppercase mt-4 shadow-lg flex justify-center items-center gap-2">
+                                <span>Submit Enquiry</span>
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                            <p class="text-center text-xs text-slate-500 mt-4">We aim to respond to all enquiries within 1 business day.</p>
+                        </form>
                     </div>
                 </div>
             </div>
