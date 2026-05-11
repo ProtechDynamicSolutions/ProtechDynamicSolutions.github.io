@@ -20,7 +20,7 @@
     <meta name="twitter:description" content="Transform complexity into competitive advantage with bespoke AI and automation solutions.">
     <meta name="twitter:image" content="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png">
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png">
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -30,15 +30,16 @@
                     colors: {
                         copper: {
                             light: '#eacda3',
-                            DEFAULT: '#d6a4a4',
-                            dark: '#8b5a2b', 
+                            DEFAULT: '#cd7f32', /* Main Copper */
+                            dark: '#b8732d', 
                             accent: '#cd7f32' 
                         },
-                        steel: {
-                            light: '#aebdd0',   /* Lighter Metallic Blue */
-                            DEFAULT: '#4e6e8e', /* TRUE BLUE STEEL */
-                            dark: '#2d4052',    /* Darker Blue Steel */
-                            deep: '#1a2634'     /* Deepest Navy Steel */
+                        corporate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            800: '#1e293b',
+                            900: '#0f172a', /* Deep Navy */
                         }
                     }
                 }
@@ -53,7 +54,8 @@
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
-            background: #020406 /* Very dark blue-black */
+            background-color: #f8fafc; /* corporate-50 */
+            color: #334155; /* slate-700 */
         }
 
         .luxury-serif {
@@ -61,9 +63,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
+            *, *::before, *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
@@ -71,218 +71,110 @@
             }
         }
 
-        @keyframes aurora {
-            0%, 100% { background-position: 0% 50% }
-            50% { background-position: 100% 50% }
-        }
-
         .hero-bg {
-            /* Adjusted to Blue Steel Gradient */
-            background: linear-gradient(135deg, #020406 0%, #0d161f 25%, #050a0f 50%, #0d161f 75%, #020406 100%);
-            background-size: 400% 400%;
-            animation: aurora 20s ease infinite;
-            position: relative
+            background: radial-gradient(circle at top right, #ffffff, #f1f5f9);
+            position: relative;
         }
 
-        .hero-bg::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            /* Changed from generic slate to specific steel blue/azure glow */
-            background: radial-gradient(circle at 20% 50%, rgba(78, 110, 142, 0.1) 0%, transparent 50%), 
-                        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
-            pointer-events: none
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
         }
 
         .luxury-gold-text {
-            /* Copper/Bronze gradient matches the logo wiring */
-            background: linear-gradient(135deg, #f0c296 0%, #cd7f32 25%, #ffdfba 50%, #cd7f32 75%, #f0c296 100%);
+            background: linear-gradient(135deg, #b8732d 20%, #cd7f32 40%, #fceabb 50%, #cd7f32 60%, #b8732d 80%);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: shine 4s linear infinite
-        }
-
-        @keyframes shine {
-            to {
-                background-position: 200% center
-            }
-        }
-
-        .ultra-glass {
-            background: rgba(26, 38, 52, 0.4); /* Blue Steel Tint */
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(205, 127, 50, 0.15); /* Copper border */
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(174, 189, 208, 0.05), 0 0 60px rgba(78, 110, 142, 0.1)
+            animation: shimmer 5s linear infinite;
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0px) }
-            50% { transform: translateY(-20px) }
+            50% { transform: translateY(-15px) }
         }
 
         .float-animation {
             animation: float 6s ease-in-out infinite
         }
 
-        .luxury-card {
-            background: linear-gradient(135deg, rgba(20, 30, 40, 0.9) 0%, rgba(26, 38, 52, 0.8) 100%); /* Deep Blue Steel Card */
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(205, 127, 50, 0.2); /* Copper border */
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(174, 189, 208, 0.05);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            will-change: transform
+        .professional-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.01);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .luxury-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(205, 127, 50, 0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none
-        }
-
-        .luxury-card:hover::before {
-            opacity: 1
-        }
-
-        .luxury-card:hover {
-            transform: translateY(-16px) scale(1.02);
-            box-shadow: 0 30px 90px rgba(205, 127, 50, 0.15), 0 0 80px rgba(205, 127, 50, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+        .professional-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+            border-color: #cd7f32;
         }
 
         .ultra-btn {
-            /* Copper Gradient */
-            background: linear-gradient(135deg, #cd7f32 0%, #f0c296 50%, #cd7f32 100%);
-            background-size: 200% auto;
-            color: #000;
-            box-shadow: 0 8px 30px rgba(205, 127, 50, 0.4), 0 0 40px rgba(205, 127, 50, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            font-weight: 800;
-            letter-spacing: 0.5px
-        }
-
-        .ultra-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.6s
+            background: #cd7f32;
+            color: #ffffff;
+            box-shadow: 0 4px 14px 0 rgba(205, 127, 50, 0.39);
+            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
         .ultra-btn:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 15px 50px rgba(205, 127, 50, 0.5), 0 0 60px rgba(205, 127, 50, 0.3);
-            background-position: right center
+            background: #b8732d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(205, 127, 50, 0.5);
         }
 
-        .ultra-btn:hover::before {
-            left: 100%
+        .outline-btn {
+            border: 2px solid #0f172a;
+            color: #0f172a;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        .icon-luxury {
-            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(240, 194, 150, 0.1));
-            box-shadow: 0 0 30px rgba(205, 127, 50, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform
+        .outline-btn:hover {
+            background: #0f172a;
+            color: #ffffff;
         }
 
-        .luxury-card:hover .icon-luxury {
-            transform: scale(1.15) rotate(5deg);
-            box-shadow: 0 0 50px rgba(205, 127, 50, 0.4), 0 0 80px rgba(205, 127, 50, 0.2)
+        .icon-container {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.4s ease;
         }
 
-        .tech-luxury {
-            background: linear-gradient(135deg, rgba(45, 64, 82, 0.8), rgba(30, 41, 59, 0.6)); /* Cool blue steel tint */
-            border: 1px solid rgba(205, 127, 50, 0.3);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+        .professional-card:hover .icon-container {
+            background: rgba(205, 127, 50, 0.1);
+            border-color: rgba(205, 127, 50, 0.3);
+            transform: scale(1.05);
         }
 
-        .tech-luxury:hover {
-            background: linear-gradient(135deg, #cd7f32, #f0c296);
-            color: #000;
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 8px 30px rgba(205, 127, 50, 0.5)
-        }
-
-        .title-luxury {
+        .title-accent {
             position: relative;
-            padding-bottom: 24px
+            padding-bottom: 16px;
         }
 
-        .title-luxury::after {
+        .title-accent::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            height: 4px;
-            /* Copper Gradient Line */
-            background: linear-gradient(90deg, transparent, #cd7f32, #f0c296, #cd7f32, transparent);
-            box-shadow: 0 0 20px rgba(205, 127, 50, 0.6), 0 4px 10px rgba(205, 127, 50, 0.3)
+            width: 80px;
+            height: 3px;
+            background: #cd7f32;
+            border-radius: 2px;
         }
 
-        /* --- Particle Styles Start --- */
-        .particles {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            top: 0;
+        .title-accent-left::after {
             left: 0;
-            pointer-events: none
+            transform: none;
         }
-
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #cd7f32; /* Copper particle */
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(205, 127, 50, 0.8);
-            animation: particle-float 15s infinite
-        }
-
-        @keyframes particle-float {
-            0% { transform: translateY(100vh) translateX(0); opacity: 0 }
-            10% { opacity: 1 }
-            90% { opacity: 1 }
-            100% { transform: translateY(-100vh) translateX(100px); opacity: 0 }
-        }
-
-        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s }
-        .particle:nth-child(2) { left: 30%; animation-delay: 2s; animation-duration: 15s }
-        .particle:nth-child(3) { left: 50%; animation-delay: 4s; animation-duration: 10s }
-        .particle:nth-child(4) { left: 70%; animation-delay: 1s; animation-duration: 14s }
-        .particle:nth-child(5) { left: 90%; animation-delay: 3s; animation-duration: 11s }
-        /* --- Particle Styles End --- */
 
         .nav-luxury {
-            background: rgba(10, 16, 22, 0.85); /* Slightly cooler */
-            backdrop-filter: blur(30px) saturate(180%);
-            -webkit-backdrop-filter: blur(30px) saturate(180%);
-            border-bottom: 1px solid rgba(205, 127, 50, 0.15);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 40px rgba(205, 127, 50, 0.05)
+            background: #0f172a; /* Deep Navy */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .logo-container {
@@ -292,37 +184,21 @@
             justify-content: center
         }
 
-        .logo-img {
-            transition: all 0.3s ease
-        }
-
         @media (max-width:768px) {
-            .logo-full { display: none }
-            .logo-p { display: block; height: 48px; width: 48px }
             .hero-mobile-center { text-align: center !important }
             .mobile-center-flex { justify-content: center !important }
             .mobile-full-width { width: 100% }
-            h1 { font-size: 2.5rem !important }
+            .title-accent-left::after { left: 50%; transform: translateX(-50%); }
         }
 
-        @media (min-width:769px) {
-            .logo-full { display: block; height: 64px; width: auto; max-width: 280px }
-            .logo-p { display: none }
+        /* Dashboard Animation Styles */
+        .bar-grow {
+            animation: growUp 1.5s ease-out forwards;
+            transform-origin: bottom;
         }
-
-        .magnetic-hover {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
-        }
-
-        .magnetic-hover:hover {
-            transform: translateY(-8px) scale(1.03);
-            filter: brightness(1.1)
-        }
-
-        *:focus-visible {
-            outline: 2px solid #cd7f32;
-            outline-offset: 4px;
-            border-radius: 4px
+        @keyframes growUp {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
         }
 
         .skip-link {
@@ -330,7 +206,7 @@
             top: -100px;
             left: 0;
             background: #cd7f32;
-            color: #000;
+            color: #fff;
             padding: 8px 16px;
             text-decoration: none;
             z-index: 100;
@@ -340,419 +216,522 @@
         .skip-link:focus { top: 0 }
     </style>
 </head>
-<body class="bg-black text-white">
+<body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Dark Authoritative Header -->
     <header class="nav-luxury sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-12" role="navigation" aria-label="Main navigation">
-            <div class="flex justify-between items-center h-24">
-                <a href="#home" class="logo-container group" aria-label="Protech Dynamic Solutions - Home">
-                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="logo-p logo-img object-contain group-hover:scale-110" loading="eager" onerror="this.src='https://placehold.co/48x48/0f1115/cd7f32?text=P';">
-                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions - Premium AI and Automation Consultancy" class="logo-full logo-img object-contain group-hover:scale-105" loading="eager" onerror="this.src='https::placehold.co/280x64/0f1115/cd7f32?text=Protech+Dynamic+Solutions';">
+            <div class="flex justify-between items-center h-28 sm:h-32">
+                <a href="#home" class="logo-container group transition-all" aria-label="Protech Dynamic Solutions - Home">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions Logo" class="h-16 sm:h-24 w-auto max-w-none object-contain transform scale-125 sm:scale-[1.35] origin-left transition-transform group-hover:scale-[1.3] sm:group-hover:scale-[1.4]" loading="eager" onerror="this.src='https://placehold.co/340x80/0f1115/cd7f32?text=Protech+Dynamic+Solutions';">
                 </a>
-                <div class="hidden md:flex md:items-center md:space-x-10">
-                    <a href="#home" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to home section">HOME</a>
-                    <a href="#services" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to services section">SERVICES</a>
-                    <a href="#about" class="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-copper-accent hover:to-amber-200 hover:bg-clip-text transition-all font-semibold text-sm tracking-wide" aria-label="Navigate to about section">ABOUT</a>
-                    <a href="#contact" class="ultra-btn text-black py-3 px-8 rounded-full text-sm uppercase tracking-wider" aria-label="Get started with a consultation">Get Started</a>
+                <div class="hidden md:flex md:items-center md:space-x-8 lg:space-x-10">
+                    <a href="#home" class="text-gray-300 hover:text-white transition-colors font-medium text-sm tracking-wide">HOME</a>
+                    <a href="#services" class="text-gray-300 hover:text-white transition-colors font-medium text-sm tracking-wide">SERVICES</a>
+                    <a href="#dashboards" class="text-gray-300 hover:text-white transition-colors font-medium text-sm tracking-wide">SOLUTIONS</a>
+                    <a href="#about" class="text-gray-300 hover:text-white transition-colors font-medium text-sm tracking-wide">ABOUT</a>
+                    <a href="mailto:info@protechdynamicsolutions.ie" class="text-gray-300 hover:text-copper-DEFAULT transition-colors" aria-label="Email Us">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </a>
+                    <a href="#contact" class="ultra-btn py-3 px-8 rounded-full text-sm tracking-wider uppercase">Get Started</a>
                 </div>
-                <button id="mobile-menu-button" class="flex md:hidden p-2 text-gray-400 hover:text-white" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
-                    <svg id="hamburger-icon" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-                    <svg id="close-icon" class="hidden h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+                <div class="flex items-center gap-4 md:hidden">
+                    <a href="mailto:info@protechdynamicsolutions.ie" class="text-gray-300 hover:text-copper-DEFAULT transition-colors" aria-label="Email Us">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </a>
+                    <button id="mobile-menu-button" class="p-2 text-gray-300 hover:text-white" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+                        <svg id="hamburger-icon" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                        <svg id="close-icon" class="hidden h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
             </div>
         </nav>
         <div class="hidden" id="mobile-menu">
-            <div class="px-4 pt-2 pb-4 space-y-2 bg-black/95 backdrop-blur-xl border-t border-copper-accent/10">
-                <a href="#home" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">Home</a>
-                <a href="#services" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">Services</a>
-                <a href="#about" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-copper-accent/10 hover:text-copper-accent transition-all font-semibold text-center">About</a>
-                <a href="#contact" class="mobile-menu-link ultra-btn block text-center text-black py-3 rounded-lg font-bold">Get Started</a>
+            <div class="px-4 pt-2 pb-6 space-y-2 bg-corporate-900 border-t border-slate-700 shadow-xl">
+                <a href="#home" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-all font-semibold text-center">Home</a>
+                <a href="#services" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-all font-semibold text-center">Services</a>
+                <a href="#dashboards" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-all font-semibold text-center">Solutions</a>
+                <a href="#about" class="mobile-menu-link block px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-all font-semibold text-center">About</a>
+                <a href="#contact" class="mobile-menu-link block text-center bg-copper-DEFAULT text-white py-3 rounded-lg font-bold mt-4">Get Started</a>
             </div>
         </div>
     </header>
+
     <main class="overflow-x-hidden" id="main-content">
-        <section id="home" class="relative pt-40 pb-56 overflow-hidden hero-bg">
-            <!-- Particle HTML Start -->
-            <div class="particles" aria-hidden="true">
-                <div class="particle"></div>
-                <div class="particle"></div>
-                <div class="particle"></div>
-                <div class="particle"></div>
-                <div class="particle"></div>
-            </div>
-            <!-- Particle HTML End -->
-            <!-- Changed blobs from Purple to Blue Steel -->
-            <div class="absolute top-20 left-10 w-96 h-96 bg-steel-DEFAULT/20 rounded-full blur-3xl" aria-hidden="true"></div>
-            <div class="absolute bottom-20 right-10 w-96 h-96 bg-steel-dark/30 rounded-full blur-3xl" aria-hidden="true"></div>
+        
+        <!-- Light, Clean Hero Section -->
+        <section id="home" class="relative pt-32 pb-40 overflow-hidden hero-bg">
+            <div class="absolute top-0 right-0 w-1/2 h-full bg-corporate-100 opacity-50 skew-x-12 transform origin-top hidden lg:block" aria-hidden="true"></div>
             
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-                <div class="grid lg:grid-cols-2 gap-20 items-center">
-                    <div class="text-center lg:text-left hero-mobile-center">
-                        <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6 opacity-90">Protech Dynamic Solutions</span>
-                        <h1 class="mt-8 text-5xl sm:text-7xl lg:text-8xl font-black leading-tight luxury-serif">
-                            Transforming<br/>
-                            <span class="block mt-4 luxury-gold-text pb-3">Complexity</span>
-                            <span class="block mt-2 text-4xl sm:text-6xl lg:text-7xl">into Advantage</span>
-                        </h1>
-                        <p class="mt-12 text-xl sm:text-2xl text-gray-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
-                            Bespoke software, intelligent automation, and AI-powered solutions that elevate your business to unprecedented heights.
-                        </p>
-                        <div class="mt-14 flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mobile-center-flex">
-                            <a href="#services" class="ultra-btn magnetic-hover text-black py-5 px-10 rounded-full text-base uppercase tracking-wider mobile-full-width" aria-label="Explore our services">Explore Excellence</a>
-                            <a href="#contact" class="ultra-glass magnetic-hover text-white py-5 px-10 rounded-full text-base uppercase tracking-wider hover:border-copper-accent/40 transition-all mobile-full-width" aria-label="Contact us to begin your journey">Begin Your Journey</a>
-                        </div>
-                    </div>
-                    <div class="relative flex justify-center float-animation">
-                        <div class="relative">
-                            <!-- Glow behind image changed to Cool Grey/Steel -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-steel-DEFAULT/30 to-steel-light/10 rounded-full blur-3xl" aria-hidden="true"></div>
-                            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions - Advanced technology and automation visualization" class="relative w-full max-w-lg rounded-2xl transition-transform duration-700 hover:scale-105 magnetic-hover" loading="lazy" onerror="this.src='https::placehold.co/512x512/0f1115/cd7f32?text=PDS';">
-                        </div>
+                <div class="max-w-4xl mx-auto text-center">
+                    <span class="inline-block text-copper-DEFAULT font-bold uppercase tracking-widest text-xs mb-6">Enterprise Technology Consultancy</span>
+                    <h1 class="mt-4 text-5xl sm:text-6xl lg:text-7xl font-black leading-tight luxury-serif text-corporate-900">
+                        Transforming<br/>
+                        <span class="block mt-2 luxury-gold-text pb-2">Complexity</span>
+                        <span class="block mt-1 text-4xl sm:text-5xl lg:text-6xl text-slate-700">into Advantage.</span>
+                    </h1>
+                    <p class="mt-8 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-light">
+                        Bespoke software, intelligent automation, and AI-powered data solutions designed to elevate Irish businesses to unprecedented heights.
+                    </p>
+                    <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center mobile-center-flex">
+                        <a href="#dashboards" class="ultra-btn py-4 px-10 rounded-full text-sm uppercase tracking-wider mobile-full-width text-center" aria-label="Explore our solutions">View Solutions</a>
+                        <a href="#contact" class="outline-btn py-4 px-10 rounded-full text-sm uppercase tracking-wider mobile-full-width text-center" aria-label="Contact us to begin your journey">Book Consultation</a>
                     </div>
                 </div>
             </div>
         </section>
-        <section id="services" class="py-32 bg-black relative overflow-hidden">
-             <!-- Changed blobs from Purple to Steel/Cool Grey -->
-            <div class="absolute top-0 left-1/2 w-96 h-96 bg-steel-dark/20 rounded-full blur-3xl -translate-x-12" aria-hidden="true"></div>
+
+        <!-- Premium Services Section -->
+        <section id="services" class="py-24 bg-white relative">
             <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-                <div class="text-center max-w-5xl mx-auto mb-24">
-                    <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Our Expertise</span>
-                    <h2 class="text-5xl sm:text-6xl lg:text-7xl font-black luxury-serif title-luxury">Premium Services</h2>
-                    <p class="mt-10 text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto">
-                        From visionary project management to cutting-edge AI applications, we deliver excellence in every dimension of technology.
+                <div class="text-center max-w-4xl mx-auto mb-20">
+                    <span class="inline-block text-copper-DEFAULT font-bold uppercase tracking-widest text-sm mb-4">Our Expertise</span>
+                    <h2 class="text-4xl sm:text-5xl font-black luxury-serif title-accent text-corporate-900">Professional Capabilities</h2>
+                    <p class="mt-8 text-lg text-slate-600 leading-relaxed">
+                        From high-level project management to granular Excel programming, we deliver robust digital transformation tailored to your operational needs.
                     </p>
                 </div>
-                <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-3 mt-20">
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                
+                <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">API Integration</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Expert development in Python, HTML, and robust API integration to connect and automate your systems.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">API Integration</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Secure connections between disparate systems using Python and modern protocols, ensuring seamless data flow across your organisation.</p>
                     </article>
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Project Management</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Bespoke software and consultancy that keeps projects transparent, on time, and within budget.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">Project Management</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Strategic oversight and agile delivery methodologies that keep complex technical projects transparent, on-time, and within budget.</p>
                     </article>
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">AI & Machine Learning</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Predictive insights, custom AI applications, and intelligent decision engines that transform data into strategy.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">AI & Machine Learning</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Deploy predictive models and intelligent categorisation engines that transform raw historical data into actionable business strategy.</p>
                     </article>
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Process Automation</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Eliminate manual workflows with intelligent automation, digital forms, and seamless integrations.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">Process Automation</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Systematic elimination of manual workflows. We build RPA and scripts that drastically reduce human error and administrative overhead.</p>
                     </article>
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Custom Applications</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Secure, scalable, and beautifully designed applications built from the ground up for your needs.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">Custom Applications</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Scalable web tools and internal portals designed specifically for your workforce, bringing disparate data into single panes of glass.</p>
                     </article>
-                    <article class="luxury-card p-12 rounded-3xl magnetic-hover">
-                        <div class="w-24 h-24 icon-luxury rounded-2xl flex items-center justify-center border border-copper-accent/30" aria-hidden="true">
-                            <svg class="h-14 w-14 text-copper-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+
+                    <article class="professional-card p-10 rounded-2xl">
+                        <div class="w-16 h-16 icon-container rounded-xl flex items-center justify-center mb-6" aria-hidden="true">
+                            <svg class="h-8 w-8 text-copper-DEFAULT" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         </div>
-                        <h3 class="mt-10 text-3xl font-bold luxury-serif text-white">Spreadsheet Excellence</h3>
-                        <p class="mt-6 text-gray-400 leading-relaxed text-lg">Transform static spreadsheets into dynamic powerhouses with advanced Excel programming and automation.</p>
+                        <h3 class="text-2xl font-bold luxury-serif text-corporate-900">Spreadsheet Excellence</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed text-sm">Upgrade static reporting. We utilise advanced VBA to turn Excel into a dynamic powerhouse for financial and operational modelling.</p>
                     </article>
                 </div>
             </div>
         </section>
-        <section id="about" class="py-32 bg-gradient-to-b from-black to-steel-deep relative overflow-hidden">
-             <!-- Changed blobs from Purple to Steel/Cool Grey -->
-            <div class="absolute bottom-0 right-0 w-96 h-96 bg-steel-DEFAULT/20 rounded-full blur-3xl" aria-hidden="true"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-                <div class="grid lg:grid-cols-2 gap-20 items-center">
-                    <div class="text-center lg:text-left hero-mobile-center">
-                        <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">About Us</span>
-                        <h2 class="text-5xl sm:text-6xl font-black luxury-serif title-luxury text-center">Irish Excellence in Digital Innovation</h2>
-                        <p class="mt-10 text-xl text-gray-400 leading-relaxed">
-                            Protech Dynamic Solutions is Ireland's premier technology consultancy. We don't just implement technology—we transform it into competitive advantage.
+
+        <!-- NEW Dashboard Showcase Section -->
+        <section id="dashboards" class="py-24 bg-corporate-50 border-y border-slate-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12">
+                <div class="flex flex-col lg:flex-row gap-16 items-center">
+                    
+                    <div class="lg:w-1/3 hero-mobile-center">
+                        <h2 class="text-3xl sm:text-4xl font-black luxury-serif title-accent title-accent-left text-corporate-900">Data-Driven Clarity</h2>
+                        <p class="mt-8 text-lg text-slate-600 leading-relaxed">
+                            We don't just process data; we make it visible, actionable, and secure. Our custom dashboards consolidate your metrics into intuitive interfaces.
                         </p>
-                        <p class="mt-6 text-xl text-gray-400 leading-relaxed">
-                            With unparalleled expertise in project management, process automation, and AI, we bridge the gap between your vision and technological reality.
+                        <ul class="mt-8 space-y-4">
+                            <li class="flex items-start">
+                                <svg class="h-6 w-6 text-copper-DEFAULT mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <span class="text-slate-700 font-medium">Real-time KPI Tracking</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-6 w-6 text-copper-DEFAULT mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <span class="text-slate-700 font-medium">Automated Financial Reporting</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-6 w-6 text-copper-DEFAULT mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <span class="text-slate-700 font-medium">Interactive Data Visualisation</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- CSS Dashboard Mockup -->
+                    <div class="lg:w-2/3 w-full">
+                        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col sm:flex-row" aria-hidden="true">
+                            <!-- Sidebar -->
+                            <div class="w-full sm:w-48 bg-corporate-900 p-6 flex flex-col hidden sm:flex">
+                                <div class="flex items-center gap-2 mb-10">
+                                    <div class="w-6 h-6 rounded bg-copper"></div>
+                                    <div class="h-4 w-20 bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="space-y-4 flex-1">
+                                    <div class="h-8 bg-slate-800 rounded flex items-center px-3 gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-copper"></div>
+                                        <div class="h-2 w-16 bg-slate-600 rounded"></div>
+                                    </div>
+                                    <div class="h-8 hover:bg-slate-800 rounded flex items-center px-3 gap-2 transition-colors">
+                                        <div class="w-3 h-3 rounded-full bg-slate-600"></div>
+                                        <div class="h-2 w-20 bg-slate-600 rounded"></div>
+                                    </div>
+                                    <div class="h-8 hover:bg-slate-800 rounded flex items-center px-3 gap-2 transition-colors">
+                                        <div class="w-3 h-3 rounded-full bg-slate-600"></div>
+                                        <div class="h-2 w-12 bg-slate-600 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Main View -->
+                            <div class="flex-1 p-6 sm:p-8 bg-slate-50">
+                                <div class="flex justify-between items-center mb-8 border-b border-slate-200 pb-4">
+                                    <h4 class="font-bold text-slate-800 text-lg sm:text-xl">Executive Performance</h4>
+                                    <div class="h-8 w-24 bg-white rounded-full border border-slate-200 shadow-sm flex items-center justify-center">
+                                        <div class="h-2 w-12 bg-slate-300 rounded"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Stat Cards -->
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                                    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                        <p class="text-xs text-slate-500 font-medium mb-1">Q3 Revenue</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-corporate-900">€245,000</p>
+                                        <p class="text-xs text-green-600 font-semibold mt-1">↑ 14.5% vs Q2</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                        <p class="text-xs text-slate-500 font-medium mb-1">Automation Savings</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-corporate-900">€18,400</p>
+                                        <p class="text-xs text-green-600 font-semibold mt-1">↑ 5.2% vs Q2</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hidden sm:block">
+                                        <p class="text-xs text-slate-500 font-medium mb-1">Hours Reclaimed</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-corporate-900">142 hrs</p>
+                                        <p class="text-xs text-copper font-semibold mt-1">Target Met</p>
+                                    </div>
+                                </div>
+
+                                <!-- Chart Mockup -->
+                                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                                    <p class="text-sm font-bold text-slate-700 mb-4">Growth Trajectory</p>
+                                    <div class="h-32 sm:h-40 flex items-end justify-between gap-2 border-b border-l border-slate-200 pb-2 pl-2">
+                                        <div class="w-full bg-slate-200 rounded-t h-[30%] bar-grow" style="animation-delay: 0.1s;"></div>
+                                        <div class="w-full bg-slate-300 rounded-t h-[45%] bar-grow" style="animation-delay: 0.2s;"></div>
+                                        <div class="w-full bg-copper-light rounded-t h-[60%] bar-grow" style="animation-delay: 0.3s;"></div>
+                                        <div class="w-full bg-copper rounded-t h-[85%] bar-grow" style="animation-delay: 0.4s;"></div>
+                                        <div class="w-full bg-corporate-900 rounded-t h-[100%] bar-grow" style="animation-delay: 0.5s;"></div>
+                                    </div>
+                                    <div class="flex justify-between mt-2 text-[10px] text-slate-400 font-medium px-2">
+                                        <span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-24 bg-white relative">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12">
+                <div class="grid lg:grid-cols-2 gap-16 items-center">
+                    <div class="text-center lg:text-left hero-mobile-center">
+                        <span class="inline-block text-copper-DEFAULT font-bold uppercase tracking-widest text-sm mb-4">About Us</span>
+                        <h2 class="text-4xl sm:text-5xl font-black luxury-serif title-accent title-accent-left text-corporate-900">Irish Excellence in Digital Innovation</h2>
+                        <p class="mt-8 text-lg text-slate-600 leading-relaxed">
+                            Protech Dynamic Solutions is Ireland's trusted technology consultancy. We don't just implement software—we architect technical ecosystems that drive measurable competitive advantage.
+                        </p>
+                        <p class="mt-4 text-lg text-slate-600 leading-relaxed">
+                            Combining rigorous project management with bleeding-edge AI and automation, we close the gap between your operational vision and daily reality.
                         </p>
                     </div>
-                    <div class="ultra-glass p-12 rounded-3xl">
-                        <h3 class="text-3xl font-bold luxury-serif text-center mb-10 luxury-gold-text">Technologies We Master</h3>
-                        <div class="flex flex-wrap justify-center gap-4" role="list">
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="python" aria-label="Learn about our Python expertise">Python</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="ai" aria-label="Learn about our AI and ML expertise">AI & ML</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="vba" aria-label="Learn about our Excel VBA expertise">Excel VBA</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="html" aria-label="Learn about our HTML and CSS expertise">HTML & CSS</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="js" aria-label="Learn about our JavaScript expertise">JavaScript</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="api" aria-label="Learn about our API Integration expertise">API Integration</button>
-                            <button class="tech-luxury tech-badge cursor-pointer font-mono text-sm font-bold py-4 px-6 rounded-full" data-tech="automation" aria-label="Learn about our Automation expertise">Automation</button>
+                    
+                    <div class="bg-corporate-50 p-10 rounded-2xl border border-slate-200">
+                        <h3 class="text-2xl font-bold luxury-serif text-center mb-8 text-corporate-900">Core Technologies</h3>
+                        <div class="flex flex-wrap justify-center gap-3" role="list">
+                            <button class="tech-badge bg-slate-200 text-slate-700 hover:bg-copper-DEFAULT hover:text-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer font-medium text-sm py-2.5 px-6 rounded-full" data-tech="python">Python</button>
+                            <button class="tech-badge bg-slate-200 text-slate-700 hover:bg-copper-DEFAULT hover:text-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer font-medium text-sm py-2.5 px-6 rounded-full" data-tech="ai">AI & ML</button>
+                            <button class="tech-badge bg-slate-200 text-slate-700 hover:bg-copper-DEFAULT hover:text-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer font-medium text-sm py-2.5 px-6 rounded-full" data-tech="vba">Excel VBA</button>
+                            <button class="tech-badge bg-slate-200 text-slate-700 hover:bg-copper-DEFAULT hover:text-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer font-medium text-sm py-2.5 px-6 rounded-full" data-tech="html">HTML/JS</button>
+                            <button class="tech-badge bg-slate-200 text-slate-700 hover:bg-copper-DEFAULT hover:text-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer font-medium text-sm py-2.5 px-6 rounded-full" data-tech="api">REST APIs</button>
                         </div>
-                        <div class="mt-12 pt-10 border-t border-copper-accent/20">
-                            <h4 class="text-2xl font-bold luxury-serif text-center mb-6 luxury-gold-text">
-                                'Smarter, Not Harder' Philosophy
+                        
+                        <div class="mt-10 pt-8 border-t border-slate-200">
+                            <h4 class="text-xl font-bold luxury-serif text-center mb-4 text-corporate-900">
+                                The 'Smarter, Not Harder' Philosophy
                             </h4>
-                            <p class="text-gray-400 leading-relaxed text-center text-lg">
-                                We're <strong class="text-copper-accent">money-wise</strong> by design. Using AI to identify the smartest path to ROI, we automate high-cost repetitive tasks, freeing your team for high-value strategic work. This isn't just transformation—it's <em class="text-copper-accent">financial optimisation</em>.
+                            <p class="text-slate-600 leading-relaxed text-center text-sm mb-6">
+                                We focus on tangible ROI. By automating high-cost administrative tasks, we free your capital and your team to focus on strategic growth. It is practical, financial optimisation.
                             </p>
-                            <div class="mt-8 p-6 bg-black/40 rounded-xl border border-copper-accent/20">
-                                <p class="text-copper-light text-center font-semibold mb-2">Real Result:</p>
-                                <p class="text-gray-300 text-center">One client <span class="text-copper-accent font-bold">freed up 15 hours of staff time weekly</span> by automating invoice processing that previously required manual data entry, allowing the team to focus on higher-value tasks.</p>
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                <p class="text-copper-dark text-center font-bold text-sm mb-1 uppercase tracking-wide">Client Success Story</p>
+                                <p class="text-slate-600 text-center text-sm">Automated invoice processing freed up <strong class="text-corporate-900">15 hours of staff time weekly</strong>, eliminating manual entry errors and accelerating monthly reconciliation.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <div id="tech-modal" class="fixed inset-0 z-[100] h-full w-full hidden items-center justify-center bg-black/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div id="modal-content-box" class="relative w-full max-w-3xl transition-all duration-300 ease-in-out opacity-0 scale-95">
-                <div class="ultra-glass rounded-3xl p-8 sm:p-12 relative overflow-hidden border-copper-accent/30 max-h-[90vh] overflow-y-auto">
-                    <button id="close-modal-btn" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-all hover:scale-125 z-10" aria-label="Close modal">
-                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+
+        <!-- Technology Modal (Light Theme) -->
+        <div id="tech-modal" class="fixed inset-0 z-[100] h-full w-full hidden items-center justify-center bg-corporate-900/40 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div id="modal-content-box" class="relative w-full max-w-2xl transition-all duration-300 ease-in-out opacity-0 scale-95">
+                <div class="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 relative overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
+                    <button id="close-modal-btn" class="absolute top-5 right-5 text-slate-400 hover:text-corporate-900 transition-colors z-10 p-2 bg-slate-100 rounded-full" aria-label="Close modal">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
-                    <h3 id="modal-title" class="text-3xl lg:text-4xl font-bold luxury-serif mb-6 luxury-gold-text pr-10"></h3>
-                    <div id="modal-content" class="text-lg text-gray-300 leading-relaxed space-y-4"></div>
+                    <h3 id="modal-title" class="text-2xl lg:text-3xl font-bold luxury-serif mb-6 text-corporate-900 pr-10 border-b border-slate-100 pb-4"></h3>
+                    <div id="modal-content" class="text-base text-slate-600 leading-relaxed space-y-4"></div>
                 </div>
             </div>
         </div>
-        <section id="contact" class="py-32 bg-black relative overflow-hidden">
-            <!-- Particle HTML Start -->
-            <div class="particles" aria-hidden="true">
-                <div class="particle"></div>
-                <div class="particle"></div>
-                <div class="particle"></div>
-            </div>
-            <!-- Particle HTML End -->
-            <!-- Changed blobs from Purple to Steel/Cool Grey -->
-            <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-steel-dark/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" aria-hidden="true"></div>
-            <div class="container mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-                <div class="text-center max-w-5xl mx-auto mb-20">
-                    <span class="inline-block luxury-gold-text font-bold uppercase tracking-widest text-xs mb-6">Get In Touch</span>
-                    <h2 class="text-5xl sm:text-6xl lg:text-7xl font-black luxury-serif title-luxury">Begin Your Transformation</h2>
-                    <p class="mt-10 text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto">
-                        Ready to automate, optimise, and innovate? Connect with us for a complimentary consultation to explore your project's potential.
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-24 bg-corporate-50 relative">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-12">
+                <div class="text-center max-w-4xl mx-auto mb-16">
+                    <span class="inline-block text-copper-DEFAULT font-bold uppercase tracking-widest text-sm mb-4">Get In Touch</span>
+                    <h2 class="text-4xl sm:text-5xl font-black luxury-serif title-accent text-corporate-900">Initiate Your Project</h2>
+                    <p class="mt-8 text-lg text-slate-600 leading-relaxed">
+                        Ready to enhance your operational efficiency? Connect with our senior consultants to discuss your custom automation requirements.
                     </p>
                 </div>
                 <div class="max-w-4xl mx-auto">
-                    <div class="ultra-glass p-8 sm:p-12 rounded-3xl">
-                        <iframe id="JotFormIFrame-253023065536047" title="Contact Form - Protech Dynamic Solutions" onload="window.parent.scrollTo(0,0)" allowtransparency="true" allow="geolocation; microphone; camera; fullscreen; payment" src="https://form.jotform.com/253023065536047" frameborder="0" style="min-width:100%;max-width:100%;height:700px;border:none;background:transparent;" scrolling="no" >
-                        </iframe>
-                        <script src='https://cdn.jotfor.ms/s/umd/latest/for-form-embed-handler.js'></script>
-                        <script>window.jotformEmbedHandler("iframe[id='JotFormIFrame-253023065536047']", "https://form.jotform.com/")</script>
+                    <div class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl border border-slate-200">
+                        <iframe id="JotFormIFrame-253023065536047" title="Contact Form - Protech Dynamic Solutions" allowtransparency="true" allow="geolocation; microphone; camera; fullscreen; payment" src="https://form.jotform.com/253023065536047" frameborder="0" style="min-width:100%;max-width:100%;height:700px;border:none;background:transparent;" scrolling="no"></iframe>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-    <footer class="bg-black border-t border-copper-accent/10 relative overflow-hidden">
-        <!-- Copper gradient footer line -->
-        <div class="absolute top-0 left-1/2 w-full h-1 bg-gradient-to-r from-transparent via-copper-accent/30 to-transparent -translate-x-1/2" aria-hidden="true"></div>
+
+    <!-- Dark Footer to match Nav and frame the site -->
+    <footer class="bg-corporate-900 border-t border-slate-800">
         <div class="container mx-auto px-4 sm:px-6 lg:px-12 py-16 text-center">
             <div class="flex justify-center mb-8">
-                <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png" alt="Protech Dynamic Solutions Logo" class="h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" loading="lazy" onerror="this.src='https::placehold.co/200x80/0f1115/cd7f32?text=Protech';">
+                <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions Logo" class="h-20 sm:h-28 w-auto max-w-none object-contain opacity-80 transition-all transform scale-125 sm:scale-[1.4] hover:opacity-100 hover:scale-[1.3] sm:hover:scale-[1.45]" loading="lazy" onerror="this.src='https://placehold.co/200x80/0f1115/cd7f32?text=Protech';">
             </div>
-            <p class="text-gray-500 text-lg font-semibold mb-4">&copy; 2025 Protech Dynamic Solutions. All rights reserved.</p>
-            <p class="text-base luxury-gold-text font-medium">Bespoke Software & AI Solutions | Ireland</p>
+            <p class="text-slate-400 text-sm font-medium mb-3">&copy; 2026 Protech Dynamic Solutions. All rights reserved.</p>
+            <p class="text-sm text-copper-DEFAULT font-semibold tracking-wide">Enterprise Software & AI Consultancy | Ireland</p>
         </div>
     </footer>
+
     <script>
-        const menuBtn = document.getElementById('mobile-menu-button');
-        const menu = document.getElementById('mobile-menu');
-        const hamburger = document.getElementById('hamburger-icon');
-        const close = document.getElementById('close-icon');
-        const links = document.querySelectorAll('.mobile-menu-link');
-
-        menuBtn.addEventListener('click', () => {
-            const isExpanded = menu.classList.contains('hidden');
-            menu.classList.toggle('hidden');
-            hamburger.classList.toggle('hidden');
-            close.classList.toggle('hidden');
-            menuBtn.setAttribute('aria-expanded', isExpanded);
-        });
-
-        links.forEach(link => link.addEventListener('click', () => {
-            if (!menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
-                hamburger.classList.remove('hidden');
-                close.classList.add('hidden');
-                menuBtn.setAttribute('aria-expanded', 'false');
-            }
-        }));
-
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault(); 
-                const targetId = this.getAttribute('href');
-                
-                if (this.classList.contains('mobile-menu-link')) {
-                    menu.classList.add('hidden');
-                    hamburger.classList.remove('hidden');
-                    close.classList.add('hidden');
-                    menuBtn.setAttribute('aria-expanded', 'false');
-                }
-
-                const target = document.querySelector(targetId);
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
         document.addEventListener('DOMContentLoaded', () => {
+            // 1. Mobile Menu Logic
+            const menuBtn = document.getElementById('mobile-menu-button');
+            const menu = document.getElementById('mobile-menu');
+            const hamburger = document.getElementById('hamburger-icon');
+            const closeIcon = document.getElementById('close-icon');
+            const links = document.querySelectorAll('.mobile-menu-link');
+
+            if (menuBtn && menu && hamburger && closeIcon) {
+                menuBtn.addEventListener('click', () => {
+                    const isExpanded = menu.classList.contains('hidden');
+                    menu.classList.toggle('hidden');
+                    hamburger.classList.toggle('hidden');
+                    closeIcon.classList.toggle('hidden');
+                    menuBtn.setAttribute('aria-expanded', isExpanded);
+                });
+
+                links.forEach(link => link.addEventListener('click', () => {
+                    if (!menu.classList.contains('hidden')) {
+                        menu.classList.add('hidden');
+                        hamburger.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        menuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }));
+            }
+
+            // 2. Smooth Scroll Logic
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault(); 
+                    const targetId = this.getAttribute('href');
+                    
+                    if (!targetId || targetId === '#') return;
+                    
+                    if (this.classList.contains('mobile-menu-link') && menu && hamburger && closeIcon) {
+                        menu.classList.add('hidden');
+                        hamburger.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+                    }
+
+                    try {
+                        const target = document.querySelector(targetId);
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Scroll destination not found:", err);
+                    }
+                });
+            });
+
+            // 3. Modal Logic
             const modal = document.getElementById('tech-modal');
             const modalContentBox = document.getElementById('modal-content-box');
-            if (!modal || !modalContentBox) return;
+            
+            if (modal && modalContentBox) {
+                const modalTitle = document.getElementById('modal-title');
+                const modalContent = document.getElementById('modal-content');
+                const closeModalBtn = document.getElementById('close-modal-btn');
+                const badges = document.querySelectorAll('.tech-badge');
 
-            const modalTitle = document.getElementById('modal-title');
-            const modalContent = document.getElementById('modal-content');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const badges = document.querySelectorAll('.tech-badge');
+                let firstFocusable, lastFocusable;
 
-            let firstFocusable, lastFocusable;
+                const techContent = {
+                    'python': {
+                        title: "Enterprise Python Architecture",
+                        content: `
+                            <p>We build secure, high-performance backends and automation scripts capable of handling vast data pipelines.</p>
+                            <p>Instead of manual processing, our Python scripts connect seamlessly with your databases, standardising and processing data instantly.</p>
+                            <pre class="bg-corporate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700 overflow-x-auto mt-4 font-mono"><code>def process_financials(data_stream):
+    for entry in data_stream:
+        if entry.type == "INVOICE":
+            validated_data = run_compliance_check(entry)
+            erp_system.upload(validated_data)
+            logger.info(f"Processed €{entry.amount} invoice securely.")</code></pre>
+                        `
+                    },
+                    'ai': {
+                        title: "Applied AI & Machine Learning",
+                        content: `
+                            <p>Move beyond buzzwords. We build specific AI models that solve actual business bottlenecks:</p>
+                            <ul class="list-disc list-inside space-y-2 mt-4 text-slate-700">
+                                <li><strong>Predictive Analytics:</strong> Anticipate market trends and manage inventory before demand spikes.</li>
+                                <li><strong>Smart Document Processing:</strong> Extract key figures from PDFs and physical contracts automatically.</li>
+                                <li><strong>Anomaly Detection:</strong> Flag unusual financial transactions instantly to prevent fraud or errors.</li>
+                            </ul>
+                        `
+                    },
+                    'vba': {
+                        title: "Financial Modelling & VBA",
+                        content: "<p>We transform standard spreadsheets into robust, automated financial applications. By writing secure VBA macros, we eliminate the need for manual copy-pasting, reducing a 3-hour reporting task to a single click, ensuring your data is accurate and instantly available.</p>"
+                    },
+                    'html': {
+                        title: "Modern Web Interfaces",
+                        content: "<p>We design clean, highly responsive internal portals and web applications. Utilising modern frameworks, we ensure your bespoke software looks and performs like a top-tier enterprise platform, offering an intuitive experience for your staff.</p>"
+                    },
+                    'api': {
+                        title: "Secure API Integration",
+                        content: "<p>Data silos cost money. We build secure bridges (RESTful APIs) between your existing software—whether that's linking your CRM to your accounting software, or syncing your e-commerce platform with your warehouse management systems.</p>"
+                    }
+                };
 
-            const techContent = {
-                'python': {
-                    title: "Custom Python Solutions",
-                    content: `
-                        <p>We use Python to build powerful automation scripts, custom APIs, and intelligent data processing pipelines.</p>
-                        <p>Imagine a workflow that automatically reads your sales emails, extracts order details, and updates your database in real-time. That's the power we deliver.</p>
-                        <pre class="bg-black/50 border border-copper-accent/20 rounded-lg p-4 text-sm text-copper-light overflow-x-auto mt-4"><code>def process_orders(email_data):
-    for email in email_data:
-        if email.subject.startswith("NEW ORDER"):
-            order_details = parse_email_body(email.body)
-            api.update_database("orders", order_details)
-            print(f"Processed order {order_details['id']}")</code></pre>
-                    `
-                },
-                'ai': {
-                    title: "Intelligent AI & ML Models",
-                    content: `
-                        <p>We turn your data into your most valuable asset. We build custom AI models to unlock predictive power and automate complex decisions, such as:</p>
-                        <ul class="list-disc list-inside space-y-2 mt-4 text-gray-300">
-                            <li><strong>Sales Forecasting:</strong> Analyse past data to accurately predict future revenue streams.</li>
-                            <li><strong>Automated Categorisation:</strong> Instantly sort thousands of customer support tickets, emails, or products.</li>
-                            <li><strong>Insight Extraction:</strong> Discover hidden patterns and opportunities in your business data.</li>
-                        </ul>
-                    `
-                },
-                'vba': {
-                    title: "Advanced Excel & VBA",
-                    content: "<p>Transform your spreadsheets from static reports into dynamic dashboards. We automate complex calculations, generate reports with one click, and build custom user forms directly within Excel to streamline your financial and operational workflows.</p>"
-                },
-                'html': {
-                    title: "Bespoke Web & App Design",
-                    content: "<p>From stunning landing pages (like this one!) to complex web applications, we build secure, scalable, and beautifully designed digital experiences using HTML, CSS, and modern frameworks that perfectly match your brand's luxury feel.</p>"
-                },
-                'js': {
-                    title: "Interactive JavaScript",
-                    content: "<p>We use JavaScript to bring your applications to life. From interactive dashboards and real-time data visualisations to complex client-side logic, we build fast, responsive, and engaging user interfaces that captivate your users.</p>"
-                },
-                'api': {
-                    title: "Seamless API Integration",
-                    content: "<p>We connect all your systems. We build and integrate robust APIs to ensure your software (CRM, ERP, marketing tools) communicates flawlessly, automating data flow and eliminating data silos across your entire business.</p>"
-                },
-                'automation': {
-                    title: "End-to-End Process Automation",
-                    content: "<p>We identify and eliminate high-cost, repetitive manual tasks. Using digital forms, robotic process automation (RPA), and custom scripts, we free your team to focus on high-value strategic work instead of manual data entry.</p>"
-                }
-            };
+                const getFocusableElements = () => {
+                    const focusableElements = modalContentBox.querySelectorAll(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    if (focusableElements.length > 0) {
+                        firstFocusable = focusableElements[0];
+                        lastFocusable = focusableElements[focusableElements.length - 1];
+                    }
+                };
 
-            const getFocusableElements = () => {
-                const focusableElements = modalContentBox.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
-                if (focusableElements.length > 0) {
-                    firstFocusable = focusableElements[0];
-                    lastFocusable = focusableElements[focusableElements.length - 1];
-                }
-            };
-
-            const handleFocusTrap = (e) => {
-                if (e.key === 'Tab') {
-                    if (e.shiftKey) {
-                        if (document.activeElement === firstFocusable) {
-                            e.preventDefault();
-                            lastFocusable.focus();
-                        }
-                    } else {
-                        if (document.activeElement === lastFocusable) {
-                            e.preventDefault();
-                            firstFocusable.focus();
+                const handleFocusTrap = (e) => {
+                    if (e.key === 'Tab') {
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstFocusable) {
+                                e.preventDefault();
+                                lastFocusable.focus();
+                            }
+                        } else {
+                            if (document.activeElement === lastFocusable) {
+                                e.preventDefault();
+                                firstFocusable.focus();
+                            }
                         }
                     }
-                }
-            };
-
-            const openModal = (techKey) => {
-                const content = techContent[techKey];
-                if (!content || !modalTitle || !modalContent) return;
-
-                modalTitle.textContent = content.title;
-                modalContent.innerHTML = content.content;
-
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                
-                getFocusableElements();
-                document.addEventListener('keydown', handleFocusTrap);
-
-                requestAnimationFrame(() => {
-                    modalContentBox.classList.remove('opacity-0');
-                    modalContentBox.classList.remove('scale-95');
-                    closeModalBtn.focus();
-                });
-            };
-
-            const closeModal = () => {
-                modalContentBox.classList.add('opacity-0');
-                modalContentBox.classList.add('scale-95');
-                document.removeEventListener('keydown', handleFocusTrap);
-
-                const onTransitionEnd = () => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                    modalContentBox.removeEventListener('transitionend', onTransitionEnd);
                 };
-                modalContentBox.addEventListener('transitionend', onTransitionEnd);
-            };
 
-            badges.forEach(badge => {
-                badge.addEventListener('click', () => {
-                    const techKey = badge.getAttribute('data-tech');
-                    openModal(techKey);
-                });
-                badge.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
+                const openModal = (techKey) => {
+                    const content = techContent[techKey];
+                    if (!content || !modalTitle || !modalContent) return;
+
+                    modalTitle.textContent = content.title;
+                    modalContent.innerHTML = content.content;
+
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    
+                    getFocusableElements();
+                    document.addEventListener('keydown', handleFocusTrap);
+
+                    requestAnimationFrame(() => {
+                        modalContentBox.classList.remove('opacity-0');
+                        modalContentBox.classList.remove('scale-95');
+                        if (closeModalBtn) closeModalBtn.focus();
+                    });
+                };
+
+                const closeModal = () => {
+                    modalContentBox.classList.add('opacity-0');
+                    modalContentBox.classList.add('scale-95');
+                    document.removeEventListener('keydown', handleFocusTrap);
+
+                    const onTransitionEnd = () => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                        modalContentBox.removeEventListener('transitionend', onTransitionEnd);
+                    };
+                    modalContentBox.addEventListener('transitionend', onTransitionEnd);
+                };
+
+                badges.forEach(badge => {
+                    badge.addEventListener('click', () => {
                         const techKey = badge.getAttribute('data-tech');
                         openModal(techKey);
+                    });
+                    badge.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            const techKey = badge.getAttribute('data-tech');
+                            openModal(techKey);
+                        }
+                    });
+                });
+
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', closeModal);
+                }
+
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal();
                     }
                 });
-            });
 
-            closeModalBtn.addEventListener('click', closeModal);
-
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                    closeModal();
-                }
-            });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                        closeModal();
+                    }
+                });
+            }
         });
     </script>
 </body>
