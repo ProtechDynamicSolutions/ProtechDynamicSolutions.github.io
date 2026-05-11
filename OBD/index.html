@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OBD Architecture | Design & Planning</title>
+    
+    <!-- Architectural CAD Cursor Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'><line x1='12' y1='0' x2='12' y2='24'/><line x1='0' y1='12' x2='24' y2='12'/><rect x='9' y='9' width='6' height='6' fill='%23b87333' stroke='none'/></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -281,15 +285,39 @@
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
                     <!-- Photo 1 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
-                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/1.JPG" alt="Courtyard House" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/1.JPG" alt="Courtyard House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    
-                    <!-- TO ADD MORE PHOTOS FOR COURTYARD HOUSE: 
-                         Copy the <div> block above, paste it below this comment, 
-                         and change the 'src' from '1.JPG' to '2.JPG', '3.JPG' etc. -->
+                    <!-- Photo 2 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/2.JPG" alt="Courtyard House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                    <!-- Photo 3 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/3.JPG" alt="Courtyard House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                    <!-- Photo 4 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/4.JPG" alt="Courtyard House View 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
+                    <!-- Photo 5 -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/5.JPG" alt="Courtyard House View 5" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800';">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
