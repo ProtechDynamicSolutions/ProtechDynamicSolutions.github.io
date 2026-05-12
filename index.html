@@ -21,6 +21,7 @@
     <meta name="twitter:image" content="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/logo%20latest%20P.png">
+    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,6 +51,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -222,8 +224,8 @@
     <!-- Dark Authoritative Header -->
     <header class="nav-luxury sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-12" role="navigation" aria-label="Main navigation">
-            <div class="flex justify-between items-center h-28 sm:h-32">
-                <a href="#home" class="logo-container group transition-all mt-3 sm:mt-4" aria-label="Protech Dynamic Solutions - Home">
+            <div class="flex justify-between items-center h-36 lg:h-40">
+                <a href="#home" class="logo-container group transition-all" aria-label="Protech Dynamic Solutions - Home">
                     <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png" alt="Protech Dynamic Solutions Logo" class="h-16 sm:h-24 w-auto max-w-none object-contain transform scale-125 sm:scale-[1.35] origin-left transition-transform group-hover:scale-[1.3] sm:group-hover:scale-[1.4]" loading="eager" onerror="this.src='https://placehold.co/340x80/0f1115/cd7f32?text=Protech+Dynamic+Solutions';">
                 </a>
                 <div class="hidden md:flex md:items-center md:space-x-8 lg:space-x-10">
@@ -516,9 +518,20 @@
                     </p>
                 </div>
                 <div class="max-w-4xl mx-auto">
-                    <div class="bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-slate-200">
-                        <!-- Custom Native Form (Replace action="#" with Formspree or Web3Forms endpoint) -->
-                        <form action="#" method="POST" class="space-y-6">
+                    <div class="bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-slate-200 relative overflow-hidden">
+                        
+                        <!-- Success Message Overlay (Hidden by default) -->
+                        <div id="form-success" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 hidden flex-col items-center justify-center text-center p-8 transition-opacity duration-300">
+                            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <h3 class="text-2xl font-bold luxury-serif text-corporate-900 mb-2">Enquiry Sent Successfully</h3>
+                            <p class="text-slate-600">Thank you for reaching out. A senior consultant will review your requirements and be in touch within 1 business day.</p>
+                            <button id="reset-form-btn" class="mt-8 outline-btn py-2 px-6 rounded-full text-sm uppercase tracking-wider">Send Another</button>
+                        </div>
+
+                        <!-- Custom Native Form connected to Google Apps Script -->
+                        <form id="contact-form" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">Full Name <span class="text-copper-DEFAULT">*</span></label>
@@ -530,21 +543,43 @@
                                 </div>
                             </div>
                             
-                            <div>
-                                <label for="company" class="block text-sm font-semibold text-slate-700 mb-2">Company Name</label>
-                                <input type="text" id="company" name="company" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400" placeholder="Your Organisation">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="company" class="block text-sm font-semibold text-slate-700 mb-2">Company Name</label>
+                                    <input type="text" id="company" name="company" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400" placeholder="Your Organisation">
+                                </div>
+                                <div>
+                                    <label for="subject" class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
+                                    <select id="subject" name="subject" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 cursor-pointer">
+                                        <option value="General Enquiry">General Enquiry</option>
+                                        <option value="Create App">Create App</option>
+                                        <option value="Dashboard">Dashboard</option>
+                                        <option value="Data Analytics">Data Analytics</option>
+                                        <option value="AI Integration">AI Integration</option>
+                                        <option value="Process Automation">Process Automation</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
-                                <label for="message" class="block text-sm font-semibold text-slate-700 mb-2">Project Details <span class="text-copper-DEFAULT">*</span></label>
+                                <label for="message" class="block text-sm font-semibold text-slate-700 mb-2">How can I help? <span class="text-copper-DEFAULT">*</span></label>
                                 <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-copper-DEFAULT focus:border-copper-DEFAULT transition-all outline-none bg-slate-50 focus:bg-white text-slate-700 placeholder-slate-400 resize-y" placeholder="Briefly describe your current processes and where you'd like to see automation or improvements..." required></textarea>
                             </div>
 
-                            <button type="submit" class="w-full ultra-btn py-4 rounded-xl text-lg font-bold tracking-wider uppercase mt-4 shadow-lg flex justify-center items-center gap-2">
-                                <span>Submit Enquiry</span>
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            <button type="submit" id="submit-btn" class="w-full ultra-btn py-4 rounded-xl text-lg font-bold tracking-wider uppercase mt-4 shadow-lg flex justify-center items-center gap-2 relative overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed">
+                                <span id="btn-text">Submit Enquiry</span>
+                                <svg id="btn-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                
+                                <!-- Loading Spinner -->
+                                <svg id="btn-spinner" class="animate-spin h-5 w-5 hidden absolute" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
                             </button>
                             <p class="text-center text-xs text-slate-500 mt-4">We aim to respond to all enquiries within 1 business day.</p>
+                            <div id="form-error" class="hidden mt-4 text-center text-sm text-red-600 bg-red-50 py-2 rounded-lg border border-red-100">
+                                An error occurred. Please try again or email us directly.
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -758,6 +793,54 @@
                     if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                         closeModal();
                     }
+                });
+            }
+
+            // 4. Google Apps Script Form Handling
+            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; // <-- PASTE YOUR URL HERE
+            const form = document.getElementById('contact-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnSpinner = document.getElementById('btn-spinner');
+            const formSuccess = document.getElementById('form-success');
+            const formError = document.getElementById('form-error');
+            const resetBtn = document.getElementById('reset-form-btn');
+
+            if (form) {
+                form.addEventListener('submit', e => {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    btnText.textContent = 'Sending...';
+                    btnIcon.classList.add('hidden');
+                    btnSpinner.classList.remove('hidden');
+                    formError.classList.add('hidden');
+
+                    fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                        .then(response => {
+                            // Show success state
+                            form.reset();
+                            formSuccess.classList.remove('hidden');
+                            formSuccess.classList.add('flex');
+                        })
+                        .catch(error => {
+                            console.error('Error!', error.message);
+                            formError.classList.remove('hidden');
+                        })
+                        .finally(() => {
+                            // Reset button state
+                            submitBtn.disabled = false;
+                            btnText.textContent = 'Submit Enquiry';
+                            btnIcon.classList.remove('hidden');
+                            btnSpinner.classList.add('hidden');
+                        });
+                });
+
+                resetBtn.addEventListener('click', () => {
+                    formSuccess.classList.add('hidden');
+                    formSuccess.classList.remove('flex');
                 });
             }
         });
