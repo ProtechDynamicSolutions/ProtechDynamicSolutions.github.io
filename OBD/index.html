@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OBD Architecture | Design & Planning</title>
     
-    <!-- Architectural CAD Cursor Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'><line x1='12' y1='0' x2='12' y2='24'/><line x1='0' y1='12' x2='24' y2='12'/><rect x='9' y='9' width='6' height='6' fill='%23b87333' stroke='none'/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -168,14 +167,11 @@
 </head>
 <body class="bg-white text-gray-900 overflow-x-hidden">
 
-    <!-- Navigation -->
     <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex justify-between items-center">
-            <!-- Logo Section -->
             <div class="flex items-center gap-2 sm:gap-4">
                 <span class="serif text-2xl sm:text-3xl font-bold tracking-tighter">OBD</span>
                 
-                <!-- Top Animated Vertical Line -->
                 <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
                     <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
                     <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v-hide pointer-events-none opacity-0">
@@ -193,9 +189,8 @@
                 </div>
             </div>
 
-            <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
-                <a href="#" onclick="window.location.reload(); return false;" class="nav-link">Home</a>
+                <a href="#" onclick="window.scrollTo(0,0); return false;" class="nav-link">Home</a>
                 <a href="#practice" class="nav-link">Practice</a>
                 <a href="#services" class="nav-link">Services</a>
                 <a href="#work" class="nav-link">Work</a>
@@ -203,17 +198,15 @@
                 <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Contact</a>
             </div>
 
-            <!-- Mobile Toggle -->
             <button class="md:hidden p-2 text-gray-900" id="menuToggle" aria-label="Open Menu">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
         </div>
     </nav>
 
-    <!-- Mobile Menu Overlay -->
     <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
         <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
-        <a href="#" onclick="window.location.reload(); return false;" class="mobile-nav-link hover:text-copper">Home</a>
+        <a href="#" onclick="window.scrollTo(0,0); return false;" class="mobile-nav-link hover:text-copper">Home</a>
         <a href="#practice" class="mobile-nav-link hover:text-copper">Practice</a>
         <a href="#services" class="mobile-nav-link hover:text-copper">Services</a>
         <a href="#work" class="mobile-nav-link hover:text-copper">Work</a>
@@ -221,21 +214,17 @@
         <a href="#contact" class="mobile-nav-link hover:text-copper">Contact</a>
     </div>
 
-    <!-- Hero Section -->
     <section class="relative min-h-[90vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
         <div class="absolute inset-0 z-0">
-            <!-- Background Image -->
             <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000" alt="Modern Architecture" class="w-full h-full object-cover">
             <div class="absolute inset-0 hero-gradient"></div>
         </div>
         
         <div class="relative z-10 text-center text-white px-6 mt-12 md:mt-0">
             
-            <!-- Hero Logo Display -->
             <div class="flex items-center justify-center gap-4 md:gap-8 mb-12 opacity-0 translate-y-10 transition-all duration-1000 ease-out" id="heroTitle">
                 <span class="serif text-6xl sm:text-7xl md:text-9xl font-bold tracking-tighter text-white">OBD</span>
                 
-                <!-- Hero Animated Vertical Line -->
                 <div class="cad-line-container relative h-16 sm:h-20 md:h-32 w-[2px] mx-1 md:mx-2">
                     <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
                     <div class="absolute w-6 h-6 text-white left-1/2 cad-cursor-v-hide pointer-events-none opacity-0">
@@ -261,17 +250,14 @@
         </div>
     </section>
 
-    <!-- Practice Section -->
     <section id="practice" class="py-24 bg-[#fafafa] overflow-hidden">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex flex-col lg:flex-row gap-16 items-center">
                 
-                <!-- Practice Image -->
                 <div class="w-full lg:w-1/2 relative reveal">
                     <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/4.JPG" alt="Architectural Studio Space" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
                 </div>
 
-                <!-- Practice Text Content -->
                 <div class="w-full lg:w-1/2 reveal delay-200">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="cad-line-container-h relative w-12 h-[1px]">
@@ -327,7 +313,6 @@
         </div>
     </section>
 
-    <!-- Services Section -->
     <section id="services" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-20 reveal">
@@ -341,7 +326,6 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 
-                <!-- Service 1 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Design and Planning</h4>
@@ -361,7 +345,6 @@
                     </div>
                 </div>
 
-                <!-- Service 2 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Bespoke New Builds</h4>
@@ -381,7 +364,6 @@
                     </div>
                 </div>
 
-                <!-- Service 3 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Extensions and Renovations</h4>
@@ -401,7 +383,6 @@
                     </div>
                 </div>
 
-                <!-- Service 4 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Landscape Design</h4>
@@ -421,7 +402,6 @@
                     </div>
                 </div>
 
-                <!-- Service 5 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">3D Printed Models</h4>
@@ -441,7 +421,6 @@
                     </div>
                 </div>
 
-                <!-- Service 6 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Building and Site Surveys</h4>
@@ -461,7 +440,6 @@
                     </div>
                 </div>
 
-                <!-- Service 7 -->
                 <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal lg:col-start-2 flex flex-col justify-between h-full">
                     <div>
                         <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Cost Estimates</h4>
@@ -485,7 +463,6 @@
         </div>
     </section>
 
-    <!-- Work Gallery Section -->
     <section id="work" class="py-20 md:py-32 px-6 bg-[#fafafa] overflow-hidden">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
@@ -498,9 +475,6 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- PROJECT 1: CANTILEVER HOUSE                    -->
-            <!-- ============================================== -->
             <div class="mb-24 reveal">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-4">
@@ -519,21 +493,18 @@
                 </div>
                 
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
-                    <!-- Photo 1 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/1.jpg" alt="Cantilever House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 2 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/2.jpg" alt="Cantilever House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 3 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/3.jpg" alt="Cantilever House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -543,9 +514,6 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- PROJECT 2: COURTYARD HOUSE                     -->
-            <!-- ============================================== -->
             <div class="mb-24 reveal delay-100">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-4">
@@ -564,35 +532,30 @@
                 </div>
                 
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
-                    <!-- Photo 1 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/1.JPG" alt="Courtyard House View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 2 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/2.JPG" alt="Courtyard House View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 3 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/3.JPG" alt="Courtyard House View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 4 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/4.JPG" alt="Courtyard House View 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 5 -->
                     <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Courtyard%20House/5.JPG" alt="Courtyard House View 5" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -602,9 +565,6 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- PROJECT 3: LACKENROE                           -->
-            <!-- ============================================== -->
             <div class="reveal delay-200">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-4">
@@ -623,28 +583,24 @@
                 </div>
                 
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
-                    <!-- Photo 1 -->
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/1.JPG" alt="Lackenroe View 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 2 -->
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/2.JPG" alt="Lackenroe View 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 3 -->
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/3.JPG" alt="Lackenroe View 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Expand</span>
                         </div>
                     </div>
-                    <!-- Photo 4 -->
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[40vw] lg:w-[30vw] relative aspect-[4/5] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
                         <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/4.jpg" alt="Lackenroe View 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800';">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -657,7 +613,6 @@
         </div>
     </section>
 
-    <!-- Testimonials Section -->
     <section id="testimonials" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-20 reveal">
@@ -666,7 +621,6 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-7xl mx-auto">
-                <!-- Testimonial 1 -->
                 <div class="reveal">
                     <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
                     <p class="serif text-base md:text-lg lg:text-xl font-light leading-relaxed text-gray-800 mb-8 italic">"We worked with Garbhan to design and secure planning permission for an attic conversion. He was a pleasure to work with throughout the process, taking on board what we wanted, advising us on what was feasible and creating a design that met all our needs. He also oversaw the planning application process seamlessly, while making sure we were kept up to date throughout. I would highly recommend OBD Architecture."</p>
@@ -688,7 +642,6 @@
                     </div>
                 </div>
 
-                <!-- Testimonial 2 -->
                 <div class="reveal delay-100">
                     <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
                     <p class="serif text-base md:text-lg lg:text-xl font-light leading-relaxed text-gray-800 mb-8 italic">"We worked with Garbhan on a project for our home, which involved a new extension and landscaping design and were very impressed with the results. He brought great clarity and creativity to the design, producing detailed, well-considered drawings and a landscape design that ties beautifully with the house. The final outcome feels cohesive, practical, and thoughtfully designed. Garbhan was professional, approachable, and easy to work with throughout. We would highly recommend him."</p>
@@ -710,7 +663,6 @@
                     </div>
                 </div>
                 
-                <!-- Testimonial 3 -->
                 <div class="reveal delay-200">
                     <svg class="w-8 h-8 text-copper/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
                     <p class="serif text-base md:text-lg lg:text-xl font-light leading-relaxed text-gray-800 mb-8 italic">"I worked with Garbhan on an extension and reconfiguration project for my home. The whole process was efficient & effective from the start. I am delighted with the final design. If I had listened from the beginning, I would have saved money!"</p>
@@ -735,26 +687,18 @@
         </div>
     </section>
 
-    <!-- Contact Section -->
     <section id="contact" class="bg-black text-white py-24 md:py-32 relative overflow-hidden">
         
-        <!-- Architectural Blueprint Background -->
         <div class="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center justify-center">
             <svg viewBox="0 0 1000 600" fill="none" stroke="white" stroke-width="1" class="w-full max-w-5xl h-auto">
-                <!-- Ground Line -->
                 <line x1="50" y1="500" x2="950" y2="500" />
-                <!-- Main Structure -->
                 <path d="M250 500 L250 250 L750 250 L750 500" />
-                <!-- Roof Pitch -->
                 <path d="M200 250 L500 100 L800 250" stroke-dasharray="10 5" />
-                <!-- Large Feature Window -->
                 <rect x="350" y="300" width="300" height="200" />
-                <!-- Measurement Guidelines -->
                 <line x1="250" y1="540" x2="750" y2="540" stroke-width="0.5"/>
                 <line x1="250" y1="530" x2="250" y2="550" stroke-width="0.5"/>
                 <line x1="750" y1="530" x2="750" y2="550" stroke-width="0.5"/>
                 <text x="500" y="565" fill="white" stroke="none" font-family="sans-serif" font-size="12" text-anchor="middle" letter-spacing="0.3em">PROPOSED ELEVATION</text>
-                <!-- Integrated CAD Cursor snapping to corner -->
                 <g transform="translate(750, 250)" stroke="white" stroke-width="1.5">
                     <line x1="-30" y1="0" x2="30" y2="0" />
                     <line x1="0" y1="-30" x2="0" y2="30" />
@@ -802,14 +746,12 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-white py-16 px-6 border-t border-gray-50">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                 <div class="flex items-center gap-4">
                     <span class="serif text-3xl font-bold tracking-tighter">OBD</span>
                     
-                    <!-- Footer Animated Divider Line -->
                     <div class="cad-line-container relative h-8 w-[1.5px]">
                         <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
                         <div class="absolute w-5 h-5 text-black left-1/2 cad-cursor-v-hide pointer-events-none opacity-0">
@@ -840,11 +782,9 @@
         </div>
     </footer>
 
-    <!-- Fullscreen Image Lightbox -->
     <div id="lightbox" class="fixed inset-0 z-[200] bg-black/95 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
         <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white text-4xl hover:text-copper transition-colors z-[210]">&times;</button>
         
-        <!-- Navigation Buttons -->
         <button onclick="changeImage(-1, event)" id="prevBtn" class="absolute left-4 md:left-10 text-white/50 hover:text-white z-[210] transition-colors hidden">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-16 md:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
@@ -856,7 +796,7 @@
     </div>
 
     <script>
-        // Hero Entrance Animation
+        // Hero Entrance Animation (Updated to reflect text removal)
         window.addEventListener('load', () => {
             const title = document.getElementById('heroTitle');
             if (title) title.classList.remove('opacity-0', 'translate-y-10');
@@ -1075,6 +1015,12 @@
                 if (currentGalleryImages.length > 1) changeImage(-1);
             }
         }
+
+        // Force page to top on refresh
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
 
     </script>
 </body>
