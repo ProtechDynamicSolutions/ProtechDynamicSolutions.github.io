@@ -216,7 +216,12 @@
 
     <section class="relative min-h-[90vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
         <div class="absolute inset-0 z-0">
-            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/4a.jpg" alt="Modern Architecture" class="w-full h-full object-cover">
+            <!-- Mobile Image (Visible on mobile, hidden on PC) -->
+            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Lackenroe/2Phone.jpg" alt="Modern Architecture Mobile" class="w-full h-full object-cover block md:hidden">
+            
+            <!-- Desktop Image (Hidden on mobile, visible on PC) -->
+            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/OBD/Cantilever%20House/4a.jpg" alt="Modern Architecture" class="w-full h-full object-cover hidden md:block">
+            
             <div class="absolute inset-0 hero-gradient"></div>
         </div>
         
@@ -813,7 +818,7 @@
 
         // Mobile Menu Logic
         const menuToggle = document.getElementById('menuToggle');
-        const closeMenu = document.getElementById('closeMenu');
+        const closeMenu = document.getElementById('mobileMenu').querySelector('button'); // Updated to avoid ID conflict
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileLinks = document.querySelectorAll('.mobile-nav-link');
 
