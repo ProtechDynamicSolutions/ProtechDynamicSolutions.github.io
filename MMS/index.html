@@ -1,0 +1,701 @@
+
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Michael Malone & Son | Solicitors | Blarney, Co. Cork</title>
+    
+    <!-- Elegant 'M' Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text x='12' y='18' font-family='Georgia, serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23b87333'>M</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        copper: '#b87333',
+                        'copper-light': '#d4a76a',
+                        'brand-black': '#111111',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --copper: #b87333;
+            --copper-light: #d4a76a;
+            --brand-black: #111111;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .copper-accent {
+            color: var(--copper);
+        }
+
+        .bg-copper {
+            background-color: var(--copper);
+        }
+
+        .border-copper {
+            border-color: var(--copper);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--copper);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(rgba(17, 17, 17, 0.6), rgba(17, 17, 17, 0.8));
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--copper);
+        }
+
+        /* Smooth reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* -----------------------------------
+           Unified Line Scroll Animations (No Crosshairs)
+           ----------------------------------- */
+        .cad-line-container, .cad-line-container-h {
+            position: relative;
+        }
+
+        /* Vertical Scroll Lines */
+        .cad-line-container.drawing .draw-line-v {
+            animation: drawLineHeight 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Horizontal Scroll Lines */
+        .cad-line-container-h.drawing .draw-line-h {
+            animation: drawLineWidth 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Keyframes for Line Growth */
+        @keyframes drawLineHeight {
+            0% { height: 0; }
+            100% { height: 100%; }
+        }
+        @keyframes drawLineWidth {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        /* Hide Scrollbar for Horizontal Galleries */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 overflow-x-hidden">
+
+    <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex justify-between items-center">
+            <div class="flex items-center gap-2 sm:gap-4">
+                <span class="serif text-2xl sm:text-3xl font-bold tracking-tighter">MALONE</span>
+                
+                <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
+                    <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                </div>
+
+                <div class="flex flex-col leading-none">
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Solicitors</span>
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Blarney, Cork</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
+                <a href="#" onclick="window.scrollTo(0,0); return false;" class="nav-link">Home</a>
+                <a href="#story" class="nav-link">Our Practice</a>
+                <a href="#services" class="nav-link">Legal Services</a>
+                <a href="#gallery" class="nav-link">Expertise</a>
+                <a href="#contact" class="px-5 py-2.5 border border-black hover:bg-black hover:text-white transition-all duration-300">Contact Us</a>
+            </div>
+
+            <button class="md:hidden p-2 text-gray-900" id="menuToggle" aria-label="Open Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
+        <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
+        <a href="#" onclick="window.scrollTo(0,0); return false;" class="mobile-nav-link hover:text-copper">Home</a>
+        <a href="#story" class="mobile-nav-link hover:text-copper">Our Practice</a>
+        <a href="#services" class="mobile-nav-link hover:text-copper">Legal Services</a>
+        <a href="#gallery" class="mobile-nav-link hover:text-copper">Expertise</a>
+        <a href="#contact" class="mobile-nav-link hover:text-copper">Contact Us</a>
+    </div>
+
+    <section class="relative min-h-[70vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
+        <div class="absolute inset-0 z-0">
+            <!-- Sleek, premium corporate/architecture background as requested -->
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1920" alt="Premium Office Space" class="w-full h-full object-cover">
+            <div class="absolute inset-0 hero-gradient"></div>
+        </div>
+        
+        <div class="relative z-10 text-center text-white px-6 mt-12 md:mt-0">
+            
+            <div class="flex items-center justify-center gap-4 md:gap-8 mb-12 opacity-0 translate-y-10 transition-all duration-1000 ease-out" id="heroTitle">
+                <span class="serif text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-white">MALONE</span>
+                
+                <div class="cad-line-container relative h-16 sm:h-20 md:h-32 w-[2px] mx-1 md:mx-2">
+                    <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                </div>
+
+                <div class="flex flex-col leading-tight text-left justify-center">
+                    <span class="serif text-3xl sm:text-5xl md:text-6xl text-white">&amp; SON</span>
+                    <span class="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] font-light text-white/80 mt-2">Solicitors | Cork</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center mt-12 md:mt-24">
+                <a href="#contact" class="px-8 py-4 border border-white text-white text-xs uppercase tracking-[0.3em] font-bold hover:bg-copper hover:border-copper transition-all duration-300 shadow-xl">
+                    Request a Consultation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="story" class="py-24 bg-[#fafafa] overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                
+                <div class="w-full lg:w-1/2 relative reveal">
+                    <!-- Generic, professional legal photo placeholder -->
+                    <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1600" alt="Legal documents and fountain pen" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
+                </div>
+
+                <div class="w-full lg:w-1/2 reveal delay-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold">Our Practice</h2>
+                    </div>
+                    <h3 class="serif text-4xl mb-12">A Family Tradition in Law</h3>
+                    
+                    <div class="space-y-10 text-gray-600 font-light leading-relaxed text-sm md:text-base">
+                        
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">Rooted in Blarney</h4>
+                            <p>
+                                Located in the Blarney Shopping Centre, our firm is built on a foundation of trust, integrity, and exceptional legal counsel. Founded by Michael Malone, we have spent years earning a reputation across County Cork for clear, practical, and highly effective representation.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">The Next Generation</h4>
+                            <p>
+                                We are proud to share that the practice has expanded, with Michael's son, Ger, officially joining the firm. Together, they combine a wealth of traditional legal experience with a dynamic, modern approach, ensuring every client receives dedicated, personal attention.
+                            </p>
+                        </div>
+
+                    </div>
+                    
+                    <div class="mt-12">
+                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-black hover:text-copper transition-colors">
+                            <span>Speak With Us</span>
+                            <div class="cad-line-container-h relative w-12 h-[1px]">
+                                <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Our Expertise</h2>
+                <h3 class="serif text-4xl mb-6">Legal Services</h3>
+                
+                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
+                    Whether you are purchasing a new home, planning for your family's future, or require representation in court, Michael and Ger provide expert guidance tailored to your specific circumstances.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Service 1: Wills & Probate -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Wills &amp; Probate</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Planning for the future is essential. We offer clear, compassionate, and confidential advice on drafting wills, estate planning, and navigating the complexities of the probate process.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 2: Conveyancing -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Conveyancing</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Expert legal guidance for buying, selling, or remortgaging residential and commercial properties. We work diligently to ensure your property transaction is smooth, secure, and stress-free.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <!-- Service 3: Representation & Legal Aid -->
+                <div class="p-10 border border-gray-100 hover:border-copper hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
+                    <div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-copper transition-colors">Representation</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            We provide strong advocacy and representation in court across a range of legal matters. We are also registered to provide Free Legal Aid to eligible clients, ensuring access to justice for all in our community.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="py-20 md:py-32 px-6 bg-[#fafafa] overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
+                <div class="reveal">
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-copper font-bold mb-4">Our Focus</h2>
+                    <h3 class="serif text-3xl md:text-5xl">Practice Areas</h3>
+                </div>
+                <div class="reveal delay-200">
+                    <p class="text-gray-500 max-w-md text-sm md:text-base">Dedicated legal support for the milestones that matter most.</p>
+                </div>
+            </div>
+
+            <div class="mb-24 reveal">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[1px]">
+                            <div class="absolute top-0 left-0 h-full bg-copper w-0 draw-line-h"></div>
+                        </div>
+                        <h4 class="serif text-2xl md:text-3xl text-gray-900">Client Matters</h4>
+                    </div>
+                </div>
+                
+                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
+                    <!-- Photo 1: Wills & Documents -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800" alt="Drafting Wills and Legal Documents" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Wills &amp; Probate</span>
+                        </div>
+                    </div>
+                    <!-- Photo 2: Conveyancing (Property/Keys) -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800" alt="Conveyancing and Property Law" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Conveyancing</span>
+                        </div>
+                    </div>
+                    <!-- Photo 3: Representation (Scales of Justice) -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=800" alt="Court Representation and Legal Aid" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs uppercase tracking-widest font-bold border border-white px-4 py-2">Representation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contact" class="bg-brand-black text-white py-24 md:py-32 relative overflow-hidden">
+        
+        <!-- Subtle background graphic adapted from original -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
+            <svg viewBox="0 0 1000 600" fill="none" stroke="white" stroke-width="1" class="w-full max-w-5xl h-auto">
+                <line x1="50" y1="500" x2="950" y2="500" />
+                <path d="M250 500 L250 250 L750 250 L750 500" />
+                <path d="M200 250 L500 100 L800 250" stroke-dasharray="10 5" />
+                <rect x="350" y="300" width="300" height="200" />
+                <line x1="250" y1="540" x2="750" y2="540" stroke-width="0.5"/>
+                <line x1="250" y1="530" x2="250" y2="550" stroke-width="0.5"/>
+                <line x1="750" y1="530" x2="750" y2="550" stroke-width="0.5"/>
+                <text x="500" y="565" fill="white" stroke="none" font-family="sans-serif" font-size="12" text-anchor="middle" letter-spacing="0.3em">BLARNEY, CO. CORK</text>
+            </svg>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="serif text-4xl md:text-6xl mb-12 leading-tight">Request a <span class="text-copper italic">consultation</span> today.</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8 md:gap-16 justify-center mb-16">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Call Us</span>
+                    <a href="tel:0214382990" class="text-lg md:text-xl hover:text-copper transition-colors">(021) 438 2990</a>
+                </div>
+                <div class="w-px h-10 bg-white/10 hidden md:block mt-2"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Office Address</span>
+                    <p class="text-lg md:text-xl leading-relaxed">
+                        8A Blarney Shopping Centre<br>
+                        Blarney, Co. Cork
+                    </p>
+                </div>
+                <div class="w-px h-10 bg-white/10 hidden md:block mt-2"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Email</span>
+                    <a href="mailto:info@maloneandson.ie" class="text-lg md:text-xl hover:text-copper transition-colors">info@maloneandson.ie</a>
+                </div>
+            </div>
+
+            <form class="mt-8 max-w-2xl mx-auto text-left space-y-8" onsubmit="event.preventDefault(); alert('Form submitted! Michael or Ger will be in touch shortly to arrange an appointment.');">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Full Name</label>
+                        <input type="text" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors placeholder-white/30" placeholder="Your Name" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Phone Number</label>
+                        <input type="tel" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors placeholder-white/30" placeholder="08X XXX XXXX" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-copper mb-2 font-bold">Briefly detail your enquiry</label>
+                    <textarea rows="4" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-copper transition-colors resize-none placeholder-white/30" placeholder="E.g., Conveyancing, Will drafting, Legal Aid..." required></textarea>
+                </div>
+                <div class="text-center pt-8">
+                    <button type="submit" class="border border-white bg-transparent text-white px-10 py-5 uppercase tracking-[0.3em] font-bold text-xs hover:bg-copper hover:border-copper transition-all duration-500 shadow-2xl">
+                        Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer class="bg-white py-16 px-6 border-t border-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                <div class="flex items-center gap-4">
+                    <span class="serif text-3xl font-bold tracking-tighter">MALONE</span>
+                    
+                    <div class="cad-line-container relative h-8 w-[1.5px]">
+                        <div class="absolute top-0 left-0 w-full bg-copper h-0 draw-line-v"></div>
+                    </div>
+
+                    <div class="flex flex-col leading-none">
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold">Solicitors</span>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold">Blarney, Cork</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-gray-400">
+                    <a href="#story" class="hover:text-copper transition-colors">Our Practice</a>
+                    <a href="#services" class="hover:text-copper transition-colors">Legal Services</a>
+                    <a href="#contact" class="hover:text-copper transition-colors">Contact</a>
+                </div>
+
+                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-medium">
+                    &copy; 2026 Michael Malone &amp; Son Solicitors. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="fixed inset-0 z-[200] bg-black/95 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white text-4xl hover:text-copper transition-colors z-[210]">&times;</button>
+        
+        <button onclick="changeImage(-1, event)" id="prevBtn" class="absolute left-4 md:left-10 text-white/50 hover:text-white z-[210] transition-colors hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-16 md:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button onclick="changeImage(1, event)" id="nextBtn" class="absolute right-4 md:right-10 text-white/50 hover:text-white z-[210] transition-colors hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-16 md:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+
+        <img id="lightboxImg" src="" alt="Full size image" class="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl transition-opacity duration-200">
+    </div>
+
+    <script>
+        // Hero Entrance Animation
+        window.addEventListener('load', () => {
+            const title = document.getElementById('heroTitle');
+            if (title) title.classList.remove('opacity-0', 'translate-y-10');
+            
+            // Trigger scroll reveal for already visible elements
+            revealElements();
+        });
+
+        // Mobile Menu Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu'); 
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closeFunc = () => {
+            mobileMenu.classList.add('translate-x-full');
+            document.body.style.overflow = 'auto';
+        };
+
+        closeMenu.addEventListener('click', closeFunc);
+        mobileLinks.forEach(link => link.addEventListener('click', closeFunc));
+
+        // Scroll Reveal logic for general elements
+        function revealElements() {
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", revealElements);
+
+        // Intersection Observer strictly for triggering CAD line drawing
+        const lineObserverOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.2 // Triggers when 20% of the element is visible
+        };
+
+        const lineObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Start the drawing animation
+                    entry.target.classList.add('drawing');
+                    // Stop observing once drawn so it doesn't replay constantly
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, lineObserverOptions);
+
+        // Attach observer to all line containers
+        document.querySelectorAll('.cad-line-container, .cad-line-container-h').forEach(container => {
+            lineObserver.observe(container);
+        });
+
+        // Gallery Auto-Scroll Logic
+        document.querySelectorAll('.horizontal-gallery').forEach(gallery => {
+            let autoScrollTimer;
+            let isHovering = false;
+
+            const autoScroll = () => {
+                if(!isHovering) {
+                    // Check if we reached the end
+                    if (gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 10) {
+                        gallery.scrollTo({left: 0, behavior: 'smooth'}); // loop back to start
+                    } else {
+                        // scroll by one image roughly
+                        gallery.scrollBy({ left: window.innerWidth * 0.7, behavior: 'smooth' }); 
+                    }
+                }
+            };
+
+            const startTimer = () => {
+                autoScrollTimer = setInterval(autoScroll, 4000); // Trigger a scroll every 4 seconds
+            };
+
+            const stopTimer = () => {
+                if(autoScrollTimer) clearInterval(autoScrollTimer);
+            };
+
+            // Pause interactions
+            gallery.addEventListener('mouseenter', () => { isHovering = true; stopTimer(); });
+            gallery.addEventListener('mouseleave', () => { isHovering = false; startTimer(); });
+            gallery.addEventListener('touchstart', () => { isHovering = true; stopTimer(); }, {passive:true});
+            gallery.addEventListener('touchend', () => { isHovering = false; startTimer(); }, {passive:true});
+
+            // Only run timer when the gallery is on-screen
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        startTimer();
+                    } else {
+                        stopTimer();
+                    }
+                });
+            });
+            observer.observe(gallery);
+        });
+
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentGalleryImages = [];
+        let currentImageIndex = 0;
+
+        function openLightbox(element) {
+            // Find all images within the specific gallery row that was clicked
+            const galleryContainer = element.closest('.horizontal-gallery');
+            const images = galleryContainer.querySelectorAll('img');
+            currentGalleryImages = Array.from(images).map(img => img.src);
+            
+            // Find the exact image clicked to start the sequence
+            const clickedSrc = element.querySelector('img').src;
+            currentImageIndex = currentGalleryImages.indexOf(clickedSrc);
+            
+            // Update the image source
+            updateLightboxImage();
+            
+            // Show or hide navigation arrows if there is more than 1 image
+            if(currentGalleryImages.length > 1) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            }
+
+            lightbox.classList.remove('hidden');
+            setTimeout(() => {
+                lightbox.classList.remove('opacity-0');
+            }, 10);
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Listen for keyboard arrows
+            document.addEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function updateLightboxImage() {
+            lightboxImg.style.opacity = 0; // brief fade out
+            setTimeout(() => {
+                lightboxImg.src = currentGalleryImages[currentImageIndex];
+                lightboxImg.style.opacity = 1; // fade back in
+            }, 150);
+        }
+
+        function changeImage(direction, event) {
+            if(event) event.stopPropagation(); // Prevents click from bubbling to the background and closing lightbox
+            
+            currentImageIndex += direction;
+            
+            // Loop back to start or end
+            if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
+            if (currentImageIndex < 0) currentImageIndex = currentGalleryImages.length - 1;
+            
+            updateLightboxImage();
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                lightboxImg.src = '';
+                document.body.style.overflow = 'auto'; // Restore background scrolling
+            }, 300);
+            
+            document.removeEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function lightboxKeyHandler(e) {
+            if (e.key === 'ArrowRight') changeImage(1);
+            if (e.key === 'ArrowLeft') changeImage(-1);
+            if (e.key === 'Escape') closeLightbox();
+        }
+
+        // Close lightbox on clicking outside the image
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // Mobile Swipe Support for Lightbox
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        lightbox.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        lightbox.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; // Minimum distance to register a swipe
+            if (touchEndX < touchStartX - swipeThreshold) {
+                // Swiped Left -> Go to Next Image
+                if (currentGalleryImages.length > 1) changeImage(1);
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                // Swiped Right -> Go to Previous Image
+                if (currentGalleryImages.length > 1) changeImage(-1);
+            }
+        }
+
+        // Force page to top on refresh
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+    </script>
+</body>
+</html>
