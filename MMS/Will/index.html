@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Your Will | Michael Malone &amp; Son Solicitors</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text x='12' y='18' font-family='Georgia, serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23b87333'>M</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: {
+  copper: '#b87333', 'copper-light': '#d4a76a', 'brand-black': '#111111'
+}}}}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root { --copper:#b87333; --copper-light:#d4a76a; --brand-black:#111111; }
+  body { font-family:'Inter',sans-serif; background:#fafafa; color:#111; }
+  .serif { font-family:'Playfair Display',serif; }
+  .eyebrow { font-size:10px; letter-spacing:0.4em; text-transform:uppercase; font-weight:700; color:var(--copper); }
+  .draw { height:1px; background:var(--copper); }
+  input,select,textarea { font-family:'Inter',sans-serif; }
+  input:focus,select:focus,textarea:focus { outline:none; border-color:var(--copper); box-shadow:0 0 0 1px var(--copper); }
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:#f1f1f1;} ::-webkit-scrollbar-thumb{background:var(--copper);}
+
+  /* The legal document, screen + print */
+  .will-doc { font-family: Georgia, 'Times New Roman', serif; color:#1a1a1a; line-height:1.7; }
+  .will-doc h1 { font-family:'Playfair Display',serif; }
+  .will-doc .clause { margin-bottom:1.1rem; text-align:justify; }
+  .will-doc .body-just { text-align:justify; }
+  .will-doc .clause-no { font-weight:700; }
+  .page-break { break-before:page; page-break-before:always; }
+
+  @media print {
+    @page { size:A4; margin:22mm 20mm; }
+    body { background:#fff; }
+    body * { visibility:hidden; }
+    #print-area, #print-area * { visibility:visible; }
+    #print-area { position:absolute; left:0; top:0; width:100%; }
+    .no-print { display:none !important; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useMemo, useRef } = React;
+
+/* ---------- Firm details: edit these for deployment ---------- */
+const FIRM = {
+  name: "Michael Malone & Son Solicitors",
+  short: "MALONE",
+  solicitor: "Michael Malone",            // the solicitor who prepares the will
+  email: "info@malonesolicitors.ie",
+  phone: "021 000 0000",                  // set the firm's number
+  location: "Blarney Shopping Centre, Blarney, Co. Cork",
+  // Paste your deployed Google Apps Script Web App URL (or backend endpoint) here:
+  endpoint: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
+};
+// Solicitor-only tools (Load / Print / approve) appear only when the URL ends with #admin
+const ADMIN = typeof location!=="undefined" && (location.hash||"").toLowerCase().includes("admin");
+
+/* ---------- helpers ---------- */
+const uid = () => Math.random().toString(36).slice(2,9);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = (iso) => { if(!iso) return ""; const d=new Date(iso+"T00:00:00"); return d.toLocaleDateString('en-IE',{day:'numeric',month:'long',year:'numeric'}); };
+const blank = () => ({
+  meta:{ ref:"", createdAt: todayISO(), markedFinal:false },
+  testator:{ title:"", fullName:"", otherNames:"", address:"", dob:"", occupation:"", maritalStatus:"" },
+  executors:[ { id:uid(), fullName:"", address:"", relationship:"", alsoTrustee:true } ],
+  spouse:{ has:"", fullName:"" },
+  children:[],
+  guardians:[],
+  gifts:[],
+  residue:[ { id:uid(), beneficiary:"", relationship:"", share:"", substitute:"" } ],
+  residueEqual:true,
+  funeral:{ include:false, wishes:"" },
+  notes:"",
+  flags:{}
+});
+
+/* ---------- small UI atoms ---------- */
+function Eyebrow({children}){
+  return (<div className="flex items-center gap-3 mb-3">
+    <div className="draw w-10"></div>
+    <span className="eyebrow">{children}</span>
+  </div>);
+}
+function Flag({id, will, setFlag}){
+  const f = will.flags[id];
+  const active = !!f;
+  return (<div className="mt-1.5 no-print">
+    <button type="button" onClick={()=>setFlag(id, active?null:{note:""})}
+      className={"text-[11px] font-semibold tracking-wide transition-colors "+(active?"text-copper":"text-gray-400 hover:text-copper")}>
+      {active ? "● Flagged for solicitor (click to remove)" : "Not sure? Ask the solicitor"}
+    </button>
+    {active && <textarea value={f.note} onChange={e=>setFlag(id,{note:e.target.value})} rows={2}
+      placeholder="Optional: tell the solicitor exactly what you'd like help with"
+      className="mt-1.5 w-full border border-copper-light bg-copper/5 rounded px-3 py-2 text-sm"/>}
+  </div>);
+}
+function Field({label, value, onChange, placeholder, type="text", flagId, will, setFlag, half, hint}){
+  return (<div className={half?"":"sm:col-span-2"}>
+    <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-600 mb-1.5">{label}</label>
+    <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm bg-white"/>
+    {hint && <p className="text-[11px] text-gray-400 mt-1">{hint}</p>}
+    {flagId && <Flag id={flagId} will={will} setFlag={setFlag}/>}
+  </div>);
+}
+function Area({label, value, onChange, placeholder, flagId, will, setFlag, rows=3}){
+  return (<div className="sm:col-span-2">
+    <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-600 mb-1.5">{label}</label>
+    <textarea rows={rows} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm bg-white"/>
+    {flagId && <Flag id={flagId} will={will} setFlag={setFlag}/>}
+  </div>);
+}
+function Select({label, value, onChange, options, flagId, will, setFlag, half}){
+  return (<div className={half?"":"sm:col-span-2"}>
+    <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-600 mb-1.5">{label}</label>
+    <select value={value} onChange={e=>onChange(e.target.value)}
+      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm bg-white">
+      <option value="">Select…</option>
+      {options.map(o=><option key={o} value={o}>{o}</option>)}
+    </select>
+    {flagId && <Flag id={flagId} will={will} setFlag={setFlag}/>}
+  </div>);
+}
+function Btn({children, onClick, kind="primary", className=""}){
+  const base="px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] font-bold transition-all duration-300 ";
+  const styles={
+    primary:"bg-copper text-white hover:bg-brand-black",
+    ghost:"border border-black text-black hover:bg-black hover:text-white",
+    soft:"border border-gray-300 text-gray-700 hover:border-copper hover:text-copper",
+  };
+  return <button type="button" onClick={onClick} className={base+styles[kind]+" "+className}>{children}</button>;
+}
+function Card({children, className=""}){ return <div className={"bg-white border border-gray-100 shadow-sm "+className}>{children}</div>; }
+function Note({children, tone="info"}){
+  const map={info:"border-copper/40 bg-copper/5 text-gray-700", warn:"border-amber-300 bg-amber-50 text-amber-900"};
+  return <div className={"border-l-2 px-4 py-3 text-sm leading-relaxed "+map[tone]}>{children}</div>;
+}
+
+/* ---------- repeater row shell ---------- */
+function RowCard({title, onRemove, children}){
+  return (<div className="border border-gray-200 rounded p-5 mb-4 bg-white relative">
+    <div className="flex items-center justify-between mb-4">
+      <span className="serif text-lg text-gray-900">{title}</span>
+      {onRemove && <button type="button" onClick={onRemove} className="no-print text-[11px] uppercase tracking-widest font-semibold text-gray-400 hover:text-red-600">Remove</button>}
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
+  </div>);
+}
+
+/* ============================================================ */
+function App(){
+  const [will, setWill] = useState(blank());
+  const [step, setStep] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [toast, setToast] = useState("");
+  const [submitState, setSubmitState] = useState("idle"); // idle | sending | sent | error
+  const fileRef = useRef(null);
+
+  /* update helpers */
+  const set = (path, val) => setWill(w=>{
+    const c = structuredClone(w); let o=c; const ks=path.split(".");
+    for(let i=0;i<ks.length-1;i++) o=o[ks[i]]; o[ks[ks.length-1]]=val; return c;
+  });
+  const setArr = (key, arr) => setWill(w=>({...w,[key]:arr}));
+  const setFlag = (id, val) => setWill(w=>{ const f={...w.flags}; if(val===null) delete f[id]; else f[id]=val; return {...w,flags:f}; });
+
+  const flagList = Object.entries(will.flags).map(([k,v])=>({key:k,note:v.note}));
+  const minors = will.children.filter(c=>c.minor);
+  const hasPartner = ["Married","In a civil partnership"].includes(will.testator.maritalStatus);
+
+  const showToast = (m)=>{ setToast(m); setTimeout(()=>setToast(""),2600); };
+
+  /* completeness */
+  const issues = useMemo(()=>{
+    const x=[];
+    if(!will.testator.fullName.trim()) x.push("Your full name");
+    if(!will.testator.address.trim()) x.push("Your address");
+    if(hasPartner && !will.spouse.fullName.trim()) x.push("Your spouse or civil partner's name");
+    if(!will.executors.some(e=>e.fullName.trim())) x.push("At least one executor");
+    if(!will.residue.some(r=>r.beneficiary.trim())) x.push("Who inherits everything else (the residue)");
+    if(minors.length && !will.guardians.some(g=>g.fullName.trim())) x.push("A guardian for your minor children");
+    return x;
+  },[will, minors.length, hasPartner]);
+
+  /* JSON in / out */
+  const exportJSON = () => {
+    const data = {...will, _format:"malone-will/v1", _exported:new Date().toISOString()};
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    const sn=(will.testator.fullName.trim().split(/\s+/).pop()||"will").toLowerCase();
+    a.href=URL.createObjectURL(blob); a.download=`will-${sn}-${todayISO()}.json`; a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("File downloaded");
+  };
+  const importJSON = (e) => {
+    const file=e.target.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+      const d=JSON.parse(r.result); const b=blank();
+      setWill({...b, ...d, meta:{...b.meta,...(d.meta||{})}, testator:{...b.testator,...(d.testator||{})},
+        spouse:{...b.spouse,...(d.spouse||{})}, funeral:{...b.funeral,...(d.funeral||{})}, flags:d.flags||{}});
+      setStep(7); showToast("File loaded");
+    }catch(err){ showToast("That file could not be read"); } };
+    r.readAsText(file); e.target.value="";
+  };
+  const submit = async () => {
+    if(submitState==="sending") return;
+    setSubmitState("sending");
+    const payload = {...will, _format:"malone-will/v1", _submitted:new Date().toISOString(),
+      _completed: issues.length===0, _openQuestions: flagList.length};
+    try{
+      if(!FIRM.endpoint || FIRM.endpoint.startsWith("PASTE_")) throw new Error("no endpoint");
+      await fetch(FIRM.endpoint, {
+        method:"POST",
+        mode:"no-cors",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      setSubmitState("sent");
+      setStep(9);
+    }catch(err){ setSubmitState("error"); }
+  };
+
+  const steps = ["Welcome","About you","Executors","Your family","Specific gifts","Everything else","Wishes & notes","Review","Submit","Submitted"];
+
+  return (<div className="min-h-screen">
+    {/* top bar */}
+    <header className="no-print sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-100">
+      <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="serif text-2xl font-bold tracking-tighter">{FIRM.short}</span>
+          <div className="draw w-[1.5px] h-7"></div>
+          <div className="leading-none">
+            <div className="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-600">Solicitors</div>
+            <div className="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-600">Blarney, Cork</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={importJSON}/>
+          {ADMIN
+            ? <Btn kind="soft" onClick={()=>fileRef.current.click()}>Load saved file</Btn>
+            : <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400">Wills &amp; Probate</span>}
+        </div>
+      </div>
+      {/* progress */}
+      <div className="max-w-5xl mx-auto px-5 pb-3">
+        <div className="h-[3px] bg-gray-100 relative">
+          <div className="absolute left-0 top-0 h-full bg-copper transition-all duration-500" style={{width:`${(step/(steps.length-1))*100}%`}}></div>
+        </div>
+        <div className="mt-2 text-[11px] uppercase tracking-widest text-gray-500">Step {step+1} of {steps.length} · <span className="text-copper font-semibold">{steps[step]}</span></div>
+      </div>
+    </header>
+
+    <main className="max-w-3xl mx-auto px-5 py-10 no-print">
+
+      {/* 0 WELCOME */}
+      {step===0 && <div>
+        <Eyebrow>Wills &amp; Probate</Eyebrow>
+        <h1 className="serif text-4xl mb-4">Make your will</h1>
+        <p className="text-gray-600 leading-relaxed mb-6">Answer the questions in plain English. You can add as many beneficiaries, children, executors and gifts as you need. When you are finished, {FIRM.name} will review everything before anything is signed.</p>
+        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+          {[["Fill it in","At your own pace, on any device."],["Submit it","It goes straight to the solicitor to review."],["Sign it properly","Print and sign with two witnesses present."]].map(([t,d],i)=>(
+            <Card key={i} className="p-5">
+              <div className="serif text-copper text-xl mb-1">{String(i+1).padStart(2,"0")}</div>
+              <div className="font-semibold text-sm mb-1">{t}</div>
+              <div className="text-xs text-gray-500 leading-relaxed">{d}</div>
+            </Card>))}
+        </div>
+        <Note>This form prepares a <strong>draft</strong> for review by your solicitor. It is not legal advice, and it does not replace a solicitor's advice on your particular circumstances.</Note>
+        <div className="mt-8 flex gap-3">
+          <Btn onClick={()=>setStep(1)}>Start</Btn>
+          {ADMIN && <Btn kind="soft" onClick={()=>fileRef.current.click()}>Continue a saved file</Btn>}
+        </div>
+      </div>}
+
+      {/* 1 TESTATOR */}
+      {step===1 && <div>
+        <Eyebrow>About you</Eyebrow>
+        <h1 className="serif text-3xl mb-6">The person making the will</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Select half label="Title" value={will.testator.title} onChange={v=>set("testator.title",v)} options={["Mr","Mrs","Ms","Dr","Other"]}/>
+          <Field half label="Full legal name" value={will.testator.fullName} onChange={v=>set("testator.fullName",v)} placeholder="As written on official documents"/>
+          <Field label="Any other names you are known by" value={will.testator.otherNames} onChange={v=>set("testator.otherNames",v)} placeholder="Optional, e.g. maiden name or business name"/>
+          <Area label="Home address" value={will.testator.address} onChange={v=>set("testator.address",v)} placeholder="Full postal address including Eircode"/>
+          <Field half type="date" label="Date of birth" value={will.testator.dob} onChange={v=>set("testator.dob",v)}/>
+          <Field half label="Occupation" value={will.testator.occupation} onChange={v=>set("testator.occupation",v)} placeholder="e.g. Retired teacher"/>
+          <Select label="Marital status" value={will.testator.maritalStatus} onChange={v=>set("testator.maritalStatus",v)} options={["Single","Married","In a civil partnership","Cohabiting","Separated","Divorced","Widowed"]} flagId="marital" will={will} setFlag={setFlag}/>
+          {hasPartner && <div className="sm:col-span-2">
+            <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-600 mb-1.5">{will.testator.maritalStatus==="Married"?"Your spouse's full name":"Your civil partner's full name"} <span className="text-copper">(required)</span></label>
+            <input value={will.spouse.fullName} onChange={e=>set("spouse.fullName",e.target.value)} placeholder="Full legal name"
+              className={"w-full border rounded px-3 py-2.5 text-sm bg-white "+(will.spouse.fullName.trim()?"border-gray-300":"border-copper")}/>
+            {!will.spouse.fullName.trim() && <p className="text-[11px] text-copper mt-1">Because you selected {will.testator.maritalStatus.toLowerCase()}, please name your partner before continuing.</p>}
+          </div>}
+        </div>
+      </div>}
+
+      {/* 2 EXECUTORS */}
+      {step===2 && <div>
+        <Eyebrow>Executors</Eyebrow>
+        <h1 className="serif text-3xl mb-3">Who will carry out your will</h1>
+        <p className="text-gray-600 text-sm mb-5">An executor makes sure your wishes are followed. Most people name one or two people they trust, plus a backup. They can also be beneficiaries.</p>
+        {will.executors.map((e,i)=>(
+          <RowCard key={e.id} title={`Executor ${i+1}`} onRemove={will.executors.length>1?()=>setArr("executors",will.executors.filter(x=>x.id!==e.id)):null}>
+            <Field half label="Full name" value={e.fullName} onChange={v=>setArr("executors",will.executors.map(x=>x.id===e.id?{...x,fullName:v}:x))}/>
+            <Field half label="Relationship to you" value={e.relationship} onChange={v=>setArr("executors",will.executors.map(x=>x.id===e.id?{...x,relationship:v}:x))} placeholder="e.g. Spouse, Son, Friend"/>
+            <Area label="Address" value={e.address} onChange={v=>setArr("executors",will.executors.map(x=>x.id===e.id?{...x,address:v}:x))}/>
+          </RowCard>))}
+        <Btn kind="soft" onClick={()=>setArr("executors",[...will.executors,{id:uid(),fullName:"",address:"",relationship:"",alsoTrustee:true}])}>+ Add another executor</Btn>
+        <div className="mt-5"><Flag id="executors-note" will={will} setFlag={setFlag}/></div>
+      </div>}
+
+      {/* 3 FAMILY */}
+      {step===3 && <div>
+        <Eyebrow>Your family</Eyebrow>
+        <h1 className="serif text-3xl mb-6">Spouse, partner and children</h1>
+
+        <Card className="p-5 mb-6">
+          {hasPartner ? <div>
+            <Field label={will.testator.maritalStatus==="Married"?"Your spouse's full name":"Your civil partner's full name"} value={will.spouse.fullName} onChange={v=>set("spouse.fullName",v)} placeholder="Full legal name"/>
+            <div className="mt-4"><Note tone="warn">In Ireland a spouse or civil partner has a <strong>legal right share</strong> of your estate under the Succession Act 1965, whatever your will says. Your solicitor will make sure your will works alongside this.</Note></div>
+          </div> : <p className="text-sm text-gray-600">You indicated you do not have a spouse or civil partner. If that changes, update your marital status on the previous step. <button type="button" onClick={()=>setStep(1)} className="text-copper font-semibold">Edit</button></p>}
+        </Card>
+
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="serif text-xl">Children</h2>
+        </div>
+        {will.children.map((c,i)=>(
+          <RowCard key={c.id} title={`Child ${i+1}`} onRemove={()=>setArr("children",will.children.filter(x=>x.id!==c.id))}>
+            <Field half label="Full name" value={c.fullName} onChange={v=>setArr("children",will.children.map(x=>x.id===c.id?{...x,fullName:v}:x))}/>
+            <Field half type="date" label="Date of birth" value={c.dob} onChange={v=>setArr("children",will.children.map(x=>x.id===c.id?{...x,dob:v}:x))}/>
+            <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={c.minor} onChange={e=>setArr("children",will.children.map(x=>x.id===c.id?{...x,minor:e.target.checked}:x))} className="accent-copper"/> Under 18 (a minor)</label>
+          </RowCard>))}
+        <Btn kind="soft" onClick={()=>setArr("children",[...will.children,{id:uid(),fullName:"",dob:"",minor:false}])}>+ Add a child</Btn>
+
+        {minors.length>0 && <div className="mt-8">
+          <h2 className="serif text-xl mb-2">Guardian for your minor children</h2>
+          <p className="text-gray-600 text-sm mb-4">Because you have children under 18, you can name a guardian to look after them.</p>
+          {will.guardians.map((g,i)=>(
+            <RowCard key={g.id} title={`Guardian ${i+1}`} onRemove={()=>setArr("guardians",will.guardians.filter(x=>x.id!==g.id))}>
+              <Field half label="Full name" value={g.fullName} onChange={v=>setArr("guardians",will.guardians.map(x=>x.id===g.id?{...x,fullName:v}:x))}/>
+              <Field half label="Relationship" value={g.relationship} onChange={v=>setArr("guardians",will.guardians.map(x=>x.id===g.id?{...x,relationship:v}:x))}/>
+              <Area label="Address" value={g.address} onChange={v=>setArr("guardians",will.guardians.map(x=>x.id===g.id?{...x,address:v}:x))}/>
+            </RowCard>))}
+          <Btn kind="soft" onClick={()=>setArr("guardians",[...will.guardians,{id:uid(),fullName:"",address:"",relationship:""}])}>+ Add a guardian</Btn>
+          <div className="mt-4"><Flag id="guardian-note" will={will} setFlag={setFlag}/></div>
+        </div>}
+      </div>}
+
+      {/* 4 GIFTS */}
+      {step===4 && <div>
+        <Eyebrow>Specific gifts</Eyebrow>
+        <h1 className="serif text-3xl mb-3">Particular gifts you want to leave</h1>
+        <p className="text-gray-600 text-sm mb-5">Use this for specific sums of money, particular items, property, or gifts to a charity. Anything not listed here passes under "everything else" in the next step. Leave this empty if you have none.</p>
+        {will.gifts.map((g,i)=>(
+          <RowCard key={g.id} title={`Gift ${i+1}`} onRemove={()=>setArr("gifts",will.gifts.filter(x=>x.id!==g.id))}>
+            <Select half label="Type of gift" value={g.kind} onChange={v=>setArr("gifts",will.gifts.map(x=>x.id===g.id?{...x,kind:v}:x))} options={["A sum of money","A particular item","Property / land","Gift to a charity"]}/>
+            <Field half label={g.kind==="A sum of money"?"Amount (€)":"Beneficiary's name"} value={g.kind==="A sum of money"?g.amount:g.beneficiary} onChange={v=>setArr("gifts",will.gifts.map(x=>x.id===g.id?(g.kind==="A sum of money"?{...x,amount:v}:{...x,beneficiary:v}):x))}/>
+            <Area label="Description of the gift" value={g.detail} onChange={v=>setArr("gifts",will.gifts.map(x=>x.id===g.id?{...x,detail:v}:x))} placeholder={g.kind==="A particular item"?"e.g. My gold pocket watch":g.kind==="Property / land"?"e.g. My house at … , Eircode …":"Details"}/>
+            <Field half label={g.kind==="A sum of money"?"Who receives it":"Their relationship to you"} value={g.kind==="A sum of money"?g.beneficiary:g.relationship} onChange={v=>setArr("gifts",will.gifts.map(x=>x.id===g.id?(g.kind==="A sum of money"?{...x,beneficiary:v}:{...x,relationship:v}):x))}/>
+            <Field half label="If they die before you, then to…" value={g.substitute} onChange={v=>setArr("gifts",will.gifts.map(x=>x.id===g.id?{...x,substitute:v}:x))} placeholder="Optional backup person"/>
+          </RowCard>))}
+        <Btn kind="soft" onClick={()=>setArr("gifts",[...will.gifts,{id:uid(),kind:"",detail:"",amount:"",beneficiary:"",relationship:"",substitute:""}])}>+ Add a gift</Btn>
+        <div className="mt-5"><Flag id="gifts-note" will={will} setFlag={setFlag}/></div>
+      </div>}
+
+      {/* 5 RESIDUE */}
+      {step===5 && <div>
+        <Eyebrow>Everything else</Eyebrow>
+        <h1 className="serif text-3xl mb-3">Who inherits the rest of your estate</h1>
+        <p className="text-gray-600 text-sm mb-5">This is everything not given as a specific gift. We call it the "residue", and it is usually the most important part of a will.</p>
+        <label className="flex items-center gap-2 text-sm text-gray-700 mb-4"><input type="checkbox" checked={will.residueEqual} onChange={e=>set("residueEqual",e.target.checked)} className="accent-copper"/> Split equally between everyone below</label>
+        {will.residue.map((r,i)=>(
+          <RowCard key={r.id} title={`Beneficiary ${i+1}`} onRemove={will.residue.length>1?()=>setArr("residue",will.residue.filter(x=>x.id!==r.id)):null}>
+            <Field half label="Full name" value={r.beneficiary} onChange={v=>setArr("residue",will.residue.map(x=>x.id===r.id?{...x,beneficiary:v}:x))}/>
+            <Field half label="Relationship" value={r.relationship} onChange={v=>setArr("residue",will.residue.map(x=>x.id===r.id?{...x,relationship:v}:x))}/>
+            {!will.residueEqual && <Field half label="Share (%)" type="number" value={r.share} onChange={v=>setArr("residue",will.residue.map(x=>x.id===r.id?{...x,share:v}:x))} placeholder="e.g. 50"/>}
+            <Field half label="If they die before you, then to…" value={r.substitute} onChange={v=>setArr("residue",will.residue.map(x=>x.id===r.id?{...x,substitute:v}:x))} placeholder="Optional backup person"/>
+          </RowCard>))}
+        <Btn kind="soft" onClick={()=>setArr("residue",[...will.residue,{id:uid(),beneficiary:"",relationship:"",share:"",substitute:""}])}>+ Add a beneficiary</Btn>
+        {!will.residueEqual && (()=>{ const tot=will.residue.reduce((s,r)=>s+(parseFloat(r.share)||0),0); return tot!==100 && will.residue.some(r=>r.share)
+          ? <div className="mt-4"><Note tone="warn">The shares currently add up to <strong>{tot}%</strong>. They should total 100%.</Note></div> : null; })()}
+        <div className="mt-5"><Flag id="residue-note" will={will} setFlag={setFlag}/></div>
+      </div>}
+
+      {/* 6 WISHES */}
+      {step===6 && <div>
+        <Eyebrow>Wishes &amp; notes</Eyebrow>
+        <h1 className="serif text-3xl mb-6">Funeral wishes and anything else</h1>
+        <Card className="p-5 mb-5">
+          <label className="flex items-center gap-2 text-sm text-gray-700 mb-3"><input type="checkbox" checked={will.funeral.include} onChange={e=>set("funeral.include",e.target.checked)} className="accent-copper"/> I would like to include funeral wishes</label>
+          {will.funeral.include && <textarea rows={3} value={will.funeral.wishes} onChange={e=>set("funeral.wishes",e.target.value)} placeholder="e.g. I wish to be buried at … / cremated …" className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm"/>}
+        </Card>
+        <div className="grid grid-cols-1 gap-4">
+          <Area rows={4} label="Anything else you'd like the solicitor to know" value={will.notes} onChange={v=>set("notes",v)} placeholder="Optional. Questions, concerns, or wishes that didn't fit elsewhere." flagId="notes-flag" will={will} setFlag={setFlag}/>
+          <Field label="Your reference (optional)" value={will.meta.ref} onChange={v=>set("meta.ref",v)} placeholder="Any reference you'd like to quote"/>
+        </div>
+      </div>}
+
+      {/* 7 REVIEW */}
+      {step===7 && <div>
+        <Eyebrow>Review</Eyebrow>
+        <h1 className="serif text-3xl mb-6">Check everything over</h1>
+        {issues.length>0 ? <Note tone="warn"><strong>Still to complete:</strong> {issues.join(" · ")}. You can still send this to the solicitor and they will help fill the gaps.</Note>
+          : <Note>All the essential sections are complete.</Note>}
+
+        {flagList.length>0 && <div className="mt-5">
+          <h2 className="serif text-xl mb-2 text-copper">{flagList.length} item(s) for the solicitor</h2>
+          <div className="space-y-2">{flagList.map(f=>(
+            <div key={f.key} className="border-l-2 border-copper bg-copper/5 px-4 py-2 text-sm">
+              <span className="font-semibold capitalize">{f.key.replace(/-/g," ")}</span>{f.note?`: ${f.note}`:" (no note added)"}
+            </div>))}</div>
+        </div>}
+
+        <div className="mt-8 grid sm:grid-cols-2 gap-3">
+          <Btn kind="ghost" onClick={()=>setPreviewOpen(true)}>Preview the document</Btn>
+          <Btn onClick={()=>setStep(8)}>Continue to submit</Btn>
+        </div>
+      </div>}
+
+      {/* 8 SUBMIT */}
+      {step===8 && <div>
+        <Eyebrow>Submit</Eyebrow>
+        <h1 className="serif text-3xl mb-4">Send your will to {FIRM.name}</h1>
+        <p className="text-gray-600 text-sm mb-6">When you submit, your details go straight to {FIRM.name}. They will review everything and contact you about the next steps. Nothing is legally binding until your solicitor has reviewed it and it has been signed correctly.</p>
+
+        {issues.length>0 && <div className="mb-5"><Note tone="warn"><strong>Some items are still blank:</strong> {issues.join(" · ")}. You can still submit, and the solicitor will help you complete them.</Note></div>}
+        {flagList.length>0 && <div className="mb-5"><Note>You have flagged <strong>{flagList.length}</strong> item(s) for the solicitor's help. These are included.</Note></div>}
+
+        <Card className="p-6 mb-6">
+          {submitState==="error"
+            ? <Note tone="warn">Your will could not be sent just now. Please check your connection and try again. If it keeps happening, contact {FIRM.name} at {FIRM.email}.</Note>
+            : <p className="text-gray-600 text-sm">Ready when you are.</p>}
+          <div className="mt-4 flex flex-wrap gap-3 items-center">
+            <Btn onClick={submit}>{submitState==="sending"?"Sending…":submitState==="error"?"Try again":"Submit to "+FIRM.name}</Btn>
+            <Btn kind="soft" onClick={()=>setPreviewOpen(true)}>Preview my will</Btn>
+          </div>
+        </Card>
+
+        {ADMIN && <Card className="p-6 mb-6 border-copper/40">
+          <div className="serif text-xl mb-1">Solicitor tools</div>
+          <p className="text-gray-500 text-xs mb-4">Staff only. Review the draft, tick to approve, then print the engrossed will and backing sheet for the signing appointment.</p>
+          <label className="flex items-center gap-2 text-sm text-gray-700 mb-4"><input type="checkbox" checked={will.meta.markedFinal} onChange={e=>set("meta.markedFinal",e.target.checked)} className="accent-copper"/> Approved by {FIRM.solicitor}. Remove the draft mark.</label>
+          <div className="flex flex-wrap gap-3 mb-5">
+            <Btn kind="ghost" onClick={()=>setPreviewOpen(true)}>Review draft</Btn>
+            <Btn onClick={()=>window.print()}>Print will for signing</Btn>
+            <Btn kind="soft" onClick={exportJSON}>Export file</Btn>
+          </div>
+          <div className="border-t border-gray-200 pt-4">
+            <div className="text-[11px] uppercase tracking-widest font-semibold text-gray-600 mb-2">At the signing appointment</div>
+            <ul className="text-xs text-gray-600 space-y-1 list-disc pl-5">
+              <li>Testator signs at the end, in front of two witnesses both present together.</li>
+              <li>Each witness then signs in the testator's presence.</li>
+              <li>No witness, or witness's spouse or civil partner, is a beneficiary.</li>
+              <li>Date the will on the day it is signed.</li>
+            </ul>
+          </div>
+        </Card>}
+
+        <Note tone="warn"><strong>What happens next.</strong> {FIRM.solicitor} will review your will, prepare it, and invite you into the office to sign it correctly with two witnesses present. You do not need to print or sign anything yourself.</Note>
+      </div>}
+
+      {/* 9 CONFIRMATION */}
+      {step===9 && <div className="text-center py-10">
+        <div className="serif text-5xl text-copper mb-4">✓</div>
+        <h1 className="serif text-3xl mb-3">Thank you{will.testator.fullName.trim()?", "+will.testator.fullName.split(/\s+/)[0]:""}</h1>
+        <p className="text-gray-600 leading-relaxed max-w-md mx-auto mb-8">{FIRM.solicitor} and the team at {FIRM.name} will now prepare your will. They will be in touch to arrange a time for you to call into the office and sign it, with two witnesses present.</p>
+        <Note>Nothing is legally binding until your will has been prepared, signed and properly witnessed at the office. Keep an eye on your email and phone for your appointment.</Note>
+      </div>}
+
+      {/* nav */}
+      {step!==9 && <div className="flex items-center justify-between mt-12 pt-6 border-t border-gray-200">
+        <button type="button" onClick={()=>setStep(s=>Math.max(0,s-1))} disabled={step===0} className={"text-[11px] uppercase tracking-widest font-bold "+(step===0?"text-gray-300":"text-gray-600 hover:text-copper")}>← Back</button>
+        <div className="flex gap-2">
+          {ADMIN && <Btn kind="soft" onClick={exportJSON}>Save progress</Btn>}
+          {step<8 && <Btn onClick={()=>{
+            if(step===1 && hasPartner && !will.spouse.fullName.trim()){ showToast("Please name your spouse or civil partner"); return; }
+            setStep(s=>Math.min(8,s+1));
+          }}>{step===0?"Start":"Next"} →</Btn>}
+        </div>
+      </div>}
+    </main>
+
+    {/* PREVIEW MODAL */}
+    {previewOpen && <div className="no-print fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-auto py-10 px-4" onClick={()=>setPreviewOpen(false)}>
+      <div className="bg-white max-w-3xl w-full shadow-2xl" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 sticky top-0 bg-white">
+          <span className="eyebrow">Document preview</span>
+          <div className="flex gap-2">
+            {ADMIN && <Btn onClick={()=>window.print()}>Print / PDF</Btn>}
+            <Btn kind="soft" onClick={()=>setPreviewOpen(false)}>Close</Btn>
+          </div>
+        </div>
+        <div className="p-8"><WillDocument will={will}/></div>
+      </div>
+    </div>}
+
+    {/* PRINT AREA (always in DOM, only visible when printing) */}
+    <div id="print-area" className="hidden print:block"><WillDocument will={will}/></div>
+
+    {toast && <div className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-black text-white text-xs uppercase tracking-widest px-5 py-3 shadow-xl z-[60]">{toast}</div>}
+  </div>);
+}
+
+/* ============================================================ */
+/* The legal document itself                                    */
+function WillDocument({will}){
+  const t=will.testator;
+  const fullName=t.fullName||"________________________";
+  let n=0; const no=()=>String(++n)+".";
+  const execNames = will.executors.filter(e=>e.fullName.trim());
+  const minors = will.children.filter(c=>c.minor);
+  const guardians = will.guardians.filter(g=>g.fullName.trim());
+  const gifts = will.gifts.filter(g=>g.detail.trim()||g.amount||g.beneficiary.trim());
+  const residue = will.residue.filter(r=>r.beneficiary.trim());
+
+  const giftText = (g)=>{
+    if(g.kind==="A sum of money") return `the sum of €${g.amount||"____"} to ${g.beneficiary||"____"}`;
+    if(g.kind==="Gift to a charity") return `${g.detail||"____"} to ${g.beneficiary||"the charity named"}`;
+    return `${g.detail||"____"} to ${g.beneficiary||"____"}${g.relationship?` (my ${g.relationship.toLowerCase()})`:""}`;
+  };
+
+  const datePrepared = fmtDate(todayISO());
+  const surname = (t.fullName.trim().split(/\s+/).pop()||"").toUpperCase();
+  const ref = will.meta.ref || (surname?`W/${surname}/${new Date().getFullYear()}`:"to be assigned");
+
+  return (<div className="will-doc">
+    {/* firm letterhead */}
+    <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-300">
+      <div>
+        <div className="flex items-center gap-2.5">
+          <span className="serif text-2xl font-bold tracking-tighter text-brand-black">{FIRM.short}</span>
+          <span style={{width:'1.5px',height:'22px',background:'var(--copper)',display:'inline-block'}}></span>
+          <span className="serif text-lg text-brand-black">&amp; Son</span>
+        </div>
+        <div className="text-[10px] uppercase tracking-[0.25em] text-gray-500 mt-1">Solicitors</div>
+      </div>
+      <div className="text-right text-[11px] text-gray-500 leading-snug">
+        <div>{FIRM.location}</div>
+        <div>{FIRM.phone} · {FIRM.email}</div>
+        <div className="mt-1">Our ref: {ref}</div>
+      </div>
+    </div>
+
+    {!will.meta.markedFinal && <div className="text-center mb-6 text-[11px] uppercase tracking-[0.3em] font-bold text-copper border-y border-copper/40 py-2">Draft for review. Not for signing</div>}
+
+    <h1 className="text-center text-2xl mb-1">Last Will and Testament</h1>
+    <p className="text-center text-sm text-gray-600 mb-8">of {fullName}{t.otherNames?` (also known as ${t.otherNames})`:""}</p>
+
+    <div className="clause"><span>I, <strong>{fullName}</strong>{t.address?`, of ${t.address.replace(/\n/g,", ")}`:""}{t.occupation?`, ${t.occupation}`:""}, DECLARE this to be my last will and testament.</span></div>
+
+    <div className="clause"><span className="clause-no">{no()} </span>I REVOKE all former wills and testamentary dispositions previously made by me.</div>
+
+    <div className="clause"><span className="clause-no">{no()} </span>I APPOINT {execNames.length?execNames.map((e,i)=>(<span key={i}><strong>{e.fullName}</strong>{e.address?` of ${e.address.replace(/\n/g,", ")}`:""}{i<execNames.length-1?(i===execNames.length-2?" and ":", "):""}</span>)):"____________"} to be the executor{execNames.length>1?"s":""} and trustee{execNames.length>1?"s":""} of this my will.</div>
+
+    {minors.length>0 && guardians.length>0 && <div className="clause"><span className="clause-no">{no()} </span>I APPOINT {guardians.map((g,i)=>(<span key={i}><strong>{g.fullName}</strong>{g.address?` of ${g.address.replace(/\n/g,", ")}`:""}{i<guardians.length-1?" and ":""}</span>))} to be the guardian{guardians.length>1?"s":""} of any of my children who are under eighteen years of age at the date of my death.</div>}
+
+    {gifts.length>0 && <div className="clause"><span className="clause-no">{no()} </span>I GIVE the following:
+      <div className="pl-6 mt-2 space-y-1">
+        {gifts.map((g,i)=>(<div key={i}>({String.fromCharCode(97+i)}) {giftText(g)}{g.substitute?`, but if they do not survive me then to ${g.substitute}`:""}.</div>))}
+      </div>
+    </div>}
+
+    <div className="clause"><span className="clause-no">{no()} </span>I GIVE, DEVISE AND BEQUEATH all the rest, residue and remainder of my estate, both real and personal, of whatever nature and wherever situated, {residue.length===0?"to ____________":will.residueEqual?(<span>to {residue.map((r,i)=>(<span key={i}><strong>{r.beneficiary}</strong>{i<residue.length-1?(i===residue.length-2?" and ":", "):""}</span>))} in equal shares absolutely{residue.some(r=>r.substitute)?", and if any of them does not survive me their share shall pass to the substitute named for them or, failing that, to the others equally":""}.</span>):(<span>as follows: {residue.map((r,i)=>(<span key={i}>{r.share||"__"}% to <strong>{r.beneficiary}</strong>{i<residue.length-1?"; ":""}</span>))}.</span>)}</div>
+
+    {will.funeral.include && will.funeral.wishes.trim() && <div className="clause"><span className="clause-no">{no()} </span>I WISH that {will.funeral.wishes.trim()}.</div>}
+
+    {will.notes.trim() && <div className="clause"><span className="clause-no">{no()} </span><em>Note for my solicitor: {will.notes.trim()}</em></div>}
+
+    {/* attestation */}
+    <div className="mt-10 pt-6 border-t border-gray-300">
+      <p className="mb-8">SIGNED by the above-named <strong>{fullName}</strong> as and for {t.title==="Mr"?"his":t.title==="Mrs"||t.title==="Ms"?"her":"his/her"} last will and testament, in the presence of us both, being present at the same time, who in {t.title==="Mr"?"his":t.title==="Mrs"||t.title==="Ms"?"her":"his/her"} presence and at {t.title==="Mr"?"his":t.title==="Mrs"||t.title==="Ms"?"her":"his/her"} request, and in the presence of each other, have signed our names as witnesses:</p>
+
+      <div className="mb-8">
+        <div className="border-b border-gray-500 w-2/3 mb-1">&nbsp;</div>
+        <div className="text-sm text-gray-600">Signature of {fullName} &nbsp;·&nbsp; Date: ______________</div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8">
+        {[1,2].map(i=>(<div key={i}>
+          <div className="border-b border-gray-500 mb-1">&nbsp;</div>
+          <div className="text-xs text-gray-600">Witness {i} signature</div>
+          <div className="border-b border-gray-400 mt-5 mb-1">&nbsp;</div><div className="text-xs text-gray-600">Name (block capitals)</div>
+          <div className="border-b border-gray-400 mt-5 mb-1">&nbsp;</div><div className="text-xs text-gray-600">Address</div>
+          <div className="border-b border-gray-400 mt-5 mb-1">&nbsp;</div><div className="text-xs text-gray-600">Occupation</div>
+        </div>))}
+      </div>
+
+      <p className="body-just text-[12px] text-gray-600 mt-8 leading-relaxed">This will has been prepared by {FIRM.solicitor} of {FIRM.name}, Solicitors, {FIRM.location}. The testator must sign at the end of this will in the presence of two witnesses, both present at the same time, who then sign in the presence of the testator. No witness, nor the spouse or civil partner of a witness, may take any benefit under this will.</p>
+    </div>
+
+    {/* traditional backing sheet, prints on its own page */}
+    <div className="page-break pt-28 text-center">
+      <div className="text-[11px] uppercase tracking-[0.3em] text-gray-500 mb-12">Dated the {datePrepared}</div>
+      <div className="serif text-3xl mb-3">Last Will and Testament</div>
+      <div className="text-base text-gray-600 mb-2">of</div>
+      <div className="serif text-2xl tracking-wide mb-2">{fullName.toUpperCase()}</div>
+      {t.address && <div className="text-sm text-gray-600 mb-28">{t.address.replace(/\n/g,", ")}</div>}
+      <div className="inline-flex items-center justify-center gap-2.5 mb-1">
+        <span className="serif text-xl font-bold tracking-tighter text-brand-black">{FIRM.short}</span>
+        <span style={{width:'1.5px',height:'18px',background:'var(--copper)',display:'inline-block'}}></span>
+        <span className="serif text-base text-brand-black">&amp; Son</span>
+      </div>
+      <div className="text-[10px] uppercase tracking-[0.25em] text-gray-500">Solicitors</div>
+      <div className="text-xs text-gray-500 mt-1">{FIRM.location}</div>
+      <div className="text-xs text-gray-500">{FIRM.phone} · {FIRM.email}</div>
+    </div>
+  </div>);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
