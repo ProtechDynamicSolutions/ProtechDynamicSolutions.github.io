@@ -1,1 +1,656 @@
-""
+
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOD Accounting Solutions Ltd | Tax & Auditing</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'><line x1='12' y1='0' x2='12' y2='24'/><line x1='0' y1='12' x2='24' y2='12'/><rect x='9' y='9' width='6' height='6' fill='%23aa1111' stroke='none'/></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jod-red': '#aa1111',
+                        'jod-red-light': '#d93838',
+                        'jod-black': '#111111',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jod-red: #aa1111;
+            --jod-black: #111111;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--jod-red);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--jod-red);
+        }
+
+        /* Smooth reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Trendline Scroll Animations */
+        .cad-line-container, .cad-line-container-h {
+            position: relative;
+        }
+
+        .cad-line-container-h.drawing .draw-line-h {
+            animation: drawLineWidth 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes drawLineWidth {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        /* Hide Scrollbar for Horizontal Galleries */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center h-16 sm:h-20">
+            
+            <div class="flex items-center gap-3 sm:gap-4">
+                <!-- Pre-cropped logo, nicely sized to match text -->
+                <a href="#" onclick="window.scrollTo(0,0); return false;" class="h-[40px] sm:h-[48px] flex items-center justify-center flex-shrink-0">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/JOD/JOD%20Accounting%20cropped.png" 
+                         alt="JOD Accounting Logo" class="h-full w-auto object-contain">
+                </a>
+                
+                <!-- Text next to logo perfectly vertically centered and sized -->
+                <div class="flex items-center border-l-[1.5px] border-jod-red pl-3 h-[38px] sm:h-[44px]">
+                    <div class="flex flex-col justify-center">
+                        <span class="text-[11px] sm:text-[13px] uppercase tracking-[0.15em] font-bold text-gray-800 leading-tight">John O'Donoghue</span>
+                        <span class="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] font-medium text-gray-500 leading-tight mt-0.5">Accounting Solutions Ltd</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-widest font-bold text-gray-800">
+                <a href="#" onclick="window.scrollTo(0,0); return false;" class="nav-link">Home</a>
+                <a href="#practice" class="nav-link">About</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#sectors" class="nav-link">Sectors</a>
+                <a href="#contact" class="px-6 py-2.5 bg-jod-red text-white border border-jod-red hover:bg-white hover:text-jod-red transition-all duration-300">Contact Us</a>
+            </div>
+
+            <button class="md:hidden p-2 text-gray-900 flex items-center justify-center" id="menuToggle" aria-label="Open Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
+        <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl" aria-label="Close Menu">&times;</button>
+        <a href="#" onclick="window.scrollTo(0,0); return false;" class="mobile-nav-link hover:text-jod-red">Home</a>
+        <a href="#practice" class="mobile-nav-link hover:text-jod-red">About</a>
+        <a href="#services" class="mobile-nav-link hover:text-jod-red">Services</a>
+        <a href="#sectors" class="mobile-nav-link hover:text-jod-red">Sectors</a>
+        <a href="#contact" class="mobile-nav-link text-jod-red font-bold">Contact</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[90vh] w-full flex items-center justify-center overflow-hidden pt-32 pb-10">
+        
+        <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000');">
+            <div class="absolute inset-0 bg-white/40 backdrop-blur-[3px]"></div>
+        </div>
+        
+        <div class="relative z-10 w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center -mt-16 md:-mt-24">
+            
+            <div id="logo-wrapper" class="w-full max-w-[550px] mx-auto mb-8 opacity-0 translate-y-10 transition-all duration-1000 ease-out">
+                <!-- Video Logo (Plays once and naturally freezes on last frame) -->
+                <video id="video-logo" class="w-full h-auto object-contain drop-shadow-md" autoplay muted playsinline>
+                    <source src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/raw/refs/heads/main/JOD/video_transparent_v2.webm" type="video/webm">
+                </video>
+            </div>
+
+            <div class="flex flex-col items-center reveal delay-500">
+                <p class="text-gray-800 max-w-xl text-sm md:text-base font-medium mb-10 leading-relaxed bg-white/60 p-4 rounded-sm backdrop-blur-md border border-white/50 shadow-sm">
+                    Precision, clarity, and strategic growth for your business. Offering bespoke accounting, bookkeeping, and tax consultancy across Co. Cork and beyond.
+                </p>
+                <a href="#practice" class="px-8 py-4 bg-jod-red text-white text-xs uppercase tracking-[0.2em] font-bold hover:bg-jod-black transition-all duration-300 shadow-lg flex items-center gap-3">
+                    Discover Our Practice
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#fafafa] to-transparent z-0"></div>
+    </section>
+
+    <!-- Practice / About Section -->
+    <section id="practice" class="py-24 bg-[#fafafa] overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                
+                <div class="w-full lg:w-1/2 relative reveal">
+                    <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1000" alt="Financial Planning and Accounting" class="w-full aspect-[4/5] object-cover shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
+                    <div class="absolute -bottom-6 -right-6 bg-white p-8 shadow-xl hidden md:block">
+                        <p class="serif text-5xl text-jod-red font-bold">2</p>
+                        <p class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mt-2">Years of<br>Excellence</p>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-1/2 reveal delay-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="cad-line-container-h relative w-12 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                            <div class="absolute text-jod-red top-1/2 cad-cursor-h opacity-0 flex items-center transform -translate-y-1/2">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="8,0 24,12 8,24"/></svg>
+                            </div>
+                        </div>
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-jod-red font-bold">The Practice</h2>
+                    </div>
+                    <h3 class="serif text-4xl mb-12 text-gray-900">About JOD Accounting</h3>
+                    
+                    <div class="space-y-8 text-gray-600 font-light leading-relaxed text-sm md:text-base">
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">Who We Are</h4>
+                            <p>
+                                Based in Macroom, Co. Cork, John O'Donoghue Accounting Solutions Limited is an agile micro-company dedicated to delivering highly personalised financial services. Over the past 2 years, we have built a reputation for accuracy, integrity, and proactive financial management.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="serif text-2xl text-gray-900 mb-3">Our Philosophy</h4>
+                            <p>
+                                We believe that sound financial management is the bedrock of any successful enterprise. We work closely with our clients, transforming complex tax and auditing requirements into clear, actionable strategies that protect assets and promote sustainable growth in Euros.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12">
+                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-jod-black hover:text-jod-red transition-colors group">
+                            <span>Schedule a Consultation</span>
+                            <div class="cad-line-container-h relative w-12 h-[2px]">
+                                <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h group-hover:w-full transition-all duration-500"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-jod-red font-bold mb-4">Principal Activities</h2>
+                <h3 class="serif text-4xl mb-6">Expertise & Services</h3>
+                
+                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
+                    Comprehensive accounting and tax solutions tailored to safeguard your business and optimise your financial performance.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Accounting & Bookkeeping</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Meticulous day-to-day bookkeeping and preparation of annual accounts. We ensure your financial records are accurate, up-to-date, and fully compliant with Irish regulatory standards.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Tax Consultancy</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Strategic tax planning for individuals and corporations. We help you navigate complex tax legislations to minimise liabilities while ensuring strict compliance with the Revenue Commissioners.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Auditing Activities</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Independent and objective auditing services providing assurance to stakeholders regarding the true and fair view of your company's financial statements.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Financial Projections</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Robust financial forecasting to support business planning, secure funding, and guide executive decision-making during periods of expansion or restructuring.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Corporate Restructuring</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            Advisory services tailored to reorganising your company's ownership, operational, or legal structures to improve profitability and streamline operations.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 border border-gray-100 hover:border-jod-red hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full bg-gray-50 hover:bg-white">
+                    <div>
+                        <svg class="w-8 h-8 text-jod-red mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
+                        <h4 class="serif text-2xl mb-4 text-gray-900 group-hover:text-jod-red transition-colors">Start-up Support</h4>
+                        <p class="text-gray-500 leading-relaxed mb-8 text-sm">
+                            From company registration (CRO) to setting up initial payroll and VAT systems, we provide the foundational financial support new businesses need to thrive.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Sectors / Portfolio Section -->
+    <section id="sectors" class="py-20 md:py-32 px-6 bg-[#111111] text-white overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
+                <div class="reveal">
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-jod-red font-bold mb-4">Our Clientele</h2>
+                    <h3 class="serif text-3xl md:text-5xl">Sectors We Serve</h3>
+                </div>
+                <div class="reveal delay-200">
+                    <p class="text-gray-400 max-w-md text-sm md:text-base">Delivering bespoke financial clarity across diverse industries throughout Ireland.</p>
+                </div>
+            </div>
+
+            <div class="mb-12 reveal">
+                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
+                    
+                    <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
+                        <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=800" alt="Construction and Engineering" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
+                                <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                            </div>
+                            <h4 class="serif text-3xl mb-2">Construction</h4>
+                            <p class="text-sm text-gray-300 font-light">Navigating RCT compliance, project costing, and cash flow management for contractors.</p>
+                        </div>
+                    </div>
+
+                    <!-- Open Source Agri-Business Image -->
+                    <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
+                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=800" alt="Agriculture and Farming Landscape" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
+                                <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                            </div>
+                            <h4 class="serif text-3xl mb-2">Agri-Business</h4>
+                            <p class="text-sm text-gray-300 font-light">Specialised tax planning, succession planning, and capital allowances for the farming sector.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800" alt="Retail and Hospitality" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
+                                <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                            </div>
+                            <h4 class="serif text-3xl mb-2">Retail & Hospitality</h4>
+                            <p class="text-sm text-gray-300 font-light">VAT compliance, payroll management, and margin analysis for shops and restaurants.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
+                        <img src="https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&q=80&w=800" alt="Corporate and Professional Services" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
+                                <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                            </div>
+                            <h4 class="serif text-3xl mb-2">Professional Services</h4>
+                            <p class="text-sm text-gray-300 font-light">Tax efficiency strategies and corporate structuring for consultants, clinics, and agencies.</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 bg-[#fafafa]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-jod-red font-bold mb-4">Client Voices</h2>
+                <h3 class="serif text-4xl">Testimonials</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-7xl mx-auto">
+                <div class="reveal bg-white p-8 shadow-sm border border-gray-50 flex flex-col h-full">
+                    <svg class="w-8 h-8 text-jod-red/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"We moved our business accounts to JOD Accounting Solutions last year, and the difference in clarity has been immense. John provides highly professional tax advice and handles our returns flawlessly. Knowing our finances are fully compliant brings huge peace of mind."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Liam McCarthy</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Macroom, Cork</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal delay-100 bg-white p-8 shadow-sm border border-gray-50 flex flex-col h-full">
+                    <svg class="w-8 h-8 text-jod-red/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"Setting up a new company felt daunting until we partnered with JOD. They guided us through the CRO registration, set up our payroll, and structured our tax plan efficiently. Their communication is exceptional and their bespoke service is exactly what a start-up needs."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Dave Maher</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Douglas, Cork</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reveal delay-200 bg-white p-8 shadow-sm border border-gray-50 flex flex-col h-full">
+                    <svg class="w-8 h-8 text-jod-red/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"An absolute professional. John reviewed our previous years' accounts and found significant efficiencies in our tax structure that translated into real savings in Euros. Prompt, reliable, and incredibly knowledgeable. Highly recommended."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Sarah Murphy</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Cork City</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="bg-jod-black text-white py-24 md:py-32 relative overflow-hidden">
+        
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
+            <svg viewBox="0 0 1000 600" fill="none" stroke="white" stroke-width="2" class="w-full max-w-5xl h-auto">
+                <line x1="100" y1="500" x2="900" y2="500" />
+                <line x1="100" y1="100" x2="100" y2="500" />
+                <line x1="100" y1="400" x2="900" y2="400" stroke-dasharray="5 5" stroke-width="1"/>
+                <line x1="100" y1="300" x2="900" y2="300" stroke-dasharray="5 5" stroke-width="1"/>
+                <line x1="100" y1="200" x2="900" y2="200" stroke-dasharray="5 5" stroke-width="1"/>
+                <rect x="200" y="350" width="60" height="150" fill="white" opacity="0.2" stroke="none" />
+                <rect x="400" y="250" width="60" height="250" fill="white" opacity="0.2" stroke="none" />
+                <rect x="600" y="150" width="60" height="350" fill="white" opacity="0.2" stroke="none" />
+                <rect x="800" y="100" width="60" height="400" fill="white" opacity="0.2" stroke="none" />
+                <path d="M100 450 L230 300 L430 200 L630 250 L830 50" stroke-linejoin="round" stroke-linecap="round" />
+                <circle cx="230" cy="300" r="6" fill="white" />
+                <circle cx="430" cy="200" r="6" fill="white" />
+                <circle cx="630" cy="250" r="6" fill="white" />
+                <circle cx="830" cy="50" r="6" fill="white" />
+            </svg>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="serif text-4xl md:text-6xl mb-12 leading-tight">Secure your <span class="text-jod-red italic">financial future</span>.</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8 md:gap-16 justify-center mb-16">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-jod-red mb-2 font-bold">Email Us</span>
+                    <a href="mailto:info@jodaccounting.ie" class="text-lg md:text-xl hover:text-jod-red transition-colors">info@jodaccounting.ie</a>
+                </div>
+                <div class="w-px h-10 bg-white/10 hidden md:block mt-2"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-jod-red mb-2 font-bold">Registered Office</span>
+                    <p class="text-lg md:text-xl leading-relaxed">Lyrenageeha, Ballingeary,<br>Macroom, Co. Cork<br>P12 T688</p>
+                </div>
+            </div>
+
+            <form class="mt-8 max-w-2xl mx-auto text-left space-y-8 bg-white/5 p-8 backdrop-blur-sm border border-white/10" onsubmit="event.preventDefault(); alert('Enquiry submitted! A member of the JOD team will be in touch shortly.');">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-jod-red mb-2 font-bold">Full Name</label>
+                        <input type="text" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-jod-red transition-colors placeholder-white/30" placeholder="Jane Doe" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-jod-red mb-2 font-bold">Email Address</label>
+                        <input type="email" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-jod-red transition-colors placeholder-white/30" placeholder="jane@example.com" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-jod-red mb-2 font-bold">Accounting Enquiry</label>
+                    <textarea rows="4" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-jod-red transition-colors resize-none placeholder-white/30" placeholder="Tell us how we can assist your business..." required></textarea>
+                </div>
+                <div class="text-center pt-6">
+                    <button type="submit" class="bg-jod-red text-white px-10 py-4 uppercase tracking-[0.2em] font-bold text-xs hover:bg-white hover:text-jod-red transition-all duration-300 shadow-xl">
+                        Submit Enquiry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12 px-6 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+                
+                <div class="flex items-center gap-4 justify-center md:justify-start">
+                    <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/JOD/JOD%20Accounting.png" alt="JOD Logo" class="h-8 object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                    
+                    <div class="flex flex-col leading-none border-l-[1.5px] border-gray-200 pl-3">
+                        <span class="text-[9px] uppercase tracking-[0.15em] font-bold text-gray-800">CRO: 757020</span>
+                        <span class="text-[9px] uppercase tracking-[0.15em] text-gray-500 mt-1">Tax Consultancy & Auditing</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">
+                    <a href="#" class="hover:text-jod-red transition-colors">LinkedIn</a>
+                    <a href="#" class="hover:text-jod-red transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-jod-red transition-colors">Terms of Service</a>
+                </div>
+
+                <div class="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-medium">
+                    &copy; 2026 John O'Donoghue Accounting Solutions Ltd.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Hero Reveal Animation
+        window.addEventListener('load', () => {
+            const logoWrapper = document.getElementById('logo-wrapper');
+            if (logoWrapper) {
+                // Fade in the container on load
+                logoWrapper.classList.remove('opacity-0', 'translate-y-10');
+            }
+            
+            revealElements();
+        });
+
+        // Mobile Menu Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closeFunc = () => {
+            mobileMenu.classList.add('translate-x-full');
+            document.body.style.overflow = 'auto';
+        };
+
+        closeMenu.addEventListener('click', closeFunc);
+        mobileLinks.forEach(link => link.addEventListener('click', closeFunc));
+
+        // Scroll Reveal Logic
+        function revealElements() {
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", revealElements);
+
+        // Intersection Observer for drawing the red trendlines
+        const lineObserverOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.2
+        };
+
+        const lineObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('drawing');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, lineObserverOptions);
+
+        document.querySelectorAll('.cad-line-container, .cad-line-container-h').forEach(container => {
+            lineObserver.observe(container);
+        });
+
+        // Horizontal Gallery Auto-Scroll
+        document.querySelectorAll('.horizontal-gallery').forEach(gallery => {
+            let autoScrollTimer;
+            let isHovering = false;
+
+            const autoScroll = () => {
+                if(!isHovering) {
+                    if (gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 10) {
+                        gallery.scrollTo({left: 0, behavior: 'smooth'}); 
+                    } else {
+                        gallery.scrollBy({ left: window.innerWidth * 0.4, behavior: 'smooth' }); 
+                    }
+                }
+            };
+
+            const startTimer = () => {
+                autoScrollTimer = setInterval(autoScroll, 4000);
+            };
+
+            const stopTimer = () => {
+                if(autoScrollTimer) clearInterval(autoScrollTimer);
+            };
+
+            gallery.addEventListener('mouseenter', () => { isHovering = true; stopTimer(); });
+            gallery.addEventListener('mouseleave', () => { isHovering = false; startTimer(); });
+            gallery.addEventListener('touchstart', () => { isHovering = true; stopTimer(); }, {passive:true});
+            gallery.addEventListener('touchend', () => { isHovering = false; startTimer(); }, {passive:true});
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) startTimer();
+                    else stopTimer();
+                });
+            });
+            observer.observe(gallery);
+        });
+
+        // Ensure page starts at the top on refresh
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+    </script>
+</body>
+</html>
