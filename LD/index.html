@@ -36,7 +36,10 @@ tailwind.config={
 :root{
   --paper:#FEFCFA;--linen:#F4EEE7;--shell:#EDE3DA;--ink:#2A2320;--muted:#8C8079;
   --nude:#BC8A7C;--nude-deep:#97695C;--line:#E3D8CE;
+  /* The main logo with text */
   --word:url("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png");
+  /* The standalone cropped brush stroke you created */
+  --stroke-img:url("https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/NailVarnishStroke.png");
 }
 html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
@@ -47,13 +50,26 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
 /* The brand assets */
 .wordmark{background-image:var(--word);background-size:contain;background-position:center;background-repeat:no-repeat;}
 
-/* The signature: a real polish swatch that paints itself on */
+/* The main signature animation */
 .stroke-h{position:relative;display:inline-block;vertical-align:middle;}
 .swipe{position:absolute;inset:0;clip-path:inset(0 100% 0 0);}
-/* Main glossy stroke animation - slow and delayed */
 .stroke-h.drawing .swipe{animation:wipeH 2.5s cubic-bezier(.45,0,.25,1) 1.0s forwards;}
-/* UI decorative line wipe */
-.ui-line.drawing .swipe{animation:wipeH 1.2s cubic-bezier(.45,0,.25,1) 0.2s forwards;}
+
+/* The new standalone mini brush strokes */
+.mini-stroke {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+}
+.mini-stroke .swipe {
+    background-image: var(--stroke-img);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.mini-stroke.drawing .swipe {
+    animation: wipeH 1.8s cubic-bezier(.45,0,.25,1) 0.2s forwards;
+}
 
 @keyframes wipeH{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 
@@ -103,6 +119,7 @@ input::placeholder { color: var(--muted); font-weight: 300; }
 <nav class="fixed w-full z-[100] bg-paper/90 backdrop-blur-md border-b border-line">
   <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 md:h-20 flex justify-between items-center">
     <a href="#top" class="flex items-center gap-4">
+      <!-- Fixed vertical alignment with negative translate-y -->
       <div class="relative w-[110px] md:w-[130px] -translate-y-[12px]">
         <div class="overflow-hidden" style="clip-path: inset(0 0 48% 0); margin-bottom: -48%;">
             <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto">
@@ -166,13 +183,14 @@ input::placeholder { color: var(--muted); font-weight: 300; }
       <img src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80&w=1200" alt="Hands resting during a manicure in soft light" loading="lazy" decoding="async" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=1200'">
     </div>
     <div class="reveal d1 order-1 lg:order-2">
-      <div class="flex items-center gap-4 mb-7"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">The Studio</span></div>
+      <!-- New miniature standalone stroke -->
+      <div class="flex items-center gap-4 mb-7"><span class="stroke-h mini-stroke" style="width:45px; height:16px;"><span class="swipe"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">The Studio</span></div>
       <h2 class="serif font-light text-5xl md:text-6xl leading-[1.05] mb-12">Considered care,<br>nothing more.</h2>
       <div class="space-y-10 text-muted font-light leading-relaxed max-w-md">
         <div><h3 class="serif text-2xl text-ink mb-3">The work</h3><p>We shape, refine and finish by hand. No upselling, no clutter, no rush. Each appointment is a single, complete idea, given the time it deserves.</p></div>
         <div><h3 class="serif text-2xl text-ink mb-3">The setting</h3><p>A calm room in warm stone and linen. Soft light, low sound, and an hour that belongs entirely to you. You leave looking after, and feeling, better.</p></div>
       </div>
-      <a href="#menu" class="inline-flex items-center gap-4 mt-12 text-[10px] uppercase tracking-[0.32em] font-medium text-ink hover:text-nude-deep transition-colors">See the menu <span class="stroke-h ui-line rounded-full overflow-hidden" style="width:30px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span></a>
+      <a href="#menu" class="inline-flex items-center gap-4 mt-12 text-[10px] uppercase tracking-[0.32em] font-medium text-ink hover:text-nude-deep transition-colors">See the menu <span class="stroke-h mini-stroke" style="width:35px; height:12px;"><span class="swipe"></span></span></a>
     </div>
   </div>
 </section>
@@ -180,7 +198,7 @@ input::placeholder { color: var(--muted); font-weight: 300; }
 <!-- THE MENU -->
 <section id="menu" class="py-28 md:py-40 px-6 bg-linen">
   <div class="max-w-3xl mx-auto text-center">
-    <div class="flex items-center justify-center gap-4 mb-7"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">The Menu</span><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span></div>
+    <div class="flex items-center justify-center gap-4 mb-7"><span class="stroke-h mini-stroke" style="width:45px; height:16px;"><span class="swipe"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">The Menu</span><span class="stroke-h mini-stroke" style="width:45px; height:16px;"><span class="swipe"></span></span></div>
     <h2 class="serif font-light text-5xl md:text-6xl mb-6">A short, deliberate list</h2>
     <p class="text-muted font-light max-w-md mx-auto mb-20">We do a few things, properly. Every treatment includes a glass from the cellar and the quiet of the room.</p>
     <div class="space-y-16 text-center">
@@ -197,7 +215,7 @@ input::placeholder { color: var(--muted); font-weight: 300; }
 <!-- WORDS -->
 <section id="words" class="py-28 md:py-40 px-6 bg-paper">
   <div class="max-w-4xl mx-auto text-center">
-    <div class="flex items-center justify-center gap-4 mb-16"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">Words</span><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span></div>
+    <div class="flex items-center justify-center gap-4 mb-16"><span class="stroke-h mini-stroke" style="width:45px; height:16px;"><span class="swipe"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">Words</span><span class="stroke-h mini-stroke" style="width:45px; height:16px;"><span class="swipe"></span></span></div>
     <div class="space-y-20">
       <blockquote class="reveal"><p class="serif italic font-light text-3xl md:text-4xl leading-snug text-ink/85">&ldquo;I came in wound up and left like I&rsquo;d had a holiday. The nails were the least of it.&rdquo;</p><cite class="not-italic block mt-6 text-[10px] uppercase tracking-[0.4em] text-muted">Aoife O'Connor &middot; Cork</cite></blockquote>
       <blockquote class="reveal"><p class="serif italic font-light text-3xl md:text-4xl leading-snug text-ink/85">&ldquo;No fuss, no selling. Lovely work and a glass of ros&eacute;. I&rsquo;ve found my place.&rdquo;</p><cite class="not-italic block mt-6 text-[10px] uppercase tracking-[0.4em] text-muted">Maeve Gallagher</cite></blockquote>
@@ -308,13 +326,9 @@ input::placeholder { color: var(--muted); font-weight: 300; }
 
     <!-- Step 4: Success -->
     <div id="b-step-4" class="flex-1 flex flex-col items-center justify-center text-center booking-step hidden">
-      <div class="relative block mx-auto mb-10" style="width:280px;">
-           <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="" class="w-full h-auto invisible">
-           <div class="absolute inset-0" style="clip-path: inset(48% 0 0 0);">
-                <div class="stroke-h w-full h-full" id="success-stroke">
-                    <div class="swipe absolute inset-0 bg-no-repeat" style="background-image: var(--word); background-size: 100% auto; background-position: top;"></div>
-                </div>
-           </div>
+      <!-- The new standalone stroke image used elegantly here -->
+      <div class="stroke-h mini-stroke mx-auto mb-10" id="success-stroke" style="width:140px; height:40px;">
+          <div class="swipe"></div>
       </div>
       <h2 class="serif font-light text-5xl mb-4">Your quiet hour awaits.</h2>
       <p class="text-muted font-light text-lg mb-2">Thank you, <span id="success-name" class="text-ink"></span>.</p>
