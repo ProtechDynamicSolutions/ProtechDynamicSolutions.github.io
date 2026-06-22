@@ -77,6 +77,19 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
 ::-webkit-scrollbar-track{background:var(--linen);}
 ::-webkit-scrollbar-thumb{background:var(--nude);border-radius:9999px;}
 
+/* Custom form inputs */
+input, select {
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+input:focus, select:focus { border-color: var(--nude-deep); }
+input::placeholder { color: var(--muted); font-weight: 300; }
+
 @media (prefers-reduced-motion: reduce){
   .swipe{clip-path:none!important;animation:none!important;}
   .reveal{opacity:1;transform:none;transition:none;}
@@ -92,7 +105,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
   <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 md:h-20 flex justify-between items-center">
     <a href="#top" class="flex items-center gap-4">
       <div class="relative w-[110px] md:w-[130px]">
-        <!-- Clipping the bottom stroke out so only the text shows, perfectly un-cropped -->
         <div class="overflow-hidden" style="clip-path: inset(0 0 48% 0); margin-bottom: -48%;">
             <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto">
         </div>
@@ -102,11 +114,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
       </span>
     </a>
     <div class="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.28em] font-medium text-ink">
-      <a href="#studio" class="nav-link">Studio</a>
       <a href="#menu" class="nav-link">Menu</a>
       <a href="#space" class="nav-link">The Space</a>
-      <a href="#words" class="nav-link">Words</a>
-      <a href="#reserve" class="px-6 py-3 border border-ink hover:bg-ink hover:text-paper transition-all duration-500">Reserve</a>
+      <button onclick="openCheckinModal()" class="nav-link text-muted hover:text-ink transition-colors">Check-in</button>
+      <button onclick="openBookingModal()" class="px-6 py-3 border border-ink hover:bg-ink hover:text-paper transition-all duration-500 uppercase tracking-[0.28em]">Reserve</button>
     </div>
     <button class="md:hidden p-2 text-ink" id="menuToggle" aria-label="Open menu">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"></line><line x1="3" y1="16" x2="21" y2="16"></line></svg>
@@ -119,8 +130,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
   <a href="#studio" class="mob hover:text-nude-deep transition">Studio</a>
   <a href="#menu" class="mob hover:text-nude-deep transition">Menu</a>
   <a href="#space" class="mob hover:text-nude-deep transition">The Space</a>
-  <a href="#words" class="mob hover:text-nude-deep transition">Words</a>
-  <a href="#reserve" class="mob hover:text-nude-deep transition">Reserve</a>
+  <button onclick="openCheckinModal(); document.getElementById('closeMenu').click();" class="mob hover:text-nude-deep transition">Check-in</button>
+  <button onclick="openBookingModal(); document.getElementById('closeMenu').click();" class="mob text-[12px] sans uppercase tracking-[0.3em] px-8 py-4 border border-ink mt-4">Reserve</button>
 </div>
 
 <!-- HERO -->
@@ -128,15 +139,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
   <p class="rise r1 text-[10px] uppercase tracking-[0.5em] text-nude-deep font-medium mb-12">Nail Studio &middot; Ireland</p>
   <h1 class="rise r2 m-0 w-full">
     <div class="relative block mx-auto" style="width:min(88vw,640px);">
-         <!-- Invisible image to exactly match the aspect ratio of the logo -->
          <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto invisible">
-         
-         <!-- Top Part: The Text (Uncropped) -->
          <div class="absolute inset-0" style="clip-path: inset(0 0 48% 0);">
               <div class="absolute inset-0 bg-no-repeat" style="background-image: var(--word); background-size: 100% auto; background-position: top;"></div>
          </div>
-         
-         <!-- Bottom Part: The Built-in Glossy Stroke (Animated) -->
          <div class="absolute inset-0" style="clip-path: inset(48% 0 0 0);">
               <div class="stroke-h w-full h-full">
                   <div class="swipe absolute inset-0 bg-no-repeat" style="background-image: var(--word); background-size: 100% auto; background-position: top;"></div>
@@ -146,10 +152,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
     <span class="sr-only">Nude. Nail Studio, Ireland</span>
   </h1>
   <p class="rise r3 serif italic font-light text-2xl md:text-4xl text-ink/80 max-w-xl mt-12">Sixty minutes of quiet.</p>
-  <a href="#reserve" class="rise r4 mt-14 inline-block px-10 py-4 border border-ink text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-ink hover:text-paper transition-all duration-500">Reserve a moment</a>
+  <button onclick="openBookingModal()" class="rise r4 mt-14 inline-block px-10 py-4 border border-ink text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-ink hover:text-paper transition-all duration-500">Reserve a moment</button>
 </header>
 
-<!-- THE MOMENT (New custom image applied) -->
+<!-- THE MOMENT -->
 <section class="reveal w-full h-[60vh] md:h-[85vh] overflow-hidden" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)">
   <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/LD.jpg" alt="The warm, welcoming space" loading="lazy" decoding="async" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&q=80&w=2000'">
 </section>
@@ -185,88 +191,183 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;o
       <article class="reveal"><h3 class="serif text-4xl md:text-5xl font-light mb-3">The Grounding</h3><p class="text-muted font-light italic serif text-xl mb-3">A considered pedicure, from heel to finish.</p><p class="text-[10px] uppercase tracking-[0.4em] text-nude-deep">60 min &middot; &euro;60</p></article>
       <article class="reveal"><h3 class="serif text-4xl md:text-5xl font-light mb-3">The Removal</h3><p class="text-muted font-light italic serif text-xl mb-3">A gentle soak-off and nail recovery.</p><p class="text-[10px] uppercase tracking-[0.4em] text-nude-deep">30 min &middot; &euro;25</p></article>
     </div>
-  </div>
-  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-px bg-line mt-24 border border-line">
-    <div class="reveal bg-linen p-10 md:p-14"><h3 class="serif text-3xl font-light mb-4">The Quiet Edit</h3><p class="text-muted font-light leading-relaxed">A small, ever-changing shortlist of nudes and soft neutrals. No wall of bottles to wade through. We choose well, so you needn't.</p></div>
-    <div class="reveal d1 bg-linen p-10 md:p-14"><h3 class="serif text-3xl font-light mb-4">The Complimentary Cellar</h3><p class="text-muted font-light leading-relaxed">A glass of ros&eacute;, a good wine, or a quiet coffee. Poured without asking, included always. The hour is meant to feel like time off.</p></div>
-  </div>
-</section>
-
-<!-- THE SPACE -->
-<section id="space" class="py-28 md:py-40 overflow-hidden">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-16">
-      <div class="reveal">
-        <div class="flex items-center gap-4 mb-6"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">The Space</span></div>
-        <h2 class="serif font-light text-5xl md:text-6xl">A room, and the work</h2>
-      </div>
-      <p class="reveal d1 text-muted font-light max-w-sm md:text-right">Mood over close-ups. This is what it feels like to be here for an hour.</p>
-    </div>
-  </div>
-
-  <div class="reveal max-w-6xl mx-auto px-6 mb-6 flex items-center gap-4"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:20px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.36em] text-ink/60">The room</span></div>
-  <div class="horizontal-gallery flex overflow-x-auto gap-5 px-6 pb-8 snap-x snap-mandatory hide-scrollbar">
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&q=80&w=1200" alt="Warm minimal interior" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&q=80&w=1200" alt="Soft towels and calm spa detail" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?auto=format&fit=crop&q=80&w=1200" alt="Quiet still life of flowers" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1510626176961-4b57d4fbbfd6?auto=format&fit=crop&q=80&w=1200" alt="A glass from the cellar" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-  </div>
-
-  <div class="reveal max-w-6xl mx-auto px-6 mt-16 mb-6 flex items-center gap-4"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:20px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.36em] text-ink/60">By hand</span></div>
-  <div class="horizontal-gallery flex overflow-x-auto gap-5 px-6 pb-8 snap-x snap-mandatory hide-scrollbar">
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=1200" alt="A soft, neutral manicure" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&q=80&w=1200" alt="Hands at rest" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&q=80&w=1200" alt="A hands treatment in progress" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
-    <figure class="flex-none w-[78vw] sm:w-[52vw] md:w-[38vw] aspect-[4/3] overflow-hidden relative group cursor-pointer snap-start" style="background:linear-gradient(135deg,#EDE3DA,#F4EEE7)" onclick="openLightbox(this)"><img src="https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=1200" alt="A neutral detail, finished" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80&w=1200'"><figcaption class="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-paper text-[10px] uppercase tracking-[0.3em]">View</figcaption></figure>
+    <button onclick="openBookingModal()" class="reveal mt-20 inline-block px-12 py-5 border border-ink bg-transparent text-ink text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-ink hover:text-paper transition-all duration-500">Book a treatment</button>
   </div>
 </section>
 
 <!-- WORDS -->
-<section id="words" class="py-28 md:py-40 px-6 bg-linen">
+<section id="words" class="py-28 md:py-40 px-6 bg-paper">
   <div class="max-w-4xl mx-auto text-center">
     <div class="flex items-center justify-center gap-4 mb-16"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">Words</span><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span></div>
     <div class="space-y-20">
       <blockquote class="reveal"><p class="serif italic font-light text-3xl md:text-4xl leading-snug text-ink/85">&ldquo;I came in wound up and left like I&rsquo;d had a holiday. The nails were the least of it.&rdquo;</p><cite class="not-italic block mt-6 text-[10px] uppercase tracking-[0.4em] text-muted">Aoife O'Connor &middot; Cork</cite></blockquote>
       <blockquote class="reveal"><p class="serif italic font-light text-3xl md:text-4xl leading-snug text-ink/85">&ldquo;No fuss, no selling. Lovely work and a glass of ros&eacute;. I&rsquo;ve found my place.&rdquo;</p><cite class="not-italic block mt-6 text-[10px] uppercase tracking-[0.4em] text-muted">Maeve Gallagher</cite></blockquote>
-      <blockquote class="reveal"><p class="serif italic font-light text-3xl md:text-4xl leading-snug text-ink/85">&ldquo;The quietest hour of my week. I book it like an appointment with myself.&rdquo;</p><cite class="not-italic block mt-6 text-[10px] uppercase tracking-[0.4em] text-muted">Siobh&aacute;n Murphy</cite></blockquote>
     </div>
-  </div>
-</section>
-
-<!-- RESERVE -->
-<section id="reserve" class="py-28 md:py-40 px-6">
-  <div class="max-w-3xl mx-auto text-center">
-    <div class="flex items-center justify-center gap-4 mb-7"><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span><span class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium">Reserve</span><span class="stroke-h ui-line rounded-full overflow-hidden" style="width:40px;height:2px;background-color:var(--line);"><span class="swipe bg-nude"></span></span></div>
-    <h2 class="serif font-light text-5xl md:text-7xl mb-8">Reserve a moment</h2>
-    <p class="text-muted font-light max-w-md mx-auto mb-14">By appointment only, so the room stays calm. Tell us when suits and we&rsquo;ll find your hour.</p>
-    <div class="grid sm:grid-cols-3 gap-px bg-line border border-line mb-14 text-left">
-      <div class="bg-paper p-8"><p class="text-[10px] uppercase tracking-[0.34em] text-nude-deep mb-2">Hours</p><p class="serif text-xl">Tue to Sat</p><p class="text-muted font-light text-sm">10:00 &ndash; 18:00</p></div>
-      <div class="bg-paper p-8"><p class="text-[10px] uppercase tracking-[0.34em] text-nude-deep mb-2">Find us</p><p class="serif text-xl">Ireland</p><p class="text-muted font-light text-sm">Address to follow</p></div>
-      <div class="bg-paper p-8"><p class="text-[10px] uppercase tracking-[0.34em] text-nude-deep mb-2">Speak to us</p><p class="serif text-xl">hello@nude.ie</p><p class="text-muted font-light text-sm">We reply within the day</p></div>
-    </div>
-    <a href="mailto:hello@nude.ie?subject=Reservation%20at%20Nude." class="inline-block px-12 py-5 bg-ink text-paper text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-nude-deep transition-all duration-500">Request a time</a>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer class="border-t border-line py-14 px-6">
+<footer class="border-t border-line py-14 px-6 bg-linen">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
     <div class="relative w-[100px] md:w-[120px]">
         <div class="overflow-hidden" style="clip-path: inset(0 0 48% 0); margin-bottom: -48%;">
             <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto">
         </div>
     </div>
-    <p class="text-[10px] uppercase tracking-[0.34em] text-muted">Nail Studio &middot; Ireland</p>
-    <p class="text-[10px] uppercase tracking-[0.34em] text-muted">&copy; <span id="year"></span> Nude.</p>
+    <div class="flex gap-6">
+      <button onclick="openBookingModal()" class="text-[10px] uppercase tracking-[0.34em] text-muted hover:text-ink transition">Reserve</button>
+      <button onclick="openCheckinModal()" class="text-[10px] uppercase tracking-[0.34em] text-muted hover:text-ink transition">Check-in</button>
+    </div>
+    <p class="text-[10px] uppercase tracking-[0.34em] text-muted">&copy; <span id="year"></span> Nude. Cork, Ireland.</p>
   </div>
 </footer>
 
-<!-- LIGHTBOX -->
-<div id="lightbox" class="fixed inset-0 z-[200] bg-ink/95 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-  <button onclick="closeLightbox()" class="absolute top-5 right-6 text-paper text-4xl font-light" aria-label="Close">&times;</button>
-  <button id="prevBtn" onclick="changeImage(-1, event)" class="absolute left-4 md:left-10 text-paper text-3xl px-3 py-2 hidden" aria-label="Previous">&#8249;</button>
-  <img id="lightboxImg" src="" alt="" class="max-w-full max-h-[85vh] object-contain transition-opacity duration-200">
-  <button id="nextBtn" onclick="changeImage(1, event)" class="absolute right-4 md:right-10 text-paper text-3xl px-3 py-2 hidden" aria-label="Next">&#8250;</button>
+<!-- ============================================== -->
+<!-- BOOKING SYSTEM OVERLAY -->
+<!-- ============================================== -->
+<div id="bookingModal" class="fixed inset-0 z-[500] bg-paper hidden opacity-0 transition-opacity duration-500 overflow-y-auto">
+  <div class="min-h-screen flex flex-col max-w-3xl mx-auto px-6 py-10">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-16">
+      <div class="relative w-[90px]">
+        <div class="overflow-hidden" style="clip-path: inset(0 0 48% 0); margin-bottom: -48%;">
+            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto">
+        </div>
+      </div>
+      <button onclick="closeBookingModal()" class="text-3xl font-light text-ink hover:text-nude-deep transition">&times;</button>
+    </div>
+
+    <!-- Step 1: Select Treatment -->
+    <div id="b-step-1" class="flex-1 flex flex-col booking-step">
+      <p class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium mb-6">Step 1 of 3</p>
+      <h2 class="serif font-light text-4xl md:text-5xl mb-10">Select a treatment</h2>
+      <div class="space-y-4">
+        <button onclick="selectTreatment('The Bare', 40, 45)" class="w-full text-left p-6 border border-line hover:border-nude transition-colors group flex justify-between items-center">
+          <div><h3 class="serif text-2xl mb-1 group-hover:text-nude-deep transition">The Bare</h3><p class="text-sm text-muted font-light">Shape, buff and breathable finish</p></div>
+          <div class="text-right"><p class="text-sm text-ink">&euro;40</p><p class="text-xs text-muted">45 min</p></div>
+        </button>
+        <button onclick="selectTreatment('The Gel Edit', 55, 60)" class="w-full text-left p-6 border border-line hover:border-nude transition-colors group flex justify-between items-center">
+          <div><h3 class="serif text-2xl mb-1 group-hover:text-nude-deep transition">The Gel Edit</h3><p class="text-sm text-muted font-light">Shape refinement and gel finish</p></div>
+          <div class="text-right"><p class="text-sm text-ink">&euro;55</p><p class="text-xs text-muted">60 min</p></div>
+        </button>
+        <button onclick="selectTreatment('The Restoration', 70, 75)" class="w-full text-left p-6 border border-line hover:border-nude transition-colors group flex justify-between items-center">
+          <div><h3 class="serif text-2xl mb-1 group-hover:text-nude-deep transition">The Restoration</h3><p class="text-sm text-muted font-light">Hot towel and deep treatment</p></div>
+          <div class="text-right"><p class="text-sm text-ink">&euro;70</p><p class="text-xs text-muted">75 min</p></div>
+        </button>
+        <button onclick="selectTreatment('The Grounding', 60, 60)" class="w-full text-left p-6 border border-line hover:border-nude transition-colors group flex justify-between items-center">
+          <div><h3 class="serif text-2xl mb-1 group-hover:text-nude-deep transition">The Grounding</h3><p class="text-sm text-muted font-light">Pedicure, from heel to finish</p></div>
+          <div class="text-right"><p class="text-sm text-ink">&euro;60</p><p class="text-xs text-muted">60 min</p></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Date & Time -->
+    <div id="b-step-2" class="flex-1 flex flex-col booking-step hidden">
+      <button onclick="goBookingStep(1)" class="text-[10px] uppercase tracking-[0.2em] text-muted hover:text-ink mb-6 self-start">&larr; Back</button>
+      <p class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium mb-6">Step 2 of 3</p>
+      <h2 class="serif font-light text-4xl md:text-5xl mb-2">When suits you?</h2>
+      <p class="text-muted font-light mb-10">Selected: <span id="summary-treatment" class="italic text-ink"></span></p>
+      
+      <div class="grid md:grid-cols-2 gap-10">
+        <div>
+          <label class="block text-[10px] uppercase tracking-[0.2em] text-muted mb-3">Select Date</label>
+          <input type="date" id="booking-date" class="bg-paper" min="" onchange="generateTimeSlots()">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase tracking-[0.2em] text-muted mb-3">Select Time</label>
+          <div id="time-slots" class="grid grid-cols-2 gap-3">
+             <p class="text-sm text-muted italic col-span-2">Please select a date first.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Details -->
+    <div id="b-step-3" class="flex-1 flex flex-col booking-step hidden">
+      <button onclick="goBookingStep(2)" class="text-[10px] uppercase tracking-[0.2em] text-muted hover:text-ink mb-6 self-start">&larr; Back</button>
+      <p class="text-[10px] uppercase tracking-[0.4em] text-nude-deep font-medium mb-6">Step 3 of 3</p>
+      <h2 class="serif font-light text-4xl md:text-5xl mb-2">Your details</h2>
+      <p class="text-muted font-light mb-10"><span id="summary-final" class="italic text-ink"></span></p>
+      
+      <form id="booking-form" onsubmit="submitBooking(event)" class="space-y-5 max-w-md">
+        <div>
+          <label class="block text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Full Name</label>
+          <input type="text" id="bf-name" required placeholder="Aoife O'Connor">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Email Address</label>
+          <input type="email" id="bf-email" required placeholder="aoife@example.com">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Phone Number</label>
+          <input type="tel" id="bf-phone" required placeholder="08X XXX XXXX">
+        </div>
+        <button type="submit" class="w-full mt-8 px-8 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-nude-deep transition-all duration-300">Confirm Reservation</button>
+      </form>
+    </div>
+
+    <!-- Step 4: Success -->
+    <div id="b-step-4" class="flex-1 flex flex-col items-center justify-center text-center booking-step hidden">
+      <div class="relative block mx-auto mb-10" style="width:280px;">
+           <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="" class="w-full h-auto invisible">
+           <div class="absolute inset-0" style="clip-path: inset(48% 0 0 0);">
+                <div class="stroke-h w-full h-full" id="success-stroke">
+                    <div class="swipe absolute inset-0 bg-no-repeat" style="background-image: var(--word); background-size: 100% auto; background-position: top;"></div>
+                </div>
+           </div>
+      </div>
+      <h2 class="serif font-light text-5xl mb-4">Your quiet hour awaits.</h2>
+      <p class="text-muted font-light text-lg mb-2">Thank you, <span id="success-name" class="text-ink"></span>.</p>
+      <p class="text-muted font-light text-sm max-w-md mx-auto">We've sent a confirmation to your email. We look forward to welcoming you to the studio in Cork.</p>
+      <button onclick="closeBookingModal()" class="mt-12 px-8 py-3 border border-line text-[10px] uppercase tracking-[0.2em] text-muted hover:text-ink hover:border-ink transition-colors">Return to site</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SELF CHECK-IN OVERLAY -->
+<!-- ============================================== -->
+<div id="checkinModal" class="fixed inset-0 z-[500] bg-linen hidden opacity-0 transition-opacity duration-500 overflow-y-auto">
+  <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+    
+    <button onclick="closeCheckinModal()" class="absolute top-10 right-10 text-3xl font-light text-ink hover:text-nude-deep transition">&times;</button>
+    
+    <div class="relative w-[120px] mb-16">
+      <div class="overflow-hidden" style="clip-path: inset(0 0 48% 0); margin-bottom: -48%;">
+          <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/LD/file_00000000aac071f4984f3bfce560123f.png" alt="Nude." class="w-full h-auto">
+      </div>
+    </div>
+
+    <!-- Check-in Search -->
+    <div id="ci-step-1" class="w-full max-w-md transition-opacity duration-500">
+      <h2 class="serif font-light text-4xl mb-4">Welcome to Nude.</h2>
+      <p class="text-muted font-light mb-10">Please enter your email to check in for your appointment.</p>
+      <form onsubmit="submitCheckin(event)" class="space-y-4 text-left">
+        <input type="email" id="ci-email" required placeholder="Email address" class="bg-paper text-center">
+        <button type="submit" class="w-full px-8 py-4 border border-ink text-[10px] uppercase tracking-[0.4em] font-medium hover:bg-ink hover:text-paper transition-all duration-300">Find Booking</button>
+      </form>
+    </div>
+
+    <!-- Check-in Success -->
+    <div id="ci-step-2" class="w-full max-w-lg hidden opacity-0 transition-opacity duration-500">
+      <h2 class="serif font-light text-5xl mb-6">Hello, <span id="ci-name" class="italic">Aoife</span>.</h2>
+      <p class="text-ink font-light text-xl mb-4">We've let your technician know you have arrived.</p>
+      <p class="text-muted font-light mb-12">Please take a seat in the lounge area. While you wait, would you care for a complimentary refreshment?</p>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <button onclick="finishCheckin()" class="p-6 border border-line bg-paper hover:border-nude transition-colors group">
+          <p class="serif text-2xl group-hover:text-nude-deep transition">Glass of Ros&eacute;</p>
+        </button>
+        <button onclick="finishCheckin()" class="p-6 border border-line bg-paper hover:border-nude transition-colors group">
+          <p class="serif text-2xl group-hover:text-nude-deep transition">Sparkling Water</p>
+        </button>
+      </div>
+      <button onclick="finishCheckin()" class="mt-8 text-[10px] uppercase tracking-[0.2em] text-muted hover:text-ink underline underline-offset-4">No thank you, I'm fine</button>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -274,7 +375,6 @@ document.getElementById('year').textContent=new Date().getFullYear();
 const mobileMenu=document.getElementById('mobileMenu');
 document.getElementById('menuToggle').addEventListener('click',()=>mobileMenu.classList.remove('translate-x-full'));
 document.getElementById('closeMenu').addEventListener('click',()=>mobileMenu.classList.add('translate-x-full'));
-document.querySelectorAll('.mob').forEach(a=>a.addEventListener('click',()=>mobileMenu.classList.add('translate-x-full')));
 
 function revealOnScroll(){
   document.querySelectorAll('.reveal').forEach(el=>{
@@ -285,7 +385,7 @@ window.addEventListener('scroll',revealOnScroll);
 window.addEventListener('load',revealOnScroll);
 revealOnScroll();
 
-/* The IntersectionObserver for the paintbrush stroke */
+/* Paintbrush Intersection Observer */
 const strokeObserver=new IntersectionObserver((entries,obs)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -296,59 +396,150 @@ const strokeObserver=new IntersectionObserver((entries,obs)=>{
 },{threshold:0.1});
 document.querySelectorAll('.stroke-h').forEach(s=>strokeObserver.observe(s));
 
-document.querySelectorAll('.horizontal-gallery').forEach(gallery=>{
-  let timer,hovering=false;
-  const step=()=>{if(hovering)return;if(gallery.scrollLeft+gallery.clientWidth>=gallery.scrollWidth-10)gallery.scrollTo({left:0,behavior:'smooth'});else gallery.scrollBy({left:window.innerWidth*0.55,behavior:'smooth'});};
-  const start=()=>timer=setInterval(step,4500);const stop=()=>timer&&clearInterval(timer);
-  gallery.addEventListener('mouseenter',()=>{hovering=true;stop();});
-  gallery.addEventListener('mouseleave',()=>{hovering=false;start();});
-  gallery.addEventListener('touchstart',()=>{hovering=true;stop();},{passive:true});
-  gallery.addEventListener('touchend',()=>{hovering=false;start();},{passive:true});
-  new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?start():stop())).observe(gallery);
-});
 
-const lightbox=document.getElementById('lightbox'),lightboxImg=document.getElementById('lightboxImg'),prevBtn=document.getElementById('prevBtn'),nextBtn=document.getElementById('nextBtn');
-let imgs=[],idx=0;
-function openLightbox(el){
-  const g=el.closest('.horizontal-gallery');
-  imgs=Array.from(g.querySelectorAll('img')).map(i=>i.currentSrc||i.src);
-  idx=imgs.indexOf(el.querySelector('img').currentSrc||el.querySelector('img').src);
-  if(idx<0)idx=0;
-  update();
-  const multi=imgs.length>1;
-  prevBtn.classList.toggle('hidden',!multi);
-  nextBtn.classList.toggle('hidden',!multi);
-  lightbox.classList.remove('hidden');
-  setTimeout(()=>lightbox.classList.remove('opacity-0'),10);
-  document.body.style.overflow='hidden';
-  document.addEventListener('keydown',keyHandler);
+/* =========================================
+   BOOKING SYSTEM LOGIC
+   ========================================= */
+const bookingModal = document.getElementById('bookingModal');
+let bookingState = { treatment: '', price: 0, duration: 0, date: '', time: '', name: '' };
+
+// Set minimum date to today
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('booking-date').min = today;
+
+function openBookingModal() {
+  bookingModal.classList.remove('hidden');
+  // Small timeout to allow display:block to render before changing opacity for CSS transition
+  setTimeout(() => { bookingModal.classList.remove('opacity-0'); }, 10);
+  document.body.style.overflow = 'hidden';
+  goBookingStep(1);
 }
-function update(){
-  lightboxImg.style.opacity=0;
-  setTimeout(()=>{lightboxImg.src=imgs[idx];lightboxImg.style.opacity=1;},150);
+
+function closeBookingModal() {
+  bookingModal.classList.add('opacity-0');
+  setTimeout(() => { 
+    bookingModal.classList.add('hidden'); 
+    document.body.style.overflow = 'auto';
+    // Reset form
+    document.getElementById('booking-form').reset();
+    document.getElementById('time-slots').innerHTML = '<p class="text-sm text-muted italic col-span-2">Please select a date first.</p>';
+    document.getElementById('booking-date').value = '';
+    document.getElementById('success-stroke').classList.remove('drawing');
+  }, 500);
 }
-function changeImage(dir,e){
-  if(e)e.stopPropagation();
-  idx=(idx+dir+imgs.length)%imgs.length;
-  update();
+
+function goBookingStep(step) {
+  document.querySelectorAll('.booking-step').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`b-step-${step}`).classList.remove('hidden');
 }
-function closeLightbox(){
-  lightbox.classList.add('opacity-0');
-  setTimeout(()=>{lightbox.classList.add('hidden');lightboxImg.src='';document.body.style.overflow='auto';},300);
-  document.removeEventListener('keydown',keyHandler);
+
+function selectTreatment(name, price, duration) {
+  bookingState.treatment = name;
+  bookingState.price = price;
+  bookingState.duration = duration;
+  document.getElementById('summary-treatment').textContent = `${name} (€${price} / ${duration} min)`;
+  goBookingStep(2);
 }
-function keyHandler(e){
-  if(e.key==='ArrowRight')changeImage(1);
-  if(e.key==='ArrowLeft')changeImage(-1);
-  if(e.key==='Escape')closeLightbox();
+
+function generateTimeSlots() {
+  const dateVal = document.getElementById('booking-date').value;
+  if(!dateVal) return;
+  bookingState.date = dateVal;
+  
+  // Demo: Generate some fake times
+  const times = ['10:00', '11:30', '14:00', '15:15', '16:30'];
+  const container = document.getElementById('time-slots');
+  container.innerHTML = '';
+  
+  times.forEach(time => {
+    const btn = document.createElement('button');
+    btn.className = 'p-3 border border-line bg-transparent hover:border-nude hover:text-nude-deep transition text-sm';
+    btn.textContent = time;
+    btn.onclick = () => selectTime(time);
+    container.appendChild(btn);
+  });
 }
-lightbox.addEventListener('click',e=>{if(e.target===lightbox)closeLightbox();});
-let sx=0;
-lightbox.addEventListener('touchstart',e=>sx=e.changedTouches[0].screenX,{passive:true});
-lightbox.addEventListener('touchend',e=>{
-  const dx=e.changedTouches[0].screenX-sx;
-  if(Math.abs(dx)>50&&imgs.length>1)changeImage(dx<0?1:-1);
-},{passive:true});
+
+function selectTime(time) {
+  bookingState.time = time;
+  // Format nice string
+  const dateObj = new Date(bookingState.date);
+  const dateStr = dateObj.toLocaleDateString('en-IE', { weekday: 'long', month: 'long', day: 'numeric' });
+  
+  document.getElementById('summary-final').innerHTML = `
+    ${bookingState.treatment} <br>
+    ${dateStr} at ${time}
+  `;
+  goBookingStep(3);
+}
+
+function submitBooking(e) {
+  e.preventDefault();
+  bookingState.name = document.getElementById('bf-name').value;
+  
+  // Switch to success step
+  document.getElementById('success-name').textContent = bookingState.name.split(' ')[0]; // First name
+  goBookingStep(4);
+  
+  // Trigger the brush stroke animation on the success page
+  setTimeout(() => {
+    document.getElementById('success-stroke').classList.add('drawing');
+  }, 200);
+}
+
+/* =========================================
+   CHECK-IN SYSTEM LOGIC
+   ========================================= */
+const checkinModal = document.getElementById('checkinModal');
+
+function openCheckinModal() {
+  checkinModal.classList.remove('hidden');
+  setTimeout(() => { checkinModal.classList.remove('opacity-0'); }, 10);
+  document.body.style.overflow = 'hidden';
+  
+  // Reset states
+  document.getElementById('ci-email').value = '';
+  document.getElementById('ci-step-1').classList.remove('hidden');
+  document.getElementById('ci-step-1').classList.remove('opacity-0');
+  document.getElementById('ci-step-2').classList.add('hidden');
+  document.getElementById('ci-step-2').classList.add('opacity-0');
+}
+
+function closeCheckinModal() {
+  checkinModal.classList.add('opacity-0');
+  setTimeout(() => { 
+    checkinModal.classList.add('hidden'); 
+    document.body.style.overflow = 'auto';
+  }, 500);
+}
+
+function submitCheckin(e) {
+  e.preventDefault();
+  const email = document.getElementById('ci-email').value;
+  
+  // Fake lookup logic: Extract name from email or default to Aoife
+  let name = "Aoife";
+  if(email.includes('@')) {
+    const prefix = email.split('@')[0];
+    name = prefix.charAt(0).toUpperCase() + prefix.slice(1).replace(/[._0-9]/g, '');
+  }
+  document.getElementById('ci-name').textContent = name;
+  
+  // Transition steps smoothly
+  document.getElementById('ci-step-1').classList.add('opacity-0');
+  setTimeout(() => {
+    document.getElementById('ci-step-1').classList.add('hidden');
+    document.getElementById('ci-step-2').classList.remove('hidden');
+    setTimeout(() => {
+      document.getElementById('ci-step-2').classList.remove('opacity-0');
+    }, 50);
+  }, 500);
+}
+
+function finishCheckin() {
+  // Demo just closes the modal upon selection
+  closeCheckinModal();
+}
 
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 window.scrollTo(0,0);
