@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ACS Oversight Dashboard</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Custom Styles for Scrollbars & Animations -->
   <style>
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -27,7 +24,6 @@
     }
   </style>
 
-  <!-- ES Module Import Map for React & Icons -->
   <script type="importmap">
     {
       "imports": {
@@ -38,8 +34,8 @@
     }
   </script>
   
-  <!-- Babel Standalone to compile JSX in the browser -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script>window.Babel || document.write('<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.2/babel.min.js"><\\/script>')</script>
 </head>
 <body class="bg-slate-100 antialiased text-slate-900">
   <div id="root"></div>
