@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+    <title>Protech Invoices</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#233140">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Protech">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/favicon.png" type="image/png">
+
+    <!-- Tailwind (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React 18 (pinned, with jsDelivr fallback) -->
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script>window.React||document.write('<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><\/script>')</script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script>window.ReactDOM||document.write('<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"><\/script>')</script>
+
+    <!-- Babel standalone (pinned, with jsDelivr fallback) -->
+    <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+    <script>window.Babel||document.write('<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"><\/script>')</script>
+
+    <!-- html2pdf (pinned, with jsDelivr fallback) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>window.html2pdf||document.write('<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"><\/script>')</script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #BE875C; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn .25s ease-out; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+        input, select, textarea, button { font-family: inherit; }
+        /* respect iOS safe areas for the bottom nav */
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200">
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react">
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+        /* ===================================================================
+         *  SECURE VAULT  -  AES-GCM + PBKDF2 (Web Crypto)
+         *  The Apps Script URL and backend password are encrypted at rest
+         *  with a key derived from your password. Without the password the
+         *  stored blob cannot be read, even by someone holding the device.
+         * =================================================================== */
+        const Vault = {
+            enc: new TextEncoder(),
+            dec: new TextDecoder(),
+            KEY: 'protech_vault',
+            b64(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); },
+            ub64(str) { return Uint8Array.from(atob(str), function (c) { return c.charCodeAt(0); }); },
+            async deriveKey(password, salt) {
+                const base = await crypto.subtle.importKey('raw', this.enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+                return crypto.subtle.deriveKey(
+                    { name: 'PBKDF2', salt: salt, iterations: 310000, hash: 'SHA-256' },
+                    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+                );
+            },
+            async save(password, payload) {
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await this.deriveKey(password, salt);
+                const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, this.enc.encode(JSON.stringify(payload)));
+                const blob = { v: 1, salt: this.b64(salt), iv: this.b64(iv), ct: this.b64(ct) };
+                localStorage.setItem(this.KEY, JSON.stringify(blob));
+            },
+            async open(password) {
+                const raw = localStorage.getItem(this.KEY);
+                if (!raw) throw new Error('No vault');
+                const blob = JSON.parse(raw);
+                const key = await this.deriveKey(password, this.ub64(blob.salt));
+                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: this.ub64(blob.iv) }, key, this.ub64(blob.ct));
+                return JSON.parse(this.dec.decode(pt));
+            },
+            exists() { return !!localStorage.getItem(this.KEY); },
+            wipe() { localStorage.removeItem(this.KEY); }
+        };
+
+        /* ===================================================================
+         *  BACKEND CALL  -  text/plain POST avoids the CORS preflight that
+         *  Apps Script web apps cannot answer.
+         * =================================================================== */
+        async function callBackend(url, payload) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload),
+                redirect: 'follow'
+            });
+            if (!res.ok) throw new Error('Server returned ' + res.status);
+            return res.json();
+        }
+
+        function blobToBase64(blob) {
+            return new Promise(function (resolve, reject) {
+                const r = new FileReader();
+                r.onloadend = function () { resolve(String(r.result).split(',')[1]); };
+                r.onerror = reject;
+                r.readAsDataURL(blob);
+            });
+        }
+
+        /* ===================================================================
+         *  ICONS (inline SVG, no external icon library)
+         * =================================================================== */
+        const Icon = ({ children, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+        const Lock = (p) => <Icon {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
+        const Unlock = (p) => <Icon {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></Icon>;
+        const Save = (p) => <Icon {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></Icon>;
+        const Download = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
+        const FolderOpen = (p) => <Icon {...p}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="2" y1="13" x2="22" y2="13"/></Icon>;
+        const Trash2 = (p) => <Icon {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></Icon>;
+        const Settings2 = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></Icon>;
+        const User = (p) => <Icon {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
+        const ListIcon = (p) => <Icon {...p}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></Icon>;
+        const X = (p) => <Icon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+        const Plus = (p) => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+        const Phone = (p) => <Icon {...p}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></Icon>;
+        const Database = (p) => <Icon {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></Icon>;
+        const RefreshCw = (p) => <Icon {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>;
+        const FilePlus = (p) => <Icon {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></Icon>;
+        const Edit3 = (p) => <Icon {...p}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></Icon>;
+        const FileText = (p) => <Icon {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></Icon>;
+        const Receipt = (p) => <Icon {...p}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></Icon>;
+        const Archive = (p) => <Icon {...p}><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></Icon>;
+        const Camera = (p) => <Icon {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></Icon>;
+        const Cloud = (p) => <Icon {...p}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></Icon>;
+        const Check = (p) => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>;
+        const Eye = (p) => <Icon {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></Icon>;
+        const ExternalLink = (p) => <Icon {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></Icon>;
+        const Upload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></Icon>;
+
+        const LOGO_URL = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Protech%20no%20bk%204.png";
+        const Spinner = ({ size = 16 }) => <RefreshCw size={size} className="spin" />;
+
+        /* ===================================================================
+         *  GATE SCREENS: Setup (first run) and Lock (every open after)
+         * =================================================================== */
+        const screenWrap = "min-h-screen flex items-center justify-center p-5 bg-gradient-to-b from-slate-900 to-slate-950";
+        const card = "w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-2xl p-7 shadow-2xl backdrop-blur";
+        const lbl = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider";
+        const fld = "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-3 text-sm text-slate-100 focus:outline-none focus:border-[#BE875C] focus:ring-1 focus:ring-[#BE875C] transition-all";
+        const goldBtn = "w-full bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white py-3 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-[#BE875C]/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-wait";
+
+        function Brand({ subtitle }) {
+            return (
+                <div className="text-center mb-6">
+                    <div className="bg-[#233140] p-3 rounded-xl inline-block mb-3 w-[150px]">
+                        <img src={LOGO_URL} alt="Protech Dynamic Solutions" className="w-full h-auto object-contain" />
+                    </div>
+                    <p className="text-slate-400 text-sm">{subtitle}</p>
+                </div>
+            );
+        }
+
+        function SetupScreen({ onReady }) {
+            const [url, setUrl] = useState('');
+            const [pw, setPw] = useState('');
+            const [pw2, setPw2] = useState('');
+            const [busy, setBusy] = useState(false);
+            const [err, setErr] = useState('');
+            const [show, setShow] = useState(false);
+
+            const submit = async () => {
+                setErr('');
+                const cleanUrl = url.trim();
+                if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(cleanUrl)) {
+                    setErr('That does not look like an Apps Script web app URL. It should start with https://script.google.com and end with /exec'); return;
+                }
+                if (pw.length < 4) { setErr('Please choose a password of at least 4 characters.'); return; }
+                if (pw !== pw2) { setErr('The two passwords do not match.'); return; }
+                setBusy(true);
+                try {
+                    const res = await callBackend(cleanUrl, { action: 'ping', password: pw });
+                    if (!res.ok) { setErr(res.error || 'The backend rejected that password.'); setBusy(false); return; }
+                    await Vault.save(pw, { url: cleanUrl, password: pw });
+                    onReady({ url: cleanUrl, password: pw });
+                } catch (e) {
+                    setErr('Could not reach the backend. Check the URL is deployed as a web app with access set to Anyone, then try again.');
+                    setBusy(false);
+                }
+            };
+
+            return (
+                <div className={screenWrap}>
+                    <div className={card + " animate-fade-in"}>
+                        <Brand subtitle="First time setup" />
+                        <p className="text-slate-300 text-sm mb-5 leading-relaxed">
+                            Paste your Google Apps Script web app URL and set a password. They are encrypted on this device and never leave it in readable form.
+                        </p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className={lbl}>Apps Script Web App URL</label>
+                                <input value={url} onChange={e => setUrl(e.target.value)} className={fld} placeholder="https://script.google.com/macros/.../exec" autoCapitalize="off" autoCorrect="off" spellCheck="false" />
+                            </div>
+                            <div>
+                                <label className={lbl}>Password</label>
+                                <div className="relative">
+                                    <input type={show ? 'text' : 'password'} value={pw} onChange={e => setPw(e.target.value)} className={fld + " pr-10"} placeholder="Your private password" />
+                                    <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#BE875C]"><Eye size={16} /></button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className={lbl}>Confirm Password</label>
+                                <input type={show ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} className={fld} placeholder="Repeat password" onKeyDown={e => e.key === 'Enter' && submit()} />
+                            </div>
+                            {err && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3">{err}</div>}
+                            <button onClick={submit} disabled={busy} className={goldBtn}>
+                                {busy ? <Spinner /> : <Lock size={16} />} {busy ? 'Connecting...' : 'Connect and secure'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function LockScreen({ onUnlock, onReset }) {
+            const [pw, setPw] = useState('');
+            const [busy, setBusy] = useState(false);
+            const [err, setErr] = useState('');
+            const inputRef = useRef(null);
+            useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, []);
+
+            const submit = async () => {
+                if (!pw) return;
+                setErr(''); setBusy(true);
+                try {
+                    const creds = await Vault.open(pw);
+                    onUnlock(creds);
+                } catch (e) {
+                    setErr('Incorrect password.'); setBusy(false); setPw('');
+                }
+            };
+
+            const reset = () => {
+                if (window.confirm('This wipes the saved connection from this device. You will need your Apps Script URL and password to set it up again. Your data stays safe in Google Sheets. Continue?')) {
+                    Vault.wipe(); onReset();
+                }
+            };
+
+            return (
+                <div className={screenWrap}>
+                    <div className={card + " animate-fade-in text-center"}>
+                        <Brand subtitle="Locked" />
+                        <div className="w-14 h-14 bg-[#BE875C]/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Lock size={26} className="text-[#BE875C]" />
+                        </div>
+                        <p className="text-slate-300 text-sm mb-5">Enter your password to unlock.</p>
+                        <input ref={inputRef} type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={fld + " text-center text-lg tracking-widest mb-4"} placeholder="Password" />
+                        {err && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">{err}</div>}
+                        <button onClick={submit} disabled={busy} className={goldBtn}>
+                            {busy ? <Spinner /> : <Unlock size={16} />} {busy ? 'Unlocking...' : 'Unlock'}
+                        </button>
+                        <button onClick={reset} className="text-slate-500 text-xs hover:text-slate-300 mt-5 transition-colors">Forgotten password? Reset this device</button>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ===================================================================
+         *  MAIN APP
+         * =================================================================== */
+        function App({ creds, onLock }) {
+            // ---- Document editor state ----
+            const [documentType, setDocumentType] = useState('Invoice');
+            const [docNo, setDocNo] = useState('');
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            const [dueDate, setDueDate] = useState('');
+            const [client, setClient] = useState({ name: '', id: '', address: '', phone: '' });
+            const [job, setJob] = useState('');
+            const [terms, setTerms] = useState('30 Days');
+            const [items, setItems] = useState([{ id: Date.now(), qty: 1, desc: '', price: 0 }]);
+
+            // ---- Data + UI state ----
+            const [savedDocs, setSavedDocs] = useState([]);
+            const [receipts, setReceipts] = useState([]);
+            const [activeTab, setActiveTab] = useState('edit'); // edit | preview | receipts | history | settings
+            const [status, setStatus] = useState({ msg: '', kind: '' }); // kind: info|ok|error|busy
+            const [loading, setLoading] = useState(true);
+            const [scale, setScale] = useState(1);
+            const previewWrapRef = useRef(null);
+
+            const flash = (msg, kind = 'info', ms = 3500) => {
+                setStatus({ msg, kind });
+                if (ms) setTimeout(() => setStatus(s => (s.msg === msg ? { msg: '', kind: '' } : s)), ms);
+            };
+
+            // ---- Initial load: pull from Google Sheets, fall back to cache ----
+            useEffect(() => {
+                let cancelled = false;
+                (async () => {
+                    // hydrate from cache instantly for snappy open
+                    try {
+                        const cd = JSON.parse(localStorage.getItem('protech_docs_cache') || '[]');
+                        const cr = JSON.parse(localStorage.getItem('protech_receipts_cache') || '[]');
+                        if (cd.length) setSavedDocs(cd);
+                        if (cr.length) setReceipts(cr);
+                    } catch (e) {}
+                    try {
+                        const [d, r] = await Promise.all([
+                            callBackend(creds.url, { action: 'list', password: creds.password }),
+                            callBackend(creds.url, { action: 'listReceipts', password: creds.password })
+                        ]);
+                        if (cancelled) return;
+                        if (d.ok) { setSavedDocs(d.documents); localStorage.setItem('protech_docs_cache', JSON.stringify(d.documents)); }
+                        if (r.ok) { setReceipts(r.receipts); localStorage.setItem('protech_receipts_cache', JSON.stringify(r.receipts)); }
+                        flash('Synced with Google Sheets', 'ok');
+                    } catch (e) {
+                        flash('Offline. Showing the last synced copy.', 'error', 5000);
+                    } finally {
+                        if (!cancelled) setLoading(false);
+                    }
+                })();
+                return () => { cancelled = true; };
+            }, [creds]);
+
+            // ---- Responsive preview scaling (A4 = 794x1123 px @96dpi) ----
+            useEffect(() => {
+                const compute = () => {
+                    const el = previewWrapRef.current;
+                    if (!el) return;
+                    setScale(Math.min(1, (el.clientWidth - 8) / 794));
+                };
+                compute();
+                window.addEventListener('resize', compute);
+                return () => window.removeEventListener('resize', compute);
+            }, [activeTab, loading]);
+
+            // ---- Smart dates / terms ----
+            const handleDateChange = (v) => {
+                setDate(v);
+                const d = new Date(v);
+                if (!isNaN(d.getTime())) { d.setDate(d.getDate() + 30); setDueDate(d.toISOString().split('T')[0]); setTerms('30 Days'); }
+            };
+            const handleDueDateChange = (v) => {
+                setDueDate(v);
+                const d1 = new Date(date), d2 = new Date(v);
+                if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+                    setTerms(Math.ceil((d2 - d1) / 86400000) + ' Days');
+                }
+            };
+
+            const getNextDocNo = (type, docs) => {
+                const nums = docs.filter(d => d.documentType === type)
+                    .map(d => parseInt(String(d.docNo).replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
+                const next = nums.length ? Math.max.apply(null, nums) + 1 : 1001;
+                return type === 'Quote' ? 'Q_' + next : String(next);
+            };
+
+            const uniqueCustomers = useMemo(() => {
+                const map = new Map(); const out = [];
+                savedDocs.forEach(d => {
+                    if (d.client && d.client.name && !map.has(d.client.name.toLowerCase())) {
+                        map.set(d.client.name.toLowerCase(), true); out.push(d.client);
+                    }
+                });
+                return out;
+            }, [savedDocs]);
+
+            useEffect(() => {
+                if (!loading) setDocNo(prev => prev || getNextDocNo('Invoice', savedDocs));
+                if (!dueDate) { const d = new Date(); d.setDate(d.getDate() + 30); setDueDate(d.toISOString().split('T')[0]); }
+            }, [loading]); // eslint-disable-line
+
+            const subtotal = items.reduce((s, it) => s + (Number(it.qty) * Number(it.price)), 0);
+            const total = subtotal;
+
+            // ---- Validation ----
+            const validateForm = () => {
+                if (!docNo || !String(docNo).trim()) return 'Document Number is required.';
+                if (!date) return 'Date is required.';
+                if (!client.name || !client.name.trim()) return 'Client Name is required.';
+                if (!client.address || !client.address.trim()) return 'Client Address is required.';
+                for (let i = 0; i < items.length; i++) if (!items[i].desc || !items[i].desc.trim()) return 'Line Item ' + (i + 1) + ': Description is required.';
+                return null;
+            };
+
+            const resetForm = (docs) => {
+                setDocNo(getNextDocNo(documentType, docs));
+                setDate(new Date().toISOString().split('T')[0]);
+                const d = new Date(); d.setDate(d.getDate() + 30); setDueDate(d.toISOString().split('T')[0]);
+                setClient({ name: '', id: '', address: '', phone: '' });
+                setJob(''); setTerms('30 Days');
+                setItems([{ id: Date.now(), qty: 1, desc: '', price: 0 }]);
+            };
+
+            const buildPdfOptions = (filename) => ({
+                margin: 0, filename: filename,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            });
+
+            const pdfFilename = (d) => {
+                const clean = (d.client.name || 'Client').replace(/[^a-zA-Z0-9 ]/g, '').trim();
+                return d.date.replace(/-/g, '') + '_' + clean + '_' + d.docNo + '.pdf';
+            };
+
+            // ---- Save document: write to Sheets + upload PDF to Drive ----
+            const handleSave = async () => {
+                const errMsg = validateForm();
+                if (errMsg) { flash(errMsg, 'error'); setActiveTab('edit'); return; }
+
+                const doc = { id: Date.now(), documentType, docNo: String(docNo), date, dueDate, client, job, terms, items, total, pdfUrl: '' };
+
+                setStatus({ msg: 'Saving and building PDF...', kind: 'busy' });
+                try {
+                    // Build the PDF from the live preview node
+                    const element = document.getElementById('invoice-preview-container');
+                    const blob = await html2pdf().set(buildPdfOptions(pdfFilename(doc))).from(element).output('blob');
+                    const b64 = await blobToBase64(blob);
+
+                    // Upload PDF to Drive
+                    let pdfUrl = '';
+                    try {
+                        const up = await callBackend(creds.url, { action: 'savePdf', password: creds.password, fileName: pdfFilename(doc), dataBase64: b64, type: documentType });
+                        if (up.ok) pdfUrl = up.fileUrl;
+                    } catch (e) { /* Drive upload failed, still save the record below */ }
+                    doc.pdfUrl = pdfUrl;
+
+                    // Save the record to Sheets
+                    const res = await callBackend(creds.url, { action: 'save', password: creds.password, document: doc });
+                    if (!res.ok) throw new Error(res.error || 'Save failed');
+
+                    // Update local state + cache (upsert by docNo+type)
+                    const idx = savedDocs.findIndex(d => String(d.docNo) === String(doc.docNo) && d.documentType === doc.documentType);
+                    let updated;
+                    if (idx >= 0) { updated = savedDocs.slice(); updated[idx] = doc; }
+                    else { updated = [doc].concat(savedDocs); }
+                    setSavedDocs(updated);
+                    localStorage.setItem('protech_docs_cache', JSON.stringify(updated));
+
+                    flash(pdfUrl ? 'Saved to Sheets and PDF saved to Drive' : 'Saved to Sheets (Drive upload skipped, you are offline)', pdfUrl ? 'ok' : 'error', 4500);
+                    resetForm(updated);
+                } catch (e) {
+                    flash('Could not save: ' + e.message, 'error', 6000);
+                }
+            };
+
+            // ---- Download a local PDF copy of the current editor ----
+            const downloadCurrentPdf = async () => {
+                const errMsg = validateForm();
+                if (errMsg) { flash(errMsg, 'error'); return; }
+                const element = document.getElementById('invoice-preview-container');
+                const fn = pdfFilename({ client, date, docNo });
+                flash('Building PDF...', 'busy', 0);
+                try { await html2pdf().set(buildPdfOptions(fn)).from(element).save(); flash('PDF downloaded', 'ok'); }
+                catch (e) { flash('PDF failed: ' + e.message, 'error'); }
+            };
+
+            const loadDoc = (d) => {
+                setDocumentType(d.documentType); setDocNo(d.docNo); setDate(d.date);
+                setDueDate(d.dueDate || ''); setClient(d.client); setJob(d.job || '');
+                setTerms(d.terms || '30 Days');
+                setItems((d.items && d.items.length) ? d.items.map((it, i) => ({ id: Date.now() + i, ...it })) : [{ id: Date.now(), qty: 1, desc: '', price: 0 }]);
+                setActiveTab('edit');
+            };
+
+            const deleteDoc = async (d) => {
+                if (!window.confirm('Delete this ' + d.documentType.toLowerCase() + '?')) return;
+                const updated = savedDocs.filter(x => x.id !== d.id);
+                setSavedDocs(updated); localStorage.setItem('protech_docs_cache', JSON.stringify(updated));
+                try { await callBackend(creds.url, { action: 'delete', password: creds.password, id: d.id }); flash('Deleted', 'ok'); }
+                catch (e) { flash('Deleted locally, but the server did not confirm.', 'error'); }
+            };
+
+            const newDoc = () => { resetForm(savedDocs); setActiveTab('edit'); };
+
+            const addItem = () => setItems([...items, { id: Date.now(), qty: 1, desc: '', price: 0 }]);
+            const removeItem = (id) => { if (items.length > 1) setItems(items.filter(it => it.id !== id)); };
+            const changeItem = (id, f, v) => setItems(items.map(it => it.id === id ? { ...it, [f]: v } : it));
+            const changeClient = (f, v) => setClient({ ...client, [f]: v });
+
+            const handleClientName = (e) => {
+                const val = e.target.value;
+                setClient(prev => ({ ...prev, name: val }));
+                const ex = uniqueCustomers.find(c => c.name.toLowerCase() === val.toLowerCase());
+                if (ex) setClient(prev => ({ ...prev, id: ex.id || prev.id, address: ex.address || prev.address, phone: ex.phone || prev.phone }));
+            };
+            const genId = (name) => {
+                const clean = (name || 'CUS').replace(/[^a-zA-Z0-9]/g, '');
+                const prefix = clean.substring(0, 3).toUpperCase().padEnd(3, 'X');
+                let num = ''; const rest = clean.substring(3);
+                if (!rest.length) num = String(Math.floor(1000 + Math.random() * 9000));
+                else { for (let i = 0; i < Math.min(2, rest.length); i++) num += rest.charCodeAt(i); if (num.length < 4) num = num.padEnd(4, '0'); }
+                return prefix + '-' + num;
+            };
+            const clientNameBlur = () => { if (client.name && !client.id) { const ex = uniqueCustomers.find(c => c.name.toLowerCase() === client.name.toLowerCase()); if (!ex) setClient(prev => ({ ...prev, id: genId(client.name) })); } };
+
+            // ---- Receipts ----
+            const blankReceipt = () => ({ id: Date.now(), date: new Date().toISOString().split('T')[0], supplier: '', category: 'Materials', amount: '', vat: '', paymentMethod: 'Card', notes: '', fileName: '', fileData: '', mimeType: '', fileUrl: '' });
+            const [receiptForm, setReceiptForm] = useState(blankReceipt());
+            const [savingReceipt, setSavingReceipt] = useState(false);
+
+            const onReceiptFile = (e) => {
+                const f = e.target.files && e.target.files[0];
+                if (!f) return;
+                const r = new FileReader();
+                r.onloadend = () => setReceiptForm(rf => ({ ...rf, fileData: String(r.result).split(',')[1], fileName: f.name, mimeType: f.type || 'application/octet-stream' }));
+                r.readAsDataURL(f);
+            };
+
+            const saveReceiptNow = async () => {
+                if (!receiptForm.supplier.trim()) { flash('Receipt needs a supplier name.', 'error'); return; }
+                if (receiptForm.amount === '' || isNaN(Number(receiptForm.amount))) { flash('Receipt needs an amount.', 'error'); return; }
+                setSavingReceipt(true);
+                try {
+                    const res = await callBackend(creds.url, { action: 'saveReceipt', password: creds.password, receipt: receiptForm });
+                    if (!res.ok) throw new Error(res.error || 'Save failed');
+                    const idx = receipts.findIndex(x => String(x.id) === String(res.receipt.id));
+                    let updated;
+                    if (idx >= 0) { updated = receipts.slice(); updated[idx] = res.receipt; }
+                    else updated = [res.receipt].concat(receipts);
+                    setReceipts(updated); localStorage.setItem('protech_receipts_cache', JSON.stringify(updated));
+                    setReceiptForm(blankReceipt());
+                    flash(res.receipt.fileUrl ? 'Receipt saved with photo to Drive' : 'Receipt saved', 'ok');
+                } catch (e) { flash('Could not save receipt: ' + e.message, 'error', 6000); }
+                finally { setSavingReceipt(false); }
+            };
+
+            const deleteReceipt = async (r) => {
+                if (!window.confirm('Delete this receipt?')) return;
+                const updated = receipts.filter(x => x.id !== r.id);
+                setReceipts(updated); localStorage.setItem('protech_receipts_cache', JSON.stringify(updated));
+                try { await callBackend(creds.url, { action: 'deleteReceipt', password: creds.password, id: r.id }); flash('Receipt deleted', 'ok'); }
+                catch (e) { flash('Deleted locally only.', 'error'); }
+            };
+
+            const receiptTotal = useMemo(() => receipts.reduce((s, r) => s + (Number(r.amount) || 0), 0), [receipts]);
+
+            // ---- Migration: push cached/local docs, and import old CSV ----
+            const [migrating, setMigrating] = useState(false);
+            const migrateLocal = async () => {
+                let legacy = [];
+                try { legacy = JSON.parse(localStorage.getItem('protech_invoices') || '[]'); } catch (e) {}
+                const pool = legacy.length ? legacy : savedDocs;
+                if (!pool.length) { flash('Nothing local to migrate.', 'info'); return; }
+                setMigrating(true);
+                try {
+                    const res = await callBackend(creds.url, { action: 'bulkImport', password: creds.password, documents: pool });
+                    if (!res.ok) throw new Error(res.error);
+                    const fresh = await callBackend(creds.url, { action: 'list', password: creds.password });
+                    if (fresh.ok) { setSavedDocs(fresh.documents); localStorage.setItem('protech_docs_cache', JSON.stringify(fresh.documents)); }
+                    flash('Migrated ' + res.count + ' new document(s) into Google Sheets', 'ok', 5000);
+                } catch (e) { flash('Migration failed: ' + e.message, 'error', 6000); }
+                finally { setMigrating(false); }
+            };
+
+            const importCsv = (e) => {
+                const f = e.target.files && e.target.files[0];
+                if (!f) return;
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    try {
+                        const docs = parseInvoiceCsv(String(reader.result));
+                        if (!docs.length) { flash('No rows found in that CSV.', 'error'); return; }
+                        setMigrating(true);
+                        const res = await callBackend(creds.url, { action: 'bulkImport', password: creds.password, documents: docs });
+                        if (!res.ok) throw new Error(res.error);
+                        const fresh = await callBackend(creds.url, { action: 'list', password: creds.password });
+                        if (fresh.ok) { setSavedDocs(fresh.documents); localStorage.setItem('protech_docs_cache', JSON.stringify(fresh.documents)); }
+                        flash('Imported ' + res.count + ' document(s) from CSV', 'ok', 5000);
+                    } catch (err) { flash('CSV import failed: ' + err.message, 'error', 6000); }
+                    finally { setMigrating(false); e.target.value = ''; }
+                };
+                reader.readAsText(f);
+            };
+
+            // ---- CSV parsing helpers (for importing the old InvoiceData.csv) ----
+            function parseCsvRows(text) {
+                const rows = []; let row = [], field = '', i = 0, inQ = false;
+                text = text.replace(/^\uFEFF/, '');
+                while (i < text.length) {
+                    const c = text[i];
+                    if (inQ) {
+                        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i += 2; continue; } inQ = false; i++; continue; }
+                        field += c; i++; continue;
+                    }
+                    if (c === '"') { inQ = true; i++; continue; }
+                    if (c === ',') { row.push(field); field = ''; i++; continue; }
+                    if (c === '\r') { i++; continue; }
+                    if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+                    field += c; i++;
+                }
+                if (field.length || row.length) { row.push(field); rows.push(row); }
+                return rows;
+            }
+            function normaliseDate(s) {
+                if (!s) return new Date().toISOString().split('T')[0];
+                if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+                const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+                if (m) { let y = m[3]; if (y.length === 2) y = '20' + y; return y + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); }
+                const dt = new Date(s); return isNaN(dt) ? new Date().toISOString().split('T')[0] : dt.toISOString().split('T')[0];
+            }
+            function parseInvoiceCsv(text) {
+                const rows = parseCsvRows(text).filter(r => r.length > 1 && r.some(x => x !== ''));
+                if (!rows.length) return [];
+                const header = rows[0].map(h => h.trim().toLowerCase());
+                const idx = (n) => header.indexOf(n.toLowerCase());
+                const out = [];
+                for (let r = 1; r < rows.length; r++) {
+                    const row = rows[r];
+                    const get = (n) => { const j = idx(n); return j >= 0 ? (row[j] || '').trim() : ''; };
+                    const docNo = get('Document No'); if (!docNo) continue;
+                    const its = [];
+                    for (let k = 1; k <= 5; k++) {
+                        const desc = get('Description ' + k), qty = get('Qty ' + k), price = get('Price ' + k);
+                        if (desc || qty || price) its.push({ qty: Number(qty) || 0, desc: desc, price: Number(price) || 0 });
+                    }
+                    if (!its.length) its.push({ qty: 1, desc: get('Job description') || 'Imported item', price: 0 });
+                    out.push({
+                        id: Date.now() + r,
+                        documentType: /quote/i.test(get('Type')) ? 'Quote' : 'Invoice',
+                        docNo: docNo, date: normaliseDate(get('Date')), dueDate: '', terms: '30 Days',
+                        client: { name: get('To'), id: get('Customer Id'), address: get('Address'), phone: get('Phone') },
+                        job: get('Job description'), items: its,
+                        total: Number(get('Total Amount')) || its.reduce((s, it) => s + it.qty * it.price, 0), pdfUrl: ''
+                    });
+                }
+                return out;
+            }
+
+            // ---- Shared styles ----
+            const inputClass = "w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#BE875C] focus:ring-1 focus:ring-[#BE875C] transition-all";
+            const labelClass = "block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider";
+            const sectionGap = items.length > 3 ? 'mb-3' : 'mb-6';
+            const cellPadding = items.length > 3 ? '6px 16px' : '12px 16px';
+            const cellFontSize = items.length > 3 ? '13px' : '14px';
+            const headerPadding = items.length > 3 ? '8px 16px' : '10px 16px';
+            const headerFontSize = items.length > 3 ? '11px' : '12px';
+
+            const panel = activeTab === 'preview' ? 'edit' : activeTab;
+            const TABS = [
+                { key: 'edit', label: 'Edit', icon: Edit3 },
+                { key: 'preview', label: 'Preview', icon: Eye },
+                { key: 'receipts', label: 'Receipts', icon: Receipt },
+                { key: 'history', label: 'History', icon: Archive },
+                { key: 'settings', label: 'Settings', icon: Settings2 }
+            ];
+            const statusColour = { ok: 'bg-green-600', error: 'bg-red-600', busy: 'bg-amber-600', info: 'bg-slate-700' }[status.kind] || 'bg-slate-700';
+
+            return (
+                <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col">
+                    {/* HEADER */}
+                    <header className="pt-safe sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-700">
+                        <div className="flex items-center justify-between px-4 h-14">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-[#233140] rounded-lg p-1 w-9 h-9 flex items-center justify-center shrink-0">
+                                    <img src={LOGO_URL} className="w-full h-full object-contain" alt="Protech" />
+                                </div>
+                                <span className="font-bold text-sm bg-gradient-to-r from-[#F0D0A5] to-[#BE875C] bg-clip-text text-transparent hidden sm:block">Protech Dynamic</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className={"flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full " + (loading ? 'bg-amber-500/15 text-amber-400' : 'bg-green-500/15 text-green-400')}>
+                                    {loading ? <Spinner size={12} /> : <Cloud size={12} />}
+                                    <span className="hidden sm:inline">{loading ? 'Syncing' : 'Sheets'}</span>
+                                </div>
+                                <button onClick={newDoc} className="p-2 rounded-lg text-slate-300 hover:bg-slate-700" title="New document"><FilePlus size={18} /></button>
+                                <button onClick={onLock} className="p-2 rounded-lg text-slate-300 hover:bg-slate-700" title="Lock app"><Lock size={18} /></button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* STATUS TOAST */}
+                    {status.msg && (
+                        <div className={"fixed top-16 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-lg text-white text-sm shadow-2xl flex items-center gap-2 max-w-[90vw] " + statusColour}>
+                            {status.kind === 'busy' && <Spinner size={14} />}
+                            {status.kind === 'ok' && <Check size={14} />}
+                            <span>{status.msg}</span>
+                        </div>
+                    )}
+
+                    {/* BODY */}
+                    <div className="flex-1 flex flex-col lg:flex-row">
+                        {/* LEFT CONTROLS */}
+                        <div className={"w-full lg:w-[460px] lg:shrink-0 lg:border-r border-slate-700 bg-slate-800 lg:h-[calc(100vh-3.5rem)] overflow-y-auto pb-28 lg:pb-6 " + (activeTab === 'preview' ? 'hidden lg:block' : 'block')}>
+
+                            {/* desktop tab strip */}
+                            <div className="hidden lg:flex border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
+                                {TABS.filter(t => t.key !== 'preview').map(t => (
+                                    <button key={t.key} onClick={() => setActiveTab(t.key)} className={"flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors " + (panel === t.key ? 'text-[#BE875C] border-b-2 border-[#BE875C] bg-slate-900/40' : 'text-slate-400 hover:text-slate-200')}>
+                                        <t.icon size={16} /> {t.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* ===== EDIT PANEL ===== */}
+                            {panel === 'edit' && (
+                                <div className="p-5 space-y-7 animate-fade-in">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={handleSave} className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white px-3 py-3 rounded-lg text-sm font-bold shadow-lg shadow-[#BE875C]/20 hover:opacity-90">
+                                            <Save size={16} /> Save to Cloud
+                                        </button>
+                                        <button onClick={downloadCurrentPdf} className="flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white px-3 py-3 rounded-lg text-sm font-medium">
+                                            <Download size={16} /> PDF Copy
+                                        </button>
+                                    </div>
+
+                                    <section>
+                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><Settings2 size={16} className="text-[#BE875C]" /> Document Settings</h3>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div><label className={labelClass}>Type</label>
+                                                <select value={documentType} onChange={e => { setDocumentType(e.target.value); setDocNo(getNextDocNo(e.target.value, savedDocs)); }} className={inputClass}>
+                                                    <option value="Invoice">Invoice</option><option value="Quote">Quote</option>
+                                                </select>
+                                            </div>
+                                            <div><label className={labelClass}>Number</label><input value={docNo} onChange={e => setDocNo(e.target.value)} className={inputClass} /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div><label className={labelClass}>Date</label><input type="date" value={date} onChange={e => handleDateChange(e.target.value)} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
+                                            <div><label className={labelClass}>Due Date</label><input type="date" value={dueDate} onChange={e => handleDueDateChange(e.target.value)} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div><label className={labelClass}>Terms</label><input value={terms} onChange={e => setTerms(e.target.value)} className={inputClass} placeholder="30 Days" /></div>
+                                            <div><label className={labelClass}>Job Summary</label><input value={job} onChange={e => setJob(e.target.value)} className={inputClass} placeholder="Brief summary" /></div>
+                                        </div>
+                                    </section>
+
+                                    <section>
+                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><User size={16} className="text-[#BE875C]" /> Client Details</h3>
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div className="col-span-2"><label className={labelClass}>Client Name</label>
+                                                    <input list="customers-list" value={client.name} onChange={handleClientName} onBlur={clientNameBlur} className={inputClass} placeholder="Company or person" />
+                                                    <datalist id="customers-list">{uniqueCustomers.map(c => <option key={c.name} value={c.name} />)}</datalist>
+                                                </div>
+                                                <div><label className={labelClass}>Cust. ID</label>
+                                                    <div className="relative">
+                                                        <input value={client.id} onChange={e => changeClient('id', e.target.value)} className={inputClass + " pr-8"} placeholder="CUS-1234" />
+                                                        <button type="button" onClick={() => setClient(p => ({ ...p, id: genId(client.name) }))} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#BE875C]"><RefreshCw size={14} /></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div><label className={labelClass}>Address</label><textarea rows="2" value={client.address} onChange={e => changeClient('address', e.target.value)} className={inputClass + " resize-none"} placeholder="Client address"></textarea></div>
+                                            <div><label className={labelClass}>Phone</label><input value={client.phone} onChange={e => changeClient('phone', e.target.value)} className={inputClass} placeholder="Phone number" /></div>
+                                        </div>
+                                    </section>
+
+                                    <section>
+                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><ListIcon size={16} className="text-[#BE875C]" /> Line Items</h3>
+                                        <div className="space-y-3">
+                                            {items.map((item, index) => (
+                                                <div key={item.id} className="bg-slate-900/40 p-3 rounded-lg border border-slate-700 relative group">
+                                                    <div className="absolute -left-2 -top-2 bg-slate-700 text-xs w-5 h-5 flex items-center justify-center rounded-full text-white font-bold">{index + 1}</div>
+                                                    {items.length > 1 && <button onClick={() => removeItem(item.id)} className="absolute -right-2 -top-2 bg-red-500/90 text-white w-6 h-6 flex items-center justify-center rounded-full"><X size={12} /></button>}
+                                                    <input value={item.desc} onChange={e => changeItem(item.id, 'desc', e.target.value)} className={inputClass + " bg-slate-800 mb-2"} placeholder="Description of service or product" />
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="flex items-center"><span className="text-slate-500 text-xs mr-2 w-8">QTY</span><input type="number" min="0" step="0.1" value={item.qty} onChange={e => changeItem(item.id, 'qty', e.target.value)} className={inputClass + " bg-slate-800 py-1.5"} /></div>
+                                                        <div className="flex items-center"><span className="text-slate-500 text-xs mr-2 w-8">PRICE</span>
+                                                            <div className="relative w-full"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">€</span><input type="number" min="0" step="0.01" value={item.price} onChange={e => changeItem(item.id, 'price', e.target.value)} className={inputClass + " bg-slate-800 py-1.5 pl-7"} /></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button onClick={addItem} className="mt-3 w-full py-2.5 border border-dashed border-slate-600 rounded-lg text-slate-400 hover:text-white hover:border-[#BE875C] hover:bg-[#BE875C]/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium"><Plus size={16} /> Add Line Item</button>
+                                    </section>
+                                </div>
+                            )}
+
+                            {/* ===== RECEIPTS PANEL ===== */}
+                            {panel === 'receipts' && (
+                                <div className="p-5 space-y-6 animate-fade-in">
+                                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><Plus size={16} className="text-[#BE875C]" /> Add a Receipt</h3>
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className={labelClass}>Date</label><input type="date" value={receiptForm.date} onChange={e => setReceiptForm({ ...receiptForm, date: e.target.value })} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
+                                                <div><label className={labelClass}>Supplier</label><input value={receiptForm.supplier} onChange={e => setReceiptForm({ ...receiptForm, supplier: e.target.value })} className={inputClass} placeholder="Who you paid" /></div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className={labelClass}>Category</label>
+                                                    <select value={receiptForm.category} onChange={e => setReceiptForm({ ...receiptForm, category: e.target.value })} className={inputClass}>
+                                                        {['Materials', 'Tools', 'Fuel', 'Subcontractor', 'Office', 'Travel', 'Insurance', 'Software', 'Other'].map(c => <option key={c}>{c}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div><label className={labelClass}>Payment</label>
+                                                    <select value={receiptForm.paymentMethod} onChange={e => setReceiptForm({ ...receiptForm, paymentMethod: e.target.value })} className={inputClass}>
+                                                        {['Card', 'Cash', 'Bank Transfer', 'Direct Debit'].map(c => <option key={c}>{c}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className={labelClass}>Amount (inc VAT)</label>
+                                                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span><input type="number" step="0.01" value={receiptForm.amount} onChange={e => setReceiptForm({ ...receiptForm, amount: e.target.value })} className={inputClass + " pl-7"} placeholder="0.00" /></div>
+                                                </div>
+                                                <div><label className={labelClass}>of which VAT</label>
+                                                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span><input type="number" step="0.01" value={receiptForm.vat} onChange={e => setReceiptForm({ ...receiptForm, vat: e.target.value })} className={inputClass + " pl-7"} placeholder="0.00" /></div>
+                                                </div>
+                                            </div>
+                                            <div><label className={labelClass}>Notes</label><input value={receiptForm.notes} onChange={e => setReceiptForm({ ...receiptForm, notes: e.target.value })} className={inputClass} placeholder="Optional note for the accountant" /></div>
+                                            <div>
+                                                <label className={labelClass}>Photo or PDF of receipt</label>
+                                                <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-slate-600 rounded-lg text-slate-300 hover:border-[#BE875C] hover:bg-[#BE875C]/10 cursor-pointer text-sm">
+                                                    <Camera size={16} /> {receiptForm.fileName ? receiptForm.fileName : 'Snap or attach'}
+                                                    <input type="file" accept="image/*,application/pdf" capture="environment" onChange={onReceiptFile} className="hidden" />
+                                                </label>
+                                            </div>
+                                            <button onClick={saveReceiptNow} disabled={savingReceipt} className={goldBtn}>{savingReceipt ? <Spinner /> : <Save size={16} />} {savingReceipt ? 'Saving...' : 'Save Receipt'}</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h3 className="text-sm font-bold text-white">Saved Receipts</h3>
+                                            <span className="text-xs text-slate-400">Total: <span className="text-[#F0D0A5] font-bold">€{receiptTotal.toFixed(2)}</span></span>
+                                        </div>
+                                        {receipts.length === 0 ? <p className="text-slate-500 text-sm text-center py-8">No receipts yet.</p> : (
+                                            <div className="space-y-2">
+                                                {receipts.map(r => (
+                                                    <div key={r.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 flex items-center justify-between gap-2">
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm text-white font-medium truncate">{r.supplier} <span className="text-xs text-slate-500">· {r.category}</span></div>
+                                                            <div className="text-xs text-slate-500">{r.date} · {r.paymentMethod}</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <span className="text-sm font-bold text-slate-200">€{Number(r.amount).toFixed(2)}</span>
+                                                            {r.fileUrl && <a href={r.fileUrl} target="_blank" rel="noopener" className="text-slate-400 hover:text-[#BE875C]" title="View file"><ExternalLink size={15} /></a>}
+                                                            <button onClick={() => deleteReceipt(r)} className="text-slate-500 hover:text-red-400"><Trash2 size={15} /></button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ===== HISTORY PANEL ===== */}
+                            {panel === 'history' && (
+                                <div className="p-5 space-y-3 animate-fade-in">
+                                    <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2"><Archive size={16} className="text-[#BE875C]" /> Saved Documents</h3>
+                                    {savedDocs.length === 0 ? <p className="text-slate-500 text-sm text-center py-10">No documents yet. Create one in the Edit tab.</p> : (
+                                        savedDocs.map(d => (
+                                            <div key={d.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 hover:border-[#BE875C]/50 transition-colors">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className={"text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider " + (d.documentType === 'Quote' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#BE875C]/20 text-[#BE875C]')}>{d.documentType}</span>
+                                                        <span className="text-white font-medium ml-2">#{d.docNo}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {d.pdfUrl && <a href={d.pdfUrl} target="_blank" rel="noopener" className="text-slate-400 hover:text-[#F0D0A5] p-1" title="View PDF in Drive"><ExternalLink size={16} /></a>}
+                                                        <button onClick={() => loadDoc(d)} className="text-slate-400 hover:text-[#F0D0A5] p-1" title="Load"><FolderOpen size={16} /></button>
+                                                        <button onClick={() => deleteDoc(d)} className="text-slate-500 hover:text-red-400 p-1" title="Delete"><Trash2 size={16} /></button>
+                                                    </div>
+                                                </div>
+                                                <div className="text-sm text-slate-300 mb-1">{d.client.name || 'Unnamed client'}</div>
+                                                <div className="flex justify-between text-xs text-slate-500"><span>{d.date}</span><span className="font-medium text-slate-300">€{Number(d.total).toFixed(2)}</span></div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ===== SETTINGS PANEL ===== */}
+                            {panel === 'settings' && (
+                                <div className="p-5 space-y-5 animate-fade-in">
+                                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                                        <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Database size={16} className="text-[#BE875C]" /> Connection</h3>
+                                        <p className="text-xs text-slate-400 mb-3 break-all">{creds.url.replace(/\/macros\/s\/[^/]+\//, '/macros/s/****/')}</p>
+                                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2"><Check size={14} /> Encrypted on this device</div>
+                                    </div>
+
+                                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                                        <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Upload size={16} className="text-[#BE875C]" /> Move data into Google Sheets</h3>
+                                        <p className="text-xs text-slate-400 mb-4 leading-relaxed">Push anything stored on this device into your Google Sheet, or import your old InvoiceData.csv. Duplicates are skipped automatically.</p>
+                                        <div className="space-y-2">
+                                            <button onClick={migrateLocal} disabled={migrating} className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50">{migrating ? <Spinner /> : <Database size={15} />} Migrate device data</button>
+                                            <label className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer">
+                                                <FileText size={15} /> Import InvoiceData.csv
+                                                <input type="file" accept=".csv,text/csv" onChange={importCsv} className="hidden" />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                                        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Lock size={16} className="text-[#BE875C]" /> Security</h3>
+                                        <button onClick={onLock} className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2.5 rounded-lg text-sm font-medium mb-2"><Lock size={15} /> Lock now</button>
+                                        <button onClick={() => { if (window.confirm('Remove the saved connection from this device? Your data stays in Google Sheets. You will need the URL and password to set up again.')) { Vault.wipe(); onLock(); window.location.reload(); } }} className="w-full flex items-center justify-center gap-2 bg-red-600/10 border border-red-600/30 text-red-400 hover:bg-red-600/20 px-3 py-2.5 rounded-lg text-sm font-medium"><Trash2 size={15} /> Forget this device</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* RIGHT: LIVE PREVIEW */}
+                        <div className={"flex-1 bg-slate-900 lg:h-[calc(100vh-3.5rem)] overflow-y-auto pb-28 lg:pb-6 " + (activeTab === 'preview' ? 'block' : 'hidden lg:block')}>
+                            <div ref={previewWrapRef} className="p-3 lg:p-6">
+                                <div style={{ display: 'flex', justifyContent: 'center', height: Math.round(1123 * scale), overflow: 'hidden' }}>
+                                    <div style={{ width: 794, height: 1123, transform: 'scale(' + scale + ')', transformOrigin: 'top center', flex: '0 0 auto' }}>
+
+                                        {/* THE A4 DOCUMENT */}
+                                        <div id="invoice-preview-container" className="relative bg-white text-slate-800 text-sm overflow-hidden box-border" style={{ width: 794, height: 1123 }}>
+                                            <div className="absolute top-0 left-0 right-0 px-10 pt-10"><div className="w-full h-2 rounded-full bg-gradient-to-r from-[#BE875C] to-[#C49066]"></div></div>
+                                            <div className="px-10 pt-[50px] pb-[160px] flex flex-col h-full w-full">
+                                                <div className="flex justify-between items-start mb-5 border-b-2 border-slate-100 pb-5 shrink-0">
+                                                    <div className="bg-[#344857] p-3 rounded-lg inline-block mb-2 w-[180px]"><img src={LOGO_URL} alt="Protech Dynamic Solutions" className="w-full h-auto object-contain" crossOrigin="anonymous" style={{ imageRendering: 'high-quality' }} /></div>
+                                                    <div className="text-right flex flex-col items-end">
+                                                        <h1 className="text-4xl font-black text-slate-200 uppercase tracking-widest mb-4">{documentType}</h1>
+                                                        <table className="text-right mt-2 text-sm border-collapse"><tbody>
+                                                            <tr><td className="pr-4 py-1 text-slate-600 font-semibold uppercase text-xs">Number:</td><td className="py-1 font-bold text-slate-800 text-base">#{docNo}</td></tr>
+                                                            <tr><td className="pr-4 py-1 text-slate-600 font-semibold uppercase text-xs">Date:</td><td className="py-1 font-medium">{date.split('-').reverse().join('/')}</td></tr>
+                                                            {documentType === 'Invoice' && dueDate && <tr><td className="pr-4 py-1 text-slate-600 font-semibold uppercase text-xs">Due Date:</td><td className="py-1 font-medium">{dueDate.split('-').reverse().join('/')}</td></tr>}
+                                                        </tbody></table>
+                                                    </div>
+                                                </div>
+                                                <div className={"grid grid-cols-2 gap-8 shrink-0 " + sectionGap}>
+                                                    <div>
+                                                        <div className="text-xs font-bold text-[#BE875C] uppercase tracking-wider mb-2 border-b border-[#BE875C]/30 pb-1 inline-block">Billed To</div>
+                                                        <div className="text-base font-bold text-slate-800 mb-1">{client.name || 'Client Name'}</div>
+                                                        {client.id && <div className="text-xs text-slate-600 mb-2">Customer ID: {client.id}</div>}
+                                                        <div className="text-slate-700 whitespace-pre-line leading-relaxed mb-2 font-medium">{client.address || 'Client Address\nCity, Postcode'}</div>
+                                                        {client.phone && <div className="text-slate-600 flex items-center gap-2"><Phone size={14} className="text-slate-400" /> {client.phone}</div>}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-bold text-[#BE875C] uppercase tracking-wider mb-2 border-b border-[#BE875C]/30 pb-1 inline-block">Job Details</div>
+                                                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                                            <div className="mb-3"><span className="block text-xs font-semibold text-slate-600 uppercase">Job Description</span><span className="font-medium text-slate-800">{job || '-'}</span></div>
+                                                            <div><span className="block text-xs font-semibold text-slate-600 uppercase">Payment Terms</span><span className="font-medium text-slate-800">{terms || '-'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className={"flex-grow " + sectionGap}>
+                                                    <table className="w-full text-left border-collapse table-fixed">
+                                                        <thead><tr className="bg-[#344857] text-white uppercase tracking-wider">
+                                                            <th className="rounded-tl-lg text-center w-16" style={{ fontSize: headerFontSize, padding: headerPadding }}>Qty</th>
+                                                            <th style={{ fontSize: headerFontSize, padding: headerPadding }}>Description</th>
+                                                            <th className="text-right w-28" style={{ fontSize: headerFontSize, padding: headerPadding }}>Unit Price</th>
+                                                            <th className="text-right w-28 rounded-tr-lg" style={{ fontSize: headerFontSize, padding: headerPadding }}>Total</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {items.map((item, index) => {
+                                                                const lt = Number(item.qty) * Number(item.price);
+                                                                return (
+                                                                    <tr key={index} className="border-b border-slate-100">
+                                                                        <td className="text-center text-slate-600 font-medium" style={{ fontSize: cellFontSize, padding: cellPadding }}>{item.qty}</td>
+                                                                        <td className="text-slate-800" style={{ fontSize: cellFontSize, padding: cellPadding }}><div style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', wordBreak: 'break-word' }}>{item.desc || <span className="text-slate-300 italic">Item Description</span>}</div></td>
+                                                                        <td className="text-right text-slate-600 whitespace-nowrap" style={{ fontSize: cellFontSize, padding: cellPadding }}>€{Number(item.price).toFixed(2)}</td>
+                                                                        <td className="text-right font-medium text-slate-800 whitespace-nowrap" style={{ fontSize: cellFontSize, padding: cellPadding }}>€{lt.toFixed(2)}</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div className="flex justify-end shrink-0">
+                                                    <div className="w-72 bg-slate-50 rounded-lg p-6 border border-slate-100">
+                                                        <div className="flex justify-between items-center mb-3"><span className="text-slate-600 font-medium">Subtotal</span><span className="text-slate-800 font-medium">€{subtotal.toFixed(2)}</span></div>
+                                                        <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-200"><span className="text-slate-600 text-[13px]">VAT (Not registered)</span><span className="text-slate-600 text-[13px]">€0.00</span></div>
+                                                        <div className="flex justify-between items-center"><span className="text-lg font-bold text-[#BE875C] uppercase">Total</span><span className="text-xl font-black text-slate-800">€{total.toFixed(2)}</span></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="absolute bottom-0 left-0 right-0 px-10 pb-6 bg-white z-10">
+                                                <div className="border-t-2 border-slate-100 pt-3 flex justify-between items-end w-full mb-3">
+                                                    <div className="text-[12px] text-slate-600 leading-tight">
+                                                        <strong className="text-slate-800 uppercase tracking-wider mb-1 block">Bank Details</strong>
+                                                        <table className="border-collapse"><tbody>
+                                                            <tr><td className="pr-2 font-semibold">Bank:</td><td>AIB</td></tr>
+                                                            <tr><td className="pr-2 font-semibold">Account:</td><td>ProTech Dynamic Solutions Ltd.</td></tr>
+                                                            <tr><td className="pr-2 font-semibold">IBAN:</td><td className="font-mono text-slate-800 font-medium tracking-tight">IE78AIBK93419451177075</td></tr>
+                                                            <tr><td className="pr-2 font-semibold">BIC:</td><td className="font-mono text-slate-800 font-medium tracking-tight">AIBKIE2D</td></tr>
+                                                        </tbody></table>
+                                                    </div>
+                                                    <div className="text-[12px] text-slate-600 leading-tight">
+                                                        <strong className="text-slate-800 uppercase tracking-wider mb-1 block"><a href="https://protechdynamicsolutions.github.io/" className="hover:text-[#BE875C]">Protech Dynamic Solutions Ltd.</a></strong>
+                                                        <table className="border-collapse"><tbody>
+                                                            <tr><td className="font-medium">Cois Dara, Moneygourney</td></tr>
+                                                            <tr><td className="font-medium">Cork, T12 PNA4</td></tr>
+                                                            <tr><td className="font-medium tracking-tight">davemaher00@outlook.com</td></tr>
+                                                            <tr><td className="font-medium">083 343 9060</td></tr>
+                                                        </tbody></table>
+                                                    </div>
+                                                    <div className="text-right pb-1"><div className="text-2xl font-black text-[#344857] uppercase tracking-widest opacity-20 select-none">Thank You</div></div>
+                                                </div>
+                                                <div className="w-full h-2 rounded-full bg-gradient-to-r from-[#C49066] to-[#BE875C]"></div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* BOTTOM NAV (mobile) */}
+                    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-slate-800 border-t border-slate-700 safe-bottom">
+                        <div className="grid grid-cols-5">
+                            {TABS.map(t => (
+                                <button key={t.key} onClick={() => setActiveTab(t.key)} className={"flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors " + (activeTab === t.key ? 'text-[#BE875C]' : 'text-slate-400')}>
+                                    <t.icon size={20} /> {t.label}
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+                </div>
+            );
+        }
+
+        /* ===================================================================
+         *  ROOT GATE
+         * =================================================================== */
+        function Root() {
+            const [creds, setCreds] = useState(null);
+            const [vaultExists, setVaultExists] = useState(Vault.exists());
+            if (!creds) {
+                return vaultExists
+                    ? <LockScreen onUnlock={setCreds} onReset={() => setVaultExists(false)} />
+                    : <SetupScreen onReady={(c) => { setVaultExists(true); setCreds(c); }} />;
+            }
+            return <App creds={creds} onLock={() => setCreds(null)} />;
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+    </script>
+
+    <!-- Register the service worker so the app installs and opens offline -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>
