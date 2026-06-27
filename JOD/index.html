@@ -61,12 +61,14 @@
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px; /* Ensure horizontal scrollbars have height if ever visible */
         }
         ::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
             background: var(--jod-red);
+            border-radius: 4px;
         }
 
         /* Smooth reveal animations */
@@ -353,8 +355,8 @@
                 <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
                     
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
-                        <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=800" alt="Construction and Engineering" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=800" alt="Construction and Engineering" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100 pointer-events-none">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                             <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
                                 <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
                             </div>
@@ -365,8 +367,8 @@
 
                     <!-- Open Source Agri-Business Image -->
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
-                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=800" alt="Agriculture and Farming Landscape" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=800" alt="Agriculture and Farming Landscape" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100 pointer-events-none">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                             <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
                                 <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
                             </div>
@@ -376,8 +378,8 @@
                     </div>
 
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
-                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800" alt="Retail and Hospitality" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800" alt="Retail and Hospitality" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100 pointer-events-none">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                             <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
                                 <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
                             </div>
@@ -387,8 +389,8 @@
                     </div>
 
                     <div class="flex-none w-[80vw] sm:w-[50vw] md:w-[35vw] relative aspect-[4/5] overflow-hidden bg-gray-900 group snap-start">
-                        <img src="https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&q=80&w=800" alt="Corporate and Professional Services" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                        <img src="https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&q=80&w=800" alt="Corporate and Professional Services" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-100 pointer-events-none">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                             <div class="cad-line-container-h relative w-8 h-[2px] mb-4">
                                 <div class="absolute top-0 left-0 h-full bg-jod-red w-0 draw-line-h"></div>
                             </div>
@@ -610,13 +612,16 @@
             lineObserver.observe(container);
         });
 
-        // Horizontal Gallery Auto-Scroll
+        // Horizontal Gallery Auto-Scroll & PC Fixes
         document.querySelectorAll('.horizontal-gallery').forEach(gallery => {
             let autoScrollTimer;
             let isHovering = false;
+            let isDown = false;
+            let startX;
+            let scrollLeft;
 
             const autoScroll = () => {
-                if(!isHovering) {
+                if(!isHovering && !isDown) {
                     if (gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 10) {
                         gallery.scrollTo({left: 0, behavior: 'smooth'}); 
                     } else {
@@ -633,8 +638,62 @@
                 if(autoScrollTimer) clearInterval(autoScrollTimer);
             };
 
-            gallery.addEventListener('mouseenter', () => { isHovering = true; stopTimer(); });
-            gallery.addEventListener('mouseleave', () => { isHovering = false; startTimer(); });
+            // --- PC Mouse Drag (Grab) to Scroll ---
+            const releaseGrab = () => {
+                if(!isDown) return;
+                isDown = false;
+                gallery.style.cursor = 'grab';
+                gallery.classList.add('snap-x', 'snap-mandatory'); // Re-enable snap after dragging
+            };
+
+            gallery.addEventListener('mousedown', (e) => {
+                isDown = true;
+                gallery.classList.remove('snap-x', 'snap-mandatory'); // Disable snap while dragging for smoothness
+                gallery.style.cursor = 'grabbing';
+                startX = e.pageX - gallery.offsetLeft;
+                scrollLeft = gallery.scrollLeft;
+                stopTimer(); 
+            });
+
+            gallery.addEventListener('mouseleave', () => {
+                releaseGrab();
+                isHovering = false; 
+                startTimer();
+            });
+
+            gallery.addEventListener('mouseup', releaseGrab);
+
+            gallery.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault(); // prevents highlighting text/images inside
+                const x = e.pageX - gallery.offsetLeft;
+                const walk = (x - startX) * 1.5; // Scroll speed multiplier
+                gallery.scrollLeft = scrollLeft - walk;
+            });
+
+            // --- PC Mouse Wheel Vertical to Horizontal Scroll ---
+            gallery.addEventListener('wheel', (e) => {
+                // If it's a vertical scroll (deltaY) and shift isn't being held
+                if (e.deltaY !== 0 && !e.shiftKey) {
+                    const maxScrollLeft = gallery.scrollWidth - gallery.clientWidth;
+                    
+                    // Allow normal page scrolling if gallery is at its absolute limits
+                    if ((e.deltaY > 0 && gallery.scrollLeft < maxScrollLeft) || 
+                        (e.deltaY < 0 && gallery.scrollLeft > 0)) {
+                        e.preventDefault();
+                        gallery.scrollLeft += e.deltaY;
+                    }
+                }
+            }, { passive: false });
+
+            // Standard Hover Events
+            gallery.addEventListener('mouseenter', () => { 
+                isHovering = true; 
+                gallery.style.cursor = 'grab'; // Show grab cursor hint on hover
+                stopTimer(); 
+            });
+            
+            // Mobile Touch Events
             gallery.addEventListener('touchstart', () => { isHovering = true; stopTimer(); }, {passive:true});
             gallery.addEventListener('touchend', () => { isHovering = false; startTimer(); }, {passive:true});
 
