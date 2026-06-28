@@ -426,6 +426,8 @@
             const [aiKeyDraft, setAiKeyDraft] = useState('');
             const [aiModelDraft, setAiModelDraft] = useState(localStorage.getItem('protech_gemini_model') || 'gemini-3.1-flash-lite');
             const [templates, setTemplates] = useState([]);
+            const [enquiries, setEnquiries] = useState([]);
+            const [authWarn, setAuthWarn] = useState(false);
             const [hourlyCost, setHourlyCost] = useState(Number(localStorage.getItem('protech_hourly_cost')) || 0);
             const [costDraft, setCostDraft] = useState(String(Number(localStorage.getItem('protech_hourly_cost')) || ''));
             const [emailModal, setEmailModal] = useState(null);
@@ -462,24 +464,31 @@
                         if (cj.length) setJobs(cj);
                         if (ca.length) setActivities(ca);
                         if (ct.length) setTemplates(ct);
+                        const ce = JSON.parse(localStorage.getItem('protech_enquiries_cache') || '[]');
+                        if (ce.length) setEnquiries(ce);
                         const tm = JSON.parse(localStorage.getItem('protech_timer') || 'null');
                         if (tm && tm.jobId) setTimer(tm);
                     } catch (e) {}
                     try {
-                        const [d, r, j, a, t] = await Promise.all([
+                        const [d, r, j, a, t, en] = await Promise.all([
                             callBackend(creds.url, { action: 'list', password: creds.password }),
                             callBackend(creds.url, { action: 'listReceipts', password: creds.password }),
                             callBackend(creds.url, { action: 'listJobs', password: creds.password }),
                             callBackend(creds.url, { action: 'listActivity', password: creds.password }),
-                            callBackend(creds.url, { action: 'listTemplates', password: creds.password })
+                            callBackend(creds.url, { action: 'listTemplates', password: creds.password }),
+                            callBackend(creds.url, { action: 'listEnquiries', password: creds.password })
                         ]);
                         if (cancelled) return;
+                        const pwBad = d && d.ok === false && /password/i.test(d.error || '');
+                        setAuthWarn(!!pwBad);
                         if (d.ok) { setSavedDocs(d.documents); localStorage.setItem('protech_docs_cache', JSON.stringify(d.documents)); }
                         if (r.ok) { setReceipts(r.receipts); localStorage.setItem('protech_receipts_cache', JSON.stringify(r.receipts)); }
                         if (j.ok) { setJobs(j.jobs); localStorage.setItem('protech_jobs_cache', JSON.stringify(j.jobs)); }
                         if (a.ok) { setActivities(a.activities); localStorage.setItem('protech_activity_cache', JSON.stringify(a.activities)); }
                         if (t && t.ok) { setTemplates(t.templates); localStorage.setItem('protech_templates_cache', JSON.stringify(t.templates)); }
-                        flash('Synced with Google Sheets', 'ok');
+                        if (en && en.ok && Array.isArray(en.enquiries)) { setEnquiries(en.enquiries); localStorage.setItem('protech_enquiries_cache', JSON.stringify(en.enquiries)); }
+                        if (pwBad) flash('App password does not match the backend. Nothing is saving to Sheets. Open Settings.', 'error', 8000);
+                        else if (d.ok) flash('Synced with Google Sheets', 'ok');
                     } catch (e) {
                         flash('Offline. Showing the last synced copy.', 'error', 5000);
                     } finally { if (!cancelled) setLoading(false); }
@@ -657,7 +666,7 @@
             const sortedJobs = useMemo(() => { const rank = j => j.status === 'done' ? 1 : 0; return jobs.slice().sort((a, b) => { const ra = rank(a), rb = rank(b); if (ra !== rb) return ra - rb; const da = a.dueDate || '', db = b.dueDate || ''; if (da && db) return da < db ? -1 : da > db ? 1 : 0; if (da && !db) return -1; if (!da && db) return 1; return 0; }); }, [jobs]);
             const jobMaterials = (j) => receipts.filter(r => String(r.jobId) === String(j.id)).reduce((s, r) => s + (Number(r.amount) || 0), 0);
             const jobProfit = (j) => { const rev = jobRevenue(j); const mat = jobMaterials(j); const st = jobStats[j.id] || { minutes: 0 }; const labour = (st.minutes / 60) * (Number(hourlyCost) || 0); return { rev: rev, mat: mat, labour: labour, profit: rev - mat - labour }; };
-            const dash = useMemo(() => { const today = new Date(); today.setHours(0, 0, 0, 0); const todayStr = today.toISOString().split('T')[0]; const month = todayStr.slice(0, 7); const dueJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate <= todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0); const soonJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate > todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : 1).slice(0, 3); const quotes = savedDocs.filter(d => d.documentType === 'Quote'); const followups = quotes.filter(d => d.status !== 'accepted' && d.status !== 'declined').filter(d => { const base = d.lastContact || d.date || ''; if (!base) return false; const days = Math.round((today - new Date(base)) / 86400000); return days >= 3; }).sort((a, b) => ((a.lastContact || a.date) < (b.lastContact || b.date) ? -1 : 1)); const invoices = savedDocs.filter(d => d.documentType === 'Invoice'); const unpaid = invoices.filter(d => d.status !== 'paid'); const outstanding = unpaid.reduce((s, d) => s + (Number(d.total) || 0), 0); const monthReceipts = receipts.filter(r => (r.date || '').slice(0, 7) === month); return { dueJobs: dueJobs, soonJobs: soonJobs, followups: followups, unpaid: unpaid, outstanding: outstanding, monthRecCount: monthReceipts.length, monthRecTotal: monthReceipts.reduce((s, r) => s + (Number(r.amount) || 0), 0) }; }, [jobs, savedDocs, receipts]);
+            const dash = useMemo(() => { const today = new Date(); today.setHours(0, 0, 0, 0); const todayStr = today.toISOString().split('T')[0]; const month = todayStr.slice(0, 7); const dueJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate <= todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0); const soonJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate > todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : 1).slice(0, 3); const quotes = savedDocs.filter(d => d.documentType === 'Quote'); const followups = quotes.filter(d => d.status !== 'accepted' && d.status !== 'declined').filter(d => { const base = d.lastContact || d.date || ''; if (!base) return false; const days = Math.round((today - new Date(base)) / 86400000); return days >= 3; }).sort((a, b) => ((a.lastContact || a.date) < (b.lastContact || b.date) ? -1 : 1)); const invoices = savedDocs.filter(d => d.documentType === 'Invoice'); const unpaid = invoices.filter(d => d.status !== 'paid'); const outstanding = unpaid.reduce((s, d) => s + (Number(d.total) || 0), 0); const openQuotes = quotes.filter(d => d.status !== 'accepted' && d.status !== 'declined'); const openQuotesValue = openQuotes.reduce((s, d) => s + (Number(d.total) || 0), 0); const monthReceipts = receipts.filter(r => (r.date || '').slice(0, 7) === month); const newEnquiries = enquiries.filter(en => (en.spam || '').toLowerCase() !== 'yes' && (en.replied || '').toLowerCase() !== 'yes').sort((a, b) => (a.date < b.date ? 1 : -1)); return { dueJobs: dueJobs, soonJobs: soonJobs, followups: followups, unpaid: unpaid, outstanding: outstanding, openQuotesCount: openQuotes.length, openQuotesValue: openQuotesValue, newEnquiries: newEnquiries, monthRecCount: monthReceipts.length, monthRecTotal: monthReceipts.reduce((s, r) => s + (Number(r.amount) || 0), 0) }; }, [jobs, savedDocs, receipts, enquiries]);
 
             // ---- Migration + CSV import ----
             const [migrating, setMigrating] = useState(false);
@@ -691,6 +700,7 @@
 
             // ---- Document status, convert, customer history ----
             const updateDocStatus = async (doc, patch) => { const merged = { ...doc, ...patch }; const updated = savedDocs.map(x => x.id === doc.id ? merged : x); setSavedDocs(updated); localStorage.setItem('protech_docs_cache', JSON.stringify(updated)); try { await callBackend(creds.url, { action: 'save', password: creds.password, document: merged }); } catch (e) { flash('Saved locally only.', 'error'); } };
+            const startQuoteFromEnquiry = (en) => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setClient({ name: en.name || '', id: '', address: en.company || '', phone: '' }); setJob(en.subject || ''); setIntro(''); setAiResult(null); setActiveTab('edit'); flash('Started a quote from the enquiry. Add your line items.', 'ok', 4000); };
             const convertQuoteToInvoice = (quote) => { const newNo = getNextDocNo('Invoice', savedDocs); setDocumentType('Invoice'); setDocNo(newNo); setDate(new Date().toISOString().split('T')[0]); const due = new Date(); due.setDate(due.getDate() + 30); setDueDate(due.toISOString().split('T')[0]); setClient(quote.client); setJob(quote.job || ''); setTerms(quote.terms || '30 Days'); setIntro(quote.intro || ''); setItems((quote.items && quote.items.length) ? quote.items.map((it, i) => ({ id: Date.now() + i, qty: it.qty, desc: it.desc, price: it.price })) : [{ id: Date.now(), qty: 1, desc: '', price: '' }]); updateDocStatus(quote, { status: 'accepted' }); setActiveTab('edit'); flash('Quote copied to a new invoice. Review and save.', 'ok', 5000); };
             const customerHistory = (name) => { if (!name || !name.trim()) return null; const n = name.trim().toLowerCase(); const docs = savedDocs.filter(d => d.client && d.client.name && d.client.name.toLowerCase() === n); if (!docs.length) return null; const invs = docs.filter(d => d.documentType === 'Invoice'); const lifetime = invs.reduce((s, d) => s + (Number(d.total) || 0), 0); const outstanding = invs.filter(d => d.status !== 'paid').reduce((s, d) => s + (Number(d.total) || 0), 0); const sorted = docs.slice().sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1); const lastInv = invs.slice().sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1)[0]; const freq = {}; docs.forEach(d => (d.items || []).forEach(it => { const k = (it.desc || '').trim(); if (k) freq[k] = (freq[k] || 0) + 1; })); const common = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 3); return { count: docs.length, invCount: invs.length, lifetime, outstanding, lastInv, lastDate: sorted[0] ? sorted[0].date : '', common }; };
 
@@ -749,10 +759,24 @@
 
                     <main className="flex-1">
 
+                        {authWarn && (
+                            <div className="mx-4 lg:mx-auto max-w-4xl mt-4 bg-red-600/15 border border-red-600/40 rounded-xl p-3 text-sm text-red-200 flex items-start gap-3">
+                                <span className="flex-1">Your app password does not match the backend, so changes are not saving to Google Sheets (you are seeing the last synced copy). Fix APP_PASSWORD in your Apps Script so it matches, or reset this device and re-enter.</span>
+                                <button onClick={() => setActiveTab('settings')} className="shrink-0 underline font-medium">Settings</button>
+                            </div>
+                        )}
+
                         {/* ===== TODAY DASHBOARD ===== */}
                         {activeTab === 'today' && (
                             <div className="max-w-4xl mx-auto p-4 lg:p-8 pb-28 lg:pb-10 space-y-4 animate-fade-in">
                                 <div><h2 className="text-xl font-bold text-white">{new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'}, Dave</h2><p className="text-xs text-slate-400">{new Date().toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <Kpi label="Outstanding" value={kfmt(dash.outstanding)} sub={dash.unpaid.length + ' unpaid'} accent={dash.outstanding > 0 ? '#fca5a5' : '#86efac'} />
+                                    <Kpi label="Open quotes" value={dash.openQuotesCount} sub={kfmt(dash.openQuotesValue)} accent="#F0D0A5" />
+                                    <Kpi label="Receipts (mo)" value={kfmt(dash.monthRecTotal)} sub={dash.monthRecCount + ' logged'} />
+                                    <Kpi label="New enquiries" value={dash.newEnquiries.length} sub="leads" accent={dash.newEnquiries.length ? '#7dd3fc' : undefined} />
+                                </div>
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <button onClick={() => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setAiResult(null); setActiveTab('edit'); }} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><FileText size={20} className="text-[#BE875C]" /> New Quote</button>
@@ -792,6 +816,20 @@
                                         <div className="space-y-1.5">{dash.followups.map(d => { const base = d.lastContact || d.date; const days = Math.round((Date.now() - new Date(base)) / 86400000); return (<div key={d.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"><div className="min-w-0"><div className="text-sm text-slate-200 truncate">{d.client.name || ('#' + d.docNo)}</div><div className="text-[11px] text-slate-500">Quote #{d.docNo} · {eur(d.total)} · sent {days}d ago</div></div><div className="flex items-center gap-1 shrink-0">{geminiKey && <button onClick={() => openEmail('followup', d)} className="text-xs text-[#BE875C] hover:underline px-1">Email</button>}<button onClick={() => updateDocStatus(d, { lastContact: new Date().toISOString().split('T')[0] })} className="text-xs text-slate-400 hover:underline px-1">Done</button></div></div>); })}</div>
                                     )}
                                 </div>
+
+                                {dash.newEnquiries.length > 0 && (
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-2"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Mail size={15} className="text-[#BE875C]" /> New enquiries</h3><span className="text-xs text-slate-500">{dash.newEnquiries.length}</span></div>
+                                        <div className="space-y-1.5">{dash.newEnquiries.slice(0, 6).map((en, i) => (
+                                            <div key={i} className="bg-slate-900/50 rounded-lg px-3 py-2">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div className="min-w-0"><div className="text-sm text-slate-200 truncate">{en.name || en.email || 'Enquiry'}{en.company ? <span className="text-slate-500"> · {en.company}</span> : null}</div><div className="text-[11px] text-slate-500 truncate">{en.subject || en.message || ''}{en.date ? ' · ' + String(en.date).slice(0, 10) : ''}</div></div>
+                                                    <div className="flex items-center gap-2 shrink-0"><button onClick={() => startQuoteFromEnquiry(en)} className="text-xs text-[#F0D0A5] hover:underline font-medium">Quote</button>{en.email && <a href={'mailto:' + en.email + '?subject=' + encodeURIComponent('Re: ' + (en.subject || 'your enquiry'))} className="text-xs text-[#BE875C] hover:underline">Reply</a>}</div>
+                                                </div>
+                                            </div>
+                                        ))}</div>
+                                    </div>
+                                )}
 
                                 <button onClick={() => setActiveTab('receipts')} className="w-full flex items-center justify-between bg-slate-800 border border-slate-700 rounded-xl p-4 hover:bg-slate-700/60">
                                     <span className="text-sm font-bold text-white flex items-center gap-2"><Receipt size={15} className="text-[#BE875C]" /> Receipts this month</span>
