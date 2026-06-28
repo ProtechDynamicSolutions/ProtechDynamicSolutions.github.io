@@ -121,12 +121,13 @@
          *  GEMINI  -  optional AI quote assistant. The API key lives in the
          *  encrypted vault; the model name is a plain preference.
          * =================================================================== */
-        async function callGemini(apiKey, model, systemPrompt, userPrompt) {
+        async function callGemini(apiKey, model, systemPrompt, userPrompt, jsonMode) {
+            if (jsonMode === undefined) jsonMode = true;
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
             const body = {
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-                generationConfig: { temperature: 0.7, responseMimeType: 'application/json' }
+                generationConfig: { temperature: 0.7, responseMimeType: jsonMode ? 'application/json' : 'text/plain' }
             };
             const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             if (!res.ok) { let t = ''; try { t = await res.text(); } catch (e) {} throw new Error('Gemini ' + res.status + (t ? ': ' + t.slice(0, 160) : '')); }
@@ -135,6 +136,35 @@
             let text = parts ? parts.map(function (p) { return p.text || ''; }).join('') : '';
             text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
             return text;
+        }
+
+        async function callGeminiImage(apiKey, model, prompt, imageBase64, mimeType) {
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+            const body = { contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mimeType, data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } };
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!res.ok) { let t = ''; try { t = await res.text(); } catch (e) {} throw new Error('Gemini ' + res.status + (t ? ': ' + t.slice(0, 160) : '')); }
+            const data = await res.json();
+            const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+            let text = parts ? parts.map(function (p) { return p.text || ''; }).join('') : '';
+            return text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+        }
+
+        // Shrink big phone photos before OCR so it is fast and uses fewer tokens. PDFs pass through untouched.
+        function downscaleImage(base64, mimeType) {
+            return new Promise(function (resolve) {
+                if (!/^image\//.test(mimeType || '')) { resolve({ data: base64, mimeType: mimeType }); return; }
+                const img = new Image();
+                img.onload = function () {
+                    const max = 1600, scale = Math.min(1, max / Math.max(img.width, img.height));
+                    const cw = Math.round(img.width * scale), ch = Math.round(img.height * scale);
+                    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+                    c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+                    try { resolve({ data: c.toDataURL('image/jpeg', 0.85).split(',')[1], mimeType: 'image/jpeg' }); }
+                    catch (e) { resolve({ data: base64, mimeType: mimeType }); }
+                };
+                img.onerror = function () { resolve({ data: base64, mimeType: mimeType }); };
+                img.src = 'data:' + (mimeType || 'image/jpeg') + ';base64,' + base64;
+            });
         }
 
         /* ===================================================================
@@ -330,7 +360,7 @@
             const [activities, setActivities] = useState([]);
             const [timer, setTimer] = useState(null); // { jobId, start } while a work session is running
             const [nowTick, setNowTick] = useState(Date.now());
-            const [activeTab, setActiveTab] = useState('edit');
+            const [activeTab, setActiveTab] = useState('today');
             const [status, setStatus] = useState({ msg: '', kind: '' });
             const [loading, setLoading] = useState(true);
             const [scale, setScale] = useState(1);
@@ -343,6 +373,17 @@
             const [showAi, setShowAi] = useState(false);
             const [aiKeyDraft, setAiKeyDraft] = useState('');
             const [aiModelDraft, setAiModelDraft] = useState(localStorage.getItem('protech_gemini_model') || 'gemini-3.1-flash-lite');
+            const [templates, setTemplates] = useState([]);
+            const [hourlyCost, setHourlyCost] = useState(Number(localStorage.getItem('protech_hourly_cost')) || 0);
+            const [costDraft, setCostDraft] = useState(String(Number(localStorage.getItem('protech_hourly_cost')) || ''));
+            const [emailModal, setEmailModal] = useState(null);
+            const [voiceOpen, setVoiceOpen] = useState(false);
+            const [voiceText, setVoiceText] = useState('');
+            const [voiceBusy, setVoiceBusy] = useState(false);
+            const [listening, setListening] = useState(false);
+            const [showTemplates, setShowTemplates] = useState(false);
+            const [tplName, setTplName] = useState('');
+            const recogRef = useRef(null);
 
             const flash = (msg, kind = 'info', ms = 3500) => {
                 setStatus({ msg, kind });
@@ -357,25 +398,29 @@
                         const cr = JSON.parse(localStorage.getItem('protech_receipts_cache') || '[]');
                         const cj = JSON.parse(localStorage.getItem('protech_jobs_cache') || '[]');
                         const ca = JSON.parse(localStorage.getItem('protech_activity_cache') || '[]');
+                        const ct = JSON.parse(localStorage.getItem('protech_templates_cache') || '[]');
                         if (cd.length) setSavedDocs(cd);
                         if (cr.length) setReceipts(cr);
                         if (cj.length) setJobs(cj);
                         if (ca.length) setActivities(ca);
+                        if (ct.length) setTemplates(ct);
                         const tm = JSON.parse(localStorage.getItem('protech_timer') || 'null');
                         if (tm && tm.jobId) setTimer(tm);
                     } catch (e) {}
                     try {
-                        const [d, r, j, a] = await Promise.all([
+                        const [d, r, j, a, t] = await Promise.all([
                             callBackend(creds.url, { action: 'list', password: creds.password }),
                             callBackend(creds.url, { action: 'listReceipts', password: creds.password }),
                             callBackend(creds.url, { action: 'listJobs', password: creds.password }),
-                            callBackend(creds.url, { action: 'listActivity', password: creds.password })
+                            callBackend(creds.url, { action: 'listActivity', password: creds.password }),
+                            callBackend(creds.url, { action: 'listTemplates', password: creds.password })
                         ]);
                         if (cancelled) return;
                         if (d.ok) { setSavedDocs(d.documents); localStorage.setItem('protech_docs_cache', JSON.stringify(d.documents)); }
                         if (r.ok) { setReceipts(r.receipts); localStorage.setItem('protech_receipts_cache', JSON.stringify(r.receipts)); }
                         if (j.ok) { setJobs(j.jobs); localStorage.setItem('protech_jobs_cache', JSON.stringify(j.jobs)); }
                         if (a.ok) { setActivities(a.activities); localStorage.setItem('protech_activity_cache', JSON.stringify(a.activities)); }
+                        if (t && t.ok) { setTemplates(t.templates); localStorage.setItem('protech_templates_cache', JSON.stringify(t.templates)); }
                         flash('Synced with Google Sheets', 'ok');
                     } catch (e) {
                         flash('Offline. Showing the last synced copy.', 'error', 5000);
@@ -473,10 +518,34 @@
             const clientNameBlur = () => { if (client.name && !client.id) { const ex = uniqueCustomers.find(c => c.name.toLowerCase() === client.name.toLowerCase()); if (!ex) setClient(prev => ({ ...prev, id: genId(client.name) })); } };
 
             // ---- Receipts ----
-            const blankReceipt = () => ({ id: Date.now(), date: new Date().toISOString().split('T')[0], supplier: '', category: 'Materials', amount: '', vat: '', paymentMethod: 'Card', notes: '', fileName: '', fileData: '', mimeType: '', fileUrl: '' });
+            const blankReceipt = () => ({ id: Date.now(), date: new Date().toISOString().split('T')[0], supplier: '', category: 'Materials', amount: '', vat: '', paymentMethod: 'Card', notes: '', fileName: '', fileData: '', mimeType: '', fileUrl: '', jobId: '' });
             const [receiptForm, setReceiptForm] = useState(blankReceipt());
             const [savingReceipt, setSavingReceipt] = useState(false);
-            const onReceiptFile = (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setReceiptForm(rf => ({ ...rf, fileData: String(r.result).split(',')[1], fileName: f.name, mimeType: f.type || 'application/octet-stream' })); r.readAsDataURL(f); };
+            const [scanning, setScanning] = useState(false);
+            const RECEIPT_CATS = ['Materials', 'Tools', 'Fuel', 'Subcontractor', 'Office', 'Travel', 'Insurance', 'Software', 'Other'];
+            const OCR_PROMPT = 'You are reading a photo of a purchase receipt or supplier invoice for a tradesperson in Ireland. Extract the details. Return ONLY a JSON object with these fields: "supplier" (the shop or company name), "date" (the purchase date as YYYY-MM-DD, empty string if unclear), "amount" (the grand total actually paid including VAT, as a number with no currency symbol), "vat" (the VAT amount if shown, as a number, otherwise 0), "category" (your best guess, exactly one of: Materials, Tools, Fuel, Subcontractor, Office, Travel, Insurance, Software, Other), "notes" (a very short description of what was bought, optional). Use plain numbers for amount and vat. If something is not visible use an empty string for text fields or 0 for numbers. No markdown, no backticks.';
+            const doScan = async (base64, mimeType) => {
+                if (!geminiKey) { flash('Add a Gemini key in Settings to scan receipts.', 'error'); return; }
+                if (!base64) { flash('Attach a photo first.', 'error'); return; }
+                setScanning(true); setStatus({ msg: 'Reading receipt...', kind: 'busy' });
+                try {
+                    const img = await downscaleImage(base64, mimeType);
+                    const raw = await callGeminiImage(geminiKey, geminiModel, OCR_PROMPT, img.data, img.mimeType);
+                    let d; try { d = JSON.parse(raw); } catch (e) { d = {}; }
+                    setReceiptForm(rf => ({
+                        ...rf,
+                        supplier: d.supplier || rf.supplier,
+                        date: /^\d{4}-\d{2}-\d{2}$/.test(String(d.date || '')) ? d.date : rf.date,
+                        amount: (d.amount !== undefined && d.amount !== null && d.amount !== '') ? String(d.amount) : rf.amount,
+                        vat: (d.vat !== undefined && d.vat !== null && d.vat !== '') ? String(d.vat) : rf.vat,
+                        category: (d.category && RECEIPT_CATS.indexOf(d.category) >= 0) ? d.category : rf.category,
+                        notes: d.notes || rf.notes
+                    }));
+                    flash('Receipt read. Check the details and save.', 'ok');
+                } catch (e) { flash('Could not read receipt: ' + e.message, 'error', 6000); }
+                finally { setScanning(false); }
+            };
+            const onReceiptFile = (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => { const b64 = String(r.result).split(',')[1]; const mime = f.type || 'application/octet-stream'; setReceiptForm(rf => ({ ...rf, fileData: b64, fileName: f.name, mimeType: mime })); if (geminiKey) doScan(b64, mime); }; r.readAsDataURL(f); };
             const saveReceiptNow = async () => {
                 if (!receiptForm.supplier.trim()) { flash('Receipt needs a supplier name.', 'error'); return; }
                 if (receiptForm.amount === '' || isNaN(Number(receiptForm.amount))) { flash('Receipt needs an amount.', 'error'); return; }
@@ -528,6 +597,9 @@
             const removeTask = (j, id) => updateJob(j, { tasks: (j.tasks || []).filter(t => t.id !== id) });
             const moveTask = (j, idx, dir) => { const t = (j.tasks || []).slice(); const ni = idx + dir; if (ni < 0 || ni >= t.length) return; const tmp = t[idx]; t[idx] = t[ni]; t[ni] = tmp; updateJob(j, { tasks: t }); };
             const sortedJobs = useMemo(() => { const rank = j => j.status === 'done' ? 1 : 0; return jobs.slice().sort((a, b) => { const ra = rank(a), rb = rank(b); if (ra !== rb) return ra - rb; const da = a.dueDate || '', db = b.dueDate || ''; if (da && db) return da < db ? -1 : da > db ? 1 : 0; if (da && !db) return -1; if (!da && db) return 1; return 0; }); }, [jobs]);
+            const jobMaterials = (j) => receipts.filter(r => String(r.jobId) === String(j.id)).reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const jobProfit = (j) => { const rev = jobRevenue(j); const mat = jobMaterials(j); const st = jobStats[j.id] || { minutes: 0 }; const labour = (st.minutes / 60) * (Number(hourlyCost) || 0); return { rev: rev, mat: mat, labour: labour, profit: rev - mat - labour }; };
+            const dash = useMemo(() => { const today = new Date(); today.setHours(0, 0, 0, 0); const todayStr = today.toISOString().split('T')[0]; const month = todayStr.slice(0, 7); const dueJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate <= todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : 1); const soonJobs = jobs.filter(j => j.status !== 'done' && j.dueDate && j.dueDate > todayStr).sort((a, b) => a.dueDate < b.dueDate ? -1 : 1).slice(0, 3); const quotes = savedDocs.filter(d => d.documentType === 'Quote'); const followups = quotes.filter(d => d.status !== 'accepted' && d.status !== 'declined').filter(d => { const base = d.lastContact || d.date || ''; if (!base) return false; const days = Math.round((today - new Date(base)) / 86400000); return days >= 3; }).sort((a, b) => ((a.lastContact || a.date) < (b.lastContact || b.date) ? -1 : 1)); const invoices = savedDocs.filter(d => d.documentType === 'Invoice'); const unpaid = invoices.filter(d => d.status !== 'paid'); const outstanding = unpaid.reduce((s, d) => s + (Number(d.total) || 0), 0); const monthReceipts = receipts.filter(r => (r.date || '').slice(0, 7) === month); return { dueJobs: dueJobs, soonJobs: soonJobs, followups: followups, unpaid: unpaid, outstanding: outstanding, monthRecCount: monthReceipts.length, monthRecTotal: monthReceipts.reduce((s, r) => s + (Number(r.amount) || 0), 0) }; }, [jobs, savedDocs, receipts]);
 
             // ---- Migration + CSV import ----
             const [migrating, setMigrating] = useState(false);
@@ -559,11 +631,32 @@
             const copyText = async (t) => { try { await navigator.clipboard.writeText(t); flash('Copied', 'ok', 1500); } catch (e) { flash('Copy not available here', 'error'); } };
             const emailHref = () => 'mailto:?subject=' + encodeURIComponent(documentType + ' from Protech Dynamic Solutions' + (docNo ? ' #' + docNo : '')) + '&body=' + encodeURIComponent((aiResult && aiResult.email) || '');
 
+            // ---- Document status, convert, customer history ----
+            const updateDocStatus = async (doc, patch) => { const merged = { ...doc, ...patch }; const updated = savedDocs.map(x => x.id === doc.id ? merged : x); setSavedDocs(updated); localStorage.setItem('protech_docs_cache', JSON.stringify(updated)); try { await callBackend(creds.url, { action: 'save', password: creds.password, document: merged }); } catch (e) { flash('Saved locally only.', 'error'); } };
+            const convertQuoteToInvoice = (quote) => { const newNo = getNextDocNo('Invoice', savedDocs); setDocumentType('Invoice'); setDocNo(newNo); setDate(new Date().toISOString().split('T')[0]); const due = new Date(); due.setDate(due.getDate() + 30); setDueDate(due.toISOString().split('T')[0]); setClient(quote.client); setJob(quote.job || ''); setTerms(quote.terms || '30 Days'); setIntro(quote.intro || ''); setItems((quote.items && quote.items.length) ? quote.items.map((it, i) => ({ id: Date.now() + i, qty: it.qty, desc: it.desc, price: it.price })) : [{ id: Date.now(), qty: 1, desc: '', price: '' }]); updateDocStatus(quote, { status: 'accepted' }); setActiveTab('edit'); flash('Quote copied to a new invoice. Review and save.', 'ok', 5000); };
+            const customerHistory = (name) => { if (!name || !name.trim()) return null; const n = name.trim().toLowerCase(); const docs = savedDocs.filter(d => d.client && d.client.name && d.client.name.toLowerCase() === n); if (!docs.length) return null; const invs = docs.filter(d => d.documentType === 'Invoice'); const lifetime = invs.reduce((s, d) => s + (Number(d.total) || 0), 0); const outstanding = invs.filter(d => d.status !== 'paid').reduce((s, d) => s + (Number(d.total) || 0), 0); const sorted = docs.slice().sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1); const lastInv = invs.slice().sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1)[0]; const freq = {}; docs.forEach(d => (d.items || []).forEach(it => { const k = (it.desc || '').trim(); if (k) freq[k] = (freq[k] || 0) + 1; })); const common = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 3); return { count: docs.length, invCount: invs.length, lifetime, outstanding, lastInv, lastDate: sorted[0] ? sorted[0].date : '', common }; };
+
+            // ---- Service templates ----
+            const applyTemplate = (tpl, replace) => { const tItems = (tpl.items || []).map((it, i) => ({ id: Date.now() + i, qty: it.qty || 1, desc: it.desc || '', price: (it.price === 0 ? 0 : (it.price || '')) })); const blank = items.every(it => !it.desc && !it.price); if (replace || blank) setItems(tItems.length ? tItems : [{ id: Date.now(), qty: 1, desc: '', price: '' }]); else setItems(items.concat(tItems)); setShowTemplates(false); flash('Inserted ' + tpl.name, 'ok', 1500); };
+            const saveAsTemplate = async () => { const name = (tplName.trim() || job.trim() || 'Template'); const its = items.filter(it => it.desc || it.price).map(it => ({ qty: Number(it.qty) || 1, desc: it.desc, price: Number(it.price) || 0 })); if (!its.length) { flash('Add some line items first.', 'error'); return; } const tpl = { id: Date.now(), name: name, items: its }; const updated = [tpl].concat(templates); setTemplates(updated); localStorage.setItem('protech_templates_cache', JSON.stringify(updated)); setTplName(''); try { await callBackend(creds.url, { action: 'saveTemplate', password: creds.password, template: tpl }); flash('Saved template ' + name, 'ok'); } catch (e) { flash('Saved locally only.', 'error'); } };
+            const deleteTemplateNow = async (tpl) => { const updated = templates.filter(x => x.id !== tpl.id); setTemplates(updated); localStorage.setItem('protech_templates_cache', JSON.stringify(updated)); try { await callBackend(creds.url, { action: 'deleteTemplate', password: creds.password, id: tpl.id }); } catch (e) {} };
+
+            // ---- Voice to quote ----
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const toggleListen = () => { if (!SpeechRec) { flash('Voice input is not supported in this browser. You can still type the brief below.', 'error', 5000); return; } if (listening) { try { recogRef.current && recogRef.current.stop(); } catch (e) {} setListening(false); return; } const rec = new SpeechRec(); recogRef.current = rec; rec.lang = 'en-IE'; rec.interimResults = true; rec.continuous = true; let finalText = voiceText ? voiceText + ' ' : ''; rec.onresult = (e) => { let interim = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const tr = e.results[i]; if (tr.isFinal) finalText += tr[0].transcript + ' '; else interim += tr[0].transcript; } setVoiceText((finalText + interim).trim()); }; rec.onerror = () => setListening(false); rec.onend = () => setListening(false); try { rec.start(); setListening(true); } catch (e) { setListening(false); } };
+            const buildQuoteFromText = async () => { if (!geminiKey) { flash('Add a Gemini key in Settings to use voice to quote.', 'error'); setActiveTab('settings'); return; } const text = voiceText.trim(); if (!text) { flash('Say or type what the quote is for.', 'error'); return; } setVoiceBusy(true); try { const prompt = 'Turn this spoken instruction from an Irish tradesperson into a structured quote. Return ONLY JSON: { "client": { "name": "", "address": "", "phone": "" }, "job": "", "items": [ { "qty": 1, "desc": "", "price": 0 } ] }. Extract the customer name, any job description, and each line item with its price in euro as a plain number. Interpret spoken numbers, for example two fifty means 250 and twelve hundred means 1200. If something is not given use an empty string or 0. Instruction: ' + text; const raw = await callGemini(geminiKey, geminiModel, 'You convert spoken job notes into structured quote data. Return only valid JSON.', prompt, true); let d; try { d = JSON.parse(raw); } catch (e) { d = null; } if (!d) throw new Error('could not understand that'); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); if (d.client) setClient(c => ({ name: d.client.name || c.name, id: c.id, address: d.client.address || c.address, phone: d.client.phone || c.phone })); if (d.job) setJob(d.job); const its = (d.items || []).filter(it => it.desc || it.price).map((it, i) => ({ id: Date.now() + i, qty: Number(it.qty) || 1, desc: it.desc || '', price: (it.price != null && it.price !== '') ? Number(it.price) : '' })); if (its.length) setItems(its); setVoiceOpen(false); setVoiceText(''); setActiveTab('edit'); flash('Quote drafted from your brief. Check it over.', 'ok', 5000); } catch (e) { flash('Voice to quote failed: ' + e.message, 'error', 6000); } finally { setVoiceBusy(false); } };
+
+            // ---- AI emails ----
+            const EMAIL_KINDS = { chase: { label: 'Chase payment', tone: 'a polite but clear reminder that this invoice is due or overdue, asking for payment and offering to answer any queries' }, followup: { label: 'Follow up quote', tone: 'a warm, low pressure follow up checking if they had a chance to look at the quote, and offering a quick chat' }, thanks: { label: 'Thank you', tone: 'a short, warm thank you for their business' }, completed: { label: 'Project completed', tone: 'a friendly note that the work is complete, briefly summarising what was done and what happens next' }, review: { label: 'Ask for review', tone: 'a friendly, genuine request for a Google review, with thanks, kept short' }, reminder: { label: 'Appointment reminder', tone: 'a brief, friendly reminder of an upcoming appointment, asking them to confirm it still suits' } };
+            const generateEmail = async (kind, doc) => { if (!geminiKey) { setEmailModal(null); flash('Add a Gemini key in Settings to generate emails.', 'error'); setActiveTab('settings'); return; } const spec = EMAIL_KINDS[kind]; const ctx = doc ? ['Document: ' + doc.documentType + ' #' + doc.docNo, 'Client: ' + ((doc.client && doc.client.name) || ''), 'Amount: ' + eur(doc.total), 'Date: ' + doc.date, doc.dueDate ? 'Due date: ' + doc.dueDate : ''].filter(Boolean).join('\n') : ''; const sys = 'You write short, warm, plain Irish business emails for Dave Maher of Protech Dynamic Solutions. First person, friendly, never pushy, no em dashes, euro sign for money. Return ONLY the email body text, no subject line, no markdown.'; const prompt = 'Write ' + spec.tone + '.\n' + (ctx ? ('Context:\n' + ctx + '\n') : '') + 'Keep it brief and genuine.'; try { const raw = await callGemini(geminiKey, geminiModel, sys, prompt, false); setEmailModal(m => m ? { ...m, busy: false, text: raw } : m); } catch (e) { setEmailModal(m => m ? { ...m, busy: false, text: '' } : m); flash('Email generation failed: ' + e.message, 'error', 6000); } };
+            const openEmail = (kind, doc) => { setEmailModal({ kind: kind, doc: doc, busy: true, text: '' }); generateEmail(kind, doc); };
+            const saveHourlyCost = () => { const n = Number(costDraft) || 0; setHourlyCost(n); localStorage.setItem('protech_hourly_cost', String(n)); flash('Saved', 'ok', 1500); };
+
             // ---- styles + nav ----
             const inputClass = "w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#BE875C] focus:ring-1 focus:ring-[#BE875C] transition-all";
             const labelClass = "block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider";
-            const TABS = [{ key: 'edit', label: 'Edit', icon: Edit3 }, { key: 'preview', label: 'Preview', icon: Eye }, { key: 'receipts', label: 'Receipts', icon: Receipt }, { key: 'jobs', label: 'Jobs', icon: Briefcase }, { key: 'history', label: 'History', icon: Archive }, { key: 'analytics', label: 'Insights', icon: Activity }];
-            const DESKTOP_TABS = [{ key: 'edit', label: 'Edit', icon: Edit3 }, { key: 'receipts', label: 'Receipts', icon: Receipt }, { key: 'jobs', label: 'Jobs', icon: Briefcase }, { key: 'history', label: 'History', icon: Archive }, { key: 'analytics', label: 'Insights', icon: Activity }];
+            const TABS = [{ key: 'today', label: 'Today', icon: Home }, { key: 'edit', label: 'Create', icon: Edit3 }, { key: 'jobs', label: 'Jobs', icon: Briefcase }, { key: 'receipts', label: 'Receipts', icon: Receipt }, { key: 'history', label: 'History', icon: Archive }, { key: 'analytics', label: 'Insights', icon: Activity }];
+            const DESKTOP_TABS = [{ key: 'today', label: 'Today', icon: Home }, { key: 'edit', label: 'Create', icon: Edit3 }, { key: 'jobs', label: 'Jobs', icon: Briefcase }, { key: 'receipts', label: 'Receipts', icon: Receipt }, { key: 'history', label: 'History', icon: Archive }, { key: 'analytics', label: 'Insights', icon: Activity }];
             const statusColour = { ok: 'bg-green-600', error: 'bg-red-600', busy: 'bg-amber-600', info: 'bg-slate-700' }[status.kind] || 'bg-slate-700';
             const showSplit = activeTab === 'edit' || activeTab === 'preview';
 
@@ -597,6 +690,57 @@
                     {status.msg && (<div className={"fixed top-16 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-lg text-white text-sm shadow-2xl flex items-center gap-2 max-w-[90vw] " + statusColour}>{status.kind === 'busy' && <Spinner size={14} />}{status.kind === 'ok' && <Check size={14} />}<span>{status.msg}</span></div>)}
 
                     <main className="flex-1">
+
+                        {/* ===== TODAY DASHBOARD ===== */}
+                        {activeTab === 'today' && (
+                            <div className="max-w-4xl mx-auto p-4 lg:p-8 pb-28 lg:pb-10 space-y-4 animate-fade-in">
+                                <div><h2 className="text-xl font-bold text-white">{new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'}, Dave</h2><p className="text-xs text-slate-400">{new Date().toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <button onClick={() => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setAiResult(null); setActiveTab('edit'); }} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><FileText size={20} className="text-[#BE875C]" /> New Quote</button>
+                                    <button onClick={() => { resetForm(savedDocs); setDocumentType('Invoice'); setDocNo(getNextDocNo('Invoice', savedDocs)); setAiResult(null); setActiveTab('edit'); }} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><FilePlus size={20} className="text-[#BE875C]" /> New Invoice</button>
+                                    <button onClick={() => setActiveTab('receipts')} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><Camera size={20} className="text-[#BE875C]" /> Add Receipt</button>
+                                    <button onClick={() => setActiveTab('jobs')} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><Clock size={20} className="text-[#BE875C]" /> {timer ? 'Timer running' : 'Start Timer'}</button>
+                                </div>
+
+                                <button onClick={() => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setVoiceText(''); setVoiceOpen(true); setActiveTab('edit'); }} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#344857] to-[#233140] border border-[#BE875C]/40 text-white py-3 rounded-xl text-sm font-bold"><Mic size={18} className="text-[#F0D0A5]" /> Speak a quote</button>
+
+                                {timer && (
+                                    <div className="bg-gradient-to-r from-[#344857] to-[#233140] border border-[#BE875C]/40 rounded-xl p-4 flex items-center justify-between">
+                                        <div className="min-w-0"><div className="text-xs text-[#F0D0A5] uppercase tracking-wider flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Recording</div><div className="text-white font-bold truncate">{runningJob ? runningJob.name : 'Job'}</div></div>
+                                        <div className="flex items-center gap-3"><span className="text-2xl font-black text-white tabular-nums">{fmtElapsed(runningElapsed)}</span><button onClick={stopTimer} className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold"><Square size={15} /> Stop</button></div>
+                                    </div>
+                                )}
+
+                                <div className="grid sm:grid-cols-2 gap-3">
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-2"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Clock size={15} className="text-[#BE875C]" /> Due now</h3><span className="text-xs text-slate-500">{dash.dueJobs.length}</span></div>
+                                        {dash.dueJobs.length === 0 ? <p className="text-xs text-slate-500 py-3">Nothing due today. {dash.soonJobs.length ? 'Next: ' + dash.soonJobs[0].name + ' (' + (dueInfo(dash.soonJobs[0]) ? dueInfo(dash.soonJobs[0]).label : '') + ')' : 'No upcoming deadlines.'}</p> : (
+                                            <div className="space-y-1.5">{dash.dueJobs.map(j => { const di = dueInfo(j); return (<button key={j.id} onClick={() => { setExpandedJob(j.id); setActiveTab('jobs'); }} className="w-full flex items-center justify-between text-left bg-slate-900/50 rounded-lg px-3 py-2 hover:bg-slate-900"><span className="text-sm text-slate-200 truncate pr-2">{j.name}</span><span className="text-xs font-medium shrink-0" style={{ color: di ? di.colour : '#94a3b8' }}>{di ? di.label : ''}</span></button>); })}</div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-2"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Euro size={15} className="text-[#BE875C]" /> Unpaid invoices</h3><span className="text-xs text-[#F0D0A5] font-bold">{eur(dash.outstanding)}</span></div>
+                                        {dash.unpaid.length === 0 ? <p className="text-xs text-slate-500 py-3">All clear, nothing outstanding.</p> : (
+                                            <div className="space-y-1.5">{dash.unpaid.slice(0, 5).map(d => (<div key={d.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"><div className="min-w-0"><div className="text-sm text-slate-200 truncate">{d.client.name || ('#' + d.docNo)}</div><div className="text-[11px] text-slate-500">#{d.docNo} · {eur(d.total)}</div></div><div className="flex items-center gap-1 shrink-0">{geminiKey && <button onClick={() => openEmail('chase', d)} className="text-xs text-[#BE875C] hover:underline px-1">Chase</button>}<button onClick={() => updateDocStatus(d, { status: 'paid' })} className="text-xs text-green-400 hover:underline px-1">Paid</button></div></div>))}</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                    <div className="flex items-center justify-between mb-2"><h3 className="text-sm font-bold text-white flex items-center gap-2"><FileText size={15} className="text-[#BE875C]" /> Quotes to follow up</h3><span className="text-xs text-slate-500">{dash.followups.length}</span></div>
+                                    {dash.followups.length === 0 ? <p className="text-xs text-slate-500 py-3">No quotes waiting on a follow up.</p> : (
+                                        <div className="space-y-1.5">{dash.followups.map(d => { const base = d.lastContact || d.date; const days = Math.round((Date.now() - new Date(base)) / 86400000); return (<div key={d.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"><div className="min-w-0"><div className="text-sm text-slate-200 truncate">{d.client.name || ('#' + d.docNo)}</div><div className="text-[11px] text-slate-500">Quote #{d.docNo} · {eur(d.total)} · sent {days}d ago</div></div><div className="flex items-center gap-1 shrink-0">{geminiKey && <button onClick={() => openEmail('followup', d)} className="text-xs text-[#BE875C] hover:underline px-1">Email</button>}<button onClick={() => updateDocStatus(d, { lastContact: new Date().toISOString().split('T')[0] })} className="text-xs text-slate-400 hover:underline px-1">Done</button></div></div>); })}</div>
+                                    )}
+                                </div>
+
+                                <button onClick={() => setActiveTab('receipts')} className="w-full flex items-center justify-between bg-slate-800 border border-slate-700 rounded-xl p-4 hover:bg-slate-700/60">
+                                    <span className="text-sm font-bold text-white flex items-center gap-2"><Receipt size={15} className="text-[#BE875C]" /> Receipts this month</span>
+                                    <span className="text-xs text-slate-400">{dash.monthRecCount} · <span className="text-[#F0D0A5] font-bold">{eur(dash.monthRecTotal)}</span></span>
+                                </button>
+                            </div>
+                        )}
 
                         {/* ===== ANALYTICS ===== */}
                         {activeTab === 'analytics' && (<div className="max-w-6xl mx-auto p-4 lg:p-8 pb-28 lg:pb-10 animate-fade-in"><AnalyticsPage docs={savedDocs} receipts={receipts} jobs={jobs} activities={activities} jobStats={jobStats} jobRevenue={jobRevenue} /></div>)}
@@ -632,6 +776,20 @@
                                 </div>
 
                                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                    <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Euro size={16} className="text-[#BE875C]" /> Your hourly cost</h3>
+                                    <p className="text-xs text-slate-400 mb-3">Used to work out real profit on jobs: revenue, less materials, less your hours at this rate.</p>
+                                    <div className="flex gap-2"><div className="relative flex-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span><input type="number" value={costDraft} onChange={e => setCostDraft(e.target.value)} onFocus={selectAll} className={inputClass + " pl-7"} placeholder="0.00" /></div><button onClick={saveHourlyCost} className="bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white px-4 rounded-lg text-sm font-bold flex items-center gap-1"><Check size={15} /> Save</button></div>
+                                    {hourlyCost > 0 && <div className="text-xs text-slate-500 mt-2">Currently {eur(hourlyCost)} per hour</div>}
+                                </div>
+
+                                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                    <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Layers size={16} className="text-[#BE875C]" /> Service templates</h3>
+                                    {templates.length === 0 ? <p className="text-xs text-slate-400">Create these from the editor: build your line items, tap Templates, and save. They appear here to manage.</p> : (
+                                        <div className="space-y-1">{templates.map(t => (<div key={t.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"><span className="text-sm text-slate-200 truncate">{t.name} <span className="text-xs text-slate-500">({(t.items || []).length})</span></span><button onClick={() => deleteTemplateNow(t)} className="text-slate-600 hover:text-red-400"><Trash2 size={14} /></button></div>))}</div>
+                                    )}
+                                </div>
+
+                                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
                                     <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Lock size={16} className="text-[#BE875C]" /> Security</h3>
                                     <button onClick={onLock} className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2.5 rounded-lg text-sm font-medium mb-2"><Lock size={15} /> Lock now</button>
                                     <button onClick={() => { if (window.confirm('Remove the saved connection from this device? Your data stays in Google Sheets.')) { Vault.wipe(); onLock(); window.location.reload(); } }} className="w-full flex items-center justify-center gap-2 bg-red-600/10 border border-red-600/30 text-red-400 hover:bg-red-600/20 px-3 py-2.5 rounded-lg text-sm font-medium"><Trash2 size={15} /> Forget this device</button>
@@ -647,12 +805,17 @@
                                     <div className="grid sm:grid-cols-2 gap-3">
                                         <div><label className={labelClass}>Date</label><input type="date" value={receiptForm.date} onChange={e => setReceiptForm({ ...receiptForm, date: e.target.value })} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
                                         <div><label className={labelClass}>Supplier</label><input value={receiptForm.supplier} onChange={e => setReceiptForm({ ...receiptForm, supplier: e.target.value })} className={inputClass} placeholder="Who you paid" /></div>
-                                        <div><label className={labelClass}>Category</label><select value={receiptForm.category} onChange={e => setReceiptForm({ ...receiptForm, category: e.target.value })} className={inputClass}>{['Materials', 'Tools', 'Fuel', 'Subcontractor', 'Office', 'Travel', 'Insurance', 'Software', 'Other'].map(c => <option key={c}>{c}</option>)}</select></div>
+                                        <div><label className={labelClass}>Category</label><select value={receiptForm.category} onChange={e => setReceiptForm({ ...receiptForm, category: e.target.value })} className={inputClass}>{RECEIPT_CATS.map(c => <option key={c}>{c}</option>)}</select></div>
                                         <div><label className={labelClass}>Payment</label><select value={receiptForm.paymentMethod} onChange={e => setReceiptForm({ ...receiptForm, paymentMethod: e.target.value })} className={inputClass}>{['Card', 'Cash', 'Bank Transfer', 'Direct Debit'].map(c => <option key={c}>{c}</option>)}</select></div>
                                         <div><label className={labelClass}>Amount (inc VAT)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span><input type="number" step="0.01" value={receiptForm.amount} onChange={e => setReceiptForm({ ...receiptForm, amount: e.target.value })} onFocus={selectAll} className={inputClass + " pl-7"} placeholder="0.00" /></div></div>
                                         <div><label className={labelClass}>of which VAT</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span><input type="number" step="0.01" value={receiptForm.vat} onChange={e => setReceiptForm({ ...receiptForm, vat: e.target.value })} onFocus={selectAll} className={inputClass + " pl-7"} placeholder="0.00" /></div></div>
                                         <div className="sm:col-span-2"><label className={labelClass}>Notes</label><input value={receiptForm.notes} onChange={e => setReceiptForm({ ...receiptForm, notes: e.target.value })} className={inputClass} placeholder="Optional note for the accountant" /></div>
-                                        <div className="sm:col-span-2"><label className={labelClass}>Photo or PDF of receipt</label><label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-slate-600 rounded-lg text-slate-300 hover:border-[#BE875C] hover:bg-[#BE875C]/10 cursor-pointer text-sm"><Camera size={16} /> {receiptForm.fileName ? receiptForm.fileName : 'Snap or attach'}<input type="file" accept="image/*,application/pdf" capture="environment" onChange={onReceiptFile} className="hidden" /></label></div>
+                                        <div className="sm:col-span-2"><label className={labelClass}>Attach to job <span className="text-slate-600 normal-case">(optional, for profit tracking)</span></label><select value={receiptForm.jobId} onChange={e => setReceiptForm({ ...receiptForm, jobId: e.target.value })} className={inputClass}><option value="">None</option>{jobs.filter(j => j.status !== 'done').map(j => <option key={j.id} value={j.id}>{j.name}</option>)}</select></div>
+                                        <div className="sm:col-span-2"><label className={labelClass}>Photo or PDF of receipt</label>
+                                            <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-slate-600 rounded-lg text-slate-300 hover:border-[#BE875C] hover:bg-[#BE875C]/10 cursor-pointer text-sm">{scanning ? <Spinner size={16} /> : <Camera size={16} />} {scanning ? 'Reading receipt...' : (receiptForm.fileName ? receiptForm.fileName : (geminiKey ? 'Snap and auto-fill' : 'Snap or attach'))}<input type="file" accept="image/*,application/pdf" capture="environment" onChange={onReceiptFile} className="hidden" /></label>
+                                            {geminiKey && receiptForm.fileData && !scanning && <button onClick={() => doScan(receiptForm.fileData, receiptForm.mimeType)} className="mt-1.5 w-full text-xs text-[#BE875C] hover:underline flex items-center justify-center gap-1"><Sparkles size={13} /> Re-scan with AI</button>}
+                                            {!geminiKey && <p className="text-[10px] text-slate-500 mt-1">Add a Gemini key in Settings to read receipts from a photo automatically.</p>}
+                                        </div>
                                     </div>
                                     <button onClick={saveReceiptNow} disabled={savingReceipt} className={goldBtn + " mt-4"}>{savingReceipt ? <Spinner /> : <Save size={16} />} {savingReceipt ? 'Saving...' : 'Save Receipt'}</button>
                                 </div>
@@ -689,14 +852,27 @@
                                 <div>
                                     <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Archive size={16} className="text-[#BE875C]" /> Saved Documents</h3>
                                     {savedDocs.length === 0 ? <p className="text-slate-500 text-sm text-center py-10">No documents yet. Create one in the Edit tab.</p> : (
-                                        <div className="space-y-2">{savedDocs.map(d => (
+                                        <div className="space-y-2">{savedDocs.map(d => { const isInv = d.documentType === 'Invoice'; const statusChip = isInv ? (d.status === 'paid' ? ['Paid', 'bg-green-500/20 text-green-400'] : ['Unpaid', 'bg-amber-500/20 text-amber-400']) : (d.status === 'accepted' ? ['Accepted', 'bg-green-500/20 text-green-400'] : d.status === 'declined' ? ['Declined', 'bg-slate-600/40 text-slate-400'] : ['Open', 'bg-blue-500/20 text-blue-400']); return (
                                             <div key={d.id} className="bg-slate-800 border border-slate-700 rounded-lg p-4 hover:border-[#BE875C]/50 transition-colors">
-                                                <div className="flex justify-between items-start mb-2"><div><span className={"text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider " + (d.documentType === 'Quote' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#BE875C]/20 text-[#BE875C]')}>{d.documentType}</span><span className="text-white font-medium ml-2">#{d.docNo}</span></div>
-                                                    <div className="flex gap-2">{d.pdfUrl && <a href={d.pdfUrl} target="_blank" rel="noopener" className="text-slate-400 hover:text-[#F0D0A5] p-1" title="View PDF in Drive"><ExternalLink size={16} /></a>}<button onClick={() => loadDoc(d)} className="text-slate-400 hover:text-[#F0D0A5] p-1" title="Load"><FolderOpen size={16} /></button><button onClick={() => deleteDoc(d)} className="text-slate-500 hover:text-red-400 p-1" title="Delete"><Trash2 size={16} /></button></div>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex items-center gap-2 flex-wrap"><span className={"text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider " + (d.documentType === 'Quote' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#BE875C]/20 text-[#BE875C]')}>{d.documentType}</span><span className="text-white font-medium">#{d.docNo}</span><span className={"text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider " + statusChip[1]}>{statusChip[0]}</span></div>
+                                                    <div className="flex gap-2 shrink-0">{d.pdfUrl && <a href={d.pdfUrl} target="_blank" rel="noopener" className="text-slate-400 hover:text-[#F0D0A5] p-1" title="View PDF in Drive"><ExternalLink size={16} /></a>}<button onClick={() => loadDoc(d)} className="text-slate-400 hover:text-[#F0D0A5] p-1" title="Load"><FolderOpen size={16} /></button><button onClick={() => deleteDoc(d)} className="text-slate-500 hover:text-red-400 p-1" title="Delete"><Trash2 size={16} /></button></div>
                                                 </div>
                                                 <div className="text-sm text-slate-300 mb-1">{d.client.name || 'Unnamed client'}</div>
-                                                <div className="flex justify-between text-xs text-slate-500"><span>{d.date}</span><span className="font-medium text-slate-300">{eur(d.total)}</span></div>
-                                            </div>))}
+                                                <div className="flex justify-between text-xs text-slate-500 mb-2"><span>{d.date}</span><span className="font-medium text-slate-300">{eur(d.total)}</span></div>
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs border-t border-slate-700/60 pt-2">
+                                                    {isInv && d.status !== 'paid' && <button onClick={() => updateDocStatus(d, { status: 'paid' })} className="text-green-400 hover:underline">Mark paid</button>}
+                                                    {isInv && d.status === 'paid' && <button onClick={() => updateDocStatus(d, { status: '' })} className="text-slate-400 hover:underline">Mark unpaid</button>}
+                                                    {!isInv && <button onClick={() => convertQuoteToInvoice(d)} className="text-[#F0D0A5] hover:underline font-medium flex items-center gap-1"><ArrowRight size={12} /> To invoice</button>}
+                                                    {!isInv && d.status !== 'accepted' && <button onClick={() => updateDocStatus(d, { status: 'accepted' })} className="text-green-400 hover:underline">Accepted</button>}
+                                                    {!isInv && d.status !== 'declined' && <button onClick={() => updateDocStatus(d, { status: 'declined' })} className="text-slate-400 hover:underline">Declined</button>}
+                                                    {geminiKey && isInv && <button onClick={() => openEmail('chase', d)} className="text-[#BE875C] hover:underline">Chase</button>}
+                                                    {geminiKey && isInv && <button onClick={() => openEmail('review', d)} className="text-[#BE875C] hover:underline">Review</button>}
+                                                    {geminiKey && !isInv && <button onClick={() => openEmail('followup', d)} className="text-[#BE875C] hover:underline">Follow up</button>}
+                                                    {geminiKey && <button onClick={() => openEmail('thanks', d)} className="text-[#BE875C] hover:underline">Thanks</button>}
+                                                </div>
+                                            </div>
+                                        ); })}
                                         </div>
                                     )}
                                 </div>
@@ -721,7 +897,7 @@
                                 {showJobForm && (
                                     <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3 animate-fade-in">
                                         <div className="grid sm:grid-cols-2 gap-3">
-                                            <div><label className={labelClass}>Job Name</label><input value={jobForm.name} onChange={e => setJobForm({ ...jobForm, name: e.target.value })} className={inputClass} placeholder="e.g. Timesheet app" /></div>
+                                            <div><label className={labelClass}>Job Name</label><input value={jobForm.name} onChange={e => setJobForm({ ...jobForm, name: e.target.value })} className={inputClass} placeholder="e.g. Kitchen rewire" /></div>
                                             <div><label className={labelClass}>Client</label><input list="customers-list" value={jobForm.client} onChange={e => setJobForm({ ...jobForm, client: e.target.value })} className={inputClass} placeholder="Client name" /></div>
                                             <div><label className={labelClass}>Link Quote (optional)</label><select value={jobForm.quoteNo} onChange={e => { const v = e.target.value; const d = savedDocs.find(x => String(x.docNo) === String(v) && x.documentType === 'Quote'); setJobForm(f => ({ ...f, quoteNo: v, client: f.client || (d && d.client ? d.client.name : ''), estimatedPrice: f.estimatedPrice || (d ? String(d.total) : '') })); }} className={inputClass}><option value="">None</option>{savedDocs.filter(d => d.documentType === 'Quote').map(d => <option key={d.id} value={d.docNo}>#{d.docNo} {d.client.name ? '· ' + d.client.name : ''}</option>)}</select></div>
                                             <div><label className={labelClass}>Link Invoice (optional)</label><select value={jobForm.invoiceNo} onChange={e => { const v = e.target.value; const d = savedDocs.find(x => String(x.docNo) === String(v) && x.documentType === 'Invoice'); setJobForm(f => ({ ...f, invoiceNo: v, client: f.client || (d && d.client ? d.client.name : '') })); }} className={inputClass}><option value="">None</option>{savedDocs.filter(d => d.documentType === 'Invoice').map(d => <option key={d.id} value={d.docNo}>#{d.docNo} {d.client.name ? '· ' + d.client.name : ''}</option>)}</select></div>
@@ -741,6 +917,7 @@
                                         const rev = jobRevenue(j); const hrs = st.minutes / 60; const rate = hrs > 0.02 ? rev / hrs : null;
                                         const qv = jobQuote(j); const iv = jobInvoice(j);
                                         const qRate = (qv > 0 && hrs > 0.02) ? qv / hrs : null; const iRate = (iv != null && hrs > 0.02) ? iv / hrs : null;
+                                        const prof = jobProfit(j); const mat = jobMaterials(j);
                                         const isOpen = expandedJob === j.id; const isRunning = timer && String(timer.jobId) === String(j.id);
                                         const acts = activities.filter(a => String(a.jobId) === String(j.id)).sort((a, b) => (b.createdAt || '') < (a.createdAt || '') ? -1 : 1);
                                         const prog = jobProgress(j); const due = dueInfo(j); const tdone = (j.tasks || []).filter(t => t.done).length; const ttot = (j.tasks || []).length; const nextIdx = (j.tasks || []).findIndex(t => !t.done);
@@ -803,6 +980,15 @@
                                                             <span>Sessions <span className="text-slate-200 font-bold">{st.sessions}</span></span>
                                                         </div>
                                                         {qv > 0 && iv != null && iv !== qv && (<div className="text-xs text-slate-500">Billed vs quoted: <span className={iv >= qv ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>{(iv >= qv ? '+' : '') + eur(iv - qv)}</span>{iv < qv ? ' (you absorbed extra work)' : ' (you recovered extra work)'}</div>)}
+                                                        {(mat > 0 || hourlyCost > 0) && (
+                                                            <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs">
+                                                                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Profit estimate</div>
+                                                                <div className="flex justify-between mb-0.5"><span className="text-slate-400">Revenue</span><span className="text-slate-200">{eur(prof.rev)}</span></div>
+                                                                <div className="flex justify-between mb-0.5"><span className="text-slate-400">Materials</span><span className="text-slate-300">- {eur(prof.mat)}</span></div>
+                                                                <div className="flex justify-between mb-0.5"><span className="text-slate-400">Your time ({fmtDur(st.minutes)}{hourlyCost ? ' @ ' + eur(hourlyCost) : ''})</span><span className="text-slate-300">- {eur(prof.labour)}</span></div>
+                                                                <div className="flex justify-between font-bold mt-1 pt-1 border-t border-slate-700"><span className="text-white">Profit</span><span style={{ color: prof.profit >= 0 ? '#86efac' : '#f87171' }}>{eur(prof.profit)}</span></div>
+                                                            </div>
+                                                        )}
                                                         <div className="bg-slate-800 border border-slate-700 rounded-lg p-3">
                                                             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Log activity</div>
                                                             <div className="flex flex-wrap gap-2 mb-2">{[['call', 'Call', PhoneCall], ['email', 'Email', Mail], ['site', 'Site', MapPin], ['admin', 'Admin', FileText]].map(k => { const Ico = k[2]; return (<button key={k[0]} onClick={() => setQuickLog({ ...quickLog, kind: k[0] })} className={"flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium " + (quickLog.kind === k[0] ? 'bg-[#BE875C] text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600')}><Ico size={13} /> {k[1]}</button>); })}</div>
@@ -843,6 +1029,36 @@
                                             <button onClick={handleSave} className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white px-3 py-3 rounded-lg text-sm font-bold shadow-lg shadow-[#BE875C]/20 hover:opacity-90"><Cloud size={16} /> Save to Cloud</button>
                                             <button onClick={pdfCopy} className="flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white px-3 py-3 rounded-lg text-sm font-medium"><Download size={16} /> Save + PDF</button>
                                         </div>
+
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setActiveTab('preview')} className="lg:hidden flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><Eye size={15} /> Preview</button>
+                                            <button onClick={() => setShowTemplates(v => !v)} className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><Layers size={15} /> Templates</button>
+                                            <button onClick={() => { setVoiceText(''); setVoiceOpen(v => !v); }} className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><Mic size={15} /> Voice</button>
+                                        </div>
+
+                                        {showTemplates && (
+                                            <div className="bg-slate-900/40 border border-slate-700 rounded-xl p-3 space-y-2 animate-fade-in">
+                                                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Service templates</span>
+                                                {templates.length === 0 ? <p className="text-xs text-slate-500">No templates yet. Build your line items below, then save them here to reuse with one tap.</p> : (
+                                                    <div className="space-y-1">{templates.map(t => (
+                                                        <div key={t.id} className="flex items-center justify-between bg-slate-800 rounded-lg px-3 py-2">
+                                                            <button onClick={() => applyTemplate(t, false)} className="flex-1 text-left text-sm text-slate-200 truncate">{t.name} <span className="text-xs text-slate-500">({(t.items || []).length})</span></button>
+                                                            <div className="flex items-center gap-2 shrink-0"><button onClick={() => applyTemplate(t, true)} className="text-[10px] text-slate-400 hover:text-[#BE875C] uppercase tracking-wider">Replace</button><button onClick={() => deleteTemplateNow(t)} className="text-slate-600 hover:text-red-400"><Trash2 size={14} /></button></div>
+                                                        </div>
+                                                    ))}</div>
+                                                )}
+                                                <div className="flex gap-2 pt-1"><input value={tplName} onChange={e => setTplName(e.target.value)} className={inputClass + " py-2"} placeholder="Save current items as..." /><button onClick={saveAsTemplate} className="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg shrink-0"><Save size={15} /></button></div>
+                                            </div>
+                                        )}
+
+                                        {voiceOpen && (
+                                            <div className="bg-slate-900/40 border border-[#BE875C]/30 rounded-xl p-3 space-y-2 animate-fade-in">
+                                                <div className="flex items-center justify-between"><span className="text-xs font-bold text-[#F0D0A5] uppercase tracking-wider flex items-center gap-1.5"><Mic size={14} /> Speak or type the job</span>{SpeechRec && <button onClick={toggleListen} className={"flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold " + (listening ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-200')}>{listening ? <React.Fragment><span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> Listening</React.Fragment> : <React.Fragment><Mic size={12} /> Record</React.Fragment>}</button>}</div>
+                                                <textarea rows="3" value={voiceText} onChange={e => setVoiceText(e.target.value)} className={inputClass + " resize-none"} placeholder="Quote for John Murphy. Website update. SEO work 250, hosting 180, Google Business 150."></textarea>
+                                                <p className="text-[10px] text-slate-500">{geminiKey ? 'I will fill in the customer and line items. Check the prices after.' : 'Add a Gemini key in Settings to use this.'}</p>
+                                                <div className="flex gap-2"><button onClick={buildQuoteFromText} disabled={voiceBusy} className={goldBtn}>{voiceBusy ? <Spinner /> : <Sparkles size={16} />} {voiceBusy ? 'Building...' : 'Build quote'}</button><button onClick={() => { setVoiceOpen(false); setVoiceText(''); }} className="px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Close</button></div>
+                                            </div>
+                                        )}
 
                                         <div className="bg-slate-900/40 border border-[#BE875C]/30 rounded-xl overflow-hidden">
                                             <button onClick={() => setShowAi(v => !v)} className="w-full flex items-center justify-between px-4 py-3">
@@ -902,6 +1118,18 @@
                                                 </div>
                                                 <div><label className={labelClass}>Address</label><textarea rows="2" value={client.address} onChange={e => changeClient('address', e.target.value)} className={inputClass + " resize-none"} placeholder="Client address"></textarea></div>
                                                 <div><label className={labelClass}>Phone</label><input value={client.phone} onChange={e => changeClient('phone', e.target.value)} className={inputClass} placeholder="Phone number" /></div>
+                                                {(() => { const ch = customerHistory(client.name); if (!ch) return null; return (
+                                                    <div className="bg-slate-900/40 border border-slate-700 rounded-lg p-3 text-xs animate-fade-in">
+                                                        <div className="flex items-center gap-1.5 text-[#F0D0A5] font-semibold mb-2"><User size={13} /> Customer history</div>
+                                                        <div className="grid grid-cols-2 gap-y-1 gap-x-3">
+                                                            <span className="text-slate-400">Lifetime spend</span><span className="text-slate-200 text-right font-medium">{eur(ch.lifetime)}</span>
+                                                            {ch.outstanding > 0 ? <React.Fragment><span className="text-slate-400">Outstanding</span><span className="text-red-400 text-right font-medium">{eur(ch.outstanding)}</span></React.Fragment> : null}
+                                                            <span className="text-slate-400">Documents</span><span className="text-slate-200 text-right">{ch.count}</span>
+                                                            {ch.lastInv ? <React.Fragment><span className="text-slate-400">Last invoice</span><span className="text-slate-200 text-right">#{ch.lastInv.docNo} · {ch.lastInv.date}</span></React.Fragment> : null}
+                                                        </div>
+                                                        {ch.common.length > 0 ? <div className="mt-2 text-slate-500">Usual: {ch.common.join(', ')}</div> : null}
+                                                    </div>
+                                                ); })()}
                                             </div>
                                         </section>
                                         <section>
@@ -940,6 +1168,23 @@
                     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-slate-800 border-t border-slate-700 safe-bottom">
                         <div className="grid grid-cols-6">{TABS.map(t => (<button key={t.key} onClick={() => setActiveTab(t.key)} className={"flex flex-col items-center gap-0.5 py-2.5 text-[9px] font-medium transition-colors " + (activeTab === t.key ? 'text-[#BE875C]' : 'text-slate-400')}><t.icon size={19} /> {t.label}</button>))}</div>
                     </nav>
+
+                    {emailModal && (
+                        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-3" onClick={() => setEmailModal(null)}>
+                            <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg p-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Mail size={16} className="text-[#BE875C]" /> {EMAIL_KINDS[emailModal.kind] ? EMAIL_KINDS[emailModal.kind].label : 'Email'}{emailModal.doc ? <span className="text-slate-500 font-normal">· {emailModal.doc.client.name || ('#' + emailModal.doc.docNo)}</span> : null}</h3><button onClick={() => setEmailModal(null)} className="text-slate-400 hover:text-white"><X size={18} /></button></div>
+                                {emailModal.busy ? <div className="flex items-center gap-2 text-slate-400 text-sm py-10 justify-center"><Spinner /> Writing in your style...</div> : (
+                                    <React.Fragment>
+                                        <textarea rows="10" value={emailModal.text} onChange={e => setEmailModal({ ...emailModal, text: e.target.value })} className={inputClass + " resize-y text-xs leading-relaxed"}></textarea>
+                                        <div className="flex gap-2 mt-3">
+                                            <button onClick={() => copyText(emailModal.text)} className="flex-1 flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-medium"><Copy size={15} /> Copy</button>
+                                            <a href={'mailto:?subject=' + encodeURIComponent((emailModal.doc ? emailModal.doc.documentType + ' #' + emailModal.doc.docNo + ' ' : '') + 'Protech Dynamic Solutions') + '&body=' + encodeURIComponent(emailModal.text || '')} className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white py-2.5 rounded-lg text-sm font-bold"><Mail size={15} /> Open in Mail</a>
+                                        </div>
+                                    </React.Fragment>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -961,6 +1206,11 @@
         const Clock = (p) => <Icon {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
         const Sparkles = (p) => <Icon {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 14l.9 2.4L22 17l-2.1.6L19 20l-.9-2.4L16 17l2.1-.6L19 14z"/></Icon>;
         const Copy = (p) => <Icon {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></Icon>;
+        const Home = (p) => <Icon {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
+        const Mic = (p) => <Icon {...p}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></Icon>;
+        const Layers = (p) => <Icon {...p}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
+        const Euro = (p) => <Icon {...p}><path d="M14 21.8a6 6 0 0 1-8-5.6V8a6 6 0 0 1 8-5.6M4 11.5h8M4 14.5h8"/></Icon>;
+        const ArrowRight = (p) => <Icon {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
 
         /* ===================================================================
          *  MEMOISED A4 PREVIEW  (so tab switches are instant - fixes #1)
