@@ -94,6 +94,50 @@
         };
 
         /* ===================================================================
+         *  FINGERPRINT QUICK UNLOCK  (WebAuthn platform authenticator)
+         *  Optional, per device. The backend password is stored on this
+         *  device and released after a successful fingerprint check, so the
+         *  app can unlock without typing. Intended for your own devices only.
+         * =================================================================== */
+        const Bio = {
+            b(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); },
+            ub(str) { return Uint8Array.from(atob(str), function (c) { return c.charCodeAt(0); }); },
+            enabled() { return !!localStorage.getItem('protech_bio'); },
+            async available() { try { return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } },
+            async enable(password) {
+                const cred = await navigator.credentials.create({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { name: 'Protech Dynamic Solutions', id: location.hostname },
+                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'protech-app', displayName: 'Protech' },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+                    timeout: 60000, attestation: 'none'
+                }});
+                const rawId = new Uint8Array(cred.rawId);
+                const k = crypto.getRandomValues(new Uint8Array(32));
+                const key = await crypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, ['encrypt']);
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(password));
+                localStorage.setItem('protech_bio', JSON.stringify({ id: this.b(rawId), iv: this.b(iv), ct: this.b(ct) }));
+                localStorage.setItem('protech_bio_key', this.b(k));
+            },
+            async unlock() {
+                const meta = JSON.parse(localStorage.getItem('protech_bio') || 'null');
+                if (!meta) throw new Error('Fingerprint not set up');
+                await navigator.credentials.get({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    allowCredentials: [{ id: this.ub(meta.id), type: 'public-key' }],
+                    userVerification: 'required', timeout: 60000, rpId: location.hostname
+                }});
+                const k = this.ub(localStorage.getItem('protech_bio_key'));
+                const key = await crypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, ['decrypt']);
+                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: this.ub(meta.iv) }, key, this.ub(meta.ct));
+                return new TextDecoder().decode(pt);
+            },
+            disable() { localStorage.removeItem('protech_bio'); localStorage.removeItem('protech_bio_key'); }
+        };
+
+        /* ===================================================================
          *  BACKEND CALL  -  text/plain POST avoids the CORS preflight that
          *  Apps Script web apps cannot answer.
          * =================================================================== */
@@ -288,7 +332,9 @@
             const [busy, setBusy] = useState(false);
             const [err, setErr] = useState('');
             const inputRef = useRef(null);
-            useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, []);
+            const [bioReady, setBioReady] = useState(false);
+            useEffect(() => { if (Bio.enabled()) { Bio.available().then(setBioReady); } else if (inputRef.current) { inputRef.current.focus(); } }, []);
+            const tryBio = async () => { setErr(''); setBusy(true); try { const pw = await Bio.unlock(); const c = await Vault.open(pw); onUnlock(c); } catch (e) { setBusy(false); if (e && e.name === 'NotAllowedError') return; setErr('Fingerprint unlock did not work. Enter your password instead.'); } };
 
             const submit = async () => {
                 if (!pw) return;
@@ -303,7 +349,7 @@
 
             const reset = () => {
                 if (window.confirm('This wipes the saved connection from this device. You will need your Apps Script URL and password to set it up again. Your data stays safe in Google Sheets. Continue?')) {
-                    Vault.wipe(); onReset();
+                    Vault.wipe(); Bio.disable(); onReset();
                 }
             };
 
@@ -314,6 +360,12 @@
                         <div className="w-14 h-14 bg-[#BE875C]/15 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Lock size={26} className="text-[#BE875C]" />
                         </div>
+                        {bioReady && (
+                            <div className="mb-4">
+                                <button onClick={tryBio} disabled={busy} className={goldBtn}><Fingerprint size={18} /> Unlock with fingerprint</button>
+                                <div className="flex items-center gap-3 mt-4"><div className="h-px bg-slate-700 flex-1"></div><span className="text-[11px] text-slate-500 uppercase tracking-wider">or password</span><div className="h-px bg-slate-700 flex-1"></div></div>
+                            </div>
+                        )}
                         <p className="text-slate-300 text-sm mb-5">Enter your password to unlock.</p>
                         <input ref={inputRef} type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={fld + " text-center text-lg tracking-widest mb-4"} placeholder="Password" />
                         {err && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">{err}</div>}
@@ -384,6 +436,12 @@
             const [showTemplates, setShowTemplates] = useState(false);
             const [tplName, setTplName] = useState('');
             const recogRef = useRef(null);
+            const [bioAvail, setBioAvail] = useState(false);
+            const [bioOn, setBioOn] = useState(Bio.enabled());
+            useEffect(() => { Bio.available().then(setBioAvail); }, []);
+            useEffect(() => { if (voiceOpen) { const t = setTimeout(() => { const el = document.getElementById('voice-panel'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 130); return () => clearTimeout(t); } }, [voiceOpen, activeTab]);
+            const enableBio = async () => { try { await Bio.enable(creds.password); setBioOn(true); flash('Fingerprint unlock enabled on this device.', 'ok'); } catch (e) { flash('Could not enable fingerprint: ' + ((e && e.message) || 'cancelled'), 'error', 6000); } };
+            const disableBio = () => { Bio.disable(); setBioOn(false); flash('Fingerprint unlock turned off on this device.', 'ok'); };
 
             const flash = (msg, kind = 'info', ms = 3500) => {
                 setStatus({ msg, kind });
@@ -703,7 +761,7 @@
                                     <button onClick={() => setActiveTab('jobs')} className="flex flex-col items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl py-4 text-xs font-semibold text-slate-200"><Clock size={20} className="text-[#BE875C]" /> {timer ? 'Timer running' : 'Start Timer'}</button>
                                 </div>
 
-                                <button onClick={() => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setVoiceText(''); setVoiceOpen(true); setActiveTab('edit'); }} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#344857] to-[#233140] border border-[#BE875C]/40 text-white py-3 rounded-xl text-sm font-bold"><Mic size={18} className="text-[#F0D0A5]" /> Speak a quote</button>
+                                <button onClick={() => { resetForm(savedDocs); setDocumentType('Quote'); setDocNo(getNextDocNo('Quote', savedDocs)); setVoiceText(''); setVoiceOpen(true); setActiveTab('edit'); }} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#344857] to-[#233140] border border-[#BE875C]/40 text-white py-3 rounded-xl text-sm font-bold"><Mic size={18} className="text-[#F0D0A5]" /> Dictate or generate a quote</button>
 
                                 {timer && (
                                     <div className="bg-gradient-to-r from-[#344857] to-[#233140] border border-[#BE875C]/40 rounded-xl p-4 flex items-center justify-between">
@@ -788,6 +846,14 @@
                                         <div className="space-y-1">{templates.map(t => (<div key={t.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"><span className="text-sm text-slate-200 truncate">{t.name} <span className="text-xs text-slate-500">({(t.items || []).length})</span></span><button onClick={() => deleteTemplateNow(t)} className="text-slate-600 hover:text-red-400"><Trash2 size={14} /></button></div>))}</div>
                                     )}
                                 </div>
+
+                                {bioAvail && (
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                        <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Fingerprint size={16} className="text-[#BE875C]" /> Fingerprint unlock</h3>
+                                        <p className="text-xs text-slate-400 mb-3">Unlock with your fingerprint instead of typing your password. Your password is kept on this device and released by your fingerprint, so use this only on devices that are yours.</p>
+                                        {bioOn ? <button onClick={disableBio} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-medium">Turn off on this device</button> : <button onClick={enableBio} className="w-full bg-gradient-to-r from-[#C49066] to-[#BE875C] text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-1.5"><Fingerprint size={15} /> Enable fingerprint unlock</button>}
+                                    </div>
+                                )}
 
                                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
                                     <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Lock size={16} className="text-[#BE875C]" /> Security</h3>
@@ -1052,8 +1118,9 @@
                                         )}
 
                                         {voiceOpen && (
-                                            <div className="bg-slate-900/40 border border-[#BE875C]/30 rounded-xl p-3 space-y-2 animate-fade-in">
-                                                <div className="flex items-center justify-between"><span className="text-xs font-bold text-[#F0D0A5] uppercase tracking-wider flex items-center gap-1.5"><Mic size={14} /> Speak or type the job</span>{SpeechRec && <button onClick={toggleListen} className={"flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold " + (listening ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-200')}>{listening ? <React.Fragment><span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> Listening</React.Fragment> : <React.Fragment><Mic size={12} /> Record</React.Fragment>}</button>}</div>
+                                            <div id="voice-panel" className="bg-slate-900/40 border border-[#BE875C]/30 rounded-xl p-3 space-y-2 animate-fade-in">
+                                                <div className="flex items-center justify-between"><span className="text-xs font-bold text-[#F0D0A5] uppercase tracking-wider flex items-center gap-1.5"><Mic size={14} /> Dictate or generate a quote</span>{SpeechRec && <button onClick={toggleListen} className={"flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold " + (listening ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-200')}>{listening ? <React.Fragment><span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> Listening</React.Fragment> : <React.Fragment><Mic size={12} /> Record</React.Fragment>}</button>}</div>
+                                                <p className="text-[11px] text-slate-400">{SpeechRec ? 'Tap Record and say it, or type the brief below. Then Build quote.' : 'Type the brief below, then Build quote.'}</p>
                                                 <textarea rows="3" value={voiceText} onChange={e => setVoiceText(e.target.value)} className={inputClass + " resize-none"} placeholder="Quote for John Murphy. Website update. SEO work 250, hosting 180, Google Business 150."></textarea>
                                                 <p className="text-[10px] text-slate-500">{geminiKey ? 'I will fill in the customer and line items. Check the prices after.' : 'Add a Gemini key in Settings to use this.'}</p>
                                                 <div className="flex gap-2"><button onClick={buildQuoteFromText} disabled={voiceBusy} className={goldBtn}>{voiceBusy ? <Spinner /> : <Sparkles size={16} />} {voiceBusy ? 'Building...' : 'Build quote'}</button><button onClick={() => { setVoiceOpen(false); setVoiceText(''); }} className="px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Close</button></div>
@@ -1211,6 +1278,7 @@
         const Layers = (p) => <Icon {...p}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
         const Euro = (p) => <Icon {...p}><path d="M14 21.8a6 6 0 0 1-8-5.6V8a6 6 0 0 1 8-5.6M4 11.5h8M4 14.5h8"/></Icon>;
         const ArrowRight = (p) => <Icon {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
+        const Fingerprint = (p) => <Icon {...p}><path d="M12 11c0 3 .5 5.5 1.5 8"/><path d="M5 13a7 7 0 0 1 14 0c0 2 0 3 .5 5"/><path d="M8.5 19.5C8 18 7.5 16 7.5 13a4.5 4.5 0 0 1 9 0c0 1 0 2 .2 3"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M5 20.5c-.5-1.5-1-3.5-1-7"/></Icon>;
 
         /* ===================================================================
          *  MEMOISED A4 PREVIEW  (so tab switches are instant - fixes #1)
@@ -1293,11 +1361,12 @@
                                 </tbody></table>
                             </div>
                             <div className="text-[12px] text-slate-600 leading-tight">
-                                <strong className="text-slate-800 uppercase tracking-wider mb-1 block"><a href="https://protechdynamicsolutions.github.io/" className="hover:text-[#BE875C]">Protech Dynamic Solutions Ltd.</a></strong>
+                                <strong className="text-slate-800 uppercase tracking-wider mb-1 block"><a href="https://protechdynamic.com" className="hover:text-[#BE875C]">Protech Dynamic Solutions Ltd.</a></strong>
                                 <table className="border-collapse"><tbody>
                                     <tr><td className="font-medium">Cois Dara, Moneygourney</td></tr>
                                     <tr><td className="font-medium">Cork, T12 PNA4</td></tr>
-                                    <tr><td className="font-medium tracking-tight">davemaher00@outlook.com</td></tr>
+                                    <tr><td className="font-medium tracking-tight">{documentType === 'Quote' ? 'quotes@protechdynamicsolutions.com' : 'accounts@protechdynamic.com'}</td></tr>
+                                    <tr><td className="font-medium"><a href="https://protechdynamic.com" className="hover:text-[#BE875C]">protechdynamic.com</a></td></tr>
                                     <tr><td className="font-medium">083 343 9060</td></tr>
                                 </tbody></table>
                             </div>
