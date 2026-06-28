@@ -1,5 +1,5 @@
 /* Protech Invoices service worker - app shell cache for installable PWA */
-const CACHE = 'protech-v1';
+const CACHE = 'protech-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -23,16 +23,36 @@ self.addEventListener('activate', function (e) {
 });
 
 self.addEventListener('fetch', function (e) {
-  var url = new URL(e.request.url);
-  // Never intercept backend or CDN calls; only same-origin GETs are cached.
-  if (url.origin !== location.origin || e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(function (cached) {
-      return cached || fetch(e.request).then(function (resp) {
+  var req = e.request;
+  var url = new URL(req.url);
+  // Never intercept backend or CDN calls; only same-origin GETs are handled.
+  if (url.origin !== location.origin || req.method !== 'GET') return;
+
+  // The app page itself is fetched network-first, so a normal refresh always
+  // gets the latest build when online, and falls back to cache when offline.
+  var isDoc = req.mode === 'navigate' || (req.headers.get('accept') || '').indexOf('text/html') !== -1;
+  if (isDoc) {
+    e.respondWith(
+      fetch(req).then(function (resp) {
         var copy = resp.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, copy); }).catch(function () {});
+        caches.open(CACHE).then(function (c) { c.put('./index.html', copy); }).catch(function () {});
         return resp;
-      }).catch(function () { return caches.match('./index.html'); });
+      }).catch(function () {
+        return caches.match(req).then(function (m) { return m || caches.match('./index.html'); });
+      })
+    );
+    return;
+  }
+
+  // Other assets (icons, manifest): serve from cache fast, refresh in the background.
+  e.respondWith(
+    caches.match(req).then(function (cached) {
+      var network = fetch(req).then(function (resp) {
+        var copy = resp.clone();
+        caches.open(CACHE).then(function (c) { c.put(req, copy); }).catch(function () {});
+        return resp;
+      }).catch(function () { return cached; });
+      return cached || network;
     })
   );
 });
