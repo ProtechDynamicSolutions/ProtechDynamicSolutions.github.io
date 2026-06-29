@@ -384,6 +384,7 @@
         const kfmt = (n) => { n = Number(n) || 0; return n >= 1000 ? '€' + (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : '€' + Math.round(n); };
         const fmtDur = (m) => { m = Math.round(Number(m) || 0); const h = Math.floor(m / 60), mm = m % 60; return h ? (mm ? h + 'h ' + mm + 'm' : h + 'h') : mm + 'm'; };
         const fmtElapsed = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; const p = (x) => String(x).padStart(2, '0'); return (h ? p(h) + ':' : '') + p(m) + ':' + p(s); };
+        const fmtDateTime = (v) => { if (!v) return ''; const d = new Date(v); if (isNaN(d.getTime())) return String(v); const p = (x) => String(x).padStart(2, '0'); return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
         const KIND_LABEL = { work: 'Work', call: 'Call', email: 'Email', site: 'Site visit', admin: 'Admin', note: 'Note' };
         const selectAll = (e) => { try { e.target.select(); } catch (x) {} };
         const monthBuckets = () => {
@@ -823,7 +824,7 @@
                                         <div className="flex items-center justify-between mb-2"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Mail size={15} className="text-[#BE875C]" /> New enquiries</h3><span className="text-xs text-slate-500">{dash.newEnquiries.length}</span></div>
                                         <div className="space-y-1.5">{dash.newEnquiries.slice(0, 6).map((en, i) => (
                                             <div key={i} className="bg-slate-900/50 rounded-lg px-3 py-2">
-                                                <div className="min-w-0 mb-1.5"><div className="text-sm text-slate-200 truncate">{en.name || en.email || 'Enquiry'}{en.company ? <span className="text-slate-500"> · {en.company}</span> : null}</div><div className="text-[11px] text-slate-500 truncate">{en.subject || en.message || ''}{en.date ? ' · ' + String(en.date).slice(0, 10) : ''}</div></div>
+                                                <div className="min-w-0 mb-1.5"><div className="text-sm text-slate-200 truncate">{en.name || en.email || 'Enquiry'}{en.company ? <span className="text-slate-500"> · {en.company}</span> : null}</div><div className="text-[11px] text-slate-500 truncate">{en.subject || en.message || ''}{en.date ? ' · ' + fmtDateTime(en.date) : ''}</div></div>
                                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                                                     <button onClick={() => startQuoteFromEnquiry(en)} className="text-[#F0D0A5] hover:underline font-medium">Quote</button>
                                                     {en.email && <a href={'mailto:' + en.email + '?subject=' + encodeURIComponent('Re: ' + (en.subject || 'your enquiry'))} className="text-[#BE875C] hover:underline">Reply</a>}
@@ -843,7 +844,7 @@
                         )}
 
                         {/* ===== ANALYTICS ===== */}
-                        {activeTab === 'analytics' && (<div className="max-w-6xl mx-auto p-4 lg:p-8 pb-28 lg:pb-10 animate-fade-in"><AnalyticsPage docs={savedDocs} receipts={receipts} jobs={jobs} activities={activities} jobStats={jobStats} jobRevenue={jobRevenue} /></div>)}
+                        {activeTab === 'analytics' && (<div className="max-w-6xl mx-auto p-4 lg:p-8 pb-28 lg:pb-10 animate-fade-in"><AnalyticsPage docs={savedDocs} receipts={receipts} jobs={jobs} activities={activities} jobStats={jobStats} jobRevenue={jobRevenue} enquiries={enquiries} /></div>)}
 
                         {/* ===== SETTINGS ===== */}
                         {activeTab === 'settings' && (
@@ -1005,7 +1006,7 @@
                                 {showJobForm && (
                                     <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3 animate-fade-in">
                                         <div className="grid sm:grid-cols-2 gap-3">
-                                            <div><label className={labelClass}>Job Name</label><input value={jobForm.name} onChange={e => setJobForm({ ...jobForm, name: e.target.value })} className={inputClass} placeholder="e.g. Kitchen rewire" /></div>
+                                            <div><label className={labelClass}>Job Name</label><input value={jobForm.name} onChange={e => setJobForm({ ...jobForm, name: e.target.value })} className={inputClass} placeholder="e.g. timesheet app" /></div>
                                             <div><label className={labelClass}>Client</label><input list="customers-list" value={jobForm.client} onChange={e => setJobForm({ ...jobForm, client: e.target.value })} className={inputClass} placeholder="Client name" /></div>
                                             <div><label className={labelClass}>Link Quote (optional)</label><select value={jobForm.quoteNo} onChange={e => { const v = e.target.value; const d = savedDocs.find(x => String(x.docNo) === String(v) && x.documentType === 'Quote'); setJobForm(f => ({ ...f, quoteNo: v, client: f.client || (d && d.client ? d.client.name : ''), estimatedPrice: f.estimatedPrice || (d ? String(d.total) : '') })); }} className={inputClass}><option value="">None</option>{savedDocs.filter(d => d.documentType === 'Quote').map(d => <option key={d.id} value={d.docNo}>#{d.docNo} {d.client.name ? '· ' + d.client.name : ''}</option>)}</select></div>
                                             <div><label className={labelClass}>Link Invoice (optional)</label><select value={jobForm.invoiceNo} onChange={e => { const v = e.target.value; const d = savedDocs.find(x => String(x.docNo) === String(v) && x.documentType === 'Invoice'); setJobForm(f => ({ ...f, invoiceNo: v, client: f.client || (d && d.client ? d.client.name : '') })); }} className={inputClass}><option value="">None</option>{savedDocs.filter(d => d.documentType === 'Invoice').map(d => <option key={d.id} value={d.docNo}>#{d.docNo} {d.client.name ? '· ' + d.client.name : ''}</option>)}</select></div>
@@ -1407,7 +1408,7 @@
                                 <table className="border-collapse"><tbody>
                                     <tr><td className="font-medium">Cois Dara, Moneygourney</td></tr>
                                     <tr><td className="font-medium">Cork, T12 PNA4</td></tr>
-                                    <tr><td className="font-medium tracking-tight">{documentType === 'Quote' ? 'quotes@protechdynamicsolutions.com' : 'accounts@protechdynamic.com'}</td></tr>
+                                    <tr><td className="font-medium tracking-tight">{documentType === 'Quote' ? 'quotes@protechdynamic.com' : 'accounts@protechdynamic.com'}</td></tr>
                                     <tr><td className="font-medium"><a href="https://protechdynamic.com" className="hover:text-[#BE875C]">protechdynamic.com</a></td></tr>
                                     <tr><td className="font-medium">083 343 9060</td></tr>
                                 </tbody></table>
@@ -1464,7 +1465,28 @@
                 </div>
             );
         }
-        function AnalyticsPage({ docs, receipts, jobs, activities, jobStats, jobRevenue }) {
+        function AnalyticsPage({ docs, receipts, jobs, activities, jobStats, jobRevenue, enquiries }) {
+            const fmtHours = (h) => { if (h == null) return 'n/a'; if (h < 1) return Math.round(h * 60) + ' min'; if (h < 48) return (Math.round(h * 10) / 10) + ' h'; return (Math.round(h / 24 * 10) / 10) + ' days'; };
+            const fmtDays = (d) => d == null ? 'n/a' : (Math.round(d * 10) / 10) + ' days';
+            const leads = useMemo(() => {
+                const list = enquiries || [];
+                const real = list.filter(en => (en.spam || '').toLowerCase() !== 'yes');
+                const replied = real.filter(en => (en.replied || '').toLowerCase() === 'yes');
+                const open = real.length - replied.length;
+                const times = replied.map(en => { const a = new Date(en.date), b = new Date(en.dateReplied); const ms = b - a; return (en.date && en.dateReplied && !isNaN(a.getTime()) && !isNaN(b.getTime()) && ms >= 0) ? ms / 3600000 : null; }).filter(x => x != null);
+                const avgRespH = times.length ? times.reduce((s, x) => s + x, 0) / times.length : null;
+                const fastestH = times.length ? Math.min.apply(null, times) : null;
+                const quotes = docs.filter(d => d.documentType === 'Quote');
+                const openQuotes = quotes.filter(d => d.status !== 'accepted' && d.status !== 'declined');
+                const now = Date.now();
+                const ages = openQuotes.map(d => { const base = d.lastContact || d.date; const t = new Date(base); return isNaN(t.getTime()) ? null : (now - t) / 86400000; }).filter(x => x != null);
+                const avgOpenAge = ages.length ? ages.reduce((s, x) => s + x, 0) / ages.length : null;
+                const accepted = quotes.filter(d => d.status === 'accepted').length;
+                const convRate = quotes.length ? Math.round((accepted / quotes.length) * 100) : null;
+                const fu = quotes.map(d => { if (!d.lastContact || !d.date) return null; const t = (new Date(d.lastContact) - new Date(d.date)) / 86400000; return (isNaN(t) || t < 0) ? null : t; }).filter(x => x != null);
+                const avgFollowupDays = fu.length ? fu.reduce((s, x) => s + x, 0) / fu.length : null;
+                return { total: real.length, repliedCount: replied.length, open: open, avgRespH: avgRespH, fastestH: fastestH, avgOpenAge: avgOpenAge, convRate: convRate, accepted: accepted, quoteCount: quotes.length, avgFollowupDays: avgFollowupDays };
+            }, [enquiries, docs]);
             const data = useMemo(() => {
                 const invoices = docs.filter(d => d.documentType === 'Invoice');
                 const quotes = docs.filter(d => d.documentType === 'Quote');
@@ -1567,6 +1589,28 @@
                             </div>
                         )}
                     </div>
+
+                    {(leads.total > 0 || leads.quoteCount > 0) && (
+                        <div className="pt-2">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-3"><Mail size={20} className="text-[#BE875C]" /> Enquiries and follow-ups</h2>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                                <Kpi label="Enquiries" value={String(leads.total)} sub={leads.open + ' awaiting reply'} accent="#7dd3fc" />
+                                <Kpi label="Replied" value={String(leads.repliedCount)} sub={leads.total ? Math.round(leads.repliedCount / leads.total * 100) + '% of enquiries' : 'none yet'} accent="#86efac" />
+                                <Kpi label="Avg reply time" value={fmtHours(leads.avgRespH)} sub={leads.fastestH != null ? 'fastest ' + fmtHours(leads.fastestH) : 'mark replies to log'} accent={leads.avgRespH == null ? '#64748b' : leads.avgRespH <= 24 ? '#86efac' : leads.avgRespH <= 72 ? '#fbbf24' : '#f87171'} />
+                                <Kpi label="Quote win rate" value={leads.convRate == null ? 'n/a' : leads.convRate + '%'} sub={leads.accepted + ' of ' + leads.quoteCount + ' accepted'} accent="#F0D0A5" />
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <Kpi label="Open quotes age" value={fmtDays(leads.avgOpenAge)} sub="avg time waiting" accent={leads.avgOpenAge == null ? '#64748b' : leads.avgOpenAge <= 7 ? '#86efac' : leads.avgOpenAge <= 14 ? '#fbbf24' : '#f87171'} />
+                                <Kpi label="Time to follow up" value={fmtDays(leads.avgFollowupDays)} sub="avg after sending" accent="#cbd5e1" />
+                            </div>
+                            {(leads.avgRespH != null || (leads.avgOpenAge != null && leads.open > 0)) && (
+                                <div className="bg-gradient-to-r from-[#BE875C]/15 to-transparent border border-[#BE875C]/30 rounded-xl p-4 mt-4 text-sm text-slate-200 leading-relaxed">
+                                    {leads.avgRespH != null && <span>You reply to enquiries in about <span className="font-bold text-[#F0D0A5]">{fmtHours(leads.avgRespH)}</span> on average. </span>}
+                                    {leads.open > 0 && <span>You have <span className="font-bold text-white">{leads.open}</span> still waiting{leads.avgOpenAge != null && <span> and open quotes are sitting <span className="font-bold text-amber-300">{fmtDays(leads.avgOpenAge)}</span> on average</span>}. Quicker replies tend to win more work.</span>}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             );
         }
