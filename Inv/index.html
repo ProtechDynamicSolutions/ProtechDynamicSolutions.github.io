@@ -55,10 +55,7 @@
         const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
         /* ===================================================================
-         *  SECURE VAULT  -  AES-GCM + PBKDF2 (Web Crypto)
-         *  The Apps Script URL and backend password are encrypted at rest
-         *  with a key derived from your password. Without the password the
-         *  stored blob cannot be read, even by someone holding the device.
+         * SECURE VAULT  -  AES-GCM + PBKDF2 (Web Crypto)
          * =================================================================== */
         const Vault = {
             enc: new TextEncoder(),
@@ -94,10 +91,7 @@
         };
 
         /* ===================================================================
-         *  FINGERPRINT QUICK UNLOCK  (WebAuthn platform authenticator)
-         *  Optional, per device. The backend password is stored on this
-         *  device and released after a successful fingerprint check, so the
-         *  app can unlock without typing. Intended for your own devices only.
+         * FINGERPRINT QUICK UNLOCK  (WebAuthn platform authenticator)
          * =================================================================== */
         const Bio = {
             b(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); },
@@ -138,8 +132,7 @@
         };
 
         /* ===================================================================
-         *  BACKEND CALL  -  text/plain POST avoids the CORS preflight that
-         *  Apps Script web apps cannot answer.
+         * BACKEND CALL
          * =================================================================== */
         async function callBackend(url, payload) {
             const res = await fetch(url, {
@@ -162,8 +155,7 @@
         }
 
         /* ===================================================================
-         *  GEMINI  -  optional AI quote assistant. The API key lives in the
-         *  encrypted vault; the model name is a plain preference.
+         * GEMINI
          * =================================================================== */
         async function callGemini(apiKey, model, systemPrompt, userPrompt, jsonMode) {
             if (jsonMode === undefined) jsonMode = true;
@@ -183,7 +175,7 @@
         }
 
         async function callGeminiImage(apiKey, model, prompt, imageBase64, mimeType) {
-            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+            const url = '[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/)' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
             const body = { contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mimeType, data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } };
             const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             if (!res.ok) { let t = ''; try { t = await res.text(); } catch (e) {} throw new Error('Gemini ' + res.status + (t ? ': ' + t.slice(0, 160) : '')); }
@@ -193,7 +185,6 @@
             return text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
         }
 
-        // Shrink big phone photos before OCR so it is fast and uses fewer tokens. PDFs pass through untouched.
         function downscaleImage(base64, mimeType) {
             return new Promise(function (resolve) {
                 if (!/^image\//.test(mimeType || '')) { resolve({ data: base64, mimeType: mimeType }); return; }
@@ -212,7 +203,7 @@
         }
 
         /* ===================================================================
-         *  ICONS (inline SVG, no external icon library)
+         * ICONS (inline SVG)
          * =================================================================== */
         const Icon = ({ children, size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
@@ -247,7 +238,7 @@
         const Spinner = ({ size = 16 }) => <RefreshCw size={size} className="spin" />;
 
         /* ===================================================================
-         *  GATE SCREENS: Setup (first run) and Lock (every open after)
+         * GATE SCREENS: Setup (first run) and Lock (every open after)
          * =================================================================== */
         const screenWrap = "min-h-screen flex items-center justify-center p-5 bg-gradient-to-b from-slate-900 to-slate-950";
         const card = "w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-2xl p-7 shadow-2xl backdrop-blur";
@@ -378,13 +369,25 @@
             );
         }
         /* ===================================================================
-         *  Shared formatting helpers
+         * Shared formatting helpers
          * =================================================================== */
         const eur = (n) => '€' + (Number(n) || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const kfmt = (n) => { n = Number(n) || 0; return n >= 1000 ? '€' + (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : '€' + Math.round(n); };
         const fmtDur = (m) => { m = Math.round(Number(m) || 0); const h = Math.floor(m / 60), mm = m % 60; return h ? (mm ? h + 'h ' + mm + 'm' : h + 'h') : mm + 'm'; };
         const fmtElapsed = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; const p = (x) => String(x).padStart(2, '0'); return (h ? p(h) + ':' : '') + p(m) + ':' + p(s); };
         const fmtDateTime = (v) => { if (!v) return ''; const d = new Date(v); if (isNaN(d.getTime())) return String(v); const p = (x) => String(x).padStart(2, '0'); return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+        const formatReceiptDate = (dateStr) => {
+            if (!dateStr) return '';
+            let d;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                d = new Date(dateStr + 'T00:00:00');
+            } else {
+                d = new Date(dateStr);
+            }
+            if (isNaN(d.getTime())) return dateStr;
+            const p = (n) => String(n).padStart(2, '0');
+            return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${d.getHours()}:${p(d.getMinutes())}`;
+        };
         const KIND_LABEL = { work: 'Work', call: 'Call', email: 'Email', site: 'Site visit', admin: 'Admin', note: 'Note' };
         const selectAll = (e) => { try { e.target.select(); } catch (x) {} };
         const monthBuckets = () => {
@@ -394,7 +397,7 @@
         };
 
         /* ===================================================================
-         *  MAIN APP
+         * MAIN APP
          * =================================================================== */
         function App({ creds, onLock }) {
             const [documentType, setDocumentType] = useState('Invoice');
@@ -586,12 +589,18 @@
             const clientNameBlur = () => { if (client.name && !client.id) { const ex = uniqueCustomers.find(c => c.name.toLowerCase() === client.name.toLowerCase()); if (!ex) setClient(prev => ({ ...prev, id: genId(client.name) })); } };
 
             // ---- Receipts ----
-            const blankReceipt = () => ({ id: Date.now(), date: new Date().toISOString().split('T')[0], supplier: '', category: 'Materials', amount: '', vat: '', paymentMethod: 'Card', notes: '', fileName: '', fileData: '', mimeType: '', fileUrl: '', jobId: '' });
+            const blankReceipt = () => { 
+                const now = new Date(); 
+                const p = (x) => String(x).padStart(2, '0'); 
+                const localDT = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}T${p(now.getHours())}:${p(now.getMinutes())}`; 
+                return { id: Date.now(), date: localDT, supplier: '', category: 'Materials', amount: '', vat: '', paymentMethod: 'Card', notes: '', fileName: '', fileData: '', mimeType: '', fileUrl: '', jobId: '' }; 
+            };
             const [receiptForm, setReceiptForm] = useState(blankReceipt());
             const [savingReceipt, setSavingReceipt] = useState(false);
             const [scanning, setScanning] = useState(false);
             const RECEIPT_CATS = ['Materials', 'Tools', 'Fuel', 'Subcontractor', 'Office', 'Travel', 'Insurance', 'Software', 'Other'];
-            const OCR_PROMPT = 'You are reading a photo of a purchase receipt or supplier invoice for a tradesperson in Ireland. Extract the details. Return ONLY a JSON object with these fields: "supplier" (the shop or company name), "date" (the purchase date as YYYY-MM-DD, empty string if unclear), "amount" (the grand total actually paid including VAT, as a number with no currency symbol), "vat" (the VAT amount if shown, as a number, otherwise 0), "category" (your best guess, exactly one of: Materials, Tools, Fuel, Subcontractor, Office, Travel, Insurance, Software, Other), "notes" (a very short description of what was bought, optional). Use plain numbers for amount and vat. If something is not visible use an empty string for text fields or 0 for numbers. No markdown, no backticks.';
+            const OCR_PROMPT = 'You are reading a photo of a purchase receipt or supplier invoice for a tradesperson in Ireland. Extract the details. Return ONLY a JSON object with these fields: "supplier" (the shop or company name), "date" (the purchase date and time as YYYY-MM-DDTHH:mm, e.g. 2024-10-25T14:30. If time is missing, use YYYY-MM-DDT00:00. Empty string if completely unclear), "amount" (the grand total actually paid including VAT, as a number with no currency symbol), "vat" (the VAT amount if shown, as a number, otherwise 0), "category" (your best guess, exactly one of: Materials, Tools, Fuel, Subcontractor, Office, Travel, Insurance, Software, Other), "notes" (a very short description of what was bought, optional). Use plain numbers for amount and vat. If something is not visible use an empty string for text fields or 0 for numbers. No markdown, no backticks.';
+            
             const doScan = async (base64, mimeType) => {
                 if (!geminiKey) { flash('Add a Gemini key in Settings to scan receipts.', 'error'); return; }
                 if (!base64) { flash('Attach a photo first.', 'error'); return; }
@@ -603,7 +612,7 @@
                     setReceiptForm(rf => ({
                         ...rf,
                         supplier: d.supplier || rf.supplier,
-                        date: /^\d{4}-\d{2}-\d{2}$/.test(String(d.date || '')) ? d.date : rf.date,
+                        date: /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{3}Z?)?)?)?$/.test(String(d.date || '')) ? d.date.slice(0, 16) : rf.date,
                         amount: (d.amount !== undefined && d.amount !== null && d.amount !== '') ? String(d.amount) : rf.amount,
                         vat: (d.vat !== undefined && d.vat !== null && d.vat !== '') ? String(d.vat) : rf.vat,
                         category: (d.category && RECEIPT_CATS.indexOf(d.category) >= 0) ? d.category : rf.category,
@@ -633,6 +642,22 @@
                 try { await callBackend(creds.url, { action: 'deleteReceipt', password: creds.password, id: r.id }); flash('Receipt deleted', 'ok'); } catch (e) { flash('Deleted locally only.', 'error'); }
             };
             const receiptTotal = useMemo(() => receipts.reduce((s, r) => s + (Number(r.amount) || 0), 0), [receipts]);
+            const duplicateReceiptIds = useMemo(() => {
+                const dupIds = new Set();
+                for (let i = 0; i < receipts.length; i++) {
+                    for (let j = i + 1; j < receipts.length; j++) {
+                        const r1 = receipts[i], r2 = receipts[j];
+                        const s1 = (r1.supplier || '').toLowerCase().trim();
+                        const s2 = (r2.supplier || '').toLowerCase().trim();
+                        const d1 = (r1.date || '').slice(0, 10);
+                        const d2 = (r2.date || '').slice(0, 10);
+                        if (s1 && s1 === s2 && Number(r1.amount) === Number(r2.amount) && d1 === d2) {
+                            dupIds.add(r1.id); dupIds.add(r2.id);
+                        }
+                    }
+                }
+                return dupIds;
+            }, [receipts]);
 
             // ---- Jobs + time / activity tracking ----
             useEffect(() => { if (!timer) return; const iv = setInterval(() => setNowTick(Date.now()), 1000); return () => clearInterval(iv); }, [timer]);
@@ -912,7 +937,7 @@
                                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 lg:p-5">
                                     <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><Plus size={16} className="text-[#BE875C]" /> Add a Receipt</h3>
                                     <div className="grid sm:grid-cols-2 gap-3">
-                                        <div><label className={labelClass}>Date</label><input type="date" value={receiptForm.date} onChange={e => setReceiptForm({ ...receiptForm, date: e.target.value })} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
+                                        <div><label className={labelClass}>Date & Time</label><input type="datetime-local" value={receiptForm.date.length === 10 ? receiptForm.date + 'T00:00' : receiptForm.date.slice(0, 16)} onChange={e => setReceiptForm({ ...receiptForm, date: e.target.value })} onClick={e => e.target.showPicker && e.target.showPicker()} className={inputClass + " cursor-pointer"} /></div>
                                         <div><label className={labelClass}>Supplier</label><input value={receiptForm.supplier} onChange={e => setReceiptForm({ ...receiptForm, supplier: e.target.value })} className={inputClass} placeholder="Who you paid" /></div>
                                         <div><label className={labelClass}>Category</label><select value={receiptForm.category} onChange={e => setReceiptForm({ ...receiptForm, category: e.target.value })} className={inputClass}>{RECEIPT_CATS.map(c => <option key={c}>{c}</option>)}</select></div>
                                         <div><label className={labelClass}>Payment</label><select value={receiptForm.paymentMethod} onChange={e => setReceiptForm({ ...receiptForm, paymentMethod: e.target.value })} className={inputClass}>{['Card', 'Cash', 'Bank Transfer', 'Direct Debit'].map(c => <option key={c}>{c}</option>)}</select></div>
@@ -931,11 +956,20 @@
                                 <div>
                                     <div className="flex justify-between items-center mb-3"><h3 className="text-sm font-bold text-white">Saved Receipts</h3><span className="text-xs text-slate-400">Total: <span className="text-[#F0D0A5] font-bold">{eur(receiptTotal)}</span></span></div>
                                     {receipts.length === 0 ? <p className="text-slate-500 text-sm text-center py-8">No receipts yet.</p> : (
-                                        <div className="space-y-2">{receipts.map(r => (
-                                            <div key={r.id} className="bg-slate-800 border border-slate-700 rounded-lg p-3 flex items-center justify-between gap-2">
-                                                <div className="min-w-0"><div className="text-sm text-white font-medium truncate">{r.supplier} <span className="text-xs text-slate-500">· {r.category}</span></div><div className="text-xs text-slate-500">{r.date} · {r.paymentMethod}</div></div>
+                                        <div className="space-y-2">{receipts.map(r => {
+                                            const isDup = duplicateReceiptIds.has(r.id);
+                                            return (
+                                            <div key={r.id} className={"bg-slate-800 border rounded-lg p-3 flex items-center justify-between gap-2 " + (isDup ? "border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.15)]" : "border-slate-700")}>
+                                                <div className="min-w-0">
+                                                    <div className="text-sm text-white font-medium truncate flex items-center flex-wrap">
+                                                        {r.supplier || 'Unnamed'} <span className="text-xs text-slate-500 ml-1">· {r.category}</span>
+                                                        {isDup && <span className="ml-2 text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider" title="Matches another receipt for the same supplier, date, and amount">Duplicate?</span>}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 mt-0.5">{formatReceiptDate(r.date)} · {r.paymentMethod}</div>
+                                                </div>
                                                 <div className="flex items-center gap-2 shrink-0"><span className="text-sm font-bold text-slate-200">{eur(r.amount)}</span>{r.fileUrl && <a href={r.fileUrl} target="_blank" rel="noopener" className="text-slate-400 hover:text-[#BE875C]" title="View file"><ExternalLink size={15} /></a>}<button onClick={() => deleteReceiptItem(r)} className="text-slate-500 hover:text-red-400"><Trash2 size={15} /></button></div>
-                                            </div>))}
+                                            </div>
+                                        )})}
                                         </div>
                                     )}
                                 </div>
@@ -1300,7 +1334,7 @@
         }
 
         /* ===================================================================
-         *  Extra icons for analytics
+         * Extra icons for analytics
          * =================================================================== */
         const Activity = (p) => <Icon {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
         const TrendingUp = (p) => <Icon {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>;
@@ -1324,7 +1358,7 @@
         const Fingerprint = (p) => <Icon {...p}><path d="M12 11c0 3 .5 5.5 1.5 8"/><path d="M5 13a7 7 0 0 1 14 0c0 2 0 3 .5 5"/><path d="M8.5 19.5C8 18 7.5 16 7.5 13a4.5 4.5 0 0 1 9 0c0 1 0 2 .2 3"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M5 20.5c-.5-1.5-1-3.5-1-7"/></Icon>;
 
         /* ===================================================================
-         *  MEMOISED A4 PREVIEW  (so tab switches are instant - fixes #1)
+         * MEMOISED A4 PREVIEW  (so tab switches are instant - fixes #1)
          * =================================================================== */
         const InvoicePreview = React.memo(function InvoicePreview({ documentType, docNo, date, dueDate, client, job, terms, items, intro }) {
             const subtotal = items.reduce((s, it) => s + (Number(it.qty) * Number(it.price)), 0);
@@ -1422,7 +1456,7 @@
         });
 
         /* ===================================================================
-         *  ANALYTICS (#5) - dependency-free SVG charts, brand colours
+         * ANALYTICS (#5) - dependency-free SVG charts, brand colours
          * =================================================================== */
         function Kpi({ label, value, sub, accent }) {
             return (
@@ -1616,7 +1650,7 @@
         }
 
         /* ===================================================================
-         *  EXCEL EXPORT (#3) - branded workbook via ExcelJS (lazy-loaded)
+         * EXCEL EXPORT (#3) - branded workbook via ExcelJS (lazy-loaded)
          * =================================================================== */
         function loadExcelJS() {
             if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
@@ -1630,7 +1664,10 @@
         }
         async function exportAccountantXlsx({ docs, receipts, from, to }) {
             const ExcelJS = await loadExcelJS();
-            const inRange = d => (!from || d >= from) && (!to || d <= to);
+            const inRange = d => {
+                const dateOnly = (d || '').slice(0, 10);
+                return (!from || dateOnly >= from) && (!to || dateOnly <= to);
+            };
             const invs = docs.filter(d => inRange(d.date)).sort((a, b) => a.date < b.date ? -1 : 1);
             const recs = receipts.filter(r => inRange(r.date)).sort((a, b) => a.date < b.date ? -1 : 1);
             const invoices = invs.filter(d => d.documentType === 'Invoice'), quotes = invs.filter(d => d.documentType === 'Quote');
@@ -1666,7 +1703,7 @@
             const ti = di.addRow({ client: 'TOTAL', total: sumInv + sumQuote }); ti.eachCell(c => { c.font = { bold: true, color: { argb: WHITE } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRONZE } }; }); ti.getCell('total').numFmt = money;
 
             const dr = wb.addWorksheet('Receipts', { views: [{ showGridLines: false, state: 'frozen', ySplit: 1 }] });
-            dr.columns = [{ header: 'Date', key: 'date', width: 13 }, { header: 'Supplier', key: 'supplier', width: 26 }, { header: 'Category', key: 'cat', width: 15 }, { header: 'Payment', key: 'pay', width: 14 }, { header: 'Notes', key: 'notes', width: 30 }, { header: 'Amount', key: 'amount', width: 14 }, { header: 'VAT', key: 'vat', width: 12 }, { header: 'File', key: 'file', width: 10 }];
+            dr.columns = [{ header: 'Date & Time', key: 'date', width: 18 }, { header: 'Supplier', key: 'supplier', width: 26 }, { header: 'Category', key: 'cat', width: 15 }, { header: 'Payment', key: 'pay', width: 14 }, { header: 'Notes', key: 'notes', width: 30 }, { header: 'Amount', key: 'amount', width: 14 }, { header: 'VAT', key: 'vat', width: 12 }, { header: 'File', key: 'file', width: 10 }];
             headerRow(dr.getRow(1));
             recs.forEach((rc, i) => { const r = dr.addRow({ date: rc.date, supplier: rc.supplier, cat: rc.category, pay: rc.paymentMethod, notes: rc.notes, amount: Number(rc.amount) || 0, vat: Number(rc.vat) || 0, file: '' }); r.getCell('amount').numFmt = money; r.getCell('vat').numFmt = money; if (i % 2) r.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT } }; }); if (rc.fileUrl) { const fc = r.getCell('file'); fc.value = { text: 'View', hyperlink: rc.fileUrl }; fc.font = { color: { argb: 'FF2563EB' }, underline: true }; } });
             const trr = dr.addRow({ notes: 'TOTAL', amount: sumExp, vat: sumVat }); trr.eachCell(c => { c.font = { bold: true, color: { argb: WHITE } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRONZE } }; }); trr.getCell('amount').numFmt = money; trr.getCell('vat').numFmt = money;
@@ -1678,7 +1715,7 @@
         }
 
         /* ===================================================================
-         *  ROOT GATE
+         * ROOT GATE
          * =================================================================== */
         function Root() {
             const [creds, setCreds] = useState(null);
