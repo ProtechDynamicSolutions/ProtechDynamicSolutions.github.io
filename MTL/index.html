@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MTL Transport Management System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Hide scrollbar for cleaner look on tables but keep functionality */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useMemo, useEffect } = React;
+
+    // --- ICON MAPPING (Replacing lucide-react with FontAwesome classes) ---
+    const LayoutDashboard = "chart-line";
+    const Package = "box-open";
+    const Truck = "truck";
+    const Users = "users";
+    const FileText = "file-invoice-dollar";
+    const Settings = "cog";
+    const Plus = "plus";
+    const Search = "search";
+    const CheckCircle = "check-circle";
+    const Clock = "clock";
+    const MapPin = "map-marker-alt";
+    const ChevronRight = "chevron-right";
+    const Menu = "bars";
+    const X = "times";
+    const Droplets = "tint";
+    const AlertTriangle = "exclamation-triangle";
+    const Smartphone = "mobile-alt";
+    const Camera = "camera";
+    const PenTool = "pen-nib";
+    const Download = "download";
+    const Printer = "print";
+    const ArrowLeft = "arrow-left";
+    const Play = "play";
+    const Flag = "flag-checkered";
+    const Eye = "eye";
+
+    const Icon = ({ icon, size = 18, className = '' }) => (
+      <i className={`fas fa-${icon} ${className}`} style={{ fontSize: size, width: size, textAlign: 'center' }}></i>
+    );
+
+    // ============ BRAND ============
+    const GREEN = '#149B60';
+    const GOLD = '#E8D48F';
+
+    // ============ DATE HELPERS ============
+    const today = new Date();
+    const addDays = (n) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    const daysUntil = (iso) => Math.ceil((new Date(iso) - today) / 86400000);
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    // ============ SEED DATA ============
+    const JOB_TYPES = ['Tanker', 'ISO Tank', 'Container', 'Curtainsider', 'HIAB', 'Abnormal Load'];
+    const WASH_TYPES = ['Hot Water Wash', 'Detergent Wash', 'Caustic Wash', 'Steam & Sanitise'];
+
+    const initialCustomers = [
+      { id: 1, name: 'Irish Distillers', contact: 'accounts@idl.ie', phone: '(021) 461 3000', terms: '30 days' },
+      { id: 2, name: 'Dairygold', contact: 'logistics@dairygold.ie', phone: '(022) 31644', terms: '30 days' },
+      { id: 3, name: 'Musgrave', contact: 'transport@musgrave.ie', phone: '(021) 452 2100', terms: '45 days' },
+      { id: 4, name: 'Kerry Group', contact: 'freight@kerry.com', phone: '(066) 718 2000', terms: '30 days' },
+    ];
+
+    const initialDrivers = [
+      { id: 1, name: 'Declan O\'Brien', licenceExp: addDays(420), adrExp: addDays(38), cpcExp: addDays(210) },
+      { id: 2, name: 'Sean McCarthy', licenceExp: addDays(800), adrExp: addDays(190), cpcExp: addDays(12) },
+      { id: 3, name: 'Pat Hegarty', licenceExp: addDays(95), adrExp: null, cpcExp: addDays(300) },
+      { id: 4, name: 'Liam Twomey', licenceExp: addDays(600), adrExp: addDays(-5), cpcExp: addDays(150) },
+    ];
+
+    const initialVehicles = [
+      { id: 1, reg: '221-C-4471', type: 'Tanker (Artic)', cvrt: addDays(140), tachoCal: addDays(45), tankTest: addDays(280) },
+      { id: 2, reg: '191-C-8823', type: 'ISO Tank Skeletal', cvrt: addDays(21), tachoCal: addDays(300), tankTest: addDays(9) },
+      { id: 3, reg: '212-C-1092', type: 'Curtainsider', cvrt: addDays(365), tachoCal: addDays(120), tankTest: null },
+      { id: 4, reg: '182-C-5540', type: 'HIAB Rigid', cvrt: addDays(-12), tachoCal: addDays(60), tankTest: null },
+      { id: 5, reg: '231-C-2201', type: 'Tanker (Artic)', cvrt: addDays(200), tachoCal: addDays(15), tankTest: addDays(400) },
+    ];
+
+    const initialJobs = [
+      { id: 'MTL-1042', client: 'Irish Distillers', type: 'Tanker', adr: true, washRequired: true, origin: 'Midleton, Cork', destination: 'Dublin Port', status: 'In Transit', value: 450, driver: 'Declan O\'Brien', date: addDays(0), invoiced: false, pod: null },
+      { id: 'MTL-1043', client: 'Dairygold', type: 'ISO Tank', adr: false, washRequired: true, origin: 'Mitchelstown, Cork', destination: 'Galway', status: 'Pending', value: 380, driver: 'Unassigned', date: addDays(0), invoiced: false, pod: null },
+      { id: 'MTL-1044', client: 'Musgrave', type: 'Curtainsider', adr: false, washRequired: false, origin: 'Cork City', destination: 'Tralee, Kerry', status: 'Delivered', value: 210, driver: 'Sean McCarthy', date: addDays(-1), invoiced: false, pod: { receiver: 'J. Moriarty', time: 'Yesterday 16:42', photo: null, signature: null } },
+      { id: 'MTL-1045', client: 'Kerry Group', type: 'Tanker', adr: false, washRequired: true, origin: 'Listowel, Kerry', destination: 'Charleville, Cork', status: 'Delivered', value: 295, driver: 'Declan O\'Brien', date: addDays(-2), invoiced: true, pod: { receiver: 'M. Daly', time: '2 days ago 11:20', photo: null, signature: null } },
+    ];
+
+    const initialDockets = [
+      { id: 'WD-2201', reg: '221-C-4471', tankType: 'Road Tanker', prevLoad: 'Whiskey spirit (UN 1170)', washType: 'Caustic Wash', date: addDays(-1), operator: 'K. Fitzgerald' },
+    ];
+
+    // ============ SMALL COMPONENTS ============
+    const ComplianceBadge = ({ date, label }) => {
+      if (!date) return <span className="text-xs text-gray-400">N/A</span>;
+      const d = daysUntil(date);
+      const cls = d < 0 ? 'bg-red-100 text-red-800' : d <= 30 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+      const txt = d < 0 ? `Expired ${Math.abs(d)}d ago` : `${d}d left`;
+      return (
+        <div className="whitespace-nowrap">
+          <div className="text-sm text-gray-700">{fmtDate(date)}</div>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`} title={label}>{txt}</span>
+        </div>
+      );
+    };
+
+    const StatusBadge = ({ status }) => (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+        status === 'Delivered' ? 'bg-green-100 text-green-800' :
+        status === 'In Transit' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+      }`}>
+        {status === 'Delivered' && <Icon icon={CheckCircle} size={12} className="mr-1" />}
+        {status === 'In Transit' && <Icon icon={Truck} size={12} className="mr-1" />}
+        {status === 'Pending' && <Icon icon={Clock} size={12} className="mr-1" />}
+        {status}
+      </span>
+    );
+
+    const Field = ({ label, children }) => (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        {children}
+      </div>
+    );
+
+    const inputCls = 'w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-sm';
+
+    const Modal = ({ title, onClose, children, footer, wide }) => (
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+        <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? 'max-w-4xl' : 'max-w-2xl'} max-h-[95vh] flex flex-col overflow-hidden`}>
+          <div className="p-4 md:p-5 flex justify-between items-center shrink-0" style={{ backgroundColor: GREEN }}>
+            <h2 className="text-lg font-bold text-white">{title}</h2>
+            <button onClick={onClose} className="text-white hover:text-gray-200 p-1"><Icon icon={X} size={22} /></button>
+          </div>
+          <div className="p-4 md:p-6 space-y-4 bg-gray-50 overflow-y-auto">{children}</div>
+          {footer && <div className="p-4 border-t border-gray-100 flex justify-end space-x-3 bg-white shrink-0">{footer}</div>}
+        </div>
+      </div>
+    );
+
+    const BtnPrimary = ({ onClick, children, disabled }) => (
+      <button onClick={onClick} disabled={disabled}
+        className="px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity disabled:opacity-40 text-sm whitespace-nowrap"
+        style={{ backgroundColor: GREEN }}>{children}</button>
+    );
+    const BtnGhost = ({ onClick, children }) => (
+      <button onClick={onClick} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors text-sm whitespace-nowrap">{children}</button>
+    );
+
+    // ============ SIGNATURE PAD ============
+    function SignaturePad({ onChange }) {
+      const canvasRef = useRef(null);
+      const drawing = useRef(false);
+      
+      const start = (e) => {
+        drawing.current = true;
+        const ctx = canvasRef.current.getContext('2d');
+        const r = canvasRef.current.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        ctx.beginPath();
+        ctx.moveTo(clientX - r.left, clientY - r.top);
+      };
+      
+      const move = (e) => {
+        if (!drawing.current) return;
+        e.preventDefault(); // Prevent scrolling on touch
+        const ctx = canvasRef.current.getContext('2d');
+        const r = canvasRef.current.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1f2937';
+        ctx.lineTo(clientX - r.left, clientY - r.top);
+        ctx.stroke();
+      };
+      
+      const end = () => {
+        if (!drawing.current) return;
+        drawing.current = false;
+        onChange(canvasRef.current.toDataURL());
+      };
+      
+      const clear = () => {
+        const c = canvasRef.current;
+        c.getContext('2d').clearRect(0, 0, c.width, c.height);
+        onChange(null);
+      };
+      
+      return (
+        <div>
+          <canvas ref={canvasRef} width={400} height={140}
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg bg-white touch-none"
+            style={{ touchAction: 'none' }}
+            onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+            onTouchStart={start} onTouchMove={move} onTouchEnd={end} />
+          <button onClick={clear} className="text-xs text-gray-500 hover:text-gray-700 mt-1 underline">Clear signature</button>
+        </div>
+      );
+    }
+
+    // ============ MAIN APP ============
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+      const [driverMode, setDriverMode] = useState(null); 
+
+      // Core data
+      const [jobs, setJobs] = useState(initialJobs);
+      const [drivers] = useState(initialDrivers);
+      const [vehicles] = useState(initialVehicles);
+      const [customers] = useState(initialCustomers);
+      const [dockets, setDockets] = useState(initialDockets);
+      const [invoices, setInvoices] = useState([]);
+
+      // Modals
+      const [showNewJob, setShowNewJob] = useState(false);
+      const [detailJob, setDetailJob] = useState(null);
+      const [showNewDocket, setShowNewDocket] = useState(false);
+      const [certDocket, setCertDocket] = useState(null);
+      const [podCaptureJob, setPodCaptureJob] = useState(null);
+      const [search, setSearch] = useState('');
+
+      // Forms
+      const emptyJob = { client: '', type: 'Tanker', origin: '', destination: '', value: '', adr: false, washRequired: false, date: addDays(0) };
+      const [jobForm, setJobForm] = useState(emptyJob);
+      const emptyDocket = { reg: '', tankType: 'Road Tanker', prevLoad: '', washType: WASH_TYPES[0], operator: '' };
+      const [docketForm, setDocketForm] = useState(emptyDocket);
+      const [podForm, setPodForm] = useState({ receiver: '', photo: null, signature: null });
+
+      // Derived stats
+      const stats = useMemo(() => {
+        const active = jobs.filter(j => j.status !== 'Delivered').length;
+        const pendingPods = jobs.filter(j => j.status === 'Delivered' && !j.pod).length;
+        const uninvoiced = jobs.filter(j => j.status === 'Delivered' && !j.invoiced);
+        const complianceAlerts = [
+          ...vehicles.flatMap(v => [v.cvrt, v.tachoCal, v.tankTest]),
+          ...drivers.flatMap(d => [d.licenceExp, d.adrExp, d.cpcExp]),
+        ].filter(x => x && daysUntil(x) <= 30).length;
+        return [
+          { label: 'Active Jobs', value: String(active), trend: `${jobs.filter(j => j.status === 'Pending').length} awaiting driver` },
+          { label: 'Compliance Alerts', value: String(complianceAlerts), trend: 'Due within 30 days', warn: complianceAlerts > 0 },
+          { label: 'Uninvoiced Delivered', value: `€${uninvoiced.reduce((s, j) => s + j.value, 0).toFixed(0)}`, trend: `${uninvoiced.length} job(s) ready to bill` },
+          { label: 'Wash Dockets (7d)', value: String(dockets.length), trend: 'Certificates on file' },
+        ];
+      }, [jobs, vehicles, drivers, dockets]);
+
+      const filteredJobs = jobs.filter(j =>
+        !search || [j.id, j.client, j.driver, j.origin, j.destination].join(' ').toLowerCase().includes(search.toLowerCase())
+      );
+
+      // Actions
+      const saveJob = () => {
+        if (!jobForm.client || !jobForm.origin || !jobForm.destination) return;
+        const newJob = {
+          id: `MTL-${1046 + jobs.length}`,
+          ...jobForm,
+          value: parseFloat(jobForm.value) || 0,
+          status: 'Pending', driver: 'Unassigned', invoiced: false, pod: null,
+        };
+        setJobs([newJob, ...jobs]);
+        setShowNewJob(false);
+        setJobForm(emptyJob);
+      };
+
+      const updateJob = (id, patch) => setJobs(jobs.map(j => j.id === id ? { ...j, ...patch } : j));
+
+      const saveDocket = () => {
+        if (!docketForm.reg || !docketForm.prevLoad) return;
+        const d = { id: `WD-${2202 + dockets.length}`, ...docketForm, date: addDays(0) };
+        setDockets([d, ...dockets]);
+        setShowNewDocket(false);
+        setDocketForm(emptyDocket);
+      };
+
+      const generateInvoices = (selectedIds) => {
+        const byClient = {};
+        jobs.filter(j => selectedIds.includes(j.id)).forEach(j => {
+          byClient[j.client] = byClient[j.client] || [];
+          byClient[j.client].push(j);
+        });
+        const newInvs = Object.entries(byClient).map(([client, cjobs], i) => ({
+          id: `INV-2026-${String(invoices.length + i + 101)}`,
+          client,
+          date: addDays(0),
+          jobs: cjobs.map(j => j.id),
+          total: cjobs.reduce((s, j) => s + j.value, 0),
+        }));
+        setInvoices([...newInvs, ...invoices]);
+        setJobs(jobs.map(j => selectedIds.includes(j.id) ? { ...j, invoiced: true } : j));
+      };
+
+      const exportCsv = () => {
+        const rows = [['Invoice No', 'Date', 'Customer', 'Job Refs', 'Total EUR']];
+        invoices.forEach(inv => rows.push([inv.id, inv.date, inv.client, inv.jobs.join('; '), inv.total.toFixed(2)]));
+        const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = 'mtl-invoices.csv'; a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const completePod = () => {
+        updateJob(podCaptureJob.id, {
+          status: 'Delivered',
+          pod: { receiver: podForm.receiver || 'Unnamed', time: new Date().toLocaleString('en-IE'), photo: podForm.photo, signature: podForm.signature },
+        });
+        setPodCaptureJob(null);
+        setPodForm({ receiver: '', photo: null, signature: null });
+      };
+
+      const handlePhoto = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setPodForm(f => ({ ...f, photo: reader.result }));
+        reader.readAsDataURL(file);
+      };
+
+      // ============ DRIVER MODE (PWA view) ============
+      if (driverMode) {
+        const myJobs = jobs.filter(j => j.driver === driverMode && j.date >= addDays(-3));
+        return (
+          <div className="min-h-screen bg-gray-100 font-sans pb-10">
+            <div className="text-white px-4 py-4 flex items-center justify-between sticky top-0 z-20 shadow-md" style={{ backgroundColor: GREEN }}>
+              <button onClick={() => setDriverMode(null)} className="flex items-center space-x-2 text-sm font-medium hover:text-green-100">
+                <Icon icon={ArrowLeft} size={18} /><span>Office view</span>
+              </button>
+              <div className="text-right">
+                <div className="font-bold text-sm">{driverMode}</div>
+                <div className="text-xs opacity-80">Driver App</div>
+              </div>
+            </div>
+            <div className="p-4 space-y-3 max-w-md mx-auto">
+              {myJobs.length === 0 && (
+                <div className="text-center text-gray-500 py-16">
+                  <Icon icon={Truck} size={40} className="mx-auto mb-3 opacity-30 text-gray-400 block" />
+                  No jobs assigned. Check with the traffic desk.
+                </div>
+              )}
+              {myJobs.map(job => (
+                <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="font-bold text-gray-800">{job.id}</span>
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600 inline-block mt-1">{job.type}</span>
+                      {job.adr && <span className="ml-1 text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-medium inline-block">ADR</span>}
+                    </div>
+                    <StatusBadge status={job.status} />
+                  </div>
+                  <div className="text-sm text-gray-700 font-medium">{job.client}</div>
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <Icon icon={MapPin} size={14} className="mr-1 text-gray-400 shrink-0" />
+                    <span>{job.origin}</span>
+                    <Icon icon={ChevronRight} size={14} className="mx-1 text-gray-300" />
+                    <span>{job.destination}</span>
+                  </div>
+                  {job.washRequired && (
+                    <div className="flex items-center text-xs text-blue-700 mt-2 font-medium">
+                      <Icon icon={Droplets} size={13} className="mr-1" /> Tank wash required after delivery
+                    </div>
+                  )}
+                  <div className="mt-4 flex space-x-2">
+                    {job.status === 'Pending' && (
+                      <button onClick={() => updateJob(job.id, { status: 'In Transit' })}
+                        className="flex-1 flex items-center justify-center space-x-2 text-white py-2.5 rounded-lg font-medium text-sm shadow-sm"
+                        style={{ backgroundColor: GREEN }}>
+                        <Icon icon={Play} size={14} /><span>Start job</span>
+                      </button>
+                    )}
+                    {job.status === 'In Transit' && (
+                      <button onClick={() => { setPodCaptureJob(job); setPodForm({ receiver: '', photo: null, signature: null }); }}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-2.5 rounded-lg font-medium text-sm shadow-sm hover:bg-blue-700">
+                        <Icon icon={Flag} size={14} /><span>Complete & capture POD</span>
+                      </button>
+                    )}
+                    {job.status === 'Delivered' && (
+                      <div className="flex-1 text-center text-sm text-green-700 font-medium py-2 bg-green-50 rounded-lg border border-green-100">
+                        Delivered {job.pod ? `· signed by ${job.pod.receiver}` : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {podCaptureJob && (
+              <Modal title={`POD — ${podCaptureJob.id}`} onClose={() => setPodCaptureJob(null)}
+                footer={<>
+                  <BtnGhost onClick={() => setPodCaptureJob(null)}>Cancel</BtnGhost>
+                  <BtnPrimary onClick={completePod} disabled={!podForm.signature && !podForm.photo}>Save POD</BtnPrimary>
+                </>}>
+                <Field label="Received by (name)">
+                  <input className={inputCls} value={podForm.receiver}
+                    onChange={e => setPodForm({ ...podForm, receiver: e.target.value })} placeholder="e.g. John Murphy" />
+                </Field>
+                <Field label="Photo of delivery / paperwork">
+                  <label className="flex items-center justify-center space-x-2 border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer bg-white hover:bg-gray-50 transition-colors">
+                    <Icon icon={Camera} size={18} className="text-gray-500" />
+                    <span className="text-sm text-gray-600">{podForm.photo ? 'Photo attached — tap to replace' : 'Take or choose photo'}</span>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} />
+                  </label>
+                  {podForm.photo && <img src={podForm.photo} alt="POD" className="mt-3 rounded-lg max-h-48 mx-auto shadow-sm border border-gray-200" />}
+                </Field>
+                <Field label="Receiver signature">
+                  <SignaturePad onChange={sig => setPodForm(f => ({ ...f, signature: sig }))} />
+                </Field>
+              </Modal>
+            )}
+          </div>
+        );
+      }
+
+      // ============ OFFICE VIEWS ============
+      const NavItem = ({ icon, label, id }) => (
+        <button
+          onClick={() => { setActiveTab(id); setIsMobileMenuOpen(false); }}
+          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+            activeTab === id ? 'bg-white text-green-700 shadow-sm font-semibold' : 'text-white hover:bg-green-600'
+          }`}>
+          <Icon icon={icon} size={18} /><span>{label}</span>
+        </button>
+      );
+
+      const titles = { dashboard: 'Dashboard', jobs: 'Consignments', fleet: 'Fleet & Drivers', wash: 'Wash Station', customers: 'Customers', invoicing: 'Invoicing', settings: 'Settings' };
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden">
+          {/* Mobile Overlay */}
+          {isMobileMenuOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity" onClick={() => setIsMobileMenuOpen(false)} />}
+
+          {/* SIDEBAR */}
+          <div className={`fixed inset-y-0 left-0 z-50 w-72 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 md:w-64`}
+            style={{ backgroundColor: GREEN }}>
+            
+            <button className="md:hidden absolute top-4 right-4 text-white/80 hover:text-white z-50" onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon icon={X} size={24} />
+            </button>
+
+            <div className="relative w-full py-8 flex flex-col items-center justify-center">
+              <div className="absolute top-0 w-full h-3" style={{ backgroundColor: GOLD }}></div>
+              <div className="absolute bottom-0 w-full h-3" style={{ backgroundColor: GOLD }}></div>
+              
+              <div className="flex items-start justify-center text-white mt-4 mb-2 relative">
+                <span className="text-[66px] font-black leading-none tracking-tighter" style={{ transform: 'scaleY(1.1)' }}>M</span>
+                <span className="text-[76px] font-black leading-none mx-[-6px] z-10" style={{ transform: 'translateY(10px)' }}>T</span>
+                <span className="text-[66px] font-black leading-none tracking-tighter" style={{ transform: 'scaleY(1.1)' }}>L</span>
+              </div>
+              <div className="text-center z-10 mt-3">
+                <div className="text-white font-bold text-[15px] tracking-wide">Murphy Transport Ltd.</div>
+                <div className="text-white italic text-[11px] opacity-90 mt-0.5">Licensed Hauliers</div>
+              </div>
+            </div>
+
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+              <NavItem icon={LayoutDashboard} label="Dashboard" id="dashboard" />
+              <NavItem icon={Package} label="Consignments" id="jobs" />
+              <NavItem icon={Truck} label="Fleet & Drivers" id="fleet" />
+              <NavItem icon={Droplets} label="Wash Station" id="wash" />
+              <NavItem icon={Users} label="Customers" id="customers" />
+              <NavItem icon={FileText} label="Invoicing" id="invoicing" />
+            </nav>
+
+            <div className="p-4 border-t border-green-700/50 space-y-2 pb-6">
+              <div className="text-white/70 text-xs font-semibold uppercase tracking-wider px-2 mb-2">Driver App preview</div>
+              {drivers.slice(0, 2).map(d => (
+                <button key={d.id} onClick={() => setDriverMode(d.name)}
+                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-white/90 hover:bg-green-600 hover:text-white transition-colors text-sm">
+                  <Icon icon={Smartphone} size={16} /><span>{d.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* MAIN */}
+          <div className="flex-1 flex flex-col h-screen overflow-hidden">
+            <header className="bg-white shadow-sm border-b border-gray-200 px-4 md:px-8 py-4 flex justify-between items-center z-10 shrink-0">
+              <div className="flex items-center">
+                <button onClick={() => setIsMobileMenuOpen(true)} className="mr-4 text-gray-600 md:hidden hover:text-gray-900">
+                  <Icon icon={Menu} size={22} />
+                </button>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800 truncate">{titles[activeTab]}</h1>
+              </div>
+              <div className="flex items-center space-x-2 md:space-x-4">
+                <div className="hidden md:block relative">
+                  <Icon icon={Search} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="text" placeholder="Search jobs, drivers…" value={search} onChange={e => setSearch(e.target.value)}
+                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-48 lg:w-64" />
+                </div>
+                <button onClick={() => setShowNewJob(true)}
+                  className="flex items-center space-x-2 text-white px-3 py-2 md:px-4 rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
+                  style={{ backgroundColor: GREEN }}>
+                  <Icon icon={Plus} size={14} /><span className="hidden sm:inline">New Job</span>
+                </button>
+              </div>
+            </header>
+
+            <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6 lg:p-8">
+
+              {/* ---- DASHBOARD ---- */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {stats.map((s, i) => (
+                      <div key={i} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                        <span className="text-gray-500 text-sm font-medium">{s.label}</span>
+                        <span className={`text-2xl md:text-3xl font-bold mt-2 ${s.warn ? 'text-red-600' : 'text-gray-800'}`}>{s.value}</span>
+                        <span className={`text-xs font-medium mt-2 ${s.warn ? 'text-red-500' : 'text-green-600'}`}>{s.trend}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <JobsTable jobs={filteredJobs.slice(0, 6)} title="Traffic Pad (Today)" onOpen={setDetailJob}
+                    extra={<button onClick={() => setActiveTab('jobs')} className="text-sm font-medium hover:underline text-green-700">View all</button>} />
+                </div>
+              )}
+
+              {/* ---- CONSIGNMENTS ---- */}
+              {activeTab === 'jobs' && <JobsTable jobs={filteredJobs} title="All Consignments" onOpen={setDetailJob} />}
+
+              {/* ---- FLEET & DRIVERS ---- */}
+              {activeTab === 'fleet' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50"><h2 className="text-lg font-bold text-gray-800">Vehicle Compliance</h2></div>
+                    <div className="overflow-x-auto hide-scrollbar">
+                      <table className="w-full text-left min-w-[640px]">
+                        <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                          <th className="px-4 md:px-6 py-3 font-medium">Reg</th><th className="px-4 md:px-6 py-3 font-medium">Type</th>
+                          <th className="px-4 md:px-6 py-3 font-medium">CVRT</th><th className="px-4 md:px-6 py-3 font-medium">Tacho Cal.</th>
+                          <th className="px-4 md:px-6 py-3 font-medium">Tank Test</th>
+                        </tr></thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {vehicles.map(v => (
+                            <tr key={v.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{v.reg}</td>
+                              <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{v.type}</td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={v.cvrt} label="CVRT" /></td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={v.tachoCal} label="Tacho" /></td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={v.tankTest} label="Tank test" /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50"><h2 className="text-lg font-bold text-gray-800">Driver Compliance</h2></div>
+                    <div className="overflow-x-auto hide-scrollbar">
+                      <table className="w-full text-left min-w-[560px]">
+                        <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                          <th className="px-4 md:px-6 py-3 font-medium">Driver</th><th className="px-4 md:px-6 py-3 font-medium">Licence</th>
+                          <th className="px-4 md:px-6 py-3 font-medium">ADR Cert</th><th className="px-4 md:px-6 py-3 font-medium">CPC</th>
+                        </tr></thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {drivers.map(d => (
+                            <tr key={d.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{d.name}</td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={d.licenceExp} label="Licence" /></td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={d.adrExp} label="ADR" /></td>
+                              <td className="px-4 md:px-6 py-4"><ComplianceBadge date={d.cpcExp} label="CPC" /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ---- WASH STATION ---- */}
+              {activeTab === 'wash' && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center flex-wrap gap-3">
+                    <h2 className="text-lg font-bold text-gray-800">Wash Dockets</h2>
+                    <BtnPrimary onClick={() => setShowNewDocket(true)}><Icon icon={Plus} size={12} className="mr-1"/>New docket</BtnPrimary>
+                  </div>
+                  <div className="overflow-x-auto hide-scrollbar">
+                    <table className="w-full text-left min-w-[700px]">
+                      <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                        <th className="px-4 md:px-6 py-3 font-medium">Docket</th><th className="px-4 md:px-6 py-3 font-medium">Reg / Tank</th>
+                        <th className="px-4 md:px-6 py-3 font-medium">Previous Load</th><th className="px-4 md:px-6 py-3 font-medium">Wash Type</th>
+                        <th className="px-4 md:px-6 py-3 font-medium">Date</th><th className="px-4 md:px-6 py-3 font-medium text-right">Certificate</th>
+                      </tr></thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {dockets.map(d => (
+                          <tr key={d.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{d.id}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-700">{d.reg} <span className="text-gray-400 block sm:inline">· {d.tankType}</span></td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{d.prevLoad}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{d.washType}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{fmtDate(d.date)}</td>
+                            <td className="px-4 md:px-6 py-4 text-right">
+                              <button onClick={() => setCertDocket(d)} className="text-sm font-medium text-green-700 hover:text-green-800 hover:underline inline-flex items-center">
+                                <Icon icon={Printer} size={14} className="mr-1" /> View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ---- CUSTOMERS ---- */}
+              {activeTab === 'customers' && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50"><h2 className="text-lg font-bold text-gray-800">Customer Accounts</h2></div>
+                  <div className="overflow-x-auto hide-scrollbar">
+                    <table className="w-full text-left min-w-[600px]">
+                      <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                        <th className="px-4 md:px-6 py-3 font-medium">Customer</th><th className="px-4 md:px-6 py-3 font-medium">Contact</th>
+                        <th className="px-4 md:px-6 py-3 font-medium">Phone</th><th className="px-4 md:px-6 py-3 font-medium">Terms</th>
+                        <th className="px-4 md:px-6 py-3 font-medium text-right">Jobs YTD</th>
+                      </tr></thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {customers.map(c => (
+                          <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{c.name}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{c.contact}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{c.phone}</td>
+                            <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{c.terms}</td>
+                            <td className="px-4 md:px-6 py-4 text-right text-sm font-medium text-gray-800">{jobs.filter(j => j.client === c.name).length}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ---- INVOICING ---- */}
+              {activeTab === 'invoicing' && (
+                <InvoicingView jobs={jobs} invoices={invoices} onGenerate={generateInvoices} onExport={exportCsv} />
+              )}
+            </main>
+          </div>
+
+          {/* ---- NEW JOB MODAL ---- */}
+          {showNewJob && (
+            <Modal title="Create New Consignment" onClose={() => setShowNewJob(false)}
+              footer={<>
+                <BtnGhost onClick={() => setShowNewJob(false)}>Cancel</BtnGhost>
+                <BtnPrimary onClick={saveJob} disabled={!jobForm.client || !jobForm.origin || !jobForm.destination}>Save to traffic pad</BtnPrimary>
+              </>}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Customer">
+                  <select className={inputCls} value={jobForm.client} onChange={e => setJobForm({ ...jobForm, client: e.target.value })}>
+                    <option value="">Select customer…</option>
+                    {customers.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Job type">
+                  <select className={inputCls} value={jobForm.type} onChange={e => setJobForm({ ...jobForm, type: e.target.value })}>
+                    {JOB_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </Field>
+                <Field label="Collection address">
+                  <textarea rows="2" className={`${inputCls} resize-none`} placeholder="e.g. Midleton, Cork"
+                    value={jobForm.origin} onChange={e => setJobForm({ ...jobForm, origin: e.target.value })} />
+                </Field>
+                <Field label="Delivery address">
+                  <textarea rows="2" className={`${inputCls} resize-none`} placeholder="e.g. Dublin Port"
+                    value={jobForm.destination} onChange={e => setJobForm({ ...jobForm, destination: e.target.value })} />
+                </Field>
+                <Field label="Collection date">
+                  <input type="date" className={inputCls} value={jobForm.date} onChange={e => setJobForm({ ...jobForm, date: e.target.value })} />
+                </Field>
+                <Field label="Rate (€)">
+                  <input type="number" className={inputCls} placeholder="0.00"
+                    value={jobForm.value} onChange={e => setJobForm({ ...jobForm, value: e.target.value })} />
+                </Field>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200 mt-2">
+                <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={jobForm.adr} onChange={e => setJobForm({ ...jobForm, adr: e.target.checked })}
+                    className="w-4 h-4 rounded accent-green-600" />
+                  <Icon icon={AlertTriangle} size={15} className="text-orange-500" /><span>ADR / hazardous load</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={jobForm.washRequired} onChange={e => setJobForm({ ...jobForm, washRequired: e.target.checked })}
+                    className="w-4 h-4 rounded accent-green-600" />
+                  <Icon icon={Droplets} size={15} className="text-blue-500" /><span>Tank wash required after delivery</span>
+                </label>
+              </div>
+              {jobForm.adr && !drivers.some(d => d.adrExp && daysUntil(d.adrExp) > 0) && (
+                <div className="text-xs text-red-600 flex items-center mt-2"><Icon icon={AlertTriangle} size={13} className="mr-1" /> No drivers currently hold a valid ADR certificate.</div>
+              )}
+            </Modal>
+          )}
+
+          {/* ---- JOB DETAIL MODAL ---- */}
+          {detailJob && (() => {
+            const job = jobs.find(j => j.id === detailJob.id);
+            if (!job) return null;
+            const eligibleDrivers = job.adr ? drivers.filter(d => d.adrExp && daysUntil(d.adrExp) > 0) : drivers;
+            return (
+              <Modal title={`${job.id} — ${job.client}`} onClose={() => setDetailJob(null)}
+                footer={<BtnGhost onClick={() => setDetailJob(null)}>Close</BtnGhost>}>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <StatusBadge status={job.status} />
+                  <span className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600 border border-gray-200">{job.type}</span>
+                  {job.adr && <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium border border-orange-200">ADR</span>}
+                  {job.washRequired && <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium inline-flex items-center border border-blue-200"><Icon icon={Droplets} size={11} className="mr-1" />Wash req.</span>}
+                  {job.invoiced && <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium border border-purple-200">Invoiced</span>}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <div><div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1">Collection</div><div className="text-gray-800 font-medium">{job.origin}</div></div>
+                  <div><div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1">Delivery</div><div className="text-gray-800 font-medium">{job.destination}</div></div>
+                  <div><div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1">Date</div><div className="text-gray-800 font-medium">{fmtDate(job.date)}</div></div>
+                  <div><div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1">Rate</div><div className="text-gray-800 font-medium text-green-700">€{job.value.toFixed(2)}</div></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 mt-2">
+                  <Field label={`Assign driver ${job.adr ? '(ADR holders only)' : ''}`}>
+                    <select className={inputCls} value={job.driver}
+                      onChange={e => updateJob(job.id, { driver: e.target.value })}>
+                      <option>Unassigned</option>
+                      {eligibleDrivers.map(d => <option key={d.id}>{d.name}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Status">
+                    <select className={inputCls} value={job.status}
+                      onChange={e => updateJob(job.id, { status: e.target.value })}>
+                      <option>Pending</option><option>In Transit</option><option>Delivered</option>
+                    </select>
+                  </Field>
+                </div>
+                {job.pod && (
+                  <div className="pt-4 border-t border-gray-200 mt-2">
+                    <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-2">Proof of delivery</div>
+                    <div className="text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
+                       Received by <span className="font-bold text-gray-900">{job.pod.receiver}</span> on {job.pod.time}
+                    </div>
+                    <div className="flex gap-3 mt-3">
+                      {job.pod.photo && <img src={job.pod.photo} alt="POD photo" className="rounded-lg h-24 object-cover border border-gray-300 shadow-sm" />}
+                      {job.pod.signature && <img src={job.pod.signature} alt="Signature" className="rounded-lg h-24 object-contain border border-gray-300 bg-white shadow-sm px-2" />}
+                    </div>
+                  </div>
+                )}
+              </Modal>
+            );
+          })()}
+
+          {/* ---- NEW WASH DOCKET ---- */}
+          {showNewDocket && (
+            <Modal title="New Wash Docket" onClose={() => setShowNewDocket(false)}
+              footer={<>
+                <BtnGhost onClick={() => setShowNewDocket(false)}>Cancel</BtnGhost>
+                <BtnPrimary onClick={saveDocket} disabled={!docketForm.reg || !docketForm.prevLoad}>Save docket</BtnPrimary>
+              </>}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Vehicle / tank reg">
+                  <input className={inputCls} placeholder="e.g. 221-C-4471" value={docketForm.reg}
+                    onChange={e => setDocketForm({ ...docketForm, reg: e.target.value })} />
+                </Field>
+                <Field label="Tank type">
+                  <select className={inputCls} value={docketForm.tankType} onChange={e => setDocketForm({ ...docketForm, tankType: e.target.value })}>
+                    <option>Road Tanker</option><option>ISO Tank</option><option>IBC</option>
+                  </select>
+                </Field>
+                <Field label="Previous load (incl. UN no. if ADR)">
+                  <input className={inputCls} placeholder="e.g. Whiskey spirit (UN 1170)" value={docketForm.prevLoad}
+                    onChange={e => setDocketForm({ ...docketForm, prevLoad: e.target.value })} />
+                </Field>
+                <Field label="Wash type">
+                  <select className={inputCls} value={docketForm.washType} onChange={e => setDocketForm({ ...docketForm, washType: e.target.value })}>
+                    {WASH_TYPES.map(w => <option key={w}>{w}</option>)}
+                  </select>
+                </Field>
+                <Field label="Wash operator">
+                  <input className={inputCls} placeholder="Operator name" value={docketForm.operator}
+                    onChange={e => setDocketForm({ ...docketForm, operator: e.target.value })} />
+                </Field>
+              </div>
+            </Modal>
+          )}
+
+          {/* ---- WASH CERTIFICATE ---- */}
+          {certDocket && (
+            <Modal title="Cleaning Certificate" onClose={() => setCertDocket(null)} wide
+              footer={<>
+                <BtnGhost onClick={() => setCertDocket(null)}>Close</BtnGhost>
+                <BtnPrimary onClick={() => window.print()}><span className="inline-flex items-center"><Icon icon={Printer} size={14} className="mr-1.5" />Print</span></BtnPrimary>
+              </>}>
+              <div className="bg-white border-[3px] rounded-lg p-6 sm:p-8" style={{ borderColor: GREEN }}>
+                <div className="flex flex-col sm:flex-row justify-between items-start border-b-[5px] pb-5 mb-5 gap-4" style={{ borderColor: GOLD }}>
+                  <div>
+                    <div className="text-3xl font-black mb-1" style={{ color: GREEN, transform: 'scaleY(1.1)', transformOrigin: 'left' }}>MTL</div>
+                    <div className="font-bold text-gray-900 text-lg">Murphy Transport Ltd. — Tank Wash Station</div>
+                    <div className="text-sm text-gray-500 mt-1">Ballinlough Road, Cork, T12 EC63 · (021) 4916500</div>
+                  </div>
+                  <div className="text-left sm:text-right w-full sm:w-auto bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-lg">
+                    <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Certificate No.</div>
+                    <div className="font-bold text-gray-900 text-xl">{certDocket.id}</div>
+                    <div className="text-sm text-gray-600 mt-1">{fmtDate(certDocket.date)}</div>
+                  </div>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-4 uppercase text-sm tracking-widest bg-gray-100 inline-block px-3 py-1 rounded">Certificate of Tank Cleaning</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                  <div><div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Vehicle / tank reg</div><div className="font-semibold text-gray-900 text-base">{certDocket.reg}</div></div>
+                  <div><div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Tank type</div><div className="font-semibold text-gray-900 text-base">{certDocket.tankType}</div></div>
+                  <div className="sm:col-span-2"><div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Previous load</div><div className="font-semibold text-gray-900 text-base bg-yellow-50 px-3 py-2 rounded border border-yellow-100 inline-block">{certDocket.prevLoad}</div></div>
+                  <div><div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Cleaning procedure</div><div className="font-semibold text-gray-900 text-base">{certDocket.washType}</div></div>
+                  <div><div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Wash operator</div><div className="font-semibold text-gray-900 text-base">{certDocket.operator || '—'}</div></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-8 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  This certifies that the above tank was cleaned at the Murphy Transport wash facility using the stated procedure.
+                  The tank was inspected on completion and found visually clean, free of residue and odour of the previous product.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-between mt-12 text-sm gap-8">
+                  <div className="w-full sm:w-48"><div className="border-t-2 border-gray-400 pt-2 text-gray-600 font-medium text-center">Operator signature</div></div>
+                  <div className="w-full sm:w-48"><div className="border-t-2 border-gray-400 pt-2 text-gray-600 font-medium text-center">Driver signature</div></div>
+                </div>
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ JOBS TABLE ============
+    function JobsTable({ jobs, title, onOpen, extra }) {
+      return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <h2 className="text-lg font-bold text-gray-800">{title}</h2>{extra}
+          </div>
+          <div className="overflow-x-auto hide-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[760px]">
+              <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                <th className="px-4 md:px-6 py-3 font-medium">Job Ref</th>
+                <th className="px-4 md:px-6 py-3 font-medium">Client / Type</th>
+                <th className="px-4 md:px-6 py-3 font-medium">Route</th>
+                <th className="px-4 md:px-6 py-3 font-medium">Driver</th>
+                <th className="px-4 md:px-6 py-3 font-medium">Status</th>
+                <th className="px-4 md:px-6 py-3 font-medium text-right">Rate</th>
+              </tr></thead>
+              <tbody className="divide-y divide-gray-100">
+                {jobs.length === 0 && (
+                  <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400 text-sm">No consignments match. Create one with New Job.</td></tr>
+                )}
+                {jobs.map(job => (
+                  <tr key={job.id} onClick={() => onOpen(job)} className="hover:bg-gray-50 transition-colors cursor-pointer group">
+                    <td className="px-4 md:px-6 py-4">
+                      <span className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">{job.id}</span>
+                      <div className="text-xs text-gray-400">{fmtDate(job.date)}</div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="font-medium text-gray-700">{job.client}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                        {job.type}
+                        {job.adr && <span className="text-orange-600 font-medium px-1.5 py-0.5 bg-orange-50 rounded">ADR</span>}
+                        {job.washRequired && <Icon icon={Droplets} size={11} className="text-blue-500" />}
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="flex items-center text-sm text-gray-600 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
+                        <Icon icon={MapPin} size={14} className="mr-1 text-gray-400 shrink-0" />
+                        <span className="truncate max-w-[100px] lg:max-w-[140px]">{job.origin}</span>
+                        <Icon icon={ChevronRight} size={12} className="mx-1.5 text-gray-300 shrink-0" />
+                        <span className="truncate max-w-[100px] lg:max-w-[140px] font-medium">{job.destination}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      {job.driver === 'Unassigned'
+                        ? <span className="text-xs px-2.5 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium whitespace-nowrap">Unassigned</span>
+                        : <span className="text-sm text-gray-700 whitespace-nowrap font-medium">{job.driver}</span>}
+                    </td>
+                    <td className="px-4 md:px-6 py-4"><StatusBadge status={job.status} /></td>
+                    <td className="px-4 md:px-6 py-4 text-right font-medium text-gray-800">€{job.value.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ============ INVOICING ============
+    function InvoicingView({ jobs, invoices, onGenerate, onExport }) {
+      const [selected, setSelected] = useState([]);
+      const billable = jobs.filter(j => j.status === 'Delivered' && !j.invoiced);
+      const toggle = (id) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+      return (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <h2 className="text-lg font-bold text-gray-800">Ready to Bill</h2>
+              <BtnPrimary onClick={() => { onGenerate(selected); setSelected([]); }} disabled={selected.length === 0}>
+                Generate invoice{selected.length > 1 ? 's' : ''} ({selected.length})
+              </BtnPrimary>
+            </div>
+            {billable.length === 0
+              ? <div className="px-6 py-10 text-center text-gray-400 text-sm">No delivered jobs awaiting invoicing.</div>
+              : (
+                <div className="overflow-x-auto hide-scrollbar">
+                  <table className="w-full text-left min-w-[560px]">
+                    <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                      <th className="px-4 md:px-6 py-3 w-10"></th><th className="px-4 md:px-6 py-3 font-medium">Job</th>
+                      <th className="px-4 md:px-6 py-3 font-medium">Customer</th><th className="px-4 md:px-6 py-3 font-medium">Delivered</th>
+                      <th className="px-4 md:px-6 py-3 font-medium text-right">Amount</th>
+                    </tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {billable.map(j => (
+                        <tr key={j.id} className={`hover:bg-gray-50 cursor-pointer transition-colors ${selected.includes(j.id) ? 'bg-green-50/50' : ''}`} onClick={() => toggle(j.id)}>
+                          <td className="px-4 md:px-6 py-4"><input type="checkbox" readOnly checked={selected.includes(j.id)} className="w-4 h-4 accent-green-600 rounded" /></td>
+                          <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{j.id}</td>
+                          <td className="px-4 md:px-6 py-4 text-sm text-gray-700">{j.client}</td>
+                          <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{fmtDate(j.date)}</td>
+                          <td className="px-4 md:px-6 py-4 text-right font-medium text-gray-800">€{j.value.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <h2 className="text-lg font-bold text-gray-800">Invoices</h2>
+              {invoices.length > 0 && (
+                <button onClick={onExport} className="text-sm font-medium text-green-700 hover:text-green-800 hover:underline inline-flex items-center">
+                  <Icon icon={Download} size={14} className="mr-1.5" /> Export CSV for accounts
+                </button>
+              )}
+            </div>
+            {invoices.length === 0
+              ? <div className="px-6 py-10 text-center text-gray-400 text-sm">No invoices raised yet. Select delivered jobs above to generate them.</div>
+              : (
+                <div className="overflow-x-auto hide-scrollbar">
+                  <table className="w-full text-left min-w-[600px]">
+                    <thead><tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                      <th className="px-4 md:px-6 py-3 font-medium">Invoice</th><th className="px-4 md:px-6 py-3 font-medium">Customer</th>
+                      <th className="px-4 md:px-6 py-3 font-medium">Date</th><th className="px-4 md:px-6 py-3 font-medium">Jobs</th>
+                      <th className="px-4 md:px-6 py-3 font-medium text-right">Total</th>
+                    </tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {invoices.map(inv => (
+                        <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 md:px-6 py-4 font-semibold text-gray-800">{inv.id}</td>
+                          <td className="px-4 md:px-6 py-4 text-sm font-medium text-gray-700">{inv.client}</td>
+                          <td className="px-4 md:px-6 py-4 text-sm text-gray-600">{fmtDate(inv.date)}</td>
+                          <td className="px-4 md:px-6 py-4 text-xs text-gray-500 leading-relaxed">{inv.jobs.join(', ')}</td>
+                          <td className="px-4 md:px-6 py-4 text-right font-medium text-green-700">€{inv.total.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
