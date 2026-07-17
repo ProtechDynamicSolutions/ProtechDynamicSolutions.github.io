@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrical Inspection & Testing Record</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Gray-100 */
+        }
+        
+        /* Custom styling for read-only calculated status fields */
+        .status-pass {
+            color: #166534; /* Green-800 */
+            background-color: #dcfce7; /* Green-100 */
+            border-color: #bbf7d0; /* Green-200 */
+        }
+        .status-fail {
+            color: #991b1b; /* Red-800 */
+            background-color: #fee2e2; /* Red-100 */
+            border-color: #fecaca; /* Red-200 */
+        }
+        .status-pending {
+            color: #374151; /* Gray-700 */
+            background-color: #f3f4f6; /* Gray-100 */
+            border-color: #e5e7eb; /* Gray-200 */
+        }
+
+        /* Form input focus rings to match logo's red */
+        .focus-red:focus {
+            outline: none;
+            border-color: #9b2226; /* Dark red */
+            box-shadow: 0 0 0 3px rgba(155, 34, 38, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-gray-800">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        
+        <!-- Header with Logo -->
+        <div class="bg-gray-50 border-b border-gray-200 p-6 flex flex-col items-center">
+            <img src="https://static.wixstatic.com/media/66b421_31acbbab42a24868bbcc46b3fbae3ad9~mv2.png/v1/fill/w_416,h_167,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/OCH-logo-original-trans.png" 
+                 alt="OCH Electrical Group" 
+                 class="h-24 object-contain mb-4">
+            <h1 class="text-2xl font-bold text-gray-900 text-center">Electrical Inspection & Testing Record</h1>
+            <p class="text-gray-500 text-sm mt-1">Demo Environment - Data will not be saved</p>
+        </div>
+
+        <form id="inspectionForm" class="p-6 md:p-8 space-y-8">
+            
+            <!-- Section 1: General Info -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">1. General Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                        <input type="date" id="date" name="date" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="colourRef" class="block text-sm font-medium text-gray-700 mb-1">Colour Ref (Auto-calculated)</label>
+                        <input type="text" id="colourRef" name="colourRef" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 font-medium cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">Inspector First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Inspector Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="hseFacility" class="block text-sm font-medium text-gray-700 mb-1">HSE Facility *</label>
+                        <select id="hseFacility" name="hseFacility" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors bg-white">
+                            <option value="CUH">CUH</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div id="otherFacilityContainer" class="hidden">
+                        <label for="otherFacility" class="block text-sm font-medium text-gray-700 mb-1">Other Facility Name</label>
+                        <input type="text" id="otherFacility" name="otherFacility" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Location & Circuit Details -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">2. Location & Circuit Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div>
+                        <label for="area" class="block text-sm font-medium text-gray-700 mb-1">Area *</label>
+                        <input type="text" id="area" name="area" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="roomNo" class="block text-sm font-medium text-gray-700 mb-1">Room No. / Name *</label>
+                        <input type="text" id="roomNo" name="roomNo" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="distributionBoard" class="block text-sm font-medium text-gray-700 mb-1">Distribution Board Ref *</label>
+                        <input type="text" id="distributionBoard" name="distributionBoard" placeholder="e.g. DB1" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="circuitRef" class="block text-sm font-medium text-gray-700 mb-1">Circuit Ref No.</label>
+                        <input type="text" id="circuitRef" name="circuitRef" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="outletLocation" class="block text-sm font-medium text-gray-700 mb-1">Outlet Location *</label>
+                        <input type="text" id="outletLocation" name="outletLocation" placeholder="e.g. next to door" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Test Results -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">3. Testing Results</h2>
+                
+                <div class="space-y-6">
+                    
+                    <!-- Protective Device -->
+                    <div>
+                        <label for="protectiveDevice" class="block text-sm font-medium text-gray-700 mb-1">Protective Device *</label>
+                        <select id="protectiveDevice" name="protectiveDevice" required 
+                                class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors bg-white">
+                            <option value="" disabled selected>Please Select</option>
+                            <option value="B20 RCBO/MCB">B20 RCBO/MCB</option>
+                            <option value="C20 RCBO/MCB">C20 RCBO/MCB</option>
+                            <option value="B16 RCBO/MCB">B16 RCBO/MCB</option>
+                            <option value="C16 RCBO/MCB">C16 RCBO/MCB</option>
+                            <option value="Fuse 20 Amp">Fuse 20 Amp</option>
+                            <option value="Fuse 16 Amp">Fuse 16 Amp</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Loop Impedance -->
+                    <div id="loopImpedanceContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="loopImpedance" class="block text-sm font-medium text-gray-700 mb-1">Loop impedance (ZI) L-N-E (Ω)</label>
+                            <input type="number" step="0.01" id="loopImpedance" name="loopImpedance" placeholder="e.g., 1.1" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Loop Impedance Status</label>
+                            <input type="text" id="loopImpedanceStatus" readonly value="Pending"
+                                   class="w-full px-4 py-2 border rounded-md font-semibold text-center status-pending transition-colors duration-300">
+                        </div>
+                    </div>
+
+                    <!-- Radio Checks -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700 mb-2">Verify RCD/RCBO 30 mA *</legend>
+                            <div class="flex items-center space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="verifyRcd" value="Pass" required class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Pass</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="verifyRcd" value="Fail" class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Fail</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700 mb-2">Test Button *</legend>
+                            <div class="flex items-center space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="testButton" value="Pass" required class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Pass</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="testButton" value="Fail" class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Fail</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700 mb-2">Trip Times x 1/2 (Should not operate) *</legend>
+                            <div class="flex items-center space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tripTimesHalf" value="Pass" required class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Pass</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tripTimesHalf" value="Fail" class="text-[#9b2226] focus:ring-[#9b2226]">
+                                    <span class="ml-2">Fail</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- Trip Times Analysis -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="tripTime1" class="block text-sm font-medium text-gray-700 mb-1">Trip time x1 (Highest ms) *</label>
+                            <input type="number" step="0.1" id="tripTime1" name="tripTime1" required placeholder="e.g., 100"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trip time x1 Status</label>
+                            <input type="text" id="tripTime1Status" readonly value="Pending"
+                                   class="w-full px-4 py-2 border rounded-md font-semibold text-center status-pending transition-colors duration-300">
+                            <p class="text-xs text-gray-500 mt-1 text-center">Fails if > 300ms</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="tripTime5" class="block text-sm font-medium text-gray-700 mb-1">Trip time x5 (Highest ms) *</label>
+                            <input type="number" step="0.1" id="tripTime5" name="tripTime5" required placeholder="e.g., 10"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus-red transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trip time x5 Status</label>
+                            <input type="text" id="tripTime5Status" readonly value="Pending"
+                                   class="w-full px-4 py-2 border rounded-md font-semibold text-center status-pending transition-colors duration-300">
+                            <p class="text-xs text-gray-500 mt-1 text-center">Fails if > 40ms</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-gray-200 flex justify-end">
+                <button type="submit" class="bg-[#9b2226] hover:bg-[#7a1b1e] text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-colors duration-200 transform hover:-translate-y-0.5">
+                    Submit Inspection Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Custom Modal for form submission (replaces alert) -->
+    <div id="submitModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content -->
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">Demo Submission</h3>
+            <p class="text-center text-gray-600 mb-6">
+                The form logic processed correctly! Since this is a demo environment, no data has been saved.
+            </p>
+            <button id="closeModalBtn" class="w-full bg-[#9b2226] hover:bg-[#7a1b1e] text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                Back to Form
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // --- Elements ---
+            const dateInput = document.getElementById('date');
+            const colourRefInput = document.getElementById('colourRef');
+            const hseFacilitySelect = document.getElementById('hseFacility');
+            const otherFacilityContainer = document.getElementById('otherFacilityContainer');
+            const otherFacilityInput = document.getElementById('otherFacility');
+            
+            const protectiveDeviceSelect = document.getElementById('protectiveDevice');
+            const loopImpedanceInput = document.getElementById('loopImpedance');
+            const loopImpedanceStatus = document.getElementById('loopImpedanceStatus');
+            
+            const tripTime1Input = document.getElementById('tripTime1');
+            const tripTime1Status = document.getElementById('tripTime1Status');
+            
+            const tripTime5Input = document.getElementById('tripTime5');
+            const tripTime5Status = document.getElementById('tripTime5Status');
+
+            const form = document.getElementById('inspectionForm');
+            const submitModal = document.getElementById('submitModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            // --- Logic Maps ---
+            const colourMap = {
+                2023: '2023 Blue',
+                2024: '2024 Red',
+                2025: '2025 Yellow',
+                2026: '2026 Green',
+                2027: '2027 Orange',
+                2028: '2028 Blue',
+                2029: '2029 Red',
+                2030: '2030 Yellow',
+                2031: '2031 Green',
+                2032: '2032 Orange'
+            };
+
+            const impedanceLimits = {
+                'B20 RCBO/MCB': 2.3,
+                'C20 RCBO/MCB': 1.15,
+                'B16 RCBO/MCB': 2.87,
+                'C16 RCBO/MCB': 1.44,
+                'Fuse 20 Amp': 1.5,
+                'Fuse 16 Amp': 2.2
+            };
+
+            // --- Helper: Update Status UI ---
+            function updateStatusDisplay(element, isPass, isPending = false) {
+                element.classList.remove('status-pass', 'status-fail', 'status-pending');
+                if (isPending) {
+                    element.value = "Pending";
+                    element.classList.add('status-pending');
+                } else if (isPass) {
+                    element.value = "Pass";
+                    element.classList.add('status-pass');
+                } else {
+                    element.value = "Fail";
+                    element.classList.add('status-fail');
+                }
+            }
+
+            // --- Event Listeners & Logic Functions ---
+
+            // 1. Set Date and Calculate Colour Ref
+            function updateColourRef() {
+                if (!dateInput.value) {
+                    colourRefInput.value = "";
+                    return;
+                }
+                const year = new Date(dateInput.value).getFullYear();
+                colourRefInput.value = colourMap[year] || 'N/A (Out of Range)';
+            }
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+            updateColourRef(); // Trigger initial calculation
+            dateInput.addEventListener('change', updateColourRef);
+
+            // 2. Handle HSE Facility "Other"
+            hseFacilitySelect.addEventListener('change', (e) => {
+                if (e.target.value === 'Other') {
+                    otherFacilityContainer.classList.remove('hidden');
+                    otherFacilityInput.setAttribute('required', 'required');
+                } else {
+                    otherFacilityContainer.classList.add('hidden');
+                    otherFacilityInput.removeAttribute('required');
+                    otherFacilityInput.value = "";
+                }
+            });
+
+            // 3. Evaluate Loop Impedance
+            function evaluateImpedance() {
+                const device = protectiveDeviceSelect.value;
+                const value = parseFloat(loopImpedanceInput.value);
+
+                if (!device) return;
+
+                if (device === 'Other') {
+                    loopImpedanceInput.value = '';
+                    loopImpedanceInput.disabled = true;
+                    updateStatusDisplay(loopImpedanceStatus, false); // Auto fail
+                    return;
+                }
+
+                loopImpedanceInput.disabled = false;
+                
+                if (isNaN(value)) {
+                    updateStatusDisplay(loopImpedanceStatus, true, true); // Pending
+                    return;
+                }
+
+                const limit = impedanceLimits[device];
+                if (limit !== undefined) {
+                    const isPass = value <= limit;
+                    updateStatusDisplay(loopImpedanceStatus, isPass);
+                }
+            }
+            protectiveDeviceSelect.addEventListener('change', evaluateImpedance);
+            loopImpedanceInput.addEventListener('input', evaluateImpedance);
+
+            // 4. Evaluate Trip Time x1 (> 300 is Fail)
+            tripTime1Input.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                if (isNaN(val)) {
+                    updateStatusDisplay(tripTime1Status, true, true); // Pending
+                } else {
+                    updateStatusDisplay(tripTime1Status, val <= 300);
+                }
+            });
+
+            // 5. Evaluate Trip Time x5 (> 40 is Fail)
+            tripTime5Input.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                if (isNaN(val)) {
+                    updateStatusDisplay(tripTime5Status, true, true); // Pending
+                } else {
+                    updateStatusDisplay(tripTime5Status, val <= 40);
+                }
+            });
+
+            // 6. Handle Form Submission (Demo mode)
+            form.addEventListener('submit', (e) => {
+                e.preventDefault(); // Prevent page reload/actual submission
+                
+                // Show modal
+                submitModal.classList.remove('hidden');
+                
+                // Add slight animation effect to modal box
+                const modalBox = submitModal.querySelector('.bg-white');
+                setTimeout(() => {
+                    modalBox.classList.remove('scale-95');
+                    modalBox.classList.add('scale-100');
+                }, 10);
+            });
+
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                const modalBox = submitModal.querySelector('.bg-white');
+                modalBox.classList.remove('scale-100');
+                modalBox.classList.add('scale-95');
+                
+                setTimeout(() => {
+                    submitModal.classList.add('hidden');
+                    form.reset(); // Optional: reset form after demo submission
+                    
+                    // Reset statuses manually after form reset
+                    updateColourRef();
+                    otherFacilityContainer.classList.add('hidden');
+                    updateStatusDisplay(loopImpedanceStatus, true, true);
+                    updateStatusDisplay(tripTime1Status, true, true);
+                    updateStatusDisplay(tripTime5Status, true, true);
+                    loopImpedanceInput.disabled = false;
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html>
