@@ -11,6 +11,7 @@
 <link rel="manifest" href='data:application/manifest+json,{"name":"VSOP IRL 580","short_name":"VSOP","display":"standalone","orientation":"portrait","background_color":"%2322394A","theme_color":"%2322394A","start_url":"."}'>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 <style>
 :root{
   --sea:#22394A; --deep:#1B2A3E; --navy:#16233B;
@@ -253,8 +254,9 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       Rocks and obstructions come from OpenSeaMap, which is crowd-mapped and is not an official survey. It will miss
       things. This gives you time to a point, not depth, and knows nothing about tide height or other traffic. The
       paper chart and the plotter stay in charge.</p>
-    <p class="credit">Hazards &copy; OpenStreetMap contributors, ODbL, via OpenSeaMap and the Overpass API.
-      Weather and sea state from Open-Meteo, CC BY 4.0.</p>
+    <p class="credit">Seamarks &copy; OpenStreetMap contributors, ODbL, via OpenSeaMap and the Overpass API.
+      Seabed relief, contours and shipwrecks &copy; INFOMAR, Geological Survey Ireland and the Marine Institute,
+      CC BY 4.0. Depth shading &copy; EMODnet Bathymetry. Weather and sea state from Open-Meteo, CC BY 4.0.</p>
   </section>
 
   <!-- ================= CHART ================= -->
@@ -264,6 +266,7 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       <button id="btnFollow">Follow</button>
       <button id="btnMarks" class="off">Seamarks</button>
       <button id="btnDepth" class="off">Depth</button>
+      <button id="btnInfo" class="off">INFOMAR</button>
     </div>
   </section>
 
@@ -440,6 +443,21 @@ function loadMarine(){
    south, Schull and Roaringwater Bay north. Loads the same box wherever
    you happen to tap Load, so it works from the house as well as the pier. */
 var BOX="51.35,-9.78,51.56,-9.33";
+/* INFOMAR shipwrecks are real surveyed point data, so they can join the
+   lookahead list rather than being map decoration. */
+function loadWrecks(){
+  var u="https://maps.marine.ie/arcgis/rest/services/Infomar/Shipwrecks/MapServer/0/query"+
+        "?where=1%3D1&geometry=-9.78,51.35,-9.33,51.56&geometryType=esriGeometryEnvelope"+
+        "&inSR=4326&outSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&f=geojson";
+  return fetch(u).then(function(r){return r.json()}).then(function(d){
+    var n=0;
+    (d.features||[]).forEach(function(f){
+      if(!f.geometry||!f.geometry.coordinates)return;
+      var c=f.geometry.coordinates,p=f.properties||{};
+      var nm=p.NAME||p.Name||p.SHIPNAME||"Wreck";
+      HAZARDS.push({n:nm+" (wreck)",lat:c[1],lon:c[0],lvl:"INFOMAR survey"});n++});
+    return n}).catch(function(){return 0})}
+
 function loadHazards(){
   var q="[out:json][timeout:60];("+
         'node["seamark:type"~"^(rock|obstruction|wreck)$"]('+BOX+");"+
@@ -466,13 +484,16 @@ function loadHazards(){
 function loadAll(){
   $("loadState").textContent="loading";$("loadState").className="state";
   loaded=true;
-  Promise.all([loadWeather().catch(function(){return null}),loadMarine(),loadHazards().catch(function(){return null})])
-    .then(function(res){
-      var n=res[2];
-      $("loadState").textContent=(n===null?"hazards failed, ":n+" hazards, ")+
-        (windDir===null?"no wind":"wind loaded")+" at "+new Date().toTimeString().slice(0,5);
+  Promise.all([loadWeather().catch(function(){return null}),loadMarine(),
+               loadHazards().catch(function(){return null})])
+    .then(function(res){return loadWrecks().then(function(w){return[res[2],w]})})
+    .then(function(r){
+      var n=r[0],w=r[1];
+      $("loadState").textContent=(n===null?"seamarks failed":n+" seamarks")+
+        ", "+w+" wrecks, "+(windDir===null?"no wind":"wind ok")+
+        " at "+new Date().toTimeString().slice(0,5);
       $("loadState").className="state "+(n===null||windDir===null?"bad":"on");
-      hazards()})
+      hazards();drawChart()})
     .catch(function(){$("loadState").textContent="load failed, try again with better signal";
       $("loadState").className="state bad"})}
 $("btnLoad").addEventListener("click",loadAll);
@@ -512,7 +533,7 @@ function sky(code,h,idx){
   if(!soon.length)return;
   var mx=Math.max.apply(null,soon);
   $("rainPc").textContent=mx;
-  $("rainNote").textContent="highest chance in the next 3 hours";
+  $("rainNote").textContent="chance in the next 3 hours";
   $("brolly").style.opacity=mx>=30?"1":".3"}
 
 /* ---------- start line ---------- */
@@ -615,7 +636,7 @@ function hazards(){
 setInterval(hazards,3000);hazards();
 
 /* ---------- chart ---------- */
-var map=null,boatMk=null,hazLayer=null,lineLayer=null,follow=true,marks=null,depth=null;
+var map=null,boatMk=null,hazLayer=null,lineLayer=null,follow=true,marks=null,depth=null,infomar=null;
 function initMap(){
   if(map||typeof L==="undefined")return;
   map=L.map("map",{zoomControl:false,attributionControl:true})
@@ -629,6 +650,14 @@ function initMap(){
     layers:"mean_multicolour",format:"image/png",transparent:true,opacity:.65,
     attribution:"Bathymetry &copy; EMODnet"});
   marks.addTo(map);$("btnMarks").classList.remove("off");
+  infomar=null;
+  if(window.L&&L.esri){
+    infomar=L.layerGroup([
+      L.esri.imageMapLayer({url:"https://maps.marine.ie/arcgis/rest/services/Infomar/All_Surveys_ShadedRelief_NW/ImageServer",
+        opacity:.75,attribution:"Seabed &copy; INFOMAR (GSI &amp; Marine Institute), CC BY 4.0"}),
+      L.esri.dynamicMapLayer({url:"https://maps.marine.ie/arcgis/rest/services/Infomar/INFOMAR_Contours/MapServer",
+        opacity:.9})
+    ])}
   hazLayer=L.layerGroup().addTo(map);
   lineLayer=L.layerGroup().addTo(map);
   map.on("dragstart",function(){follow=false;$("btnFollow").classList.add("off")});
@@ -645,6 +674,11 @@ $("btnDepth").addEventListener("click",function(){
   if(!map)return;
   if(map.hasLayer(depth)){map.removeLayer(depth);this.classList.add("off")}
   else{depth.addTo(map);this.classList.remove("off")}});
+
+$("btnInfo").addEventListener("click",function(){
+  if(!map||!infomar){this.textContent="n/a";return}
+  if(map.hasLayer(infomar)){map.removeLayer(infomar);this.classList.add("off")}
+  else{infomar.addTo(map);this.classList.remove("off")}});
 
 function drawChart(){
   if(!map)return;
