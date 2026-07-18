@@ -195,6 +195,22 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       </div>
     </div>
 
+    <p class="eyebrow">Sky</p>
+    <div class="grid">
+      <div class="tile" style="display:flex;align-items:center;gap:12px">
+        <div id="skyIcon" style="color:var(--hull);flex:0 0 auto"></div>
+        <div><div class="k">Now</div><div style="font-size:19px;font-weight:700" id="skyText">--</div></div>
+      </div>
+      <div class="tile" style="display:flex;align-items:center;gap:10px">
+        <svg id="brolly" viewBox="0 0 48 48" width="34" height="34" fill="currentColor" style="opacity:.3;flex:0 0 auto">
+          <path d="M24 5c10 0 18 8 19 18H5C6 13 14 5 24 5z"/>
+          <path d="M22 23h4v16a5 5 0 01-10 0h4a1 1 0 002 0z"/>
+        </svg>
+        <div><div class="v" style="font-size:34px"><span id="rainPc">--</span><span class="u">%</span></div>
+          <div class="state" id="rainNote">rain chance</div></div>
+      </div>
+    </div>
+
     <p class="eyebrow">Shifts</p>
     <div class="card">
       <div class="k" style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist)">This tack vs mean of last 8</div>
@@ -223,7 +239,8 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       <div class="tile"><div class="k">Wave height</div>
         <div class="v"><span id="wave">--</span> <span class="u">m</span></div></div>
       <div class="tile"><div class="k">Period</div>
-        <div class="v"><span id="period">--</span> <span class="u">s</span></div></div>
+        <div class="v"><span id="period">--</span> <span class="u">s</span></div>
+        <div class="state" id="waveNote">not loaded</div></div>
     </div>
 
     <p class="eyebrow">Add a hazard here</p>
@@ -379,8 +396,8 @@ function loadWeather(){
   if(!here)return Promise.resolve();
   var u="https://api.open-meteo.com/v1/forecast?latitude="+here.lat.toFixed(3)+
         "&longitude="+here.lon.toFixed(3)+
-        "&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
-        "&hourly=wind_speed_10m,wind_direction_10m"+
+        "&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,precipitation"+
+        "&hourly=wind_speed_10m,wind_direction_10m,precipitation_probability,weather_code"+
         "&wind_speed_unit=kn&timezone=Europe%2FDublin&forecast_days=2";
   return fetch(u).then(function(r){return r.json()}).then(function(d){
     var c=d.current;
@@ -395,17 +412,24 @@ function loadWeather(){
                 " "+Math.round(d.hourly.wind_speed_10m[i])+" kts")}
     $("wTrend").textContent=rows.join("\n");
     $("wTrend").style.whiteSpace="pre";
+    sky(c.weather_code,d.hourly,idx);
     line();
   })}
 function loadMarine(){
   if(!here)return Promise.resolve();
-  var u="https://marine-api.open-meteo.com/v1/marine?latitude="+here.lat.toFixed(3)+
-        "&longitude="+here.lon.toFixed(3)+"&current=wave_height,wave_period&timezone=Europe%2FDublin";
-  return fetch(u).then(function(r){return r.json()}).then(function(d){
-    if(!d.current)return;
-    $("wave").textContent=d.current.wave_height!=null?d.current.wave_height.toFixed(1):"--";
-    $("period").textContent=d.current.wave_period!=null?Math.round(d.current.wave_period):"--";
-  }).catch(function(){})}
+  function ask(lat,lon,tag){
+    var u="https://marine-api.open-meteo.com/v1/marine?latitude="+lat.toFixed(3)+
+          "&longitude="+lon.toFixed(3)+"&current=wave_height,wave_period&timezone=Europe%2FDublin";
+    return fetch(u).then(function(r){return r.json()}).then(function(d){
+      if(!d.current||d.current.wave_height==null)return null;
+      $("wave").textContent=d.current.wave_height.toFixed(1);
+      $("period").textContent=d.current.wave_period!=null?Math.round(d.current.wave_period):"--";
+      $("waveNote").textContent=tag;
+      return true})}
+  return ask(here.lat,here.lon,"at your position").then(function(ok){
+    if(ok)return true;
+    return ask(here.lat-0.06,here.lon,"offshore, harbour will be flatter")})
+    .catch(function(){})}
 
 /* ---------- hazards: OpenSeaMap via Overpass ---------- */
 function loadHazards(){
@@ -442,6 +466,44 @@ function loadAll(){
     .catch(function(){$("loadState").textContent="load failed, try again with better signal";
       $("loadState").className="state bad"})}
 $("btnLoad").addEventListener("click",loadAll);
+
+/* ---------- sky icons, drawn in the hull colour ---------- */
+var SVG={
+  sun:'<circle cx="24" cy="24" r="9"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round">'+
+      '<path d="M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M14 34l-4 4"/></g>',
+  part:'<circle cx="18" cy="17" r="7"/><path d="M17 40a8 8 0 010-16 11 11 0 0121 3 6 6 0 01-1 13z"/>',
+  cloud:'<path d="M15 39a9 9 0 010-18 12 12 0 0123 3 7 7 0 01-1 15z"/>',
+  rain:'<path d="M15 32a9 9 0 010-18 12 12 0 0123 3 7 7 0 01-1 15z"/>'+
+       '<g stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M17 37l-2 6M26 37l-2 6M35 37l-2 6"/></g>',
+  heavy:'<path d="M15 30a9 9 0 010-18 12 12 0 0123 3 7 7 0 01-1 15z"/>'+
+        '<g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M16 34l-3 10M26 34l-3 10M36 34l-3 10"/></g>',
+  storm:'<path d="M15 28a9 9 0 010-18 12 12 0 0123 3 7 7 0 01-1 15z"/><path d="M26 30l-9 12h7l-3 9 12-14h-8l4-7z"/>',
+  fog:'<g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M8 18h32M6 27h36M10 36h28"/></g>'
+};
+function wmo(c){
+  if(c===0)return{i:"sun",t:"Clear"};
+  if(c===1)return{i:"sun",t:"Mostly clear"};
+  if(c===2)return{i:"part",t:"Part cloud"};
+  if(c===3)return{i:"cloud",t:"Overcast"};
+  if(c===45||c===48)return{i:"fog",t:"Fog"};
+  if(c>=51&&c<=57)return{i:"rain",t:"Drizzle"};
+  if(c===61||c===63||c===80||c===81)return{i:"rain",t:"Showers"};
+  if(c===65||c===82)return{i:"heavy",t:"Heavy rain"};
+  if(c>=71&&c<=77||c===85||c===86)return{i:"heavy",t:"Sleet or snow"};
+  if(c>=95)return{i:"storm",t:"Thunder"};
+  return{i:"cloud",t:"Cloud"}}
+
+function sky(code,h,idx){
+  var s=wmo(code);
+  $("skyIcon").innerHTML='<svg viewBox="0 0 48 48" width="54" height="54" fill="currentColor">'+SVG[s.i]+'</svg>';
+  $("skyText").textContent=s.t;
+  if(!h||!h.precipitation_probability||idx<0)return;
+  var soon=h.precipitation_probability.slice(idx,idx+3).filter(function(x){return x!=null});
+  if(!soon.length)return;
+  var mx=Math.max.apply(null,soon);
+  $("rainPc").textContent=mx;
+  $("rainNote").textContent="highest chance in the next 3 hours";
+  $("brolly").style.opacity=mx>=30?"1":".3"}
 
 /* ---------- start line ---------- */
 var pin=null,boat=null,ref=null;
@@ -605,4 +667,3 @@ awake();
 </script>
 </body>
 </html>
-
