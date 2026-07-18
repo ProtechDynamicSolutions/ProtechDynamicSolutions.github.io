@@ -1,1 +1,608 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>VSOP — IRL 580</title>
+<meta name="theme-color" content="#22394A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href='data:application/manifest+json,{"name":"VSOP IRL 580","short_name":"VSOP","display":"standalone","orientation":"portrait","background_color":"%2322394A","theme_color":"%2322394A","start_url":"."}'>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --sea:#22394A; --deep:#1B2A3E; --navy:#16233B;
+  --hull:#F2EAD3; --rope:#B99B63; --mist:#8FA6B4;
+  --red:#B02A37; --go:#4FA07A; --edge:rgba(242,234,211,.16);
+}
+body.night{
+  --sea:#000; --deep:#080808; --navy:#0E0E0E;
+  --hull:#E24B2A; --rope:#7A3320; --mist:#7A3320;
+  --red:#FF5A3C; --go:#C9603A; --edge:rgba(226,75,42,.22);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--sea);color:var(--hull);
+  font-family:"Avenir Next Condensed","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-variant-numeric:tabular-nums;user-select:none;overscroll-behavior:none;
+  display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+
+header{display:flex;align-items:baseline;justify-content:space-between;padding:8px 16px 6px;flex:0 0 auto}
+.mark{font-size:26px;font-weight:800;letter-spacing:.14em;line-height:1}
+.sail{font-size:12px;letter-spacing:.24em;color:var(--mist)}
+#themeBtn{background:none;border:1px solid var(--edge);color:var(--mist);border-radius:999px;
+  padding:6px 12px;font:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+
+main{flex:1 1 auto;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+main::-webkit-scrollbar{display:none}
+section{flex:0 0 100%;scroll-snap-align:center;overflow-y:auto;padding:4px 14px 20px;-webkit-overflow-scrolling:touch}
+
+.eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);margin:14px 0 6px}
+.card{background:var(--deep);border:1px solid var(--edge);border-radius:14px;padding:12px 14px}
+
+.hoist{display:flex;gap:5px;margin-bottom:8px}
+.flag{flex:1;height:26px;border-radius:3px;opacity:.2;position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,.14);display:flex;align-items:flex-end;justify-content:center;
+  transition:opacity .25s,transform .25s}
+.flag.up{opacity:1;transform:translateY(-2px)}
+.flag b{font-size:8px;letter-spacing:.1em;color:#fff;padding-bottom:2px;position:relative;z-index:2;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);font-weight:600}
+.f1{background:#B02A37}
+.f2{background:#12518F}
+.f2::before{content:"";position:absolute;inset:24% 28%;background:#fff}
+.f3{background:repeating-linear-gradient(90deg,#fff 0 25%,#B02A37 25% 50%)}
+.f4{background:#4FA07A}
+body.night .flag{filter:grayscale(.5) brightness(.75)}
+
+.clock{background:var(--deep);border:2px solid var(--edge);border-radius:16px;padding:10px 8px 14px;text-align:center}
+.clock.on{border-color:var(--rope)}
+.clock.racing{border-color:var(--go)}
+#big{font-size:clamp(80px,27vw,140px);line-height:.84;font-weight:800;letter-spacing:-.03em;margin:4px 0 2px}
+#big.warn{color:var(--rope)}
+#big.go{color:var(--go)}
+#phase{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);min-height:14px}
+
+.big-btn{display:block;width:100%;margin-top:10px;background:var(--hull);color:var(--navy);
+  border:none;border-radius:14px;font:inherit;font-size:30px;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;min-height:92px;transition:transform .06s}
+.big-btn:active{transform:scale(.985)}
+.big-btn.armed{background:var(--red);color:#fff}
+.row{display:flex;gap:8px;margin-top:8px}
+.btn{flex:1;background:var(--hull);color:var(--navy);border:none;border-radius:12px;font:inherit;
+  font-size:17px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;min-height:62px;transition:transform .06s}
+.btn:active{transform:scale(.97)}
+.btn.quiet{background:transparent;color:var(--mist);border:1px solid var(--edge);font-size:13px;font-weight:400;min-height:46px}
+button:focus-visible{outline:3px solid var(--rope);outline-offset:2px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--deep);border:1px solid var(--edge);border-radius:12px;padding:10px 12px}
+.tile .k{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist)}
+.tile .v{font-size:clamp(34px,11vw,50px);font-weight:800;line-height:1.02}
+.tile .u{font-size:14px;color:var(--mist);font-weight:400}
+.wide{grid-column:1/-1}
+.state{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mist);margin-top:4px}
+.state.on{color:var(--go)}
+.state.bad{color:var(--red)}
+
+.haz{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;
+  background:var(--deep);border:1px solid var(--edge);margin-bottom:7px}
+.haz .t{font-size:38px;font-weight:800;line-height:1;min-width:98px}
+.haz .t small{font-size:14px;font-weight:400;color:var(--mist)}
+.haz .n{font-size:17px;letter-spacing:.04em;font-weight:700}
+.haz .b{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--mist);margin-top:2px}
+.haz.near{border-color:var(--rope)}
+.haz.close{background:var(--red);border-color:var(--red);color:#fff}
+.haz.close .t small,.haz.close .b{color:rgba(255,255,255,.85)}
+
+input{background:var(--sea);color:var(--hull);border:1px solid var(--edge);border-radius:9px;
+  padding:10px;font:inherit;font-size:17px;text-align:center;width:92px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--mist)}
+.note{font-size:12px;line-height:1.55;color:var(--mist);margin:14px 0 0}
+.credit{font-size:10px;line-height:1.5;color:var(--mist);opacity:.75;margin-top:12px}
+
+#s-chart{padding:0;display:flex;flex-direction:column}
+#map{flex:1 1 auto;width:100%;background:var(--deep)}
+.mapbar{flex:0 0 auto;display:flex;gap:8px;padding:8px 12px;align-items:center;background:var(--navy)}
+.mapbar button{flex:1;background:var(--hull);color:var(--navy);border:none;border-radius:10px;
+  font:inherit;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;min-height:48px}
+.mapbar .off{background:transparent;color:var(--mist);border:1px solid var(--edge);font-weight:400}
+.boat-icon{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+  border-bottom:26px solid #F2EAD3;filter:drop-shadow(0 0 3px rgba(0,0,0,.8))}
+.leaflet-container{background:#0E1D2B}
+body.night .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.55) sepia(.6) saturate(3)}
+
+nav{flex:0 0 auto;display:flex;border-top:1px solid var(--edge);background:var(--navy)}
+nav button{flex:1;background:none;border:none;color:var(--mist);font:inherit;font-size:12px;
+  letter-spacing:.18em;text-transform:uppercase;padding:14px 0 16px;position:relative}
+nav button.sel{color:var(--hull)}
+nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;height:3px;background:var(--hull)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div><div class="mark">VSOP</div><div class="sail">IRL 580</div></div>
+  <button id="themeBtn">Night</button>
+</header>
+
+<main id="deck">
+
+  <!-- ================= START ================= -->
+  <section id="s-start">
+    <div class="hoist">
+      <div class="flag f1" id="fl1"><b>WARNING</b></div>
+      <div class="flag f2" id="fl2"><b>PREP</b></div>
+      <div class="flag f3" id="fl3"><b>ONE MIN</b></div>
+      <div class="flag f4" id="fl4"><b>START</b></div>
+    </div>
+
+    <div class="clock" id="clock"><div id="big">5:00</div><div id="phase">Ready</div></div>
+
+    <button class="big-btn" id="btnMain">Start</button>
+    <div class="row"><button class="btn" id="btnSync">Sync</button><button class="btn" id="btnPlus">+1 min</button></div>
+    <div class="row"><button class="btn quiet" id="btnRecall">General recall</button><button class="btn quiet" id="btnReset">Reset</button></div>
+    <div class="set"><span>Warning signal at</span><span><input type="number" id="warnMin" value="5" min="1" max="10" step="1"> min</span></div>
+
+    <p class="eyebrow">Start line</p>
+    <div class="row" style="margin-top:0">
+      <button class="btn" id="btnPin">Ping pin</button>
+      <button class="btn" id="btnBoat">Ping boat</button>
+    </div>
+    <div class="grid" style="margin-top:8px">
+      <div class="tile"><div class="k">To line</div>
+        <div class="v"><span id="dist">--</span> <span class="u">m</span></div>
+        <div class="state" id="side">line not set</div></div>
+      <div class="tile"><div class="k">Time to burn</div>
+        <div class="v" id="burn">--</div>
+        <div class="state" id="burnNote">needs speed</div></div>
+      <div class="tile wide"><div class="k">Favoured end</div>
+        <div class="v" style="font-size:28px" id="fav">waiting for wind</div>
+        <div class="state" id="favSrc">wind comes from the forecast</div></div>
+    </div>
+    <p class="note">Ping each end as you sail past it. Sync rounds the clock to the nearest whole minute if you were late on the gun.</p>
+  </section>
+
+  <!-- ================= RACE ================= -->
+  <section id="s-race">
+    <p class="eyebrow" style="margin-top:6px">Through the water</p>
+    <div class="grid">
+      <div class="tile"><div class="k">Speed</div>
+        <div class="v"><span id="sog">--</span> <span class="u">kts</span></div>
+        <div class="state" id="sogState">waiting for fix</div></div>
+      <div class="tile"><div class="k">Course</div>
+        <div class="v"><span id="cog">--</span><span class="u">&deg;</span></div>
+        <div class="state" id="avgState">avg --</div></div>
+    </div>
+
+    <p class="eyebrow">Wind now</p>
+    <div class="grid">
+      <div class="tile"><div class="k">From</div>
+        <div class="v"><span id="wDir">--</span><span class="u">&deg;</span></div>
+        <div class="state" id="wCard">--</div></div>
+      <div class="tile"><div class="k">Speed</div>
+        <div class="v"><span id="wSpd">--</span> <span class="u">kts</span></div>
+        <div class="state" id="wGust">gusts --</div></div>
+      <div class="tile wide">
+        <div class="k">Next six hours</div>
+        <div class="v" style="font-size:19px;line-height:1.45" id="wTrend">not loaded</div>
+        <div class="set" style="margin-top:6px">
+          <span>Override wind from</span>
+          <span><input type="number" id="twd" min="0" max="359" step="5" placeholder="auto"> &deg;</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="eyebrow">Shifts</p>
+    <div class="card">
+      <div class="k" style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist)">This tack vs mean of last 8</div>
+      <div id="shift" style="font-size:52px;font-weight:800;line-height:1.05">--</div>
+      <div class="state" id="shiftNote">log a heading on each tack once settled</div>
+      <button class="big-btn" id="btnLog" style="min-height:76px;font-size:24px">Log heading</button>
+      <button class="btn quiet" id="btnClearLog" style="margin-top:8px;width:100%">Clear log</button>
+    </div>
+    <p class="note">Speed and course come from GPS, so both need way on. Below 2 knots the course reading wanders and is held back.</p>
+  </section>
+
+  <!-- ================= PASSAGE ================= -->
+  <section id="s-pass">
+    <button class="big-btn" id="btnLoad" style="min-height:74px;font-size:22px;margin-top:8px">Load for today</button>
+    <div class="state" id="loadState" style="text-align:center">tap while you still have signal</div>
+
+    <p class="eyebrow">Ahead on this course</p>
+    <div id="hazList"></div>
+    <div class="card" id="hazIdle">
+      <div style="font-size:20px;color:var(--mist)" id="hazIdleMsg">Nothing loaded yet</div>
+      <div class="state" id="hazIdleSub">Warnings show for anything within 30&deg; of your course</div>
+    </div>
+
+    <p class="eyebrow">Sea state</p>
+    <div class="grid">
+      <div class="tile"><div class="k">Wave height</div>
+        <div class="v"><span id="wave">--</span> <span class="u">m</span></div></div>
+      <div class="tile"><div class="k">Period</div>
+        <div class="v"><span id="period">--</span> <span class="u">s</span></div></div>
+    </div>
+
+    <p class="eyebrow">Add a hazard here</p>
+    <div class="card">
+      <input id="hazName" type="text" placeholder="name it" style="width:100%;text-align:left">
+      <button class="btn" id="btnHaz" style="width:100%;margin-top:8px">Drop hazard at this position</button>
+    </div>
+
+    <p class="note"><strong style="color:var(--hull)">Aid only, not a chart.</strong>
+      Rocks and obstructions come from OpenSeaMap, which is crowd-mapped and is not an official survey. It will miss
+      things. This gives you time to a point, not depth, and knows nothing about tide height or other traffic. The
+      paper chart and the plotter stay in charge.</p>
+    <p class="credit">Hazards &copy; OpenStreetMap contributors, ODbL, via OpenSeaMap and the Overpass API.
+      Weather and sea state from Open-Meteo, CC BY 4.0.</p>
+  </section>
+
+  <!-- ================= CHART ================= -->
+  <section id="s-chart">
+    <div id="map"></div>
+    <div class="mapbar">
+      <button id="btnFollow">Follow</button>
+      <button id="btnMarks" class="off">Seamarks</button>
+      <button id="btnDepth" class="off">Contours</button>
+    </div>
+  </section>
+
+</main>
+
+<nav>
+  <button id="t0" class="sel">Start</button>
+  <button id="t1">Race</button>
+  <button id="t2">Passage</button>
+  <button id="t3">Chart</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i)};
+
+/* hazards arrive from OpenSeaMap; nothing is seeded by hand */
+var HAZARDS=[];
+
+/* ---------- audio ---------- */
+var ac=null;
+function beep(f,d,v){try{
+  if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==="suspended")ac.resume();
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type="square";o.frequency.value=f;
+  g.gain.setValueAtTime(v||.35,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+function buzz(p){if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
+
+/* ---------- wake lock ---------- */
+var lock=null;
+function awake(){if(!("wakeLock"in navigator))return;
+  navigator.wakeLock.request("screen").then(function(l){lock=l;
+    l.addEventListener("release",function(){lock=null})}).catch(function(){})}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible"&&!lock)awake()});
+
+/* ---------- screens ---------- */
+var deck=$("deck"),tabs=[$("t0"),$("t1"),$("t2"),$("t3")];
+tabs.forEach(function(b,i){b.addEventListener("click",function(){
+  deck.scrollTo({left:deck.clientWidth*i,behavior:"smooth"})})});
+deck.addEventListener("scroll",function(){
+  var i=Math.round(deck.scrollLeft/deck.clientWidth);
+  tabs.forEach(function(b,j){b.classList.toggle("sel",j===i)});
+  if(i===3&&map)setTimeout(function(){map.invalidateSize()},60)});
+
+$("themeBtn").addEventListener("click",function(){
+  var n=document.body.classList.toggle("night");
+  this.textContent=n?"Day":"Night";
+  document.querySelector('meta[name=theme-color]').setAttribute("content",n?"#000000":"#22394A")});
+
+/* ---------- timer ---------- */
+var gunAt=null,running=false,lastWhole=null;
+function warnSecs(){var m=parseInt($("warnMin").value,10);if(isNaN(m)||m<1)m=5;return m*60}
+function rem(){return running?(gunAt-Date.now())/1000:warnSecs()}
+function fmt(s){var neg=s<0,t=Math.floor(Math.abs(s)),m=Math.floor(t/60),x=t%60;
+  return(neg?"+":"")+m+":"+(x<10?"0":"")+x}
+function begin(){gunAt=Date.now()+warnSecs()*1000;running=true;lastWhole=null;
+  beep(880,.05,.2);awake();$("btnMain").textContent="Stop";$("btnMain").classList.add("armed");tick()}
+function reset(){running=false;gunAt=null;lastWhole=null;
+  $("btnMain").textContent="Start";$("btnMain").classList.remove("armed");tick()}
+function sync(){if(!running)return;var r=rem();if(r<=0)return;
+  gunAt=Date.now()+Math.max(60,Math.round(r/60)*60)*1000;lastWhole=null;beep(1200,.09,.45);buzz(60);tick()}
+$("btnMain").addEventListener("click",function(){running?reset():begin()});
+$("btnSync").addEventListener("click",sync);
+$("btnPlus").addEventListener("click",function(){
+  if(running)gunAt+=60000;else $("warnMin").value=Math.min(10,warnSecs()/60+1);tick()});
+$("btnRecall").addEventListener("click",begin);
+$("btnReset").addEventListener("click",reset);
+$("warnMin").addEventListener("change",function(){if(!running)tick()});
+
+function flags(r){var w=warnSecs();
+  $("fl1").classList.toggle("up",running&&r<=w&&r>0);
+  $("fl2").classList.toggle("up",running&&r<=w-60&&r>60);
+  $("fl3").classList.toggle("up",running&&r<=60&&r>0);
+  $("fl4").classList.toggle("up",running&&r<=0)}
+function chimes(r){var w=Math.ceil(r);if(w===lastWhole)return;lastWhole=w;var t=warnSecs();
+  if(w===t||w===t-60||w===60){beep(1000,.35,.5);buzz(220)}
+  else if(w===30){beep(900,.15,.45);buzz(90)}
+  else if(w<=10&&w>=1){beep(1400,.1,.5);buzz(60)}
+  else if(w===0){beep(600,1,.6);buzz([300,120,300])}}
+function tick(){
+  var r=rem(),big=$("big"),c=$("clock");
+  big.textContent=fmt(r);big.className="";c.className="clock";
+  if(!running){$("phase").textContent="Ready";flags(r);line();return}
+  chimes(r);var w=warnSecs();
+  if(r>w-60){$("phase").textContent="Warning";c.classList.add("on")}
+  else if(r>60){$("phase").textContent="Preparatory";c.classList.add("on")}
+  else if(r>0){$("phase").textContent="One minute";big.className="warn";c.classList.add("on")}
+  else{$("phase").textContent="Racing";big.className="go";c.classList.add("racing")}
+  flags(r);line()}
+setInterval(tick,200);tick();
+
+/* ---------- GPS ---------- */
+var here=null,kts=0,cog=null,loaded=false;
+navigator.geolocation&&navigator.geolocation.watchPosition(function(p){
+  var first=!here;
+  here={lat:p.coords.latitude,lon:p.coords.longitude};
+  var s=p.coords.speed;kts=(s===null||isNaN(s))?0:s*1.94384;
+  $("sog").textContent=kts.toFixed(1);
+  $("sogState").textContent="fix ok";$("sogState").className="state on";
+  var h=p.coords.heading;
+  if(h!==null&&!isNaN(h)&&kts>=2){cog=h;$("cog").textContent=Math.round(h)}
+  else if(kts<2){cog=null;$("cog").textContent="--"}
+  line();hazards();
+  if(first&&navigator.onLine&&!loaded)loadAll();
+},function(){$("sogState").textContent="no GPS permission";$("sogState").className="state bad"},
+{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+
+/* ---------- geometry ---------- */
+var R=6378137;
+function xy(p,ref){return{
+  x:(p.lon-ref.lon)*Math.PI/180*R*Math.cos(ref.lat*Math.PI/180),
+  y:(p.lat-ref.lat)*Math.PI/180*R}}
+function metres(a,b){var d=xy(b,a);return Math.hypot(d.x,d.y)}
+function brg(a,b){
+  var y=Math.sin((b.lon-a.lon)*Math.PI/180)*Math.cos(b.lat*Math.PI/180),
+      x=Math.cos(a.lat*Math.PI/180)*Math.sin(b.lat*Math.PI/180)-
+        Math.sin(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.cos((b.lon-a.lon)*Math.PI/180);
+  return(Math.atan2(y,x)*180/Math.PI+360)%360}
+function card(d){return["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d/22.5)%16]}
+
+/* ---------- weather: Open-Meteo ---------- */
+var windDir=null;
+function loadWeather(){
+  if(!here)return Promise.resolve();
+  var u="https://api.open-meteo.com/v1/forecast?latitude="+here.lat.toFixed(3)+
+        "&longitude="+here.lon.toFixed(3)+
+        "&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
+        "&hourly=wind_speed_10m,wind_direction_10m"+
+        "&wind_speed_unit=kn&timezone=Europe%2FDublin&forecast_days=2";
+  return fetch(u).then(function(r){return r.json()}).then(function(d){
+    var c=d.current;
+    windDir=c.wind_direction_10m;
+    $("wDir").textContent=Math.round(windDir);
+    $("wCard").textContent=card(windDir);
+    $("wSpd").textContent=Math.round(c.wind_speed_10m);
+    $("wGust").textContent="gusts "+Math.round(c.wind_gusts_10m)+" kts";
+    var now=new Date(),idx=d.hourly.time.findIndex(function(t){return new Date(t)>now}),rows=[];
+    for(var i=idx;i<idx+6&&i<d.hourly.time.length;i+=2){
+      rows.push(d.hourly.time[i].slice(11,16)+"  "+card(d.hourly.wind_direction_10m[i])+
+                " "+Math.round(d.hourly.wind_speed_10m[i])+" kts")}
+    $("wTrend").textContent=rows.join("\n");
+    $("wTrend").style.whiteSpace="pre";
+    line();
+  })}
+function loadMarine(){
+  if(!here)return Promise.resolve();
+  var u="https://marine-api.open-meteo.com/v1/marine?latitude="+here.lat.toFixed(3)+
+        "&longitude="+here.lon.toFixed(3)+"&current=wave_height,wave_period&timezone=Europe%2FDublin";
+  return fetch(u).then(function(r){return r.json()}).then(function(d){
+    if(!d.current)return;
+    $("wave").textContent=d.current.wave_height!=null?d.current.wave_height.toFixed(1):"--";
+    $("period").textContent=d.current.wave_period!=null?Math.round(d.current.wave_period):"--";
+  }).catch(function(){})}
+
+/* ---------- hazards: OpenSeaMap via Overpass ---------- */
+function loadHazards(){
+  if(!here)return Promise.resolve();
+  var q="[out:json][timeout:25];("+
+        'node["seamark:type"~"^(rock|obstruction|wreck)$"](around:20000,'+here.lat.toFixed(4)+","+here.lon.toFixed(4)+");"+
+        'node["natural"="rock"](around:20000,'+here.lat.toFixed(4)+","+here.lon.toFixed(4)+");"+
+        ");out body;";
+  return fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:q})
+    .then(function(r){return r.json()}).then(function(d){
+      var seen={},kept=[];
+      (d.elements||[]).forEach(function(e){
+        var t=e.tags||{};
+        var name=t.name||t["seamark:name"]||
+          ({rock:"Rock",obstruction:"Obstruction",wreck:"Wreck"}[t["seamark:type"]]||"Rock");
+        var key=e.lat.toFixed(4)+","+e.lon.toFixed(4);
+        if(seen[key])return;seen[key]=1;
+        kept.push({n:name,lat:e.lat,lon:e.lon,
+                   lvl:t["seamark:rock:water_level"]||t["seamark:wreck:category"]||""})});
+      HAZARDS=kept.concat(HAZARDS.filter(function(h){return h.mine}));
+      return kept.length})}
+
+function loadAll(){
+  if(!here){$("loadState").textContent="waiting for a GPS fix";$("loadState").className="state bad";return}
+  $("loadState").textContent="loading";$("loadState").className="state";
+  loaded=true;
+  Promise.all([loadWeather().catch(function(){return null}),loadMarine(),loadHazards().catch(function(){return null})])
+    .then(function(res){
+      var n=res[2];
+      $("loadState").textContent=(n===null?"hazards failed, ":n+" hazards, ")+
+        (windDir===null?"no wind":"wind loaded")+" at "+new Date().toTimeString().slice(0,5);
+      $("loadState").className="state "+(n===null||windDir===null?"bad":"on");
+      hazards()})
+    .catch(function(){$("loadState").textContent="load failed, try again with better signal";
+      $("loadState").className="state bad"})}
+$("btnLoad").addEventListener("click",loadAll);
+
+/* ---------- start line ---------- */
+var pin=null,boat=null,ref=null;
+function ping(w){
+  if(!here){$("side").textContent="no GPS fix yet";$("side").className="state bad";return}
+  if(w==="pin")pin=here;else boat=here;
+  if(pin&&boat)ref=here;
+  beep(1500,.08,.4);buzz(50);line()}
+$("btnPin").addEventListener("click",function(){ping("pin")});
+$("btnBoat").addEventListener("click",function(){ping("boat")});
+
+function activeWind(){
+  var m=parseFloat($("twd").value);
+  if(!isNaN(m))return{d:m,src:"manual override"};
+  if(windDir!==null)return{d:windDir,src:"forecast, "+card(windDir)};
+  return null}
+
+function line(){
+  var w=activeWind();
+  if(!pin||!boat||!here){
+    if(w&&pin&&boat){}
+    return}
+  var P=xy(pin,pin),B=xy(boat,pin),M=xy(here,pin);
+  var vx=B.x-P.x,vy=B.y-P.y,len=Math.hypot(vx,vy);
+  if(len<1)return;
+  var cross=((M.x-P.x)*vy-(M.y-P.y)*vx)/len,d=Math.abs(cross);
+  $("dist").textContent=d.toFixed(0);
+  var sgn=1;
+  if(ref){var S=xy(ref,pin);sgn=Math.sign(((S.x-P.x)*vy-(S.y-P.y)*vx)/len)||1}
+  var over=Math.sign(cross)!==sgn&&d>3;
+  $("side").textContent=over?"over the line":"behind the line";
+  $("side").className="state "+(over?"bad":"on");
+
+  var ms=kts*.514444;
+  if(ms<.3||!running){$("burn").textContent="--";
+    $("burnNote").textContent=running?"no speed":"timer not running";$("burnNote").className="state"}
+  else{var b=rem()-d/ms;$("burn").textContent=fmt(b);
+    $("burnNote").textContent=b>0?"seconds spare":"late for the line";
+    $("burnNote").className="state "+(b>0?"on":"bad")}
+
+  if(w){
+    var perp=(brg(pin,boat)+90)%360,diff=((w.d-perp+540)%360)-180,deg=Math.abs(diff).toFixed(0);
+    $("fav").textContent=Math.abs(diff)<3?"square, "+deg+"\u00B0":
+      (diff>0?"boat end, "+deg+"\u00B0":"pin end, "+deg+"\u00B0");
+    $("favSrc").textContent=w.src}
+}
+$("twd").addEventListener("change",line);
+
+/* ---------- shift log ---------- */
+var log=[];
+$("btnLog").addEventListener("click",function(){
+  if(cog===null){$("shiftNote").textContent="need way on for a course reading";$("shiftNote").className="state bad";return}
+  log.push(cog);if(log.length>8)log.shift();
+  var sx=0,sy=0;log.forEach(function(a){sx+=Math.cos(a*Math.PI/180);sy+=Math.sin(a*Math.PI/180)});
+  var mean=(Math.atan2(sy,sx)*180/Math.PI+360)%360,d=((cog-mean+540)%360)-180;
+  $("shift").textContent=(d>=0?"+":"")+d.toFixed(0)+"\u00B0";
+  $("avgState").textContent="avg "+Math.round(mean)+"\u00B0";
+  $("shiftNote").textContent=Math.abs(d)<3?"steady, "+log.length+" logged":(d>0?"lifted on this tack":"headed on this tack");
+  $("shiftNote").className="state "+(Math.abs(d)<3?"":(d>0?"on":"bad"));
+  beep(1300,.06,.3)});
+$("btnClearLog").addEventListener("click",function(){log=[];
+  $("shift").textContent="--";$("avgState").textContent="avg --";
+  $("shiftNote").textContent="log a heading on each tack once settled";$("shiftNote").className="state"});
+
+/* ---------- hazard lookahead ---------- */
+$("btnHaz").addEventListener("click",function(){
+  if(!here)return;
+  HAZARDS.push({n:($("hazName").value.trim()||"Marked here"),lat:here.lat,lon:here.lon,mine:true});
+  $("hazName").value="";beep(1500,.08,.4);hazards()});
+
+var warned={};
+function hazards(){
+  var listEl=$("hazList"),idle=$("hazIdle");
+  function idleMsg(a,b){listEl.innerHTML="";idle.style.display="";
+    $("hazIdleMsg").textContent=a;$("hazIdleSub").textContent=b}
+  if(!HAZARDS.length)return idleMsg("Nothing loaded yet","Tap Load for today while you still have signal");
+  if(!here)return idleMsg("Waiting for a fix","");
+  if(kts<2||cog===null)return idleMsg("Needs way on","Course warnings need at least 2 knots");
+
+  var ms=kts*.514444,out=[];
+  HAZARDS.forEach(function(h){
+    var d=metres(here,h);if(d>6000)return;
+    var b=brg(here,h),off=Math.abs(((b-cog+540)%360)-180);
+    if(off>30)return;
+    out.push({n:h.n,mins:d/ms/60,b:b,off:off,d:d,lvl:h.lvl})});
+  out.sort(function(a,b){return a.mins-b.mins});
+  if(!out.length)return idleMsg("Clear ahead","Nothing within 30\u00B0 of your course");
+  idle.style.display="none";
+  listEl.innerHTML=out.slice(0,6).map(function(h){
+    var cls=h.mins<3?"close":(h.mins<8?"near":"");
+    var t=h.mins<1?Math.round(h.mins*60)+"<small>s</small>":h.mins.toFixed(0)+"<small> min</small>";
+    return '<div class="haz '+cls+'"><div class="t">'+t+'</div><div><div class="n">'+h.n+
+      '</div><div class="b">'+Math.round(h.b)+'\u00B0 &middot; '+
+      (h.d<1852?Math.round(h.d)+" m":(h.d/1852).toFixed(1)+" nm")+' &middot; '+
+      Math.round(h.off)+'\u00B0 off'+(h.lvl?" &middot; "+h.lvl:"")+'</div></div></div>'}).join("");
+  out.forEach(function(h){
+    if(h.mins<3&&!warned[h.n]){warned[h.n]=1;beep(500,.5,.6);buzz([200,80,200,80,200])}
+    if(h.mins>6&&warned[h.n])delete warned[h.n]})}
+setInterval(hazards,3000);hazards();
+
+/* ---------- chart ---------- */
+var map=null,boatMk=null,hazLayer=null,lineLayer=null,follow=true,marks=null,depth=null;
+function initMap(){
+  if(map||typeof L==="undefined")return;
+  map=L.map("map",{zoomControl:false,attributionControl:true})
+        .setView(here?[here.lat,here.lon]:[51.51,-9.55],14);
+  L.control.zoom({position:"topright"}).addTo(map);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
+  marks=L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{
+    maxZoom:18,attribution:"Seamarks &copy; OpenSeaMap"});
+  depth=L.tileLayer("https://tiles.openseamap.org/contour/{z}/{x}/{y}.png",{maxZoom:17});
+  marks.addTo(map);$("btnMarks").classList.remove("off");
+  hazLayer=L.layerGroup().addTo(map);
+  lineLayer=L.layerGroup().addTo(map);
+  map.on("dragstart",function(){follow=false;$("btnFollow").classList.add("off")});
+  drawChart()}
+
+$("btnFollow").addEventListener("click",function(){
+  follow=!follow;this.classList.toggle("off",!follow);
+  if(follow&&here&&map)map.setView([here.lat,here.lon],map.getZoom())});
+$("btnMarks").addEventListener("click",function(){
+  if(!map)return;
+  if(map.hasLayer(marks)){map.removeLayer(marks);this.classList.add("off")}
+  else{marks.addTo(map);this.classList.remove("off")}});
+$("btnDepth").addEventListener("click",function(){
+  if(!map)return;
+  if(map.hasLayer(depth)){map.removeLayer(depth);this.classList.add("off")}
+  else{depth.addTo(map);this.classList.remove("off")}});
+
+function drawChart(){
+  if(!map)return;
+  if(here){
+    var ll=[here.lat,here.lon];
+    if(!boatMk){
+      boatMk=L.marker(ll,{icon:L.divIcon({className:"",html:'<div class="boat-icon"></div>',
+        iconSize:[18,26],iconAnchor:[9,13]})}).addTo(map)}
+    else boatMk.setLatLng(ll);
+    var el=boatMk.getElement();
+    if(el&&cog!==null)el.style.transform+=" rotate("+cog+"deg)";
+    if(follow)map.setView(ll,map.getZoom(),{animate:false})}
+
+  hazLayer.clearLayers();
+  HAZARDS.forEach(function(h){
+    L.circleMarker([h.lat,h.lon],{radius:6,color:h.mine?"#B99B63":"#B02A37",
+      weight:2,fillOpacity:.6,fillColor:h.mine?"#B99B63":"#B02A37"})
+      .bindPopup(h.n+(h.lvl?" ("+h.lvl+")":"")).addTo(hazLayer)});
+
+  lineLayer.clearLayers();
+  if(pin&&boat){
+    L.polyline([[pin.lat,pin.lon],[boat.lat,boat.lon]],
+      {color:"#F2EAD3",weight:3,dashArray:"6 6"}).addTo(lineLayer);
+    L.circleMarker([pin.lat,pin.lon],{radius:5,color:"#F2EAD3",fillOpacity:1}).bindPopup("Pin").addTo(lineLayer);
+    L.circleMarker([boat.lat,boat.lon],{radius:5,color:"#F2EAD3",fillOpacity:1}).bindPopup("Committee boat").addTo(lineLayer)}
+}
+setInterval(drawChart,2000);
+if(document.readyState!=="loading")initMap();else document.addEventListener("DOMContentLoaded",initMap);
+
+awake();
+})();
+</script>
+</body>
+</html>
 
