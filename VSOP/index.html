@@ -8,7 +8,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href='data:application/manifest+json,{"name":"VSOP IRL 5601","short_name":"VSOP","display":"standalone","orientation":"portrait","background_color":"%2322394A","theme_color":"%2322394A","start_url":"."}'>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
@@ -33,8 +35,9 @@ body{background:var(--sea);color:var(--hull);
 header{display:flex;align-items:baseline;justify-content:space-between;padding:8px 16px 6px;flex:0 0 auto}
 .mark{font-size:26px;font-weight:800;letter-spacing:.14em;line-height:1}
 .sail{font-size:12px;letter-spacing:.24em;color:var(--mist)}
-#themeBtn{background:none;border:1px solid var(--edge);color:var(--mist);border-radius:999px;
+#themeBtn,#voiceBtn{background:none;border:1px solid var(--edge);color:var(--mist);border-radius:999px;
   padding:6px 12px;font:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+#voiceBtn.on{background:var(--hull);color:var(--navy);border-color:var(--hull)}
 
 main{flex:1 1 auto;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
 main::-webkit-scrollbar{display:none}
@@ -103,6 +106,16 @@ input{background:var(--sea);color:var(--hull);border:1px solid var(--edge);borde
 .note{font-size:12px;line-height:1.55;color:var(--mist);margin:14px 0 0}
 .credit{font-size:10px;line-height:1.5;color:var(--mist);opacity:.75;margin-top:12px}
 
+#install{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:9000;display:none;background:var(--deep);border:1px solid var(--rope);border-radius:16px;
+  padding:14px 14px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#install.show{display:block}
+#install .top{display:flex;gap:12px;align-items:center}
+#install img{width:52px;height:52px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:var(--sea)}
+#install h3{margin:0;font-size:18px;letter-spacing:.06em}
+#install p{margin:3px 0 0;font-size:12px;line-height:1.5;color:var(--mist)}
+#install .acts{display:flex;gap:8px;margin-top:12px}
+#install .acts button{flex:1;min-height:52px;font-size:15px}
 #splash{position:fixed;inset:0;z-index:9999;background:var(--sea);display:none;
   align-items:center;justify-content:center;flex-direction:column;gap:18px;
   transition:opacity .45s ease}
@@ -136,6 +149,13 @@ nav button{flex:1;background:none;border:none;color:var(--mist);font:inherit;fon
   letter-spacing:.18em;text-transform:uppercase;padding:14px 0 16px;position:relative}
 nav button.sel{color:var(--hull)}
 nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;height:3px;background:var(--hull)}
+#gunPop{position:fixed;inset:0;z-index:8000;background:rgba(7,16,26,.82);display:none;
+  align-items:center;justify-content:center;padding:24px}
+#gunPop.show{display:flex}
+#gunPop .box{background:var(--deep);border:2px solid var(--go);border-radius:18px;
+  padding:22px 18px;width:100%;max-width:420px;text-align:center}
+#gunPop h2{margin:0 0 4px;font-size:34px;letter-spacing:.1em;color:var(--go);text-transform:uppercase}
+#gunPop p{margin:0 0 14px;font-size:13px;color:var(--mist)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -143,9 +163,30 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
 
 <div id="splash"><img id="splashImg" alt=""><div class="cap">VSOP &middot; IRL 5601</div></div>
 
+<div id="gunPop"><div class="box">
+  <h2>Race on</h2>
+  <p>Track the race, or reset the clock?</p>
+  <button class="big-btn" id="btnTrack" style="min-height:76px">Track race</button>
+  <button class="btn quiet" id="btnPopReset" style="width:100%;margin-top:8px">Reset</button>
+</div></div>
+
+<div id="install">
+  <div class="top">
+    <img id="instIcon" alt="">
+    <div><h3>Keep VSOP on the home screen</h3><p id="instText">Install it so it opens full screen, like an app.</p></div>
+  </div>
+  <div class="acts">
+    <button class="btn" id="instGo">Add</button>
+    <button class="btn quiet" id="instNo">Not now</button>
+  </div>
+</div>
+
 <header>
   <div><div class="mark">VSOP</div><div class="sail">IRL 5601</div></div>
-  <button id="themeBtn">Night</button>
+  <div style="display:flex;gap:6px">
+    <button id="voiceBtn">Voice</button>
+    <button id="themeBtn">Night</button>
+  </div>
 </header>
 
 <main id="deck">
@@ -178,6 +219,12 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       <div class="tile"><div class="k">Time to burn</div>
         <div class="v" id="burn">--</div>
         <div class="state" id="burnNote">needs speed</div></div>
+      <div class="tile wide">
+        <div class="k">Practice run to the line</div>
+        <div class="v" style="font-size:34px"><span id="runTime">--</span></div>
+        <div class="state" id="runNote">tap go, sail for the line, stops itself as you cross</div>
+        <button class="btn" id="btnRun" style="width:100%;margin-top:8px">Go</button>
+      </div>
       <div class="tile wide"><div class="k">Favoured end</div>
         <div class="v" style="font-size:28px" id="fav">waiting for wind</div>
         <div class="state" id="favSrc">wind comes from the forecast</div></div>
@@ -239,6 +286,11 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       <button class="big-btn" id="btnLog" style="min-height:76px;font-size:24px">Log heading</button>
       <button class="btn quiet" id="btnClearLog" style="margin-top:8px;width:100%">Clear log</button>
     </div>
+    <button class="big-btn" id="btnFinish" style="display:none;background:var(--go);min-height:80px">Finish</button>
+
+    <p class="eyebrow">Past races</p>
+    <div id="raceList" class="card" style="font-size:14px;line-height:1.7;color:var(--mist)">none yet</div>
+
     <p class="note">Speed and course come from GPS, so both need way on. Below 2 knots the course reading wanders and is held back.</p>
   </section>
 
@@ -314,18 +366,174 @@ var $=function(i){return document.getElementById(i)};
 /* hazards arrive from OpenSeaMap; nothing is seeded by hand */
 var HAZARDS=[];
 
-/* Splash: put a base64 image in logo.txt beside this file. Raw base64 or a
-   full data: URI both work. If the file is missing the app just opens. */
+/* ---------- service worker ---------- */
+if("serviceWorker"in navigator&&location.protocol.indexOf("http")===0){
+  window.addEventListener("load",function(){
+    navigator.serviceWorker.register("./sw.js").catch(function(){})})}
+
+/* ---------- storage ---------- */
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+
+/* ---------- race tracking ---------- */
+var racing=false,raceStart=0,track=[],lastSample=0,gunShown=false,gunTimer=null;
+function startRace(){
+  if(gunTimer){clearTimeout(gunTimer);gunTimer=null}
+  racing=true;raceStart=Date.now();track=[];
+  deck.scrollTo({left:deck.clientWidth,behavior:"smooth"});
+  $("btnFinish").style.display="block";
+  $("gunPop").classList.remove("show")}
+function trackSample(){
+  if(!racing||!here)return;
+  var now=Date.now();
+  if(now-lastSample<5000)return;
+  lastSample=now;
+  track.push([now,here.lat,here.lon,+kts.toFixed(1),cog===null?-1:Math.round(cog)])}
+function finishRace(){
+  racing=false;$("btnFinish").style.display="none";
+  var dur=(Date.now()-raceStart)/1000,dist=0,mx=0;
+  for(var i=1;i<track.length;i++){
+    dist+=metres({lat:track[i-1][1],lon:track[i-1][2]},{lat:track[i][1],lon:track[i][2]});
+    if(track[i][3]>mx)mx=track[i][3]}
+  var races=load("vsop_races")||[];
+  races.unshift({d:new Date().toISOString().slice(0,16).replace("T"," "),
+    dur:Math.round(dur),nm:+(dist/1852).toFixed(2),mx:mx,
+    avg:dur>0?+((dist/dur)*1.94384).toFixed(1):0});
+  if(races.length>20)races.length=20;
+  store("vsop_races",races);
+  reset();renderRaces()}
+function renderRaces(){
+  var races=load("vsop_races")||[];
+  $("raceList").innerHTML=races.length?races.map(function(r){
+    var m=Math.floor(r.dur/60),sec=r.dur%60;
+    return "<div><strong style='color:var(--hull)'>"+r.d+"</strong> &middot; "+
+      m+"m "+sec+"s &middot; "+r.nm+" nm &middot; avg "+r.avg+" kts &middot; max "+r.mx+" kts</div>"
+  }).join(""):"none yet"}
+$("btnFinish").addEventListener("click",finishRace);
+$("btnTrack").addEventListener("click",startRace);
+$("btnPopReset").addEventListener("click",function(){
+  if(gunTimer){clearTimeout(gunTimer);gunTimer=null}
+  $("gunPop").classList.remove("show");reset()});
+renderRaces();
+
+/* ---------- practice run ---------- */
+var runFrom=0,runOn=false;
+$("btnRun").addEventListener("click",function(){
+  if(runOn){runOn=false;this.textContent="Go";
+    $("runNote").textContent="stopped by hand";return}
+  if(!pin||!boat){$("runNote").textContent="ping both ends of the line first";return}
+  runOn=true;runFrom=Date.now();this.textContent="Stop";
+  $("runTime").textContent="0.0s";
+  $("runNote").textContent="sailing, stops as you cross";beep(1200,.1,.4)});
+function runTick(over){
+  if(!runOn)return;
+  var t=(Date.now()-runFrom)/1000;
+  $("runTime").textContent=t.toFixed(1)+"s";
+  if(over&&t>3){runOn=false;$("btnRun").textContent="Go";
+    $("runNote").textContent="crossed the line, use this against time to burn";
+    beep(1000,.35,.5);buzz(150)}}
+
+/* Splash and app icon: put a base64 image in logo.txt beside this file.
+   Raw base64 or a full data: URI both work. Missing file, app just opens. */
+var LOGO=null;
+function applyLogo(uri){
+  LOGO=uri;
+  $("splashImg").src=uri;
+  $("instIcon").src=uri;
+  /* iOS reads this at the moment you tap Add to Home Screen */
+  var t=document.createElement("link");
+  t.rel="apple-touch-icon";t.href=uri;
+  document.head.appendChild(t);
+  /* manifest.json carries the icons for Android; logo.txt is the
+     splash, the banner and the iOS home screen icon */}
+
 (function(){
-  var sp=$("splash"),im=$("splashImg");
+  var sp=$("splash");
   fetch("logo.txt",{cache:"no-store"}).then(function(r){
     if(!r.ok)throw 0;return r.text()}).then(function(t){
     t=t.trim();if(!t)throw 0;
-    im.src=t.indexOf("data:")===0?t:"data:image/png;base64,"+t.replace(/\s+/g,"");
+    applyLogo(t.indexOf("data:")===0?t:"data:image/png;base64,"+t.replace(/\s+/g,""));
     sp.classList.add("show");
     setTimeout(function(){sp.classList.add("fade");
-      setTimeout(function(){sp.classList.remove("show","fade")},450)},1200);
-  }).catch(function(){})})();
+      setTimeout(function(){sp.classList.remove("show","fade");askInstall()},450)},1200);
+  }).catch(function(){askInstall()})})();
+
+/* ---------- add to home screen ---------- */
+var deferred=null;
+window.addEventListener("beforeinstallprompt",function(e){
+  e.preventDefault();deferred=e});
+function installed(){
+  return window.matchMedia("(display-mode: standalone)").matches||
+         window.navigator.standalone===true}
+function askInstall(){
+  if(installed())return;
+  if(load("vsop_noinstall"))return;
+  /* iPadOS 13+ reports itself as a Mac, so check for touch as well */
+  var ua=navigator.userAgent;
+  var iOS=/iphone|ipad|ipod/i.test(ua)||
+          (/macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+  if(iOS){
+    $("instText").innerHTML="Tap the Share button, then <strong>Add to Home Screen</strong>. "+
+      "It opens full screen with the logo as its icon.";
+    $("instGo").textContent="Got it"}
+  else if(!deferred){
+    $("instText").textContent="In your browser menu, choose Install app or Add to home screen.";
+    $("instGo").textContent="Got it"}
+  setTimeout(function(){$("install").classList.add("show")},400)}
+$("instGo").addEventListener("click",function(){
+  if(deferred){deferred.prompt();
+    deferred.userChoice.then(function(){deferred=null});
+    $("install").classList.remove("show")}
+  else $("install").classList.remove("show")});
+$("instNo").addEventListener("click",function(){
+  store("vsop_noinstall",1);$("install").classList.remove("show")});
+
+/* ---------- voice callouts ---------- */
+var voiceOn=true,vox=null;
+function pickVoice(){
+  if(!window.speechSynthesis)return null;
+  var v=speechSynthesis.getVoices();
+  if(!v.length)return null;
+  var pref=["en-IE","en-GB","en-AU","en-US"];
+  for(var i=0;i<pref.length;i++){
+    var hit=v.filter(function(x){return x.lang&&x.lang.indexOf(pref[i])===0});
+    if(hit.length){
+      var nice=hit.filter(function(x){return /siri|enhanced|premium|natural|neural|google/i.test(x.name)});
+      return nice[0]||hit[0]}}
+  return v[0]}
+if(window.speechSynthesis){
+  vox=pickVoice();
+  speechSynthesis.onvoiceschanged=function(){vox=pickVoice()}}
+function say(t){
+  if(!voiceOn||!window.speechSynthesis)return;
+  try{
+    var ss=speechSynthesis;
+    if(ss.paused)ss.resume();                 /* Chrome idles out after ~15s */
+    var go=function(){
+      var u=new SpeechSynthesisUtterance(t);
+      if(vox)u.voice=vox;
+      u.rate=1.02;u.pitch=1;u.volume=1;
+      u.onerror=function(){voiceFail("error")};
+      ss.speak(u)};
+    /* cancel() immediately followed by speak() silently drops the utterance
+       on iOS, so leave a beat between them */
+    if(ss.speaking||ss.pending){ss.cancel();setTimeout(go,80)}else go();
+  }catch(e){voiceFail("unavailable")}}
+
+function voiceFail(why){
+  var b=$("voiceBtn");if(b)b.textContent=why==="error"?"Voice?":"No voice"}
+
+/* iOS only unlocks speech from inside a real tap, and a zero-volume
+   utterance does not count, so prime with a genuine short one. */
+var primed=false;
+function primeVoice(){
+  if(primed||!window.speechSynthesis)return;
+  primed=true;
+  try{
+    var u=new SpeechSynthesisUtterance("ready");
+    if(vox)u.voice=vox;
+    u.volume=1;u.rate=1.1;
+    speechSynthesis.speak(u)}catch(e){}}
 
 /* ---------- audio ---------- */
 var ac=null;
@@ -357,6 +565,14 @@ deck.addEventListener("scroll",function(){
   tabs.forEach(function(b,j){b.classList.toggle("sel",j===i)});
   if(i===3&&map)setTimeout(function(){map.invalidateSize()},60)});
 
+$("voiceBtn").classList.add("on");
+document.addEventListener("touchend",primeVoice,{once:true});
+document.addEventListener("click",primeVoice,{once:true});
+$("voiceBtn").addEventListener("click",function(){
+  voiceOn=!voiceOn;this.classList.toggle("on",voiceOn);
+  if(voiceOn){primed=false;primeVoice();setTimeout(function(){say("Five minutes")},400)}
+  else if(window.speechSynthesis)speechSynthesis.cancel()});
+
 $("themeBtn").addEventListener("click",function(){
   var n=document.body.classList.toggle("night");
   this.textContent=n?"Day":"Night";
@@ -368,9 +584,9 @@ function warnSecs(){var m=parseInt($("warnMin").value,10);if(isNaN(m)||m<1)m=5;r
 function rem(){return running?(gunAt-Date.now())/1000:warnSecs()}
 function fmt(s){var neg=s<0,t=Math.floor(Math.abs(s)),m=Math.floor(t/60),x=t%60;
   return(neg?"+":"")+m+":"+(x<10?"0":"")+x}
-function begin(){gunAt=Date.now()+warnSecs()*1000;running=true;lastWhole=null;
-  beep(880,.05,.2);awake();$("btnMain").textContent="Stop";$("btnMain").classList.add("armed");tick()}
-function reset(){running=false;gunAt=null;lastWhole=null;
+function begin(){gunAt=Date.now()+warnSecs()*1000;running=true;lastWhole=null;gunShown=false;
+  beep(880,.05,.2);primeVoice();awake();$("btnMain").textContent="Stop";$("btnMain").classList.add("armed");tick()}
+function reset(){running=false;gunAt=null;lastWhole=null;gunShown=false;
   $("btnMain").textContent="Start";$("btnMain").classList.remove("armed");tick()}
 function sync(){if(!running)return;var r=rem();if(r<=0)return;
   gunAt=Date.now()+Math.max(60,Math.round(r/60)*60)*1000;lastWhole=null;beep(1200,.09,.45);buzz(60);tick()}
@@ -387,11 +603,16 @@ function flags(r){var w=warnSecs();
   $("fl2").classList.toggle("up",running&&r<=w-60&&r>60);
   $("fl3").classList.toggle("up",running&&r<=60&&r>0);
   $("fl4").classList.toggle("up",running&&r<=0)}
-function chimes(r){var w=Math.ceil(r);if(w===lastWhole)return;lastWhole=w;var t=warnSecs();
-  if(w===t||w===t-60||w===60){beep(1000,.35,.5);buzz(220)}
-  else if(w===30){beep(900,.15,.45);buzz(90)}
-  else if(w<=10&&w>=1){beep(1400,.1,.5);buzz(60)}
-  else if(w===0){beep(600,1,.6);buzz([300,120,300])}}
+var WORDS={1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine",10:"ten"};
+function chimes(r){
+  var w=Math.ceil(r);if(w===lastWhole)return;lastWhole=w;
+  var t=warnSecs();
+  if(w===t){beep(1000,.35,.5);buzz(220);say(w/60===1?"one minute":(w/60)+" minutes")}
+  else if(w>0&&w<t&&w%60===0){beep(1000,.3,.45);buzz(180);
+    var m=w/60;say(m===1?"one minute":m+" minutes")}
+  else if(w===30){beep(900,.15,.4);buzz(90);say("thirty seconds")}
+  else if(w<=10&&w>=1){beep(1400,.08,.35);buzz(50);say(WORDS[w])}
+  else if(w===0){beep(600,1,.6);buzz([300,120,300]);say("Go")}}
 function tick(){
   var r=rem(),big=$("big"),c=$("clock");
   big.textContent=fmt(r);big.className="";c.className="clock";
@@ -400,7 +621,9 @@ function tick(){
   if(r>w-60){$("phase").textContent="Warning";c.classList.add("on")}
   else if(r>60){$("phase").textContent="Preparatory";c.classList.add("on")}
   else if(r>0){$("phase").textContent="One minute";big.className="warn";c.classList.add("on")}
-  else{$("phase").textContent="Racing";big.className="go";c.classList.add("racing")}
+  else{$("phase").textContent="Racing";big.className="go";c.classList.add("racing");
+    if(!gunShown&&!racing){gunShown=true;$("gunPop").classList.add("show");
+      gunTimer=setTimeout(startRace,15000)}}
   flags(r);line()}
 setInterval(tick,200);tick();
 
@@ -419,7 +642,7 @@ navigator.geolocation&&navigator.geolocation.watchPosition(function(p){
   var h=p.coords.heading;
   if(h!==null&&!isNaN(h)&&kts>=2){cog=h;$("cog").textContent=Math.round(h)}
   else if(kts<2){cog=null;$("cog").textContent="--"}
-  line();hazards();
+  line();hazards();trackSample();
   if(first&&navigator.onLine&&!loaded)loadAll();
 },function(){$("sogState").textContent="no GPS permission";$("sogState").className="state bad"},
 {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
@@ -593,9 +816,12 @@ function sky(code,h,idx){
 
 /* ---------- start line ---------- */
 var pin=null,boat=null,ref=null;
+(function(){var sl=load("vsop_line");
+  if(sl&&sl.p&&sl.b){pin=sl.p;boat=sl.b;
+    $("side").textContent="line restored";$("side").className="state on"}})();
 function ping(w){
   if(!here){$("side").textContent="no GPS fix yet";$("side").className="state bad";return}
-  if(w==="pin")pin=here;else boat=here;
+  if(w==="pin")pin=here;else boat=here;store("vsop_line",{p:pin,b:boat});
   if(pin&&boat)ref=here;
   beep(1500,.08,.4);buzz(50);line()}
 $("btnPin").addEventListener("click",function(){ping("pin")});
@@ -619,7 +845,7 @@ function line(){
   $("dist").textContent=d.toFixed(0);
   var sgn=1;
   if(ref){var S=xy(ref,pin);sgn=Math.sign(((S.x-P.x)*vy-(S.y-P.y)*vx)/len)||1}
-  var over=Math.sign(cross)!==sgn&&d>3;
+  var over=Math.sign(cross)!==sgn&&d>3;runTick(over);
   $("side").textContent=over?"over the line":"behind the line";
   $("side").className="state "+(over?"bad":"on");
 
