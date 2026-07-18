@@ -103,7 +103,13 @@ input{background:var(--sea);color:var(--hull);border:1px solid var(--edge);borde
 .note{font-size:12px;line-height:1.55;color:var(--mist);margin:14px 0 0}
 .credit{font-size:10px;line-height:1.5;color:var(--mist);opacity:.75;margin-top:12px}
 
-#s-chart{padding:0;display:flex;flex-direction:column}
+#s-chart{padding:0;display:flex;flex-direction:column;position:relative}
+.gauge{position:absolute;left:10px;bottom:74px;z-index:600;display:none;
+  background:rgba(22,35,59,.88);border:1px solid var(--edge);border-radius:10px;padding:8px 10px}
+.gauge.on{display:block}
+.gauge .lab{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist);margin-bottom:5px}
+.gauge img{display:block;max-width:120px;max-height:190px;border-radius:4px;background:#fff}
+.gauge .fallback{font-size:11px;color:var(--mist);max-width:120px}
 #map{flex:1 1 auto;width:100%;background:var(--deep)}
 .mapbar{flex:0 0 auto;display:flex;gap:8px;padding:8px 12px;align-items:center;background:var(--navy)}
 .mapbar button{flex:1;background:var(--hull);color:var(--navy);border:none;border-radius:10px;
@@ -262,6 +268,12 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
   <!-- ================= CHART ================= -->
   <section id="s-chart">
     <div id="map"></div>
+    <div class="gauge" id="gauge">
+      <div class="lab">Depth, metres</div>
+      <img id="gaugeImg" alt="Depth colour scale"
+           src="https://ows.emodnet-bathymetry.eu/wms?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image/png&amp;layer=mean_multicolour">
+      <div class="fallback" id="gaugeAlt" style="display:none">Scale unavailable offline. Lighter shades are shallower.</div>
+    </div>
     <div class="mapbar">
       <button id="btnFollow">Follow</button>
       <button id="btnMarks" class="off">Seamarks</button>
@@ -476,7 +488,9 @@ function loadHazards(){
           ({rock:"Rock",obstruction:"Obstruction",wreck:"Wreck"}[t["seamark:type"]]||"Rock");
         var key=lat.toFixed(4)+","+lon.toFixed(4);
         if(seen[key])return;seen[key]=1;
-        kept.push({n:name,lat:lat,lon:lon,
+        var typ=t["seamark:type"]||(t.natural==="rock"?"rock":"hazard");
+        var dep=t["seamark:rock:depth"]||t["seamark:wreck:depth"]||t["seamark:sounding"]||t.depth||null;
+        kept.push({n:name,lat:lat,lon:lon,typ:typ,dep:dep!=null?parseFloat(dep):null,
                    lvl:t["seamark:rock:water_level"]||t["seamark:wreck:category"]||""})});
       HAZARDS=kept.concat(HAZARDS.filter(function(h){return h.mine}));
       return kept.length})}
@@ -619,21 +633,30 @@ function hazards(){
     var d=metres(here,h);if(d>6000)return;
     var b=brg(here,h),off=Math.abs(((b-cog+540)%360)-180);
     if(off>30)return;
-    out.push({n:h.n,mins:d/ms/60,b:b,off:off,d:d,lvl:h.lvl})});
+    out.push({n:h.n,mins:d/ms/60,b:b,off:off,d:d,lvl:h.lvl,typ:h.typ,dep:h.dep})});
   out.sort(function(a,b){return a.mins-b.mins});
   if(!out.length)return idleMsg("Clear ahead","Nothing within 30\u00B0 of your course");
   idle.style.display="none";
   listEl.innerHTML=out.slice(0,6).map(function(h){
     var cls=h.mins<3?"close":(h.mins<8?"near":"");
     var t=h.mins<1?Math.round(h.mins*60)+"<small>s</small>":h.mins.toFixed(0)+"<small> min</small>";
-    return '<div class="haz '+cls+'"><div class="t">'+t+'</div><div><div class="n">'+h.n+
+    return '<div class="haz '+cls+'"><div class="t">'+t+'</div><div><div class="n">'+label(h)+
       '</div><div class="b">'+Math.round(h.b)+'\u00B0 &middot; '+
       (h.d<1852?Math.round(h.d)+" m":(h.d/1852).toFixed(1)+" nm")+' &middot; '+
-      Math.round(h.off)+'\u00B0 off'+(h.lvl?" &middot; "+h.lvl:"")+'</div></div></div>'}).join("");
+      Math.round(h.off)+'\u00B0 off</div></div></div>'}).join("");
   out.forEach(function(h){
     if(h.mins<3&&!warned[h.n]){warned[h.n]=1;beep(500,.5,.6);buzz([200,80,200,80,200])}
     if(h.mins>6&&warned[h.n])delete warned[h.n]})}
 setInterval(hazards,3000);hazards();
+
+/* Name, what it is, and depth where the data carries one. Depth is often
+   absent in OpenSeaMap, so it only shows when it is genuinely there. */
+function label(h){
+  var bits=[h.n];
+  if(h.typ&&h.n.toLowerCase().indexOf(h.typ)<0)bits.push(h.typ);
+  if(h.dep!=null&&!isNaN(h.dep))bits.push(h.dep.toFixed(1)+" m");
+  else if(h.lvl)bits.push(h.lvl);
+  return bits.join(" &middot; ")}
 
 /* ---------- chart ---------- */
 var map=null,boatMk=null,hazLayer=null,lineLayer=null,follow=true,marks=null,depth=null,infomar=null;
@@ -642,12 +665,15 @@ function initMap(){
   map=L.map("map",{zoomControl:false,attributionControl:true})
         .setView(here?[here.lat,here.lon]:[51.51,-9.55],14);
   L.control.zoom({position:"topright"}).addTo(map);
+  map.createPane("bathy");map.getPane("bathy").style.zIndex=350;
+  map.createPane("seamarks");map.getPane("seamarks").style.zIndex=450;
+  map.getPane("seamarks").style.pointerEvents="none";
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
     maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
   marks=L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{
-    maxZoom:18,attribution:"Seamarks &copy; OpenSeaMap"});
+    maxZoom:18,pane:"seamarks",attribution:"Seamarks &copy; OpenSeaMap"});
   depth=L.tileLayer.wms("https://ows.emodnet-bathymetry.eu/wms",{
-    layers:"mean_multicolour",format:"image/png",transparent:true,opacity:.65,
+    layers:"mean_multicolour",format:"image/png",transparent:true,opacity:.65,pane:"bathy",
     attribution:"Bathymetry &copy; EMODnet"});
   marks.addTo(map);$("btnMarks").classList.remove("off");
   infomar=null;
@@ -672,8 +698,12 @@ $("btnMarks").addEventListener("click",function(){
   else{marks.addTo(map);this.classList.remove("off")}});
 $("btnDepth").addEventListener("click",function(){
   if(!map)return;
-  if(map.hasLayer(depth)){map.removeLayer(depth);this.classList.add("off")}
-  else{depth.addTo(map);this.classList.remove("off")}});
+  if(map.hasLayer(depth)){map.removeLayer(depth);this.classList.add("off");
+    $("gauge").classList.remove("on")}
+  else{depth.addTo(map);this.classList.remove("off");
+    $("gauge").classList.add("on")}});
+$("gaugeImg").addEventListener("error",function(){
+  this.style.display="none";$("gaugeAlt").style.display="block"});
 
 $("btnInfo").addEventListener("click",function(){
   if(!map||!infomar){this.textContent="n/a";return}
@@ -693,10 +723,12 @@ function drawChart(){
     if(follow)map.setView(ll,map.getZoom(),{animate:false})}
 
   hazLayer.clearLayers();
+  var showNames=map.getZoom()>=14;
   HAZARDS.forEach(function(h){
-    L.circleMarker([h.lat,h.lon],{radius:6,color:h.mine?"#B99B63":"#B02A37",
-      weight:2,fillOpacity:.6,fillColor:h.mine?"#B99B63":"#B02A37"})
-      .bindPopup(h.n+(h.lvl?" ("+h.lvl+")":"")).addTo(hazLayer)});
+    var col=h.mine?"#B99B63":"#B02A37";
+    var m=L.circleMarker([h.lat,h.lon],{radius:6,color:col,weight:2,fillOpacity:.6,fillColor:col})
+      .bindPopup(label(h)).addTo(hazLayer);
+    if(showNames)m.bindTooltip(label(h),{permanent:true,direction:"right",offset:[8,0],className:"haz-tip"})});
 
   lineLayer.clearLayers();
   if(pin&&boat){
