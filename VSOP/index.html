@@ -263,7 +263,7 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
     <div class="mapbar">
       <button id="btnFollow">Follow</button>
       <button id="btnMarks" class="off">Seamarks</button>
-      <button id="btnDepth" class="off">Contours</button>
+      <button id="btnDepth" class="off">Depth</button>
     </div>
   </section>
 
@@ -362,13 +362,17 @@ function tick(){
 setInterval(tick,200);tick();
 
 /* ---------- GPS ---------- */
-var here=null,kts=0,cog=null,loaded=false;
+var here=null,kts=0,cog=null,loaded=false,spdBuf=[];
 navigator.geolocation&&navigator.geolocation.watchPosition(function(p){
   var first=!here;
   here={lat:p.coords.latitude,lon:p.coords.longitude};
-  var s=p.coords.speed;kts=(s===null||isNaN(s))?0:s*1.94384;
+  var s=p.coords.speed,raw=(s===null||isNaN(s)||s<0)?0:s*1.94384;
+  spdBuf.push(raw);if(spdBuf.length>4)spdBuf.shift();
+  var avg=spdBuf.reduce(function(a,b){return a+b},0)/spdBuf.length;
+  kts=avg<0.7?0:avg;                       /* below 0.7 kt it is only GPS wander */
   $("sog").textContent=kts.toFixed(1);
-  $("sogState").textContent="fix ok";$("sogState").className="state on";
+  $("sogState").textContent=kts?"fix ok":"stopped";
+  $("sogState").className="state "+(kts?"on":"");
   var h=p.coords.heading;
   if(h!==null&&!isNaN(h)&&kts>=2){cog=h;$("cog").textContent=Math.round(h)}
   else if(kts<2){cog=null;$("cog").textContent="--"}
@@ -432,28 +436,34 @@ function loadMarine(){
     .catch(function(){})}
 
 /* ---------- hazards: OpenSeaMap via Overpass ---------- */
+/* Baltimore and Sherkin west to Crookhaven, Cape Clear and the Fastnet
+   south, Schull and Roaringwater Bay north. Loads the same box wherever
+   you happen to tap Load, so it works from the house as well as the pier. */
+var BOX="51.35,-9.78,51.56,-9.33";
 function loadHazards(){
-  if(!here)return Promise.resolve();
-  var q="[out:json][timeout:25];("+
-        'node["seamark:type"~"^(rock|obstruction|wreck)$"](around:20000,'+here.lat.toFixed(4)+","+here.lon.toFixed(4)+");"+
-        'node["natural"="rock"](around:20000,'+here.lat.toFixed(4)+","+here.lon.toFixed(4)+");"+
-        ");out body;";
+  var q="[out:json][timeout:60];("+
+        'node["seamark:type"~"^(rock|obstruction|wreck)$"]('+BOX+");"+
+        'node["natural"="rock"]('+BOX+");"+
+        'way["seamark:type"~"^(rock|obstruction)$"]('+BOX+");"+
+        ");out center;";
   return fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:q})
     .then(function(r){return r.json()}).then(function(d){
       var seen={},kept=[];
       (d.elements||[]).forEach(function(e){
+        var lat=e.lat!=null?e.lat:(e.center&&e.center.lat),
+            lon=e.lon!=null?e.lon:(e.center&&e.center.lon);
+        if(lat==null||lon==null)return;
         var t=e.tags||{};
         var name=t.name||t["seamark:name"]||
           ({rock:"Rock",obstruction:"Obstruction",wreck:"Wreck"}[t["seamark:type"]]||"Rock");
-        var key=e.lat.toFixed(4)+","+e.lon.toFixed(4);
+        var key=lat.toFixed(4)+","+lon.toFixed(4);
         if(seen[key])return;seen[key]=1;
-        kept.push({n:name,lat:e.lat,lon:e.lon,
+        kept.push({n:name,lat:lat,lon:lon,
                    lvl:t["seamark:rock:water_level"]||t["seamark:wreck:category"]||""})});
       HAZARDS=kept.concat(HAZARDS.filter(function(h){return h.mine}));
       return kept.length})}
 
 function loadAll(){
-  if(!here){$("loadState").textContent="waiting for a GPS fix";$("loadState").className="state bad";return}
   $("loadState").textContent="loading";$("loadState").className="state";
   loaded=true;
   Promise.all([loadWeather().catch(function(){return null}),loadMarine(),loadHazards().catch(function(){return null})])
@@ -615,7 +625,9 @@ function initMap(){
     maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
   marks=L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{
     maxZoom:18,attribution:"Seamarks &copy; OpenSeaMap"});
-  depth=L.tileLayer("https://tiles.openseamap.org/contour/{z}/{x}/{y}.png",{maxZoom:17});
+  depth=L.tileLayer.wms("https://ows.emodnet-bathymetry.eu/wms",{
+    layers:"mean_multicolour",format:"image/png",transparent:true,opacity:.65,
+    attribution:"Bathymetry &copy; EMODnet"});
   marks.addTo(map);$("btnMarks").classList.remove("off");
   hazLayer=L.layerGroup().addTo(map);
   lineLayer=L.layerGroup().addTo(map);
