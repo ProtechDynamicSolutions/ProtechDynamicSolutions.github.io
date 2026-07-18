@@ -495,23 +495,27 @@ function loadWrecks(){
       if(!f.geometry||!f.geometry.coordinates)return;
       var c=f.geometry.coordinates,p=f.properties||{};
       var nm=p.NAME||p.Name||p.SHIPNAME||"Wreck";
-      HAZARDS.push({n:nm+" (wreck)",lat:c[1],lon:c[0],lvl:"INFOMAR survey"});n++});
+      HAZARDS.push({n:nm+" (wreck)",lat:c[1],lon:c[0],lvl:"INFOMAR survey",wreck:true});n++});
     return n}).catch(function(){return 0})}
 
 var lastErr="";
+var OVERPASS=["https://overpass-api.de/api/interpreter",
+              "https://overpass.kumi.systems/api/interpreter",
+              "https://overpass.private.coffee/api/interpreter"];
 function loadHazards(){
   var q="[out:json][timeout:60];("+
         'node["seamark:type"~"^(rock|obstruction|wreck)$"]('+BOX+");"+
         'node["natural"="rock"]('+BOX+");"+
         'way["seamark:type"~"^(rock|obstruction)$"]('+BOX+");"+
         ");out center;";
-  return fetch("https://overpass-api.de/api/interpreter",{
-      method:"POST",
-      headers:{"Content-Type":"application/x-www-form-urlencoded"},
-      body:"data="+encodeURIComponent(q)})
-    .then(function(r){
-      if(!r.ok)throw new Error("Overpass "+r.status);
-      return r.json()}).then(function(d){
+  function attempt(i){
+    if(i>=OVERPASS.length)return Promise.reject(new Error("all Overpass servers failed"));
+    return fetch(OVERPASS[i],{method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:"data="+encodeURIComponent(q)})
+      .then(function(r){if(!r.ok)throw 0;return r.json()})
+      .catch(function(){return attempt(i+1)})}
+  return attempt(0).then(function(d){
       var seen={},kept=[];
       (d.elements||[]).forEach(function(e){
         var lat=e.lat!=null?e.lat:(e.center&&e.center.lat),
@@ -526,7 +530,10 @@ function loadHazards(){
         var dep=t["seamark:rock:depth"]||t["seamark:wreck:depth"]||t["seamark:sounding"]||t.depth||null;
         kept.push({n:name,lat:lat,lon:lon,typ:typ,dep:dep!=null?parseFloat(dep):null,
                    lvl:t["seamark:rock:water_level"]||t["seamark:wreck:category"]||""})});
-      HAZARDS=kept.concat(HAZARDS.filter(function(h){return h.mine}));
+      /* a thin reload never replaces a healthy list */
+      var existing=HAZARDS.filter(function(h){return !h.mine&&!h.wreck}).length;
+      if(kept.length>=existing||existing===0)
+        HAZARDS=kept.concat(HAZARDS.filter(function(h){return h.mine||h.wreck}));
       return kept.length})}
 
 function loadAll(){
@@ -755,11 +762,11 @@ $("btnInfo").addEventListener("click",function(){
 
 $("btnFit").addEventListener("click",function(){
   if(!map)return;
-  if(!HAZARDS.length){this.textContent="none yet";
-    setTimeout(function(){$("btnFit").textContent="Rocks"},1800);return}
   follow=false;$("btnFollow").classList.add("off");
-  map.fitBounds(L.latLngBounds(HAZARDS.map(function(h){return[h.lat,h.lon]})),{padding:[30,30]});
+  var b=BOX.split(",").map(Number);           /* s,w,n,e */
+  map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:[16,16]});
   this.textContent=HAZARDS.length+" loaded";
+  if(HAZARDS.length<10&&navigator.onLine)loadAll();   /* thin list, try again */
   setTimeout(function(){$("btnFit").textContent="Rocks"},1800)});
 
 function drawChart(){
