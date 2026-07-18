@@ -2,7 +2,7 @@
    Shell cached so the app opens with no signal. Map tiles you have already
    looked at are kept, so the water you browsed ashore is there at sea.
    Bump SHELL when you change index.html. */
-var SHELL = "vsop-shell-v1";
+var SHELL = "vsop-shell-v2";
 var TILES = "vsop-tiles-v1";
 var TILE_CAP = 1200;
 

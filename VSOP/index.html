@@ -306,6 +306,12 @@ nav button.sel::after{content:"";position:absolute;left:22%;right:22%;top:0;heig
       <div class="state" id="hazIdleSub">Warnings show for anything within 30&deg; of your course</div>
     </div>
 
+    <p class="eyebrow">Tide</p>
+    <div class="card">
+      <div class="v" style="font-size:19px;line-height:1.6" id="tideList">not loaded</div>
+      <div class="state" id="tideNote">model estimate, not a tide table</div>
+    </div>
+
     <p class="eyebrow">Sea state</p>
     <div class="grid">
       <div class="tile"><div class="k">Wave height</div>
@@ -701,6 +707,44 @@ function loadMarine(){
     return ask(here.lat-0.06,here.lon,"offshore, harbour will be flatter")})
     .catch(function(){})}
 
+/* ---------- tides ---------- */
+/* Open-Meteo models sea level including tides. It is an 8 km model referenced
+   to mean sea level, not chart datum, so times are useful and heights are
+   relative only. The tide table stays in charge. */
+function loadTides(){
+  if(!here)return Promise.resolve(0);
+  var u="https://marine-api.open-meteo.com/v1/marine?latitude="+here.lat.toFixed(3)+
+        "&longitude="+here.lon.toFixed(3)+
+        "&hourly=sea_level_height_msl&timezone=Europe%2FDublin&forecast_days=3";
+  return fetch(u).then(function(r){return r.json()}).then(function(d){
+    var h=d.hourly&&d.hourly.sea_level_height_msl,t=d.hourly&&d.hourly.time;
+    if(!h||!t)throw 0;
+    var now=Date.now(),out=[];
+    for(var i=1;i<h.length-1;i++){
+      if(h[i]==null||h[i-1]==null||h[i+1]==null)continue;
+      var up=h[i]>=h[i-1]&&h[i]>=h[i+1],dn=h[i]<=h[i-1]&&h[i]<=h[i+1];
+      if(!up&&!dn)continue;
+      var when=new Date(t[i]).getTime();
+      if(when<now-1800000)continue;
+      /* fit a parabola through the three hours for a better time and height */
+      var a=h[i-1],b=h[i],c=h[i+1],den=(a-2*b+c);
+      var off=den?0.5*(a-c)/den:0;
+      if(off>1||off<-1)off=0;
+      out.push({t:when+off*3600000,hi:up,m:b+0.25*(a-c)*off});
+      if(out.length>=4)break}
+    if(!out.length)throw 0;
+    $("tideList").innerHTML=out.map(function(o){
+      var d2=new Date(o.t),hh=("0"+d2.getHours()).slice(-2),mm=("0"+d2.getMinutes()).slice(-2);
+      var mins=Math.round((o.t-Date.now())/60000);
+      var inTxt=mins<60?"in "+mins+" min":"in "+Math.floor(mins/60)+"h "+(mins%60)+"m";
+      return "<div><strong style='color:var(--hull)'>"+(o.hi?"High":"Low")+" "+hh+":"+mm+
+        "</strong> &middot; "+inTxt+"</div>"}).join("");
+    $("tideNote").textContent="model estimate, check the tide table for Schull";
+    $("tideNote").className="state on";
+    return out.length}).catch(function(){
+      $("tideList").textContent="tide unavailable";
+      $("tideNote").className="state bad";return 0})}
+
 /* ---------- hazards: OpenSeaMap via Overpass ---------- */
 /* Baltimore and Sherkin west to Crookhaven, Cape Clear and the Fastnet
    south, Schull and Roaringwater Bay north. Loads the same box wherever
@@ -762,7 +806,7 @@ function loadHazards(){
 function loadAll(){
   $("loadState").textContent="loading";$("loadState").className="state";
   loaded=true;
-  Promise.all([loadWeather().catch(function(){return null}),loadMarine(),
+  Promise.all([loadWeather().catch(function(){return null}),loadMarine(),loadTides(),
                loadHazards().catch(function(e){lastErr=(e&&e.message)||"offline";return null})])
     .then(function(res){return loadWrecks().then(function(w){return[res[2],w]})})
     .then(function(r){
