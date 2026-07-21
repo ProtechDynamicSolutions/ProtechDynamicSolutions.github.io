@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Corbett | Bolt Torque Report</title>
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 100'%3E%3Cpath d='M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z' fill='%232253A8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 100'%3E%3Cpath d='M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z' fill='%232253A8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --corbett:#2253A8;
+  --corbett-dark:#16386f;
+  --ink:#0b1220;
+  --steel:#5b6879;
+  --line:#c9d2de;
+  --paper:#ffffff;
+  --wash:#f2f5f9;
+  --warn:#b45309;
+  --bad:#b91c1c;
+  --good:#15803d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+/* CRITICAL FIX: Ensures any element with 'hidden' attribute disappears correctly */
+[hidden] { display: none !important; }
+
+body{
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--wash); color:var(--ink); -webkit-text-size-adjust:100%;
+  overflow-x:hidden;
+}
+img,svg,table{max-width:100%}
+.display{font-family:'Barlow Condensed','Inter',sans-serif;letter-spacing:.01em}
+.mono{font-family:'Roboto Mono',ui-monospace,monospace}
+
+/* ---------- INTRO ---------- */
+#intro{position:fixed;inset:0;z-index:100;background:#05070c;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .7s ease, visibility .7s}
+#intro.gone{opacity:0;visibility:hidden;pointer-events:none}
+.introwrap{display:flex;align-items:center;gap:18px;position:relative;padding:0 24px}
+.hookrig{position:relative;flex:none;transform:translateY(-110vh);transition:transform 1.25s cubic-bezier(.22,1,.36,1)}
+.hookrig.drop{transform:translateY(70px)}
+.hookrig.lift{transform:translateY(0);transition:transform 1.4s cubic-bezier(.4,0,.2,1)}
+.cables{position:absolute;right:4%;bottom:88%;width:20%;height:160vh;opacity:0;transition:opacity .5s}
+.hookrig.drop .cables,.hookrig.lift .cables{opacity:1}
+.cable{position:absolute;bottom:0;width:3px;height:100%;
+  background-image:repeating-linear-gradient(45deg,#2253A8 0,#2253A8 8px,#0f2752 8px,#0f2752 16px);
+  box-shadow:0 0 10px rgba(34,83,168,.45)}
+.cable.l{left:0}.cable.r{right:0;bottom:-6px}
+.hooksvg{height:clamp(76px,13vw,132px);width:auto;filter:drop-shadow(0 0 18px rgba(34,83,168,.35))}
+.introtext{display:flex;flex-direction:column;justify-content:center}
+.introtext h1{margin:0;color:#fff;font-weight:700;font-size:clamp(3rem,11vw,6rem);line-height:.9;letter-spacing:-.02em;
+  opacity:0;transform:translateY(70px);transition:all 1.2s cubic-bezier(.22,1,.36,1)}
+.introtext p{margin:.4rem 0 0;color:#c7d3e6;font-weight:400;font-size:clamp(.8rem,3.2vw,1.5rem);letter-spacing:.16em;text-transform:uppercase;
+  opacity:0;transform:translateY(14px);transition:all .8s ease .1s}
+#intro.s2 .introtext h1{opacity:1;transform:none}
+#intro.s3 .introtext p{opacity:1;transform:none}
+.skip{position:absolute;bottom:24px;right:24px;color:#5b6b85;background:none;border:0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.skip:hover{color:#fff}
+
+/* ---------- LOGIN WRAPPER ---------- */
+.login-wrapper {
+  position:fixed;inset:0;z-index:45;background:var(--wash);display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+
+/* ---------- CHROME ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:var(--ink);color:#fff}
+.brandmark{width:26px;height:29px}
+.tab{padding:.55rem .95rem;border-radius:999px;font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid transparent;background:none;color:#93a3ba;cursor:pointer;transition:.15s}
+.tab.on{background:var(--corbett);color:#fff}
+.tab:hover:not(.on){color:#fff;background:rgba(255,255,255,.1)}
+.btn{display:inline-flex;align-items:center;gap:.45rem;border:0;border-radius:6px;padding:.6rem .9rem;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.btn-p{background:var(--corbett);color:#fff}.btn-p:hover{background:var(--corbett-dark)}
+.btn-d{background:var(--ink);color:#fff}.btn-d:hover{background:#1e293b}
+.btn-g{background:#e4e9f0;color:#33445c}.btn-g:hover{background:#d4dbe6}
+.btn-r{background:#fee2e2;color:var(--bad)}.btn-r:hover{background:#fecaca}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--corbett);outline-offset:2px}
+
+/* ---------- FORM ---------- */
+.sheet{max-width:1080px;margin:0 auto;background:var(--paper);box-shadow:0 20px 60px -20px rgba(11,18,32,.35)}
+.lab{font-size:.66rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--steel);white-space:nowrap}
+.fld{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:.3rem .15rem;font-size:.9rem;color:var(--ink);font-family:inherit}
+.fld:focus{outline:0;border-bottom:2px solid var(--corbett);padding-bottom:calc(.3rem - 1px)}
+.row{display:flex;align-items:flex-end;gap:.5rem}
+.sect{border-top:2px solid var(--ink);margin-top:1.6rem;padding-top:.5rem}
+.secttitle{font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--corbett);margin:.2rem 0 .9rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 1.8rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem 1.8rem}
+#seqLayout{display:grid;grid-template-columns:minmax(240px,1fr) 1.4fr;gap:1.6rem}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:880px){#seqLayout{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .row{flex-wrap:wrap}
+  .lab{width:100%}
+  .sheet{padding:1.1rem .9rem 2rem!important}
+  .boltbtn{width:38px}
+}
+.chip{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .5rem;border-radius:999px}
+.chip.draft{background:#e2e8f0;color:#475569}
+.chip.prog{background:#dbeafe;color:#1d4ed8}
+.chip.done{background:#dcfce7;color:var(--good)}
+
+/* signature */
+.sigbox{position:relative;width:100%;height:110px;border-bottom:1px solid var(--line);background:#fbfcfe;border-radius:4px 4px 0 0;overflow:hidden}
+.sigbox canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.sighint{position:absolute;top:6px;left:8px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#c3ccd9;pointer-events:none}
+.sigtools{position:absolute;top:4px;right:4px;display:flex;gap:4px;opacity:0;transition:.15s}
+.sigbox:hover .sigtools,.sigbox:focus-within .sigtools{opacity:1}
+.sigtools button{border:0;background:#e6ebf2;color:#54627a;border-radius:4px;padding:5px 6px;cursor:pointer;line-height:0}
+
+/* table */
+table.pass{width:100%;border-collapse:collapse;font-size:.82rem}
+table.pass th{background:var(--wash);font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;color:var(--steel);padding:.45rem .5rem;text-align:left;border:1px solid var(--line)}
+table.pass td{border:1px solid var(--line);padding:.3rem .5rem}
+table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto Mono',monospace;font-size:.82rem;padding:.2rem}
+.boltgrid{display:flex;flex-wrap:wrap;gap:6px}
+.boltbtn{width:40px;height:34px;border:1px solid var(--line);border-radius:5px;background:#fff;font-family:'Roboto Mono',monospace;font-size:.72rem;font-weight:700;color:#64748b;cursor:pointer}
+.boltbtn.ticked{background:var(--corbett);border-color:var(--corbett);color:#fff}
+
+/* register */
+.reg{width:100%;border-collapse:collapse;font-size:.85rem;background:#fff}
+.reg th{text-align:left;font-size:.63rem;letter-spacing:.09em;text-transform:uppercase;color:var(--steel);padding:.7rem .8rem;border-bottom:1px solid var(--line)}
+.reg td{padding:.65rem .8rem;border-bottom:1px solid #eef2f7}
+.reg tr:hover td{background:#f8fafd}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,140%);background:var(--ink);color:#fff;padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;z-index:80;transition:transform .3s;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#toast.show{transform:translate(-50%,0)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(5,7,12,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal[hidden]{display:none}
+.modalcard{background:#fff;border-radius:10px;width:100%;max-width:900px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- PRINT ---------- */
+@page{size:A4 portrait;margin:9mm}
+@media print{
+  html,body{background:#fff;font-size:9.2pt}
+  .noprint{display:none!important}
+  .sheet{box-shadow:none;max-width:none;margin:0;padding:0!important}
+  .sect{margin-top:.5rem;padding-top:.2rem;border-top-width:1.5px}
+  .secttitle{margin:.1rem 0 .35rem;font-size:.6rem}
+  .grid2{grid-template-columns:1fr 1fr;gap:.25rem .9rem}
+  .grid3{grid-template-columns:repeat(3,1fr);gap:.25rem .9rem}
+  #seqLayout{grid-template-columns:.85fr 1.15fr;gap:.9rem}
+  .row{flex-wrap:nowrap}
+  .lab{width:auto;font-size:.55rem}
+  .fld{border-bottom:1px solid #94a3b8;padding:.05rem .1rem;font-size:9pt}
+  table.pass th{padding:.15rem .35rem;font-size:.55rem}
+  table.pass td{padding:.12rem .35rem;font-size:8.6pt}
+  .sigbox{background:#fff;height:56px}
+  .boltbtn{width:25px;height:21px;font-size:7.5pt}
+  .boltgrid{gap:3px}
+  #flangeDial{padding:.2rem}
+  #flangeDial svg{max-width:172px}
+  textarea{min-height:46px!important;height:46px;font-size:9pt}
+  .avoidbreak{break-inside:avoid;page-break-inside:avoid}
+  input,select,textarea{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .reg th,.reg td{padding:.22rem .4rem;font-size:8.4pt}
+  
+  /* CRITICAL: Remove dropdown arrows in PDF/Print */
+  select, .fld {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-image: none !important;
+      background-color: transparent !important;
+  }
+  select::-ms-expand { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== INTRO ===================== -->
+<div id="intro">
+  <div class="introwrap">
+    <div class="hookrig" id="hookrig">
+      <div class="cables"><span class="cable l"></span><span class="cable r"></span></div>
+      <svg class="hooksvg" viewBox="0 0 90 100" aria-label="Corbett">
+        <path d="M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z" fill="#2253A8"/>
+      </svg>
+    </div>
+    <div class="introtext">
+      <h1 class="display">Corbett</h1>
+      <p>Powering your heavy lift</p>
+    </div>
+  </div>
+  <button class="skip" onclick="endIntro()">Skip</button>
+</div>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="view-login" class="login-wrapper" hidden>
+  <div class="sheet" style="width:100%;max-width:380px;padding:2.2rem;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.1)">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <svg style="width:46px;height:52px;display:inline-block" viewBox="0 0 90 100"><path d="M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z" fill="#2253A8"/></svg>
+      <div class="display" style="font-size:1.8rem;font-weight:700;color:var(--corbett)">CORBETT</div>
+    </div>
+
+    <div style="display:flex;gap:4px;margin-bottom:1.5rem;background:#eef2f7;padding:4px;border-radius:8px">
+      <button id="btnTogUser" class="btn" style="flex:1;justify-content:center;background:#fff;color:var(--corbett);box-shadow:0 2px 4px rgba(0,0,0,.05)" onclick="setLoginMode('user')">Technician</button>
+      <button id="btnTogAdmin" class="btn" style="flex:1;justify-content:center;background:transparent;color:var(--steel)" onclick="setLoginMode('admin')">Admin</button>
+    </div>
+
+    <div>
+      <label class="lab">PIN</label>
+      <input type="password" id="loginPin" class="fld mono" style="font-size:1.2rem;margin-bottom:1.2rem;padding:.5rem;text-align:center;letter-spacing:2px" maxlength="10" placeholder="••••••••••">
+    </div>
+
+    <div id="loginAdminForm" hidden>
+      <label class="lab">Username</label>
+      <input type="text" id="loginUser" class="fld" style="margin-bottom:1rem;padding:.5rem">
+      <label class="lab">Password</label>
+      <input type="password" id="loginPass" class="fld" style="margin-bottom:1.2rem;padding:.5rem">
+    </div>
+
+    <button class="btn btn-p" style="width:100%;justify-content:center;padding:.8rem;font-size:1rem" onclick="doLogin()">Log In</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div class="topbar noprint" id="mainTopbar" hidden>
+  <div style="max-width:1080px;margin:0 auto;padding:.7rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <svg class="brandmark" viewBox="0 0 90 100"><path d="M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z" fill="#2253A8"/></svg>
+      <div style="line-height:1">
+        <div class="display" style="font-size:1.35rem;font-weight:700">CORBETT</div>
+        <div style="font-size:.56rem;letter-spacing:.22em;color:#7f8fa6;text-transform:uppercase">Bolt torque QC</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.4rem;margin-left:auto">
+      <span id="navTabs" style="display:flex;gap:.4rem">
+        <button class="tab on" id="tabReg" onclick="showView('register')">Register</button>
+        <button class="tab" id="tabRep" onclick="showView('report')">Joint</button>
+        <button class="tab" id="tabPrj" onclick="showView('project')">Project report</button>
+      </span>
+      <button class="tab" onclick="logout()" style="margin-left: 10px; border-left: 1px solid #334155; border-radius: 0; padding-left: 15px;">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- REGISTER ---------- -->
+<div id="view-register" class="noprint" hidden style="max-width:1080px;margin:0 auto;padding:1.2rem 1rem 4rem">
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+    <button class="btn btn-p" onclick="newJoint()">+ New joint report</button>
+    <input id="regSearch" class="fld" style="max-width:230px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem" placeholder="Search project, joint, iso..." oninput="renderRegister()">
+    <span style="margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="exportCSV()">Export CSV</button>
+      <button class="btn btn-g" onclick="exportJSON()">Back up</button>
+      <button class="btn btn-g" onclick="document.getElementById('importFile').click()">Restore</button>
+      <input type="file" id="importFile" accept="application/json" hidden onchange="importJSON(event)">
+    </span>
+  </div>
+  <div style="background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto">
+    <table class="reg">
+      <thead><tr><th>Project</th><th>Joint ref</th><th>Iso / Dwg</th><th>Bolts</th><th>Torque</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody id="regBody"></tbody>
+    </table>
+  </div>
+  <p style="font-size:.75rem;color:var(--steel);margin-top:.8rem" id="storeNote"></p>
+</div>
+
+<!-- ---------- REPORT ---------- -->
+<div id="view-report" hidden>
+  <div class="noprint" style="max-width:1080px;margin:0 auto;padding:.9rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-g" id="btnBackReg" onclick="showView('register')">&larr; Register</button>
+    <button class="btn btn-p" id="btnNewForUser" onclick="newJoint()">+ Start Next Report</button>
+    <span id="saveState" style="font-size:.72rem;color:var(--steel);margin-left: .5rem;"></span>
+    <span style="margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-g" id="btnDuplicate" onclick="duplicateJoint()">Duplicate</button>
+      <button class="btn btn-d" onclick="window.print()">Print / save PDF</button>
+    </span>
+  </div>
+
+  <div class="sheet" style="padding:1.6rem 1.4rem 2.4rem">
+    <!-- header -->
+    <div style="display:flex;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;border-bottom:3px solid var(--ink);padding-bottom:1rem">
+      <div style="display:flex;gap:.9rem;align-items:flex-start">
+        <svg style="width:46px;height:52px;flex:none" viewBox="0 0 90 100"><path d="M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z" fill="#2253A8"/></svg>
+        <div>
+          <div class="display" style="font-size:2.3rem;font-weight:700;line-height:.9;color:var(--corbett)">CORBETT</div>
+          <div style="font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-top:.25rem">Powering your heavy lift</div>
+          <div class="display" style="font-size:1.5rem;font-weight:600;margin-top:.7rem">Bolt Torque Report</div>
+          <div style="font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)">Quality control record</div>
+        </div>
+      </div>
+      <div style="min-width:270px;flex:1;max-width:340px;display:flex;flex-direction:column;gap:.55rem">
+        <img id="jointLogo" alt="" style="max-height:44px;max-width:150px;object-fit:contain;align-self:flex-end;display:none">
+        <div class="row"><span class="lab">Report no</span><input class="fld mono" data-f="reportNo" readonly></div>
+        <div class="row"><span class="lab">Project</span><span id="projectHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">Client</span><input class="fld" data-f="client"></div>
+        <div class="row"><span class="lab" style="color:var(--bad)">Proj no</span><input class="fld mono" data-f="projNo" style="color:var(--bad);font-weight:700"></div>
+      </div>
+    </div>
+
+    <!-- identification -->
+    <div class="sect avoidbreak">
+      <div class="secttitle">1 &nbsp;Joint identification</div>
+      <div class="grid2">
+        <div class="row"><span class="lab">Subcontractor</span><span id="subHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">System test pack no</span><input class="fld" data-f="testPack"></div>
+        <div class="row"><span class="lab">Area isometric no</span><input class="fld" data-f="areaIso"></div>
+        <div class="row"><span class="lab">Sht no</span><input class="fld" data-f="shtNo"><span class="lab">Dwg no</span><input class="fld" data-f="dwgNo"></div>
+        <div class="row"><span class="lab">Joint reference / location</span><input class="fld" data-f="jointRef"></div>
+        <div class="row"><span class="lab">Spec no</span><input class="fld" data-f="specNo"></div>
+        <div class="row"><span class="lab">Flange details</span><span id="flangeHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">Gasket details</span><span id="gasketHost" style="flex:1"></span></div>
+      </div>
+    </div>
+
+    <!-- bolting -->
+    <div class="sect avoidbreak">
+      <div class="secttitle">2 &nbsp;Bolting and equipment</div>
+      <div class="grid3">
+        <div class="row"><span class="lab">Bolt size</span><span id="boltHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">No. of bolts</span>
+          <select class="fld" data-f="noOfBolts" id="noOfBolts"></select></div>
+        <div class="row"><span class="lab">Material</span><span id="matHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">Lubrication</span>
+          <select class="fld" data-f="lube">
+            <option>Moly / anti-seize</option><option>Oiled</option><option>PTFE coated</option><option>Dry / as received</option>
+          </select></div>
+        <div class="row"><span class="lab">Required torque</span>
+          <input class="fld mono" data-f="requiredTorque" inputmode="decimal" placeholder="0">
+          <select class="fld" data-f="unit" style="max-width:72px"><option>Nm</option><option>ft-lb</option></select></div>
+        <div class="row"><span class="lab">Passes</span>
+          <select class="fld" data-f="noOfSteps">
+            <option value="1">1 (100%)</option>
+            <option value="2">2 (50, 100%)</option>
+            <option value="3" selected>3 (30, 60, 100%)</option>
+            <option value="4">4 (25, 50, 75, 100%)</option>
+          </select></div>
+        <div class="row"><span class="lab">Wrench make</span><span id="wrenchHost" style="flex:1"></span></div>
+        <div class="row"><span class="lab">Serial no</span><input class="fld mono" data-f="serialNumber"></div>
+        <div class="row"><span class="lab">Calibration date</span><input class="fld" type="date" data-f="calDate"></div>
+      </div>
+      <div class="noprint" style="margin-top:.7rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="suggestTorque()">Suggest torque from bolt size</button>
+        <span id="calWarn" style="font-size:.75rem;font-weight:600"></span>
+      </div>
+      <div id="torqueNote" style="font-size:.7rem;color:var(--steel);margin-top:.5rem"></div>
+    </div>
+
+    <!-- sequence + passes -->
+    <div class="sect avoidbreak">
+      <div class="secttitle">3 &nbsp;Tightening sequence and passes</div>
+      <div id="seqLayout">
+        <div>
+          <div class="noprint" style="display:flex;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap">
+            <select class="fld" data-f="pattern" style="border:1px solid var(--line);border-radius:6px;padding:.4rem;max-width:170px">
+              <option value="Cross">Star / cross pattern</option>
+              <option value="Sequential">Sequential 1 to N</option>
+              <option value="Custom">Custom (tap bolts)</option>
+            </select>
+            <button class="btn btn-g" onclick="resetCustom()" id="resetSeqBtn" hidden>Reset order</button>
+          </div>
+          <div id="flangeDial" style="border:1px solid var(--line);border-radius:8px;background:#fff;padding:.6rem"></div>
+          <div id="seqList" class="mono" style="font-size:.7rem;color:var(--steel);margin-top:.5rem;line-height:1.5"></div>
+        </div>
+        <div>
+          <div class="tablewrap">
+          <table class="pass">
+            <thead><tr><th style="width:70px">Pass</th><th style="width:70px">%</th><th>Target</th><th>Achieved</th><th style="width:96px">Done</th></tr></thead>
+            <tbody id="passBody"></tbody>
+          </table>
+          </div>
+          <div style="margin-top:1rem">
+            <div class="lab" style="margin-bottom:.4rem">Final pass bolt verification</div>
+            <div class="boltgrid" id="boltGrid"></div>
+            <div id="boltProgress" style="font-size:.72rem;color:var(--steel);margin-top:.5rem"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- remarks -->
+    <div class="sect avoidbreak">
+      <div class="secttitle">4 &nbsp;Remarks</div>
+      <textarea data-f="remarks" rows="4" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:.6rem;font-family:inherit;font-size:.88rem;resize:vertical" placeholder="Deviations, hold points, gasket condition, re-torque notes..."></textarea>
+    </div>
+
+    <!-- sign off -->
+    <div class="sect avoidbreak">
+      <div class="secttitle">5 &nbsp;Verification and sign off</div>
+      <div style="border:1px solid var(--line);background:var(--wash);padding:.6rem;border-radius:6px;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;text-align:center;color:#33445c;margin-bottom:1.1rem">
+        The above bolt torque record has been satisfactorily verified in accordance with the project specification.
+      </div>
+      <div class="grid3" style="gap:1.4rem">
+        <div id="sig-sub"></div>
+        <div id="sig-con"></div>
+        <div id="sig-cli"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.6rem;padding-top:.6rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--steel)">
+      <span>Corbett &middot; Bolt torque report</span>
+      <span id="footRef" class="mono"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- PROJECT REPORT ---------- -->
+<div id="view-project" hidden>
+  <div class="noprint" style="max-width:1080px;margin:0 auto;padding:.9rem 1rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end">
+    <label style="display:flex;flex-direction:column;gap:.2rem">
+      <span class="lab">Project</span>
+      <select id="prProject" class="fld" style="border:1px solid var(--line);border-radius:6px;padding:.5rem;min-width:180px" onchange="renderProject()"></select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:.2rem">
+      <span class="lab">From</span>
+      <input type="date" id="prFrom" class="fld" style="border:1px solid var(--line);border-radius:6px;padding:.45rem" onchange="renderProject()">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:.2rem">
+      <span class="lab">To</span>
+      <input type="date" id="prTo" class="fld" style="border:1px solid var(--line);border-radius:6px;padding:.45rem" onchange="renderProject()">
+    </label>
+    <button class="btn btn-g" onclick="document.getElementById('logoFile').click()">Upload client logo</button>
+    <button class="btn btn-g" onclick="removeLogo()">Remove logo</button>
+    <input type="file" id="logoFile" accept="image/*" hidden onchange="uploadLogo(event)">
+    <span style="margin-left:auto;display:flex;gap:.5rem">
+      <button class="btn btn-g" onclick="exportProjectCSV()">Export CSV</button>
+      <button class="btn btn-d" onclick="window.print()">Print / save PDF</button>
+    </span>
+  </div>
+
+  <div class="sheet" id="prSheet" style="padding:1.6rem 1.4rem 2.4rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;border-bottom:3px solid var(--ink);padding-bottom:1rem;flex-wrap:wrap">
+      <div style="display:flex;gap:.9rem;align-items:flex-start">
+        <svg style="width:42px;height:47px;flex:none" viewBox="0 0 90 100"><path d="M 0 100 L 0 45 L 90 0 L 90 25 L 25 57.5 L 25 75 L 65 75 L 65 60 L 90 60 L 90 100 Z" fill="#2253A8"/></svg>
+        <div>
+          <div class="display" style="font-size:2.1rem;font-weight:700;line-height:.9;color:var(--corbett)">CORBETT</div>
+          <div style="font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-top:.25rem">Powering your heavy lift</div>
+          <div class="display" style="font-size:1.4rem;font-weight:600;margin-top:.7rem">Bolt Torque Completion Report</div>
+          <div style="font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)">Prepared on behalf of Corbett Heavy Lift</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <img id="prLogo" alt="" style="max-height:64px;max-width:190px;object-fit:contain;display:none;margin-bottom:.5rem">
+        <div class="mono" id="prMeta" style="font-size:.72rem;color:var(--steel);line-height:1.7"></div>
+      </div>
+    </div>
+
+    <div class="sect avoidbreak" style="border-top:0;margin-top:1rem">
+      <div class="secttitle">Summary</div>
+      <div id="prStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem"></div>
+    </div>
+
+    <div class="sect avoidbreak">
+      <div class="secttitle">Joint schedule</div>
+      <div class="tablewrap"><table class="reg" id="prTable"></table></div>
+    </div>
+
+    <div class="sect avoidbreak">
+      <div class="secttitle">Declaration</div>
+      <div style="border:1px solid var(--line);background:var(--wash);padding:.7rem;border-radius:6px;font-size:.78rem;color:#33445c;margin-bottom:1.1rem">
+        Corbett Heavy Lift confirms that the bolted joints listed above were tightened and verified in accordance with the project specification and the recorded torque values, over the period stated. Individual joint torque reports are available on request and form part of this record.
+      </div>
+      <div class="grid2" style="gap:1.4rem">
+        <div id="prsig-a"></div>
+        <div id="prsig-b"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals & Toasts -->
+<div class="modal" id="sigModal" hidden>
+  <div class="modalcard">
+    <div style="padding:.9rem 1.1rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <strong id="sigModalTitle">Sign document</strong>
+      <button class="btn btn-g" onclick="closeSigModal()">Close</button>
+    </div>
+    <div style="padding:1rem;background:var(--wash)">
+      <div style="background:#fff;border:2px dashed var(--line);border-radius:8px;aspect-ratio:2/1;max-height:56vh">
+        <canvas id="bigSig" style="width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
+      </div>
+    </div>
+    <div style="padding:.9rem 1.1rem;border-top:1px solid var(--line);display:flex;justify-content:space-between">
+      <button class="btn btn-r" onclick="clearBigSig()">Clear</button>
+      <button class="btn btn-p" onclick="saveBigSig()">Save signature</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="confirmModal" hidden>
+  <div class="modalcard" style="max-width:320px;text-align:center;padding:1.5rem">
+    <h3 style="margin-top:0">Delete Report?</h3>
+    <p style="font-size:0.9rem;color:var(--steel)">This cannot be undone.</p>
+    <div style="display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem">
+      <button class="btn btn-g" onclick="document.getElementById('confirmModal').hidden=true">Cancel</button>
+      <button class="btn btn-r" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============ CONFIGURATION ============ */
+// 1. Put the first half of your Apps Script URL here.
+const PARTIAL_APPSCRIPT_LINK = "https://script.google.com/macros/s/AKfycbxr5XZBgEKgBtawiR6wTR4Wh4epveYwR4wLkZh8XrdwmQ1zn8_nQ7GCwt4n";
+
+let fullAppsScriptLink = ""; // This will be built dynamically using the 10-digit PIN
+let currentUserRole = null; 
+let activeLoginMode = 'user'; 
+
+function setLoginMode(mode){
+  activeLoginMode = mode;
+  document.getElementById('btnTogUser').style.background = mode==='user'?'#fff':'transparent';
+  document.getElementById('btnTogUser').style.color = mode==='user'?'var(--corbett)':'var(--steel)';
+  document.getElementById('btnTogUser').style.boxShadow = mode==='user'?'0 2px 4px rgba(0,0,0,.05)':'none';
+  
+  document.getElementById('btnTogAdmin').style.background = mode==='admin'?'#fff':'transparent';
+  document.getElementById('btnTogAdmin').style.color = mode==='admin'?'var(--corbett)':'var(--steel)';
+  document.getElementById('btnTogAdmin').style.boxShadow = mode==='admin'?'0 2px 4px rgba(0,0,0,.05)':'none';
+  
+  document.getElementById('loginAdminForm').hidden = (mode!=='admin');
+}
+
+async function doLogin(){
+  const pin = document.getElementById('loginPin').value.trim();
+  if(!pin) { toast('Please enter the PIN'); return; }
+
+  // MERGE THE LINKS: This securely builds the path to Apps Script based on user knowledge
+  fullAppsScriptLink = PARTIAL_APPSCRIPT_LINK + pin + "/exec";
+
+  if(activeLoginMode === 'admin'){
+    const u = document.getElementById('loginUser').value;
+    const p = document.getElementById('loginPass').value;
+    
+    try {
+      toast('Verifying credentials...');
+      // Makes a real network request using the assembled URL
+      const res = await fetch(fullAppsScriptLink + "?action=login&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p));
+      const data = await res.json();
+      if(data.success && data.role === 'admin') {
+         // Save credentials locally so the user doesn't have to type them again
+         store.set('corbett_pin', pin);
+         store.set('corbett_user', u);
+         store.set('corbett_pass', p);
+         finishLogin('admin');
+      } else {
+         toast('Invalid Admin credentials.');
+      }
+    } catch(e) { toast('Error: Invalid PIN or network issue.'); }
+
+  } else {
+    try {
+      toast('Verifying link...');
+      // Makes a real network request to verify the PIN completes the URL correctly
+      const res = await fetch(fullAppsScriptLink + "?action=login");
+      const data = await res.json();
+      if(data.success) {
+         // Save PIN locally
+         store.set('corbett_pin', pin);
+         finishLogin('user');
+      } else {
+         toast('Access denied.');
+      }
+    } catch(e) { toast('Error: Invalid PIN or network issue.'); }
+  }
+}
+
+function finishLogin(role) {
+  currentUserRole = role;
+  document.getElementById('loginUser').value = store.get('corbett_user') || '';
+  document.getElementById('loginPass').value = store.get('corbett_pass') || '';
+  document.getElementById('loginPin').value = store.get('corbett_pin') || '';
+  toast(role === 'admin' ? 'Welcome, Admin.' : 'Logged in as Technician.');
+  showView(role === 'admin' ? 'register' : 'report');
+  if(role === 'user' && !current) newJoint();
+  
+  // Sync immediately with Apps Script after logging in successfully!
+  pullDataFromGoogleSheets();
+}
+
+function logout(){
+  currentUserRole = null;
+  current = null;
+  fullAppsScriptLink = "";
+  showView('login');
+}
+
+async function pullDataFromGoogleSheets() {
+  try {
+    const res = await fetch(fullAppsScriptLink + "?action=getData");
+    const data = await res.json();
+    
+    if(data.nextReportNo && current) {
+      current.reportNo = data.nextReportNo;
+      const el = document.querySelector('[data-f="reportNo"]');
+      if(el) el.value = current.reportNo;
+    }
+    if(data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+      previousProjects = data.projects.map(name => ({name, client:'', projNo:'', specNo:''}));
+      combo('projectHost','project', previousProjects.map(p=>p.name));
+    }
+  } catch(e) {
+    console.error("Failed to pull from Google Sheets", e);
+  }
+}
+
+async function pushDataToGoogleSheets(jointData) {
+  try {
+    // We use no-cors to safely push data across domains to Google Sheets without preflight blocks
+    await fetch(fullAppsScriptLink, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'saveReport',
+        payload: jointData
+      })
+    });
+  } catch(e) {
+    console.error("Failed to push to Google Sheets", e);
+  }
+}
+
+const store = (()=>{
+  let ok=true, mem={};
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t')}catch(e){ok=false}
+  return {
+    ok,
+    get(k){ try{ return ok?localStorage.getItem(k):(mem[k]??null) }catch(e){ return mem[k]??null } },
+    set(k,v){ try{ ok?localStorage.setItem(k,v):mem[k]=v }catch(e){ mem[k]=v } }
+  };
+})();
+const KEY='corbett_torque_v1';
+let db = JSON.parse(store.get(KEY) || '{"joints":[]}');
+let current = null;
+let dirtyTimer = null;
+
+// Pre-fill saved credentials for convenience
+document.getElementById('loginPin').value = store.get('corbett_pin') || '';
+document.getElementById('loginUser').value = store.get('corbett_user') || '';
+document.getElementById('loginPass').value = store.get('corbett_pass') || '';
+
+/* ============ reference data ============ */
+const previousProjects=[
+  {name:"Cobh Terminal",client:"Liebherr Container Cranes",projNo:"PCC-COBH",specNo:"SP-PCC-01"},
+  {name:"Dublin Port",client:"Liebherr Container Cranes",projNo:"PCC-DUB",specNo:"SP-PCC-02"},
+  {name:"Maher Terminals",client:"Liebherr Container Cranes",projNo:"PCC-MAH",specNo:"SP-PCC-03"}
+];
+const subcontractors=["Corbett Heavy Lift","Maher Crane Tech","Jackson Mech"];
+const boltSizes=['1/2"','5/8"','3/4"','7/8"','1"','1 1/8"','1 1/4"','1 1/2"'];
+const boltingMaterials=["A193 B7 / A194 2H","A320 L7 / A194 Grade 4","A193 B8 / A194 8","Duplex / Super Duplex"];
+const wrenchMakers=["Hytorc","Enerpac","Plarad","TorcUP","Rad Torque"];
+const flangeTypes=["150# WN RF","300# WN RF","600# WN RF","900# RTJ","1500# RTJ"];
+const gasketTypes=["Spiral wound (CG)","Spiral wound (CGI)","Ring type joint (RTJ)","CNAF"];
+/* indicative B7 torque, Nm, moly lubricated, ~50% yield */
+const torqueRef={'1/2"':100,'5/8"':200,'3/4"':350,'7/8"':570,'1"':850,'1 1/8"':1100,'1 1/4"':1550,'1 1/2"':2700};
+const lubeFactor={"Moly / anti-seize":1,"Oiled":1.18,"PTFE coated":0.78,"Dry / as received":1.35};
+const stepPct={1:[100],2:[50,100],3:[30,60,100],4:[25,50,75,100]};
+
+/* ============ intro ============ */
+const rig=document.getElementById('hookrig'), intro=document.getElementById('intro');
+setTimeout(()=>rig.classList.add('drop'),400);
+setTimeout(()=>{rig.classList.remove('drop');rig.classList.add('lift');intro.classList.add('s2')},1700);
+setTimeout(()=>intro.classList.add('s3'),3300);
+const introTimer=setTimeout(endIntro,4900);
+function endIntro(){clearTimeout(introTimer);intro.classList.add('gone')}
+
+/* ============ helpers ============ */
+function uid(){return 'J'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*90+10)}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+function todayISO(){return new Date().toISOString().split('T')[0]}
+function fmtDate(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('en-IE',{day:'2-digit',month:'short',year:'numeric'})}
+
+function blankJoint(seed={}){
+  return Object.assign({
+    id:uid(), reportNo:'BTR-'+String(db.joints.length+1).padStart(4,'0'),
+    project:'',client:'',projNo:'',subcontractor:'Corbett Heavy Lift',testPack:'',
+    areaIso:'',shtNo:'',dwgNo:'',jointRef:'',specNo:'',flangeDetails:'',gasketDetails:'',
+    boltSize:'',noOfBolts:'8',boltingMaterial:'A193 B7 / A194 2H',lube:'Moly / anti-seize',
+    requiredTorque:'',unit:'Nm',noOfSteps:'3',wrenchManufacturer:'',serialNumber:'',calDate:'',
+    pattern:'Cross',customOrder:{},remarks:'',passes:[],boltTicks:[],
+    sub:{name:'Corbett Heavy Lift',date:todayISO(),sig:''},
+    con:{name:'',date:todayISO(),sig:''},
+    cli:{name:'',date:todayISO(),sig:''},
+    updated:Date.now()
+  },seed);
+}
+
+/* ============ views ============ */
+function showView(v){
+  document.getElementById('view-login').hidden = v!=='login';
+  document.getElementById('view-register').hidden = v!=='register';
+  document.getElementById('view-report').hidden  = v!=='report';
+  document.getElementById('view-project').hidden = v!=='project';
+  
+  document.getElementById('mainTopbar').hidden = (v === 'login');
+
+  if(v !== 'login') {
+    document.getElementById('tabReg').classList.toggle('on',v==='register');
+    document.getElementById('tabRep').classList.toggle('on',v==='report');
+    document.getElementById('tabPrj').classList.toggle('on',v==='project');
+
+    // Apply role-based visibility rules
+    const isAdmin = (currentUserRole === 'admin');
+    document.getElementById('navTabs').style.display = isAdmin ? 'flex' : 'none';
+    
+    const btnBackReg = document.getElementById('btnBackReg');
+    if(btnBackReg) btnBackReg.style.display = isAdmin ? 'inline-flex' : 'none';
+    
+    const btnDup = document.getElementById('btnDuplicate');
+    if(btnDup) btnDup.style.display = isAdmin ? 'inline-flex' : 'none';
+    
+    const btnNewUser = document.getElementById('btnNewForUser');
+    if(btnNewUser) btnNewUser.style.display = (!isAdmin) ? 'inline-flex' : 'none';
+  }
+
+  if(v==='register') renderRegister();
+  if(v==='report' && !current) newJoint();
+  if(v==='project') initProject();
+  window.scrollTo(0,0);
+}
+
+/* ============ register ============ */
+function statusOf(j){
+  const passes=stepPct[j.noOfSteps||3]||[100];
+  const done=(j.passes||[]).filter(p=>p.done).length;
+  const signed=j.sub.sig||j.con.sig||j.cli.sig;
+  if(done>=passes.length && signed) return ['done','Complete'];
+  if(done>0||j.jointRef) return ['prog','In progress'];
+  return ['draft','Draft'];
+}
+function renderRegister(){
+  const q=(document.getElementById('regSearch').value||'').toLowerCase();
+  const rows=db.joints
+    .filter(j=>!q||[j.project,j.jointRef,j.areaIso,j.projNo,j.reportNo].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>b.updated-a.updated);
+  const body=document.getElementById('regBody');
+  if(!rows.length){
+    body.innerHTML='<tr><td colspan="8" style="padding:2.4rem;text-align:center;color:var(--steel)">No joint reports yet. Start one with “New joint report”.</td></tr>';
+  }else{
+    body.innerHTML=rows.map(j=>{
+      const [cls,label]=statusOf(j);
+      return `<tr>
+        <td><strong>${esc(j.project)||'&mdash;'}</strong><div style="font-size:.7rem;color:var(--steel)" class="mono">${esc(j.reportNo)}</div></td>
+        <td>${esc(j.jointRef)||'&mdash;'}</td>
+        <td class="mono" style="font-size:.75rem">${esc(j.areaIso)||'&mdash;'} ${j.dwgNo?'/ '+esc(j.dwgNo):''}</td>
+        <td class="mono">${esc(j.noOfBolts)}</td>
+        <td class="mono">${j.requiredTorque?esc(j.requiredTorque)+' '+esc(j.unit):'&mdash;'}</td>
+        <td><span class="chip ${cls}">${label}</span></td>
+        <td style="font-size:.75rem;color:var(--steel)">${fmtDate(new Date(j.updated).toISOString())}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-g" onclick="openJoint('${j.id}')">Open</button>
+          <button class="btn btn-r" onclick="deleteJoint('${j.id}')">Delete</button>
+        </td></tr>`;
+    }).join('');
+  }
+  document.getElementById('storeNote').textContent = store.ok
+    ? db.joints.length+' report(s) saved on this device. Use “Back up” to keep an off-device copy.'
+    : 'This browser is blocking local storage, so reports will be lost on refresh. Download the file and open it directly, or use “Back up” before closing.';
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function newJoint(){ current=blankJoint(); db.joints.push(current); save(); loadForm(); showView('report'); }
+function openJoint(id){ current=db.joints.find(j=>j.id===id); loadForm(); showView('report'); }
+function duplicateJoint(){
+  if(!current)return;
+  const c=JSON.parse(JSON.stringify(current));
+  const copy=blankJoint(Object.assign(c,{id:uid(),reportNo:'BTR-'+String(db.joints.length+1).padStart(4,'0'),
+    jointRef:'',areaIso:'',passes:[],boltTicks:[],customOrder:{},remarks:'',updated:Date.now(),
+    sub:Object.assign({},c.sub,{sig:''}),con:Object.assign({},c.con,{sig:''}),cli:Object.assign({},c.cli,{sig:''})}));
+  db.joints.push(copy); current=copy; save(); loadForm(); toast('Duplicated. Joint details cleared for the next joint.');
+}
+function deleteJoint(id){
+  const m = document.getElementById('confirmModal');
+  m.hidden = false;
+  document.getElementById('confirmBtn').onclick = () => {
+    db.joints = db.joints.filter(j => j.id !== id);
+    if(current && current.id === id) current = null;
+    save(); renderRegister();
+    m.hidden = true;
+    toast('Report deleted.');
+  };
+}
+
+/* ============ combo select (list + free text) ============ */
+function combo(hostId,field,options){
+  const host=document.getElementById(hostId);
+  const val=current[field]||'';
+  const custom = val && !options.includes(val);
+  host.innerHTML='';
+  if(custom){
+    const wrap=document.createElement('span');wrap.style.cssText='display:flex;width:100%;align-items:flex-end;gap:4px';
+    const inp=document.createElement('input');inp.className='fld';inp.value=val;
+    inp.oninput=e=>{current[field]=e.target.value;touch()};
+    const x=document.createElement('button');x.className='btn btn-g noprint';x.textContent='List';x.style.padding='.25rem .5rem';
+    x.onclick=()=>{current[field]='';touch();combo(hostId,field,options)};
+    wrap.append(inp,x);host.append(wrap);
+  }else{
+    const sel=document.createElement('select');sel.className='fld';
+    sel.innerHTML='<option value="">Select…</option>'+options.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')+'<option value="__other">Other (type…)</option>';
+    sel.onchange=e=>{
+      if(e.target.value==='__other'){current[field]='  ';touch();combo(hostId,field,options);host.querySelector('input').focus();host.querySelector('input').value='';current[field]='';}
+      else{current[field]=e.target.value;touch();if(field==='project')applyProject(e.target.value);if(field==='boltSize')updateTorqueNote();}
+    };
+    host.append(sel);
+  }
+}
+function applyProject(name){
+  const p=previousProjects.find(x=>x.name===name);
+  if(!p)return;
+  current.client=p.client;current.projNo=p.projNo;current.specNo=p.specNo;
+  bindFields();showJointLogo();touch();
+}
+
+/* ============ form binding ============ */
+function loadForm(){
+  const sel=document.getElementById('noOfBolts');
+  sel.innerHTML=[4,8,12,16,20,24,28,32,36,40].map(n=>`<option value="${n}">${n} bolts</option>`).join('');
+  bindFields();
+  combo('projectHost','project',previousProjects.map(p=>p.name));
+  combo('subHost','subcontractor',subcontractors);
+  combo('flangeHost','flangeDetails',flangeTypes);
+  combo('gasketHost','gasketDetails',gasketTypes);
+  combo('boltHost','boltSize',boltSizes);
+  combo('matHost','boltingMaterial',boltingMaterials);
+  combo('wrenchHost','wrenchManufacturer',wrenchMakers);
+  buildSignature('sig-sub','sub','Subcontractor',current.sub);
+  buildSignature('sig-con','con','Contractor',current.con);
+  buildSignature('sig-cli','cli','Client',current.cli);
+  showJointLogo();
+  renderDial(); renderPasses(); renderBoltGrid(); updateTorqueNote(); checkCal();
+  document.getElementById('footRef').textContent=current.reportNo;
+}
+function bindFields(){
+  document.querySelectorAll('[data-f]').forEach(el=>{
+    const f=el.dataset.f;
+    if(el.value!==undefined) el.value=current[f]??'';
+    el.oninput=el.onchange=()=>{
+      current[f]=el.value; touch();
+      if(f==='noOfBolts'){current.customOrder={};current.boltTicks=[];renderDial();renderBoltGrid()}
+      if(f==='pattern'){current.customOrder={};renderDial()}
+      if(f==='noOfSteps'){renderPasses()}
+      if(f==='requiredTorque'||f==='unit'){renderPasses();updateTorqueNote()}
+      if(f==='calDate'){checkCal()}
+      if(f==='lube'||f==='boltSize'){updateTorqueNote()}
+    };
+  });
+  const rb=document.getElementById('resetSeqBtn');
+  if(rb&&current) rb.hidden = current.pattern!=='Custom';
+}
+function touch(){
+  if(current) current.updated=Date.now();
+  const ss=document.getElementById('saveState');
+  if(ss) ss.textContent='Saving…';
+  clearTimeout(dirtyTimer);
+  dirtyTimer=setTimeout(()=>{save();if(ss)ss.textContent='Saved '+new Date().toLocaleTimeString('en-IE',{hour:'2-digit',minute:'2-digit'})},400);
+  const rb=document.getElementById('resetSeqBtn');
+  if(rb&&current) rb.hidden = current.pattern!=='Custom';
+}
+function save(){ store.set(KEY,JSON.stringify(db)); }
+
+/* ============ torque helpers ============ */
+function suggestTorque(){
+  if(!current.boltSize||!torqueRef[current.boltSize]){toast('Pick a standard bolt size first.');return}
+  let nm=torqueRef[current.boltSize]*(lubeFactor[current.lube]||1);
+  if(current.unit==='ft-lb') nm=nm/1.3558;
+  current.requiredTorque=Math.round(nm/5)*5;
+  bindFields(); renderPasses(); updateTorqueNote(); touch();
+  toast('Indicative figure inserted. Confirm against the project spec.');
+}
+function updateTorqueNote(){
+  const t=parseFloat(current.requiredTorque);
+  let s='';
+  if(t){
+    const nm=current.unit==='Nm'?t:t*1.3558;
+    s=`Equivalent: ${current.unit==='Nm'?(t/1.3558).toFixed(0)+' ft-lb':nm.toFixed(0)+' Nm'}. `;
+  }
+  s+='Suggested figures are indicative only for B7 studs and do not replace the project torque table.';
+  document.getElementById('torqueNote').textContent=s;
+}
+function checkCal(){
+  const el=document.getElementById('calWarn');
+  if(!current.calDate){el.textContent='';return}
+  const days=(Date.now()-new Date(current.calDate))/864e5;
+  if(days>365){el.style.color='var(--bad)';el.textContent='Calibration is over 12 months old. Do not use this wrench.'}
+  else if(days>335){el.style.color='var(--warn)';el.textContent='Calibration expires within 30 days.'}
+  else {el.style.color='var(--good)';el.textContent='Calibration in date.'}
+}
+
+/* ============ sequence dial ============ */
+function starSequence(n){
+  if(n<2) return [1];
+  if(n%2) return Array.from({length:n},(_,i)=>i+1);
+  const half=starSequence(n/2), out=[];
+  half.forEach(s=>{out.push(s,s+n/2)});
+  return out;
+}
+function sequenceFor(){
+  const n=parseInt(current.noOfBolts)||8;
+  if(current.pattern==='Sequential') return Array.from({length:n},(_,i)=>i+1);
+  if(current.pattern==='Custom') return null;
+  return starSequence(n);
+}
+function renderDial(){
+  const n=parseInt(current.noOfBolts)||8;
+  const seq=sequenceFor();
+  const r=100, big=n>20;
+  let holes='';
+  for(let i=0;i<n;i++){
+    const a=(i*360/n-90)*Math.PI/180;
+    const cx=150+r*Math.cos(a), cy=150+r*Math.sin(a);
+    let num='', on=true;
+    if(current.pattern==='Custom'){ num=current.customOrder[i]||''; on=!!num; }
+    else { num=seq[i]; }
+    holes+=`<g style="cursor:${current.pattern==='Custom'?'pointer':'default'}" onclick="tapBolt(${i})">
+      <circle cx="${cx}" cy="${cy}" r="${big?8:12}" fill="${on?'#fff':'#f1f5f9'}" stroke="${on?'#0b1220':'#94a3b8'}" stroke-width="${on?2:1}"/>
+      ${num?`<text x="${cx}" y="${cy}" text-anchor="middle" dy=".35em" font-size="${big?8:11}" font-weight="700" font-family="Roboto Mono, monospace" fill="#0b1220">${num}</text>`:''}
+    </g>`;
+  }
+  document.getElementById('flangeDial').innerHTML=`<svg viewBox="0 0 300 300" style="width:100%;max-width:250px;display:block;margin:0 auto">
+    <circle cx="150" cy="150" r="130" fill="none" stroke="#e6ecf4" stroke-width="2"/>
+    <circle cx="150" cy="150" r="100" fill="#fbfcfe" stroke="#c9d2de" stroke-width="4"/>
+    <circle cx="150" cy="150" r="70" fill="#eef2f7" stroke="#c9d2de" stroke-width="2"/>
+    <text x="150" y="153" text-anchor="middle" font-size="13" font-family="Barlow Condensed,sans-serif" letter-spacing="2" fill="#94a3b8">${n} BOLT</text>
+    ${holes}</svg>`;
+  const order = current.pattern==='Custom'
+    ? Object.entries(current.customOrder).sort((a,b)=>a[1]-b[1]).map(e=>Number(e[0])+1)
+    : seq.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v).map(o=>o.i+1);
+  document.getElementById('seqList').textContent = order.length? 'Order: '+order.join(' \u2192 ') : 'Tap the bolts in the order they will be tightened.';
+}
+function tapBolt(i){
+  if(current.pattern!=='Custom')return;
+  if(current.customOrder[i]){delete current.customOrder[i];
+    const vals=Object.entries(current.customOrder).sort((a,b)=>a[1]-b[1]);
+    current.customOrder={}; vals.forEach(([k],idx)=>current.customOrder[k]=idx+1);
+  } else {
+    current.customOrder[i]=Object.keys(current.customOrder).length+1;
+  }
+  renderDial(); touch();
+}
+function resetCustom(){ current.customOrder={}; renderDial(); touch(); }
+
+/* ============ passes ============ */
+function renderPasses(){
+  const pcts=stepPct[current.noOfSteps]||[100];
+  const base=parseFloat(current.requiredTorque)||0;
+  if(!current.passes||current.passes.length!==pcts.length) current.passes=pcts.map(()=>({achieved:'',done:false,by:''}));
+  document.getElementById('passBody').innerHTML=pcts.map((p,i)=>{
+    const target=base?Math.round(base*p/100):'';
+    return `<tr>
+      <td class="mono" style="font-weight:700">${i+1}</td>
+      <td class="mono">${p}%</td>
+      <td class="mono" style="color:var(--corbett);font-weight:700">${target?target+' '+esc(current.unit):'&mdash;'}</td>
+      <td><input class="mono" inputmode="decimal" value="${esc(current.passes[i].achieved)}" oninput="current.passes[${i}].achieved=this.value;touch()" placeholder="actual"></td>
+      <td style="text-align:center"><input type="checkbox" ${current.passes[i].done?'checked':''} onchange="current.passes[${i}].done=this.checked;touch()" style="width:18px;height:18px"></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============ bolt verification grid ============ */
+function renderBoltGrid(){
+  const n=parseInt(current.noOfBolts)||8;
+  if(!Array.isArray(current.boltTicks)) current.boltTicks=[];
+  const g=document.getElementById('boltGrid');
+  g.innerHTML=Array.from({length:n},(_,i)=>
+    `<button class="boltbtn ${current.boltTicks.includes(i+1)?'ticked':''}" onclick="tickBolt(${i+1})">${i+1}</button>`).join('');
+  const done=current.boltTicks.filter(b=>b<=n).length;
+  document.getElementById('boltProgress').textContent=`${done} of ${n} bolts checked at final torque.`;
+}
+function tickBolt(b){
+  const i=current.boltTicks.indexOf(b);
+  i>-1?current.boltTicks.splice(i,1):current.boltTicks.push(b);
+  renderBoltGrid(); touch();
+}
+
+/* ============ signatures ============ */
+const sigOwner={};
+function buildSignature(hostId,key,label,owner){
+  const rec=owner||current[key];
+  sigOwner[key]=rec;
+  const host=document.getElementById(hostId);
+  host.innerHTML=`
+    <div style="border:1px solid var(--line);border-radius:8px;padding:.8rem">
+      <div class="lab" style="color:var(--corbett);margin-bottom:.6rem">${label}</div>
+      <div class="row" style="margin-bottom:.6rem"><span class="lab">Name</span><input class="fld" value="${esc(rec.name)}" oninput="sigOwner['${key}'].name=this.value;touch()"></div>
+      <div class="sigbox">
+        <span class="sighint">Sign here</span>
+        <canvas></canvas>
+        <div class="sigtools noprint">
+          <button title="Sign on a bigger pad" onclick="openSigModal('${key}','${label}')">Enlarge</button>
+          <button title="Clear" onclick="clearSig('${key}')">Clear</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:.6rem"><span class="lab">Date</span><input class="fld" type="date" value="${esc(rec.date)}" onchange="sigOwner['${key}'].date=this.value;touch()"></div>
+    </div>`;
+  const cv=host.querySelector('canvas');
+  sigPads[key]=attachPad(cv,key);
+  drawStored(cv,rec.sig);
+}
+const sigPads={};
+function attachPad(cv,key){
+  const fit=()=>{const r=cv.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;
+    const c=cv.getContext('2d');c.scale(2,2);c.strokeStyle='#0b1220';c.lineWidth=1.8;c.lineCap='round';c.lineJoin='round';
+    if(sigOwner[key]&&sigOwner[key].sig)drawStored(cv,sigOwner[key].sig)};
+  requestAnimationFrame(fit);
+  let drawing=false;
+  const pos=e=>{const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top}};
+  const start=e=>{e.preventDefault();drawing=true;const{x,y}=pos(e);const c=cv.getContext('2d');c.beginPath();c.moveTo(x,y)};
+  const move=e=>{if(!drawing)return;e.preventDefault();const{x,y}=pos(e);const c=cv.getContext('2d');c.lineTo(x,y);c.stroke()};
+  const end=()=>{if(!drawing)return;drawing=false;sigOwner[key].sig=cv.toDataURL('image/png');touch()};
+  cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',end);cv.addEventListener('mouseleave',end);
+  cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});cv.addEventListener('touchend',end);
+  return {cv,fit};
+}
+function drawStored(cv,data){
+  if(!data)return;const img=new Image();
+  img.onload=()=>{const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(img,0,0,cv.width/2,cv.height/2)};
+  img.src=data;
+}
+function clearSig(key){
+  const cv=sigPads[key].cv;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+  sigOwner[key].sig='';touch();
+}
+let modalKey=null,bigDrawing=false;
+function openSigModal(key,label){
+  modalKey=key;
+  document.getElementById('sigModalTitle').textContent='Sign as '+label;
+  const m=document.getElementById('sigModal');m.hidden=false;
+  const cv=document.getElementById('bigSig');
+  requestAnimationFrame(()=>{
+    const r=cv.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;
+    const c=cv.getContext('2d');c.scale(2,2);c.strokeStyle='#0b1220';c.lineWidth=3.5;c.lineCap='round';c.lineJoin='round';
+  });
+}
+(function(){
+  const cv=document.getElementById('bigSig');
+  const pos=e=>{const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top}};
+  const start=e=>{e.preventDefault();bigDrawing=true;const{x,y}=pos(e);const c=cv.getContext('2d');c.beginPath();c.moveTo(x,y)};
+  const move=e=>{if(!bigDrawing)return;e.preventDefault();const{x,y}=pos(e);const c=cv.getContext('2d');c.lineTo(x,y);c.stroke()};
+  const end=()=>bigDrawing=false;
+  cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});cv.addEventListener('touchend',end);
+})();
+function clearBigSig(){const cv=document.getElementById('bigSig');cv.getContext('2d').clearRect(0,0,cv.width,cv.height)}
+function closeSigModal(){document.getElementById('sigModal').hidden=true}
+function saveBigSig(){
+  const data=document.getElementById('bigSig').toDataURL('image/png');
+  sigOwner[modalKey].sig=data;
+  drawStored(sigPads[modalKey].cv,data);
+  touch();closeSigModal();toast('Signature saved.');
+}
+
+/* ============ project report ============ */
+db.logos = db.logos || {};
+db.projectSign = db.projectSign || {};
+function jointDate(j){ return (j.sub && j.sub.date) || new Date(j.updated).toISOString().split('T')[0]; }
+
+function initProject(){
+  const sel=document.getElementById('prProject');
+  const names=[...new Set(db.joints.map(j=>j.project).filter(Boolean))];
+  const keep=sel.value;
+  sel.innerHTML=names.length?names.map(n=>`<option${n===keep?' selected':''}>${esc(n)}</option>`).join(''):'<option value="">No projects yet</option>';
+  const f=document.getElementById('prFrom'), t=document.getElementById('prTo');
+  if(!f.value||!t.value){
+    const ds=db.joints.map(jointDate).filter(Boolean).sort();
+    if(ds.length){ f.value=f.value||ds[0]; t.value=t.value||ds[ds.length-1]; }
+    else { f.value=f.value||todayISO(); t.value=t.value||todayISO(); }
+  }
+  renderProject();
+}
+
+function projectRows(){
+  const p=document.getElementById('prProject').value;
+  const f=document.getElementById('prFrom').value, t=document.getElementById('prTo').value;
+  return db.joints.filter(j=>j.project===p)
+    .filter(j=>{const d=jointDate(j);return (!f||d>=f)&&(!t||d<=t)})
+    .sort((a,b)=>jointDate(a).localeCompare(jointDate(b))||a.reportNo.localeCompare(b.reportNo));
+}
+
+function renderProject(){
+  const p=document.getElementById('prProject').value;
+  const rows=projectRows();
+  const first=rows[0]||db.joints.find(j=>j.project===p)||{};
+
+  document.getElementById('prMeta').innerHTML=
+    `Project: ${esc(p)||'&mdash;'}<br>Client: ${esc(first.client||'')||'&mdash;'}<br>Proj no: ${esc(first.projNo||'')||'&mdash;'}<br>`+
+    `Period: ${fmtDate(document.getElementById('prFrom').value)} to ${fmtDate(document.getElementById('prTo').value)}<br>`+
+    `Issued: ${fmtDate(todayISO())}`;
+
+  const complete=rows.filter(j=>statusOf(j)[0]==='done').length;
+  const bolts=rows.reduce((s,j)=>s+(parseInt(j.noOfBolts)||0),0);
+  const checked=rows.reduce((s,j)=>s+((j.boltTicks||[]).length),0);
+  const stat=(label,val,note)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:.7rem">
+      <div class="lab">${label}</div>
+      <div class="display" style="font-size:1.9rem;font-weight:700;line-height:1.1;color:var(--corbett)">${val}</div>
+      <div style="font-size:.66rem;color:var(--steel)">${note}</div></div>`;
+  document.getElementById('prStats').innerHTML=
+    stat('Joints in period',rows.length,'torque reports issued')+
+    stat('Signed off',complete,rows.length?Math.round(complete/rows.length*100)+'% of joints':'&mdash;')+
+    stat('Bolts torqued',bolts,'across all joints')+
+    stat('Bolts verified',checked,'at final pass');
+
+  document.getElementById('prTable').innerHTML=
+    `<thead><tr><th>Date</th><th>Report</th><th>Joint ref</th><th>Iso / Dwg</th><th>Flange</th><th>Bolts</th><th>Torque</th><th>Passes</th><th>Status</th></tr></thead><tbody>`+
+    (rows.length?rows.map(j=>{
+      const pcts=stepPct[j.noOfSteps]||[100];
+      const done=(j.passes||[]).filter(x=>x.done).length;
+      return `<tr>
+        <td class="mono" style="font-size:.75rem">${fmtDate(jointDate(j))}</td>
+        <td class="mono" style="font-size:.75rem">${esc(j.reportNo)}</td>
+        <td>${esc(j.jointRef)||'&mdash;'}</td>
+        <td class="mono" style="font-size:.75rem">${esc(j.areaIso)||'&mdash;'}${j.dwgNo?' / '+esc(j.dwgNo):''}</td>
+        <td style="font-size:.78rem">${esc(j.flangeDetails)||'&mdash;'}</td>
+        <td class="mono">${esc(j.noOfBolts)}</td>
+        <td class="mono">${j.requiredTorque?esc(j.requiredTorque)+' '+esc(j.unit):'&mdash;'}</td>
+        <td class="mono">${done}/${pcts.length}</td>
+        <td><span class="chip ${statusOf(j)[0]}">${statusOf(j)[1]}</span></td></tr>`;
+    }).join('')
+    :'<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--steel)">No joints for this project in the selected dates.</td></tr>')+'</tbody>';
+
+  db.projectSign[p]=db.projectSign[p]||{a:{name:'',date:todayISO(),sig:''},b:{name:'',date:todayISO(),sig:''}};
+  buildSignature('prsig-a','pra','For Corbett Heavy Lift',db.projectSign[p].a);
+  buildSignature('prsig-b','prb','For the client',db.projectSign[p].b);
+  showLogo();
+}
+
+function showLogo(){
+  const p=document.getElementById('prProject').value;
+  const img=document.getElementById('prLogo');
+  if(db.logos[p]){img.src=db.logos[p];img.style.display='inline-block'}else{img.style.display='none'}
+}
+function showJointLogo(){
+  const img=document.getElementById('jointLogo');
+  if(!img||!current)return;
+  if(db.logos[current.project]){img.src=db.logos[current.project];img.style.display='block'}else{img.style.display='none'}
+}
+function uploadLogo(e){
+  const f=e.target.files[0];if(!f)return;
+  const p=document.getElementById('prProject').value;
+  if(!p){toast('Pick a project first.');e.target.value='';return}
+  const r=new FileReader();
+  r.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=360, sc=Math.min(1,max/img.width);
+      const c=document.createElement('canvas');
+      c.width=img.width*sc;c.height=img.height*sc;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      db.logos[p]=c.toDataURL('image/png');
+      save();showLogo();toast('Logo added to '+p+'.');
+    };
+    img.src=r.result;
+  };
+  r.readAsDataURL(f);e.target.value='';
+}
+function removeLogo(){
+  const p=document.getElementById('prProject').value;
+  delete db.logos[p];save();showLogo();toast('Logo removed.');
+}
+function exportProjectCSV(){
+  const rows=projectRows();
+  const head='date,reportNo,jointRef,areaIso,dwgNo,flange,gasket,boltSize,noOfBolts,requiredTorque,unit,passesDone,boltsChecked,status';
+  const body=rows.map(j=>[jointDate(j),j.reportNo,j.jointRef,j.areaIso,j.dwgNo,j.flangeDetails,j.gasketDetails,j.boltSize,j.noOfBolts,j.requiredTorque,j.unit,(j.passes||[]).filter(x=>x.done).length,(j.boltTicks||[]).length,statusOf(j)[1]]
+    .map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
+  download('corbett-'+(document.getElementById('prProject').value||'project').replace(/\W+/g,'-').toLowerCase()+'-'+todayISO()+'.csv',[head,...body].join('\n'),'text/csv');
+}
+
+/* ============ export / import ============ */
+function download(name,content,type){
+  const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
+function exportCSV(){
+  const cols=['reportNo','project','client','projNo','subcontractor','testPack','areaIso','shtNo','dwgNo','jointRef','specNo','flangeDetails','gasketDetails','boltSize','noOfBolts','boltingMaterial','lube','requiredTorque','unit','noOfSteps','wrenchManufacturer','serialNumber','calDate','remarks'];
+  const head=cols.join(',')+',passesComplete,boltsChecked,status';
+  const rows=db.joints.map(j=>{
+    const base=cols.map(c=>`"${String(j[c]??'').replace(/"/g,'""')}"`).join(',');
+    return base+`,${(j.passes||[]).filter(p=>p.done).length},${(j.boltTicks||[]).length},"${statusOf(j)[1]}"`;
+  });
+  download('corbett-bolt-torque-'+todayISO()+'.csv',[head,...rows].join('\n'),'text/csv');
+}
+function exportJSON(){ download('corbett-torque-backup-'+todayISO()+'.json',JSON.stringify(db),'application/json'); }
+function importJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const inc=JSON.parse(r.result);
+      if(!inc.joints)throw 0;
+      const have=new Set(db.joints.map(j=>j.id));
+      inc.joints.forEach(j=>{if(!have.has(j.id))db.joints.push(j)});
+      save();renderRegister();toast('Restored '+inc.joints.length+' report(s).');
+    }catch(err){toast('That file is not a Corbett backup.')}
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
+
+/* ============ boot ============ */
+window.addEventListener('resize',()=>Object.values(sigPads).forEach(p=>p&&p.fit()));
+window.addEventListener('beforeprint',()=>{ if(current) document.title='BTR '+(current.jointRef||current.reportNo); });
+
+// Show the login view initially (it sits behind the intro animation)
+showView('login');
+</script>
+</body>
+</html>
