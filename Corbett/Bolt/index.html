@@ -25,8 +25,6 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-
-/* CRITICAL FIX: Ensures any element with 'hidden' attribute disappears correctly */
 [hidden] { display: none !important; }
 
 body{
@@ -62,7 +60,7 @@ img,svg,table{max-width:100%}
 .skip{position:absolute;bottom:24px;right:24px;color:#5b6b85;background:none;border:0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
 .skip:hover{color:#fff}
 
-/* ---------- LOGIN WRAPPER ---------- */
+/* ---------- LOGIN ---------- */
 .login-wrapper {
   position:fixed;inset:0;z-index:45;background:var(--wash);display:flex;align-items:center;justify-content:center;padding:1rem;
 }
@@ -134,7 +132,7 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
 
 /* modal */
 .modal{position:fixed;inset:0;z-index:70;background:rgba(5,7,12,.72);display:flex;align-items:center;justify-content:center;padding:16px}
-.modal[hidden]{display:none}
+.modal[hidden]{display:none !important}
 .modalcard{background:#fff;border-radius:10px;width:100%;max-width:900px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
 
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -179,7 +177,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
 </head>
 <body>
 
-<!-- ===================== INTRO ===================== -->
 <div id="intro">
   <div class="introwrap">
     <div class="hookrig" id="hookrig">
@@ -196,7 +193,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   <button class="skip" onclick="endIntro()">Skip</button>
 </div>
 
-<!-- ===================== LOGIN ===================== -->
 <div id="view-login" class="login-wrapper" hidden>
   <div class="sheet" style="width:100%;max-width:380px;padding:2.2rem;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.1)">
     <div style="text-align:center;margin-bottom:1.5rem">
@@ -211,7 +207,7 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
 
     <div>
       <label class="lab">PIN</label>
-      <input type="password" id="loginPin" class="fld mono" style="font-size:1.2rem;margin-bottom:1.2rem;padding:.5rem;text-align:center;letter-spacing:2px" maxlength="10" placeholder="••••••••••">
+      <input type="password" id="loginPin" class="fld mono" style="font-size:1.2rem;margin-bottom:1.2rem;padding:.5rem;text-align:center;letter-spacing:2px" placeholder="••••••••••">
     </div>
 
     <div id="loginAdminForm" hidden>
@@ -225,7 +221,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   </div>
 </div>
 
-<!-- ===================== APP ===================== -->
 <div class="topbar noprint" id="mainTopbar" hidden>
   <div style="max-width:1080px;margin:0 auto;padding:.7rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:.6rem">
@@ -246,7 +241,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   </div>
 </div>
 
-<!-- ---------- REGISTER ---------- -->
 <div id="view-register" class="noprint" hidden style="max-width:1080px;margin:0 auto;padding:1.2rem 1rem 4rem">
   <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
     <button class="btn btn-p" onclick="newJoint()">+ New joint report</button>
@@ -267,7 +261,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   <p style="font-size:.75rem;color:var(--steel);margin-top:.8rem" id="storeNote"></p>
 </div>
 
-<!-- ---------- REPORT ---------- -->
 <div id="view-report" hidden>
   <div class="noprint" style="max-width:1080px;margin:0 auto;padding:.9rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
     <button class="btn btn-g" id="btnBackReg" onclick="showView('register')">&larr; Register</button>
@@ -280,6 +273,7 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   </div>
 
   <div class="sheet" style="padding:1.6rem 1.4rem 2.4rem">
+
     <!-- header -->
     <div style="display:flex;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;border-bottom:3px solid var(--ink);padding-bottom:1rem">
       <div style="display:flex;gap:.9rem;align-items:flex-start">
@@ -403,6 +397,13 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
       <span>Corbett &middot; Bolt torque report</span>
       <span id="footRef" class="mono"></span>
     </div>
+
+    <!-- form actions -->
+    <div class="noprint" style="margin-top:2.5rem;padding-top:1.5rem;border-top:2px solid var(--ink);display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-g" style="padding:.9rem 1.8rem;font-size:.95rem" onclick="saveForLater()">Save for later</button>
+      <button class="btn btn-p" style="padding:.9rem 1.8rem;font-size:.95rem" onclick="submitAndNext()">Submit & move to next</button>
+    </div>
+
   </div>
 </div>
 
@@ -470,7 +471,6 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
   </div>
 </div>
 
-<!-- Modals & Toasts -->
 <div class="modal" id="sigModal" hidden>
   <div class="modalcard">
     <div style="padding:.9rem 1.1rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
@@ -490,7 +490,7 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
 </div>
 
 <div class="modal" id="confirmModal" hidden>
-  <div class="modalcard" style="max-width:320px;text-align:center;padding:1.5rem">
+  <div class="modalcard" style="max-width:320px;text-align:center;padding:1.5rem;margin: 0 auto;">
     <h3 style="margin-top:0">Delete Report?</h3>
     <p style="font-size:0.9rem;color:var(--steel)">This cannot be undone.</p>
     <div style="display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem">
@@ -503,13 +503,39 @@ table.pass input{width:100%;border:0;background:transparent;font-family:'Roboto 
 <div id="toast"></div>
 
 <script>
-/* ============ CONFIGURATION ============ */
+/* ============ AUTHENTICATION & CLOUD SYNC ============ */
+
 // 1. Put the first half of your Apps Script URL here.
 const PARTIAL_APPSCRIPT_LINK = "https://script.google.com/macros/s/AKfycbxr5XZBgEKgBtawiR6wTR4Wh4epveYwR4wLkZh8XrdwmQ1zn8_nQ7GCwt4n";
 
-let fullAppsScriptLink = ""; // This will be built dynamically using the 10-digit PIN
+let fullAppsScriptLink = ""; 
 let currentUserRole = null; 
 let activeLoginMode = 'user'; 
+
+/* ============ storage setup ============ */
+const store = (()=>{
+  let ok=true, mem={};
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t')}catch(e){ok=false}
+  return {
+    ok,
+    get(k){ try{ return ok?localStorage.getItem(k):(mem[k]??null) }catch(e){ return mem[k]??null } },
+    set(k,v){ try{ ok?localStorage.setItem(k,v):mem[k]=v }catch(e){ mem[k]=v } }
+  };
+})();
+
+// Auto-fill memory
+document.addEventListener("DOMContentLoaded", () => {
+  const savedPin = store.get('savedPin');
+  const savedMode = store.get('savedMode');
+  if (savedPin) document.getElementById('loginPin').value = savedPin;
+  if (savedMode) setLoginMode(savedMode);
+  if (savedMode === 'admin') {
+     const u = store.get('savedUser');
+     const p = store.get('savedPass');
+     if (u) document.getElementById('loginUser').value = u;
+     if (p) document.getElementById('loginPass').value = p;
+  }
+});
 
 function setLoginMode(mode){
   activeLoginMode = mode;
@@ -531,54 +557,46 @@ async function doLogin(){
   // MERGE THE LINKS: This securely builds the path to Apps Script based on user knowledge
   fullAppsScriptLink = PARTIAL_APPSCRIPT_LINK + pin + "/exec";
 
-  if(activeLoginMode === 'admin'){
-    const u = document.getElementById('loginUser').value;
-    const p = document.getElementById('loginPass').value;
+  toast('Verifying link...');
+
+  try {
+    let fetchUrl = fullAppsScriptLink + "?action=login";
     
-    try {
-      toast('Verifying credentials...');
-      // Makes a real network request using the assembled URL
-      const res = await fetch(fullAppsScriptLink + "?action=login&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p));
-      const data = await res.json();
-      if(data.success && data.role === 'admin') {
-         // Save credentials locally so the user doesn't have to type them again
-         store.set('corbett_pin', pin);
-         store.set('corbett_user', u);
-         store.set('corbett_pass', p);
-         finishLogin('admin');
-      } else {
-         toast('Invalid Admin credentials.');
+    // Add credentials if it's an admin login
+    let u = "", p = "";
+    if (activeLoginMode === 'admin') {
+      u = document.getElementById('loginUser').value;
+      p = document.getElementById('loginPass').value;
+      fetchUrl += "&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p);
+    }
+    
+    // Test the assembled URL
+    const res = await fetch(fetchUrl, {redirect: 'follow'});
+    const data = await res.json();
+    
+    if (data.success) {
+      currentUserRole = data.role;
+      
+      // Save credentials for next time
+      store.set('savedPin', pin);
+      store.set('savedMode', activeLoginMode);
+      if(activeLoginMode === 'admin'){
+        store.set('savedUser', u);
+        store.set('savedPass', p);
       }
-    } catch(e) { toast('Error: Invalid PIN or network issue.'); }
-
-  } else {
-    try {
-      toast('Verifying link...');
-      // Makes a real network request to verify the PIN completes the URL correctly
-      const res = await fetch(fullAppsScriptLink + "?action=login");
-      const data = await res.json();
-      if(data.success) {
-         // Save PIN locally
-         store.set('corbett_pin', pin);
-         finishLogin('user');
-      } else {
-         toast('Access denied.');
-      }
-    } catch(e) { toast('Error: Invalid PIN or network issue.'); }
+      
+      toast(currentUserRole === 'admin' ? 'Welcome, Admin.' : 'Logged in as Technician.');
+      showView(currentUserRole === 'admin' ? 'register' : 'report');
+      if(currentUserRole === 'user' && !current) newJoint();
+      
+      // Pull latest sequence number & projects
+      pullDataFromGoogleSheets();
+    } else {
+      toast(data.message || 'Access denied. Invalid credentials.');
+    }
+  } catch(e) { 
+    toast('Error: Invalid PIN or Link broken.'); 
   }
-}
-
-function finishLogin(role) {
-  currentUserRole = role;
-  document.getElementById('loginUser').value = store.get('corbett_user') || '';
-  document.getElementById('loginPass').value = store.get('corbett_pass') || '';
-  document.getElementById('loginPin').value = store.get('corbett_pin') || '';
-  toast(role === 'admin' ? 'Welcome, Admin.' : 'Logged in as Technician.');
-  showView(role === 'admin' ? 'register' : 'report');
-  if(role === 'user' && !current) newJoint();
-  
-  // Sync immediately with Apps Script after logging in successfully!
-  pullDataFromGoogleSheets();
 }
 
 function logout(){
@@ -590,15 +608,15 @@ function logout(){
 
 async function pullDataFromGoogleSheets() {
   try {
-    const res = await fetch(fullAppsScriptLink + "?action=getData");
+    const res = await fetch(fullAppsScriptLink + "?action=getData", {redirect: 'follow'});
     const data = await res.json();
     
-    if(data.nextReportNo && current) {
+    if(data.nextReportNo && current && !current.jointRef) { // Only update report number if brand new
       current.reportNo = data.nextReportNo;
       const el = document.querySelector('[data-f="reportNo"]');
       if(el) el.value = current.reportNo;
     }
-    if(data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+    if(data.projects && Array.isArray(data.projects)) {
       previousProjects = data.projects.map(name => ({name, client:'', projNo:'', specNo:''}));
       combo('projectHost','project', previousProjects.map(p=>p.name));
     }
@@ -609,58 +627,65 @@ async function pullDataFromGoogleSheets() {
 
 async function pushDataToGoogleSheets(jointData) {
   try {
-    // We use no-cors to safely push data across domains to Google Sheets without preflight blocks
+    // We use form-urlencoded to safely POST across domains without preflight blocks
     await fetch(fullAppsScriptLink, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'saveReport',
-        payload: jointData
-      })
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: "action=saveReport&payload=" + encodeURIComponent(JSON.stringify(jointData))
     });
   } catch(e) {
     console.error("Failed to push to Google Sheets", e);
   }
 }
 
-const store = (()=>{
-  let ok=true, mem={};
-  try{localStorage.setItem('__t','1');localStorage.removeItem('__t')}catch(e){ok=false}
-  return {
-    ok,
-    get(k){ try{ return ok?localStorage.getItem(k):(mem[k]??null) }catch(e){ return mem[k]??null } },
-    set(k,v){ try{ ok?localStorage.setItem(k,v):mem[k]=v }catch(e){ mem[k]=v } }
-  };
-})();
+async function saveForLater() {
+  save(); 
+  const ss = document.getElementById('saveState');
+  if(ss) ss.textContent = 'Syncing to cloud...';
+  toast('Syncing report to cloud...');
+  
+  await pushDataToGoogleSheets(current);
+  
+  if(ss) ss.textContent = 'Saved to cloud';
+  toast('Report saved successfully.');
+  showView('register');
+}
+
+async function submitAndNext() {
+  save(); 
+  const ss = document.getElementById('saveState');
+  if(ss) ss.textContent = 'Syncing to cloud...';
+  toast('Submitting report...');
+  
+  await pushDataToGoogleSheets(current);
+  
+  toast('Report submitted.');
+  newJoint();
+}
+
 const KEY='corbett_torque_v1';
 let db = JSON.parse(store.get(KEY) || '{"joints":[]}');
 let current = null;
 let dirtyTimer = null;
 
-// Pre-fill saved credentials for convenience
-document.getElementById('loginPin').value = store.get('corbett_pin') || '';
-document.getElementById('loginUser').value = store.get('corbett_user') || '';
-document.getElementById('loginPass').value = store.get('corbett_pass') || '';
-
-/* ============ reference data ============ */
-const previousProjects=[
+let previousProjects=[
   {name:"Cobh Terminal",client:"Liebherr Container Cranes",projNo:"PCC-COBH",specNo:"SP-PCC-01"},
   {name:"Dublin Port",client:"Liebherr Container Cranes",projNo:"PCC-DUB",specNo:"SP-PCC-02"},
   {name:"Maher Terminals",client:"Liebherr Container Cranes",projNo:"PCC-MAH",specNo:"SP-PCC-03"}
 ];
-const subcontractors=["Corbett Heavy Lift","Maher Crane Tech","Jackson Mech"];
+const subcontractors=["Corbett Heavy Lift","Maher Crane Tech","Jacksom Mech"];
 const boltSizes=['1/2"','5/8"','3/4"','7/8"','1"','1 1/8"','1 1/4"','1 1/2"'];
 const boltingMaterials=["A193 B7 / A194 2H","A320 L7 / A194 Grade 4","A193 B8 / A194 8","Duplex / Super Duplex"];
 const wrenchMakers=["Hytorc","Enerpac","Plarad","TorcUP","Rad Torque"];
 const flangeTypes=["150# WN RF","300# WN RF","600# WN RF","900# RTJ","1500# RTJ"];
 const gasketTypes=["Spiral wound (CG)","Spiral wound (CGI)","Ring type joint (RTJ)","CNAF"];
-/* indicative B7 torque, Nm, moly lubricated, ~50% yield */
 const torqueRef={'1/2"':100,'5/8"':200,'3/4"':350,'7/8"':570,'1"':850,'1 1/8"':1100,'1 1/4"':1550,'1 1/2"':2700};
 const lubeFactor={"Moly / anti-seize":1,"Oiled":1.18,"PTFE coated":0.78,"Dry / as received":1.35};
 const stepPct={1:[100],2:[50,100],3:[30,60,100],4:[25,50,75,100]};
 
-/* ============ intro ============ */
 const rig=document.getElementById('hookrig'), intro=document.getElementById('intro');
 setTimeout(()=>rig.classList.add('drop'),400);
 setTimeout(()=>{rig.classList.remove('drop');rig.classList.add('lift');intro.classList.add('s2')},1700);
@@ -668,11 +693,11 @@ setTimeout(()=>intro.classList.add('s3'),3300);
 const introTimer=setTimeout(endIntro,4900);
 function endIntro(){clearTimeout(introTimer);intro.classList.add('gone')}
 
-/* ============ helpers ============ */
 function uid(){return 'J'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*90+10)}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
 function todayISO(){return new Date().toISOString().split('T')[0]}
 function fmtDate(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('en-IE',{day:'2-digit',month:'short',year:'numeric'})}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 function blankJoint(seed={}){
   return Object.assign({
@@ -689,7 +714,6 @@ function blankJoint(seed={}){
   },seed);
 }
 
-/* ============ views ============ */
 function showView(v){
   document.getElementById('view-login').hidden = v!=='login';
   document.getElementById('view-register').hidden = v!=='register';
@@ -703,18 +727,14 @@ function showView(v){
     document.getElementById('tabRep').classList.toggle('on',v==='report');
     document.getElementById('tabPrj').classList.toggle('on',v==='project');
 
-    // Apply role-based visibility rules
+    // Apply role-based visibility
     const isAdmin = (currentUserRole === 'admin');
-    document.getElementById('navTabs').style.display = isAdmin ? 'flex' : 'none';
     
-    const btnBackReg = document.getElementById('btnBackReg');
-    if(btnBackReg) btnBackReg.style.display = isAdmin ? 'inline-flex' : 'none';
-    
-    const btnDup = document.getElementById('btnDuplicate');
-    if(btnDup) btnDup.style.display = isAdmin ? 'inline-flex' : 'none';
-    
-    const btnNewUser = document.getElementById('btnNewForUser');
-    if(btnNewUser) btnNewUser.style.display = (!isAdmin) ? 'inline-flex' : 'none';
+    // Techs see the nav bars so they can access their register drafts, 
+    // but we hide specific admin controls
+    document.getElementById('tabPrj').style.display = isAdmin ? 'inline-block' : 'none'; 
+    document.getElementById('btnDuplicate').style.display = isAdmin ? 'inline-flex' : 'none'; 
+    document.getElementById('btnNewForUser').style.display = (!isAdmin) ? 'inline-flex' : 'none';
   }
 
   if(v==='register') renderRegister();
@@ -723,7 +743,6 @@ function showView(v){
   window.scrollTo(0,0);
 }
 
-/* ============ register ============ */
 function statusOf(j){
   const passes=stepPct[j.noOfSteps||3]||[100];
   const done=(j.passes||[]).filter(p=>p.done).length;
@@ -732,6 +751,7 @@ function statusOf(j){
   if(done>0||j.jointRef) return ['prog','In progress'];
   return ['draft','Draft'];
 }
+
 function renderRegister(){
   const q=(document.getElementById('regSearch').value||'').toLowerCase();
   const rows=db.joints
@@ -742,15 +762,24 @@ function renderRegister(){
     body.innerHTML='<tr><td colspan="8" style="padding:2.4rem;text-align:center;color:var(--steel)">No joint reports yet. Start one with “New joint report”.</td></tr>';
   }else{
     body.innerHTML=rows.map(j=>{
-      const [cls,label]=statusOf(j);
+      const [cls,label] = statusOf(j);
+      const proj = esc(j.project) || '&mdash;';
+      const repNo = esc(j.reportNo);
+      const ref = esc(j.jointRef) || '&mdash;';
+      const iso = esc(j.areaIso) || '&mdash;';
+      const dwg = j.dwgNo ? '/ ' + esc(j.dwgNo) : '';
+      const bolts = esc(j.noOfBolts);
+      const torque = j.requiredTorque ? esc(j.requiredTorque) + ' ' + esc(j.unit) : '&mdash;';
+      const dt = fmtDate(new Date(j.updated).toISOString());
+
       return `<tr>
-        <td><strong>${esc(j.project)||'&mdash;'}</strong><div style="font-size:.7rem;color:var(--steel)" class="mono">${esc(j.reportNo)}</div></td>
-        <td>${esc(j.jointRef)||'&mdash;'}</td>
-        <td class="mono" style="font-size:.75rem">${esc(j.areaIso)||'&mdash;'} ${j.dwgNo?'/ '+esc(j.dwgNo):''}</td>
-        <td class="mono">${esc(j.noOfBolts)}</td>
-        <td class="mono">${j.requiredTorque?esc(j.requiredTorque)+' '+esc(j.unit):'&mdash;'}</td>
+        <td><strong>${proj}</strong><div style="font-size:.7rem;color:var(--steel)" class="mono">${repNo}</div></td>
+        <td>${ref}</td>
+        <td class="mono" style="font-size:.75rem">${iso} ${dwg}</td>
+        <td class="mono">${bolts}</td>
+        <td class="mono">${torque}</td>
         <td><span class="chip ${cls}">${label}</span></td>
-        <td style="font-size:.75rem;color:var(--steel)">${fmtDate(new Date(j.updated).toISOString())}</td>
+        <td style="font-size:.75rem;color:var(--steel)">${dt}</td>
         <td style="text-align:right;white-space:nowrap">
           <button class="btn btn-g" onclick="openJoint('${j.id}')">Open</button>
           <button class="btn btn-r" onclick="deleteJoint('${j.id}')">Delete</button>
@@ -759,12 +788,20 @@ function renderRegister(){
   }
   document.getElementById('storeNote').textContent = store.ok
     ? db.joints.length+' report(s) saved on this device. Use “Back up” to keep an off-device copy.'
-    : 'This browser is blocking local storage, so reports will be lost on refresh. Download the file and open it directly, or use “Back up” before closing.';
+    : 'Browser blocking local storage. Reports lost on refresh. Use “Back up”.';
 }
-function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-function newJoint(){ current=blankJoint(); db.joints.push(current); save(); loadForm(); showView('report'); }
+function newJoint(){ 
+  current=blankJoint(); 
+  db.joints.push(current); 
+  save(); 
+  loadForm(); 
+  pullDataFromGoogleSheets(); 
+  showView('report'); 
+}
+
 function openJoint(id){ current=db.joints.find(j=>j.id===id); loadForm(); showView('report'); }
+
 function duplicateJoint(){
   if(!current)return;
   const c=JSON.parse(JSON.stringify(current));
@@ -772,7 +809,9 @@ function duplicateJoint(){
     jointRef:'',areaIso:'',passes:[],boltTicks:[],customOrder:{},remarks:'',updated:Date.now(),
     sub:Object.assign({},c.sub,{sig:''}),con:Object.assign({},c.con,{sig:''}),cli:Object.assign({},c.cli,{sig:''})}));
   db.joints.push(copy); current=copy; save(); loadForm(); toast('Duplicated. Joint details cleared for the next joint.');
+  pullDataFromGoogleSheets();
 }
+
 function deleteJoint(id){
   const m = document.getElementById('confirmModal');
   m.hidden = false;
@@ -785,7 +824,6 @@ function deleteJoint(id){
   };
 }
 
-/* ============ combo select (list + free text) ============ */
 function combo(hostId,field,options){
   const host=document.getElementById(hostId);
   const val=current[field]||'';
@@ -815,7 +853,6 @@ function applyProject(name){
   bindFields();showJointLogo();touch();
 }
 
-/* ============ form binding ============ */
 function loadForm(){
   const sel=document.getElementById('noOfBolts');
   sel.innerHTML=[4,8,12,16,20,24,28,32,36,40].map(n=>`<option value="${n}">${n} bolts</option>`).join('');
@@ -834,6 +871,7 @@ function loadForm(){
   renderDial(); renderPasses(); renderBoltGrid(); updateTorqueNote(); checkCal();
   document.getElementById('footRef').textContent=current.reportNo;
 }
+
 function bindFields(){
   document.querySelectorAll('[data-f]').forEach(el=>{
     const f=el.dataset.f;
@@ -848,21 +886,26 @@ function bindFields(){
       if(f==='lube'||f==='boltSize'){updateTorqueNote()}
     };
   });
-  const rb=document.getElementById('resetSeqBtn');
-  if(rb&&current) rb.hidden = current.pattern!=='Custom';
+  document.getElementById('resetSeqBtn').hidden = current.pattern!=='Custom';
 }
+
 function touch(){
   if(current) current.updated=Date.now();
   const ss=document.getElementById('saveState');
-  if(ss) ss.textContent='Saving…';
+  if(ss) ss.textContent='Saving locally…';
+  
+  // Save strictly to local device storage here so no work is lost
   clearTimeout(dirtyTimer);
-  dirtyTimer=setTimeout(()=>{save();if(ss)ss.textContent='Saved '+new Date().toLocaleTimeString('en-IE',{hour:'2-digit',minute:'2-digit'})},400);
+  dirtyTimer=setTimeout(()=>{
+    save();
+    if(ss)ss.textContent='Saved locally '+new Date().toLocaleTimeString('en-IE',{hour:'2-digit',minute:'2-digit'});
+  },400);
+  
   const rb=document.getElementById('resetSeqBtn');
   if(rb&&current) rb.hidden = current.pattern!=='Custom';
 }
 function save(){ store.set(KEY,JSON.stringify(db)); }
 
-/* ============ torque helpers ============ */
 function suggestTorque(){
   if(!current.boltSize||!torqueRef[current.boltSize]){toast('Pick a standard bolt size first.');return}
   let nm=torqueRef[current.boltSize]*(lubeFactor[current.lube]||1);
@@ -890,7 +933,6 @@ function checkCal(){
   else {el.style.color='var(--good)';el.textContent='Calibration in date.'}
 }
 
-/* ============ sequence dial ============ */
 function starSequence(n){
   if(n<2) return [1];
   if(n%2) return Array.from({length:n},(_,i)=>i+1);
@@ -943,7 +985,6 @@ function tapBolt(i){
 }
 function resetCustom(){ current.customOrder={}; renderDial(); touch(); }
 
-/* ============ passes ============ */
 function renderPasses(){
   const pcts=stepPct[current.noOfSteps]||[100];
   const base=parseFloat(current.requiredTorque)||0;
@@ -960,7 +1001,6 @@ function renderPasses(){
   }).join('');
 }
 
-/* ============ bolt verification grid ============ */
 function renderBoltGrid(){
   const n=parseInt(current.noOfBolts)||8;
   if(!Array.isArray(current.boltTicks)) current.boltTicks=[];
@@ -976,7 +1016,6 @@ function tickBolt(b){
   renderBoltGrid(); touch();
 }
 
-/* ============ signatures ============ */
 const sigOwner={};
 function buildSignature(hostId,key,label,owner){
   const rec=owner||current[key];
@@ -1054,7 +1093,6 @@ function saveBigSig(){
   touch();closeSigModal();toast('Signature saved.');
 }
 
-/* ============ project report ============ */
 db.logos = db.logos || {};
 db.projectSign = db.projectSign || {};
 function jointDate(j){ return (j.sub && j.sub.date) || new Date(j.updated).toISOString().split('T')[0]; }
@@ -1109,16 +1147,27 @@ function renderProject(){
     (rows.length?rows.map(j=>{
       const pcts=stepPct[j.noOfSteps]||[100];
       const done=(j.passes||[]).filter(x=>x.done).length;
+      
+      const pDt = fmtDate(jointDate(j));
+      const pRepNo = esc(j.reportNo);
+      const pRef = esc(j.jointRef) || '&mdash;';
+      const pIso = esc(j.areaIso) || '&mdash;';
+      const pDwg = j.dwgNo ? ' / ' + esc(j.dwgNo) : '';
+      const pFlange = esc(j.flangeDetails) || '&mdash;';
+      const pBolts = esc(j.noOfBolts);
+      const pTorque = j.requiredTorque ? esc(j.requiredTorque) + ' ' + esc(j.unit) : '&mdash;';
+      const statusArr = statusOf(j);
+
       return `<tr>
-        <td class="mono" style="font-size:.75rem">${fmtDate(jointDate(j))}</td>
-        <td class="mono" style="font-size:.75rem">${esc(j.reportNo)}</td>
-        <td>${esc(j.jointRef)||'&mdash;'}</td>
-        <td class="mono" style="font-size:.75rem">${esc(j.areaIso)||'&mdash;'}${j.dwgNo?' / '+esc(j.dwgNo):''}</td>
-        <td style="font-size:.78rem">${esc(j.flangeDetails)||'&mdash;'}</td>
-        <td class="mono">${esc(j.noOfBolts)}</td>
-        <td class="mono">${j.requiredTorque?esc(j.requiredTorque)+' '+esc(j.unit):'&mdash;'}</td>
+        <td class="mono" style="font-size:.75rem">${pDt}</td>
+        <td class="mono" style="font-size:.75rem">${pRepNo}</td>
+        <td>${pRef}</td>
+        <td class="mono" style="font-size:.75rem">${pIso}${pDwg}</td>
+        <td style="font-size:.78rem">${pFlange}</td>
+        <td class="mono">${pBolts}</td>
+        <td class="mono">${pTorque}</td>
         <td class="mono">${done}/${pcts.length}</td>
-        <td><span class="chip ${statusOf(j)[0]}">${statusOf(j)[1]}</span></td></tr>`;
+        <td><span class="chip ${statusArr[0]}">${statusArr[1]}</span></td></tr>`;
     }).join('')
     :'<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--steel)">No joints for this project in the selected dates.</td></tr>')+'</tbody>';
 
@@ -1161,18 +1210,17 @@ function removeLogo(){
   const p=document.getElementById('prProject').value;
   delete db.logos[p];save();showLogo();toast('Logo removed.');
 }
+
+function download(name,content,type){
+  const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
 function exportProjectCSV(){
   const rows=projectRows();
   const head='date,reportNo,jointRef,areaIso,dwgNo,flange,gasket,boltSize,noOfBolts,requiredTorque,unit,passesDone,boltsChecked,status';
   const body=rows.map(j=>[jointDate(j),j.reportNo,j.jointRef,j.areaIso,j.dwgNo,j.flangeDetails,j.gasketDetails,j.boltSize,j.noOfBolts,j.requiredTorque,j.unit,(j.passes||[]).filter(x=>x.done).length,(j.boltTicks||[]).length,statusOf(j)[1]]
     .map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
   download('corbett-'+(document.getElementById('prProject').value||'project').replace(/\W+/g,'-').toLowerCase()+'-'+todayISO()+'.csv',[head,...body].join('\n'),'text/csv');
-}
-
-/* ============ export / import ============ */
-function download(name,content,type){
-  const b=new Blob([content],{type});const u=URL.createObjectURL(b);
-  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
 }
 function exportCSV(){
   const cols=['reportNo','project','client','projNo','subcontractor','testPack','areaIso','shtNo','dwgNo','jointRef','specNo','flangeDetails','gasketDetails','boltSize','noOfBolts','boltingMaterial','lube','requiredTorque','unit','noOfSteps','wrenchManufacturer','serialNumber','calDate','remarks'];
@@ -1200,11 +1248,10 @@ function importJSON(e){
   r.readAsText(f);
 }
 
-/* ============ boot ============ */
 window.addEventListener('resize',()=>Object.values(sigPads).forEach(p=>p&&p.fit()));
 window.addEventListener('beforeprint',()=>{ if(current) document.title='BTR '+(current.jointRef||current.reportNo); });
 
-// Show the login view initially (it sits behind the intro animation)
+// Show the login view initially 
 showView('login');
 </script>
 </body>
