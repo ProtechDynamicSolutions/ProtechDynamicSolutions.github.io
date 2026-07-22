@@ -1,3 +1,317 @@
+/**
+ * Fastnet Awnings & Shutters Ltd
+ * Quote & Invoice backend  --  Google Apps Script + Google Sheets
+ *
+ * SETUP (once):
+ *  1. Create a new Google Sheet. Extensions > Apps Script. Paste this file in as Code.gs.
+ *  2. Run  setup()  once from the editor and authorise it. It builds the tabs and
+ *     writes the default password.
+ *  3. Project Settings > Script Properties. Confirm APP_PASSWORD exists and change it
+ *     to whatever you want the team to type.
+ *  4. Deploy > New deployment > Web app.
+ *        Execute as: Me
+ *        Who has access: Anyone
+ *     Copy the /exec URL. It looks like:
+ *        https://script.google.com/macros/s/AKfycbxAAAAAAAA................zzzzzzzzzz/exec
+ *  5. In index.html set SCRIPT_ID_PREFIX to the deployment id WITHOUT its last 10
+ *     characters. The team types those last 10 characters plus the password on first run.
+ *  6. Every time you change this file you must Deploy > Manage deployments > Edit >
+ *     Version: New version, otherwise the live app keeps the old code.
+ */
+
+var SHEET_DOCS = 'Documents';
+var SHEET_LINES = 'LineItems';
+var SHEET_LOG = 'AccessLog';
+
+var DOC_HEADERS = [
+  'Ref', 'Type', 'Status', 'Date', 'DueDate', 'Manager',
+  'ClientName', 'ClientEmail', 'ClientPhone', 'SiteAddress',
+  'PORef', 'DiscountPct', 'IncludeVAT',
+  'Subtotal', 'DiscountAmt', 'Net', 'VAT', 'Gross', 'Deposit', 'Balance',
+  'Notes', 'ItemsJSON', 'SourceRef', 'CreatedAt', 'UpdatedAt'
+];
+
+var LINE_HEADERS = [
+  'Ref', 'Type', 'Date', 'Manager', 'ClientName',
+  'Description', 'Qty', 'UnitPrice', 'LineTotal'
+];
+
+/* ------------------------------------------------------------------ setup */
+
+function setup() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheet(ss, SHEET_DOCS, DOC_HEADERS);
+  ensureSheet(ss, SHEET_LINES, LINE_HEADERS);
+  ensureSheet(ss, SHEET_LOG, ['When', 'Result', 'Detail']);
+
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('APP_PASSWORD')) {
+    props.setProperty('APP_PASSWORD', 'fastnet2026');
+  }
+  return 'Setup complete. Password is: ' + props.getProperty('APP_PASSWORD');
+}
+
+function ensureSheet(ss, name, headers) {
+  var sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sh.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold').setBackground('#111827').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+/* ------------------------------------------------------------- entrypoints */
+
+function doGet(e) {
+  return json({ ok: true, service: 'Fastnet Quotes', version: 3 });
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(25000);
+  } catch (err) {
+    return json({ ok: false, error: 'Server busy, please try again.' });
+  }
+
+  try {
+    var body = {};
+    if (e && e.postData && e.postData.contents) {
+      body = JSON.parse(e.postData.contents);
+    }
+
+    var action = String(body.action || '');
+
+    if (action === 'ping') {
+      return json({ ok: true, data: { service: 'Fastnet Quotes' } });
+    }
+
+    if (!checkPassword(body.password)) {
+      logAccess('DENIED', action);
+      return json({ ok: false, error: 'Incorrect password.', code: 'AUTH' });
+    }
+
+    switch (action) {
+      case 'login':    return json({ ok: true, data: { managers: getManagers() } });
+      case 'list':     return json({ ok: true, data: listDocs() });
+      case 'save':     return json({ ok: true, data: saveDoc(body.doc) });
+      case 'delete':   return json({ ok: true, data: deleteDoc(body.ref) });
+      case 'status':   return json({ ok: true, data: setStatus(body.ref, body.status) });
+      default:         return json({ ok: false, error: 'Unknown action: ' + action });
+    }
+  } catch (err) {
+    return json({ ok: false, error: String(err && err.message ? err.message : err) });
+  } finally {
+    try { lock.releaseLock(); } catch (ignore) {}
+  }
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* -------------------------------------------------------------------- auth */
+
+function checkPassword(supplied) {
+  var expected = PropertiesService.getScriptProperties().getProperty('APP_PASSWORD');
+  if (!expected) return false;
+  return String(supplied || '') === String(expected);
+}
+
+function logAccess(result, detail) {
+  try {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOG);
+    if (sh) sh.appendRow([new Date(), result, detail || '']);
+  } catch (ignore) {}
+}
+
+function getManagers() {
+  return ['Peter Kelleher', 'Kieran Kelleher', 'Kimberley McGorry'];
+}
+
+/* -------------------------------------------------------------------- data */
+
+function docsSheet() {
+  return ensureSheet(SpreadsheetApp.getActiveSpreadsheet(), SHEET_DOCS, DOC_HEADERS);
+}
+
+function linesSheet() {
+  return ensureSheet(SpreadsheetApp.getActiveSpreadsheet(), SHEET_LINES, LINE_HEADERS);
+}
+
+function listDocs() {
+  var sh = docsSheet();
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  var values = sh.getRange(2, 1, last - 1, DOC_HEADERS.length).getValues();
+  var out = [];
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    if (!row[0]) continue;
+    var obj = {};
+    for (var c = 0; c < DOC_HEADERS.length; c++) obj[DOC_HEADERS[c]] = row[c];
+    obj.Date = asDateString(obj.Date);
+    obj.DueDate = asDateString(obj.DueDate);
+    try { obj.items = JSON.parse(obj.ItemsJSON || '[]'); } catch (e) { obj.items = []; }
+    delete obj.ItemsJSON;
+    out.push(obj);
+  }
+  return out;
+}
+
+function asDateString(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(v);
+}
+
+/**
+ * Saves a quote or invoice. If doc.ref is blank a new reference is issued
+ * server side so two phones can never produce the same number.
+ */
+function saveDoc(doc) {
+  if (!doc) throw new Error('No document supplied.');
+
+  var sh = docsSheet();
+  var ref = String(doc.ref || '').trim();
+  var isNew = !ref;
+
+  if (isNew) ref = nextRef(doc.type);
+
+  var now = new Date();
+  var rowIndex = findRow(sh, ref);
+
+  var record = {
+    Ref: ref,
+    Type: doc.type || 'quote',
+    Status: doc.status || 'Draft',
+    Date: doc.date || '',
+    DueDate: doc.dueDate || '',
+    Manager: doc.manager || '',
+    ClientName: doc.clientName || '',
+    ClientEmail: doc.clientEmail || '',
+    ClientPhone: doc.clientPhone || '',
+    SiteAddress: doc.siteAddress || '',
+    PORef: doc.poRef || '',
+    DiscountPct: num(doc.discountPct),
+    IncludeVAT: doc.includeVat ? 'YES' : 'NO',
+    Subtotal: num(doc.subtotal),
+    DiscountAmt: num(doc.discountAmt),
+    Net: num(doc.net),
+    VAT: num(doc.vat),
+    Gross: num(doc.gross),
+    Deposit: num(doc.deposit),
+    Balance: num(doc.balance),
+    Notes: doc.notes || '',
+    ItemsJSON: JSON.stringify(doc.items || []),
+    SourceRef: doc.sourceRef || '',
+    CreatedAt: doc.createdAt || now,
+    UpdatedAt: now
+  };
+
+  var row = DOC_HEADERS.map(function (h) { return record[h]; });
+
+  if (rowIndex > 0) {
+    var created = sh.getRange(rowIndex, DOC_HEADERS.indexOf('CreatedAt') + 1).getValue();
+    if (created) row[DOC_HEADERS.indexOf('CreatedAt')] = created;
+    sh.getRange(rowIndex, 1, 1, DOC_HEADERS.length).setValues([row]);
+  } else {
+    sh.appendRow(row);
+  }
+
+  rewriteLines(ref, record, doc.items || []);
+
+  return { ref: ref, createdAt: row[DOC_HEADERS.indexOf('CreatedAt')] };
+}
+
+function num(v) {
+  var n = parseFloat(v);
+  return isNaN(n) ? 0 : Math.round(n * 100) / 100;
+}
+
+function findRow(sh, ref) {
+  var last = sh.getLastRow();
+  if (last < 2) return -1;
+  var refs = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (var i = 0; i < refs.length; i++) {
+    if (String(refs[i][0]) === String(ref)) return i + 2;
+  }
+  return -1;
+}
+
+function nextRef(type) {
+  var props = PropertiesService.getScriptProperties();
+  var isInvoice = String(type) === 'invoice';
+  var yy = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yy');
+  var key = (isInvoice ? 'SEQ_INV_' : 'SEQ_QUO_') + yy;
+  var n = parseInt(props.getProperty(key) || '0', 10) + 1;
+  props.setProperty(key, String(n));
+  var prefix = isInvoice ? 'FB-INV-' : 'FB-QUO-';
+  return prefix + yy + '-' + ('0000' + n).slice(-4);
+}
+
+function rewriteLines(ref, record, items) {
+  var sh = linesSheet();
+  var last = sh.getLastRow();
+
+  if (last >= 2) {
+    var refs = sh.getRange(2, 1, last - 1, 1).getValues();
+    for (var i = refs.length - 1; i >= 0; i--) {
+      if (String(refs[i][0]) === String(ref)) sh.deleteRow(i + 2);
+    }
+  }
+
+  if (!items.length) return;
+
+  var rows = items.map(function (it) {
+    var qty = parseFloat(it.qty) || 0;
+    var price = parseFloat(it.unitPrice) || 0;
+    var desc = it.mode === 'typed'
+      ? String(it.longText || 'Typed quote').replace(/\s+/g, ' ').slice(0, 400)
+      : String(it.description || '');
+    return [
+      ref, record.Type, record.Date, record.Manager, record.ClientName,
+      desc, qty, price, Math.round(qty * price * 100) / 100
+    ];
+  });
+
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, LINE_HEADERS.length).setValues(rows);
+}
+
+function setStatus(ref, status) {
+  var sh = docsSheet();
+  var row = findRow(sh, ref);
+  if (row < 0) throw new Error('Reference not found: ' + ref);
+  sh.getRange(row, DOC_HEADERS.indexOf('Status') + 1).setValue(status);
+  sh.getRange(row, DOC_HEADERS.indexOf('UpdatedAt') + 1).setValue(new Date());
+  return { ref: ref, status: status };
+}
+
+function deleteDoc(ref) {
+  var sh = docsSheet();
+  var row = findRow(sh, ref);
+  if (row > 0) sh.deleteRow(row);
+
+  var ls = linesSheet();
+  var last = ls.getLastRow();
+  if (last >= 2) {
+    var refs = ls.getRange(2, 1, last - 1, 1).getValues();
+    for (var i = refs.length - 1; i >= 0; i--) {
+      if (String(refs[i][0]) === String(ref)) ls.deleteRow(i + 2);
+    }
+  }
+  return { ref: ref, deleted: true };
+}
+```eof
+
+```html:index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,9 +414,8 @@
            ================================================================== */
 
         // Your Apps Script deployment id with the LAST 10 CHARACTERS REMOVED.
-        // Full URL looks like: https://script.google.com/macros/s/<ID>/exec
-        // Paste everything up to but not including the final 10 characters here.
-        const SCRIPT_ID_PREFIX = 'https://script.google.com/macros/s/AKfycbyG9A6RiEB7fe0p2zq-6Wj_vGVUGjhWYuuWnvhElr6Ffgd2QPRKE2WY7zb-Bg';
+        // It's completely fine if it has the "https://..." at the start, the app handles it automatically now!
+        const SCRIPT_ID_PREFIX = 'https://script.google.com/macros/s/AKfycbyG9A6RiEB7fe0p2zq-6Wj_vGVUGjhWYuuWnvhElr6Ffgd2QPRKE2WY7';
 
         const COMPANY = {
             name: 'Fastnet Awnings & Shutters Limited',
@@ -163,8 +476,15 @@
         const dmy = (iso) => (iso ? String(iso).split('-').reverse().join('/') : '');
         const uid = () => Date.now() + Math.floor(Math.random() * 1000);
 
-        const scriptUrl = (code) =>
-            'https://script.google.com/macros/s/' + SCRIPT_ID_PREFIX + String(code || '').trim() + '/exec';
+        const scriptUrl = (code) => {
+            let prefix = String(SCRIPT_ID_PREFIX).trim();
+            // Intelligent check: Remove /exec if the user left it in the configuration by mistake
+            prefix = prefix.replace(/\/exec\/?$/, '');
+            // Intelligent check: If they didn't include https://, add it for them
+            const base = prefix.startsWith('http') ? prefix : 'https://script.google.com/macros/s/' + prefix;
+            // Append the 10 character code they typed on the login screen, and add /exec
+            return base + String(code || '').trim() + '/exec';
+        };
 
         async function callApi(auth, action, payload) {
             const res = await fetch(scriptUrl(auth.code), {
@@ -1318,3 +1638,4 @@
     </script>
 </body>
 </html>
+```eof
