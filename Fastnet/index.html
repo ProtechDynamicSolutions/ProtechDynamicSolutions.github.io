@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Fastnet Quote Generator</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <title>Fastnet Quotes &amp; Invoices</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fastnet">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" href="icon-192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -26,20 +35,17 @@
                     colors: {
                         'fastnet-dark': '#111827',
                         'fastnet-gray': '#4B5563',
-                        'fastnet-accent': '#0284c7', 
+                        'fastnet-accent': '#0284c7'
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.2s ease-out',
-                        'slide-up': 'slideUp 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out'
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: {
                             '0%': { transform: 'translateY(10px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
                         }
                     }
                 }
@@ -52,14 +58,14 @@
         ::-webkit-scrollbar-track { background: #f4f4f5; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        body { 
-            background-color: #f8fafc; 
-            color: #1e293b; 
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
             font-family: system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
@@ -67,47 +73,167 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* Prevent zooming on iOS inputs */
-        input[type="text"], input[type="number"], select, textarea {
+        input[type="text"], input[type="number"], input[type="password"],
+        input[type="email"], input[type="tel"], input[type="date"], select, textarea {
             font-size: 16px !important;
         }
+
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, Component, useRef } from 'react';
+        import React, { useState, useEffect, useMemo, Component } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { 
-            FileText, Share, Calendar, MapPin, User, Phone, 
-            Mail, Plus, Trash2, Settings, Download, Euro, Home, FileCheck, Percent, X, ChevronDown
+        import {
+            FileText, Calendar, MapPin, User, Phone, Mail, Plus, Settings,
+            Download, Home, Percent, X, ChevronDown, Lock, KeyRound, LogOut,
+            LayoutDashboard, FolderOpen, FilePlus2, Search, RefreshCw, Save,
+            Trash2, Copy, ArrowRightLeft, CheckCircle2, CloudOff, Cloud, Euro,
+            Type, AlertCircle, Pencil
         } from 'lucide-react';
 
-        const ADVISERS = [
-            { name: "Peter Kelleher", phone: "087 627 9456", email: "info@fastnetblinds.ie" },
-            { name: "Kieran Kelleher", phone: "087 627 9456", email: "info@fastnetblinds.ie" },
-            { name: "Kimberley McGorry", phone: "087 627 9456", email: "info@fastnetblinds.ie" }
-        ];
+        /* ==================================================================
+           1.  CONFIGURATION  --  change these three things and nothing else
+           ================================================================== */
+
+        // Your Apps Script deployment id with the LAST 10 CHARACTERS REMOVED.
+        // Full URL looks like: https://script.google.com/macros/s/<ID>/exec
+        // Paste everything up to but not including the final 10 characters here.
+        const SCRIPT_ID_PREFIX = 'PASTE_YOUR_DEPLOYMENT_ID_WITHOUT_THE_LAST_10_CHARACTERS';
+
+        const COMPANY = {
+            name: 'Fastnet Awnings & Shutters Limited',
+            address: ['Kilnagleary, Carrigaline', 'P43 HF59, Co Cork'],
+            tel: '+353 87 627 9456',
+            web: 'www.fastnetblinds.ie',
+            vat: '3668036EH',
+            bank: [
+                'Bank Name: Bank of Ireland',
+                'Account No: 82982297',
+                'Sort Code: 902709',
+                'BIC/SWIFT: BOFIIE2D',
+                'IBAN: IE51BOFI90270982982297'
+            ]
+        };
+
+        const ADVISERS = ['Peter Kelleher', 'Kieran Kelleher', 'Kimberley McGorry'];
+
+        const TYPED_QUOTE = 'Typed Quote';
 
         const BLIND_TYPES = [
-            "Roller Blinds", "Roman Blinds", "Vertical Blinds",
-            "Venetian Blinds", "Wooden Venetian Blinds", "Pleated Blinds",
-            "Perfect Fit Blinds", "Plantation Shutters", "Motorised Blinds",
-            "Awnings", "Outdoor Blinds", "Skylight Blinds"
+            TYPED_QUOTE,
+            'Roller Blinds', 'Roman Blinds', 'Vertical Blinds',
+            'Venetian Blinds', 'Wooden Venetian Blinds', 'Pleated Blinds',
+            'Perfect Fit Blinds', 'Plantation Shutters', 'Motorised Blinds',
+            'Awnings', 'Outdoor Blinds', 'Skylight Blinds',
+            'Supply Only', 'Installation', 'Call Out & Survey', 'Repair / Service'
         ];
 
-        const LOGO_URL = "https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/Fastnet/1772185373414.png";
+        const STATUSES = ['Draft', 'Sent', 'Accepted', 'Declined', 'Invoiced', 'Paid'];
 
-        const getInitials = (name) => name.split(/[ ']/).filter(Boolean).map(p => p[0]).join('').toUpperCase();
-        const formatCurrency = (num) => parseFloat(num || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const LOGO_URL = 'icon-512.png';
+        const VAT_RATE = 0.135;
 
-        // --- ERROR BOUNDARY ---
+        /* ==================================================================
+           2.  HELPERS
+           ================================================================== */
+
+        const LS = {
+            auth: 'fb_auth_v1',
+            docs: 'fb_docs_v1',
+            queue: 'fb_queue_v1'
+        };
+
+        const read = (k, fallback) => {
+            try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; }
+            catch (e) { return fallback; }
+        };
+        const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+        const fmt = (n) => parseFloat(n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const today = () => new Date().toISOString().split('T')[0];
+        const addDays = (iso, days) => {
+            const d = new Date(iso + 'T12:00:00');
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        };
+        const dmy = (iso) => (iso ? String(iso).split('-').reverse().join('/') : '');
+        const uid = () => Date.now() + Math.floor(Math.random() * 1000);
+
+        const scriptUrl = (code) =>
+            'https://script.google.com/macros/s/' + SCRIPT_ID_PREFIX + String(code || '').trim() + '/exec';
+
+        async function callApi(auth, action, payload) {
+            const res = await fetch(scriptUrl(auth.code), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(Object.assign({ action, password: auth.password }, payload || {})),
+                redirect: 'follow'
+            });
+            if (!res.ok) throw new Error('Access code not recognised (' + res.status + ')');
+            const text = await res.text();
+            let json;
+            try { json = JSON.parse(text); }
+            catch (e) { throw new Error('Access code not recognised.'); }
+            if (!json.ok) { const err = new Error(json.error || 'Request failed'); err.code = json.code; throw err; }
+            return json.data;
+        }
+
+        const blankDoc = (type) => ({
+            ref: '',
+            type: type || 'quote',
+            status: 'Draft',
+            date: today(),
+            dueDate: addDays(today(), 30),
+            manager: ADVISERS[0],
+            clientName: '',
+            clientEmail: '',
+            clientPhone: '',
+            siteAddress: '',
+            poRef: '',
+            discountPct: '',
+            includeVat: true,
+            deposit: '',
+            notes: '',
+            sourceRef: '',
+            items: [{ id: uid(), mode: 'line', description: '', longText: '', qty: 1, unitPrice: '' }]
+        });
+
+        const totalsFor = (doc) => {
+            const subtotal = (doc.items || []).reduce((s, it) => {
+                const qty = it.mode === 'typed' ? 1 : parseFloat(it.qty || 0);
+                return s + qty * parseFloat(it.unitPrice || 0);
+            }, 0);
+            const discountPct = parseFloat(doc.discountPct || 0);
+            const discountAmt = subtotal * (discountPct / 100);
+            const net = Math.max(0, subtotal - discountAmt);
+            const vat = doc.includeVat ? net * VAT_RATE : 0;
+            const gross = net + vat;
+            const deposit = parseFloat(doc.deposit || 0);
+            const balance = Math.max(0, gross - deposit);
+            return { subtotal, discountPct, discountAmt, net, vat, gross, deposit, balance };
+        };
+
+        /* ==================================================================
+           3.  SHARED UI BITS
+           ================================================================== */
+
         class ErrorBoundary extends Component {
-            constructor(props) { super(props); this.state = { hasError: false }; }
-            static getDerivedStateFromError() { return { hasError: true }; }
+            constructor(p) { super(p); this.state = { hasError: false, msg: '' }; }
+            static getDerivedStateFromError(e) { return { hasError: true, msg: e.message }; }
             render() {
-                if (this.state.hasError) return <div className="p-8 text-center text-red-500 font-bold">An error occurred. Please refresh the page.</div>;
+                if (this.state.hasError) {
+                    return (
+                        <div className="p-8 text-center">
+                            <p className="text-red-600 font-bold mb-2">Something went wrong.</p>
+                            <p className="text-xs text-slate-500 mb-4">{this.state.msg}</p>
+                            <button onClick={() => location.reload()} className="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm">Reload</button>
+                        </div>
+                    );
+                }
                 return this.props.children;
             }
         }
@@ -121,578 +247,1074 @@
             </div>
         );
 
-        const TextInput = ({ ...props }) => (
+        const TextInput = (props) => (
             <input {...props} className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder-slate-400 text-sm" />
         );
 
-        function AppContent() {
-            const [isGenerating, setIsGenerating] = useState(false);
-            const [statusMsg, setStatusMsg] = useState('');
-            const [quoteRef, setQuoteRef] = useState('Draft');
-            const [activeDropdown, setActiveDropdown] = useState(null);
-
-            const [formData, setFormData] = useState({
-                adviserName: ADVISERS[0].name,
-                date: new Date().toISOString().split('T')[0],
-                clientName: '',
-                clientEmail: '',
-                clientPhone: '',
-                siteAddress: '',
-                discount: '',
-                includeVat: true
-            });
-
-            const [items, setItems] = useState([
-                { id: 1, description: '', qty: 1, unitPrice: '' }
-            ]);
-
-            useEffect(() => {
-                const generateRef = () => {
-                    const initials = getInitials(formData.adviserName);
-                    const now = new Date();
-                    const yy = String(now.getFullYear()).slice(-2);
-                    const mm = String(now.getMonth() + 1).padStart(2, '0');
-                    const dd = String(now.getDate()).padStart(2, '0');
-                    const hh = String(now.getHours()).padStart(2, '0');
-                    const min = String(now.getMinutes()).padStart(2, '0');
-                    
-                    setQuoteRef(`FB-${initials}-${yy}${mm}${dd}-${hh}${min}`);
-                };
-                generateRef();
-            }, [formData.adviserName]);
-
-            const handleFormChange = (e) => {
-                const { name, value, type, checked } = e.target;
-                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        const Pill = ({ status }) => {
+            const map = {
+                Draft: 'bg-slate-100 text-slate-600',
+                Sent: 'bg-sky-100 text-sky-700',
+                Accepted: 'bg-emerald-100 text-emerald-700',
+                Declined: 'bg-rose-100 text-rose-700',
+                Invoiced: 'bg-amber-100 text-amber-700',
+                Paid: 'bg-emerald-600 text-white'
             };
+            return <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${map[status] || map.Draft}`}>{status}</span>;
+        };
 
-            const handleItemChange = (id, field, value) => {
-                setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
-            };
+        /* ==================================================================
+           4.  LOGIN GATE
+           ================================================================== */
 
-            const addItem = () => {
-                const newId = Date.now();
-                setItems(prev => [...prev, { id: newId, description: '', qty: 1, unitPrice: '' }]);
-                // Small delay to allow React to render then scroll
-                setTimeout(() => {
-                    const el = document.getElementById(`item-${newId}`);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
-            };
+        function Gate({ onAuthed }) {
+            const [code, setCode] = useState('');
+            const [password, setPassword] = useState('');
+            const [busy, setBusy] = useState(false);
+            const [err, setErr] = useState('');
 
-            const removeItem = (id) => {
-                if (items.length > 1) setItems(prev => prev.filter(item => item.id !== id));
-            };
-
-            // Calculations
-            const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.unitPrice || 0)), 0);
-            const discountPerc = parseFloat(formData.discount || 0);
-            const discountAmt = subtotal * (discountPerc / 100);
-            const netTotal = Math.max(0, subtotal - discountAmt);
-            const vatAmount = formData.includeVat ? netTotal * 0.135 : 0; 
-            const grossTotal = netTotal + vatAmount;
-
-            const getBase64ImageFromURL = (url) => {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.setAttribute("crossOrigin", "anonymous");
-                    img.onload = () => {
-                        const c = document.createElement("canvas");
-                        c.width = img.width; c.height = img.height;
-                        const ctx = c.getContext("2d");
-                        ctx.drawImage(img, 0, 0);
-                        resolve({ data: c.toDataURL("image/png"), w: img.width, h: img.height });
-                    };
-                    img.onerror = () => resolve(null);
-                    img.src = url;
-                });
-            };
-
-            const generatePDF = async () => {
-                if (!window.jspdf) return;
-                setIsGenerating(true);
-                setStatusMsg('Formatting document...');
-
+            const submit = async () => {
+                setErr('');
+                if (code.trim().length !== 10) { setErr('The access code is exactly 10 characters.'); return; }
+                if (!password) { setErr('Enter the password.'); return; }
+                setBusy(true);
                 try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    
-                    const brandBlack = [17, 24, 39];
-                    const brandGray = [75, 85, 99];
-                    const lightGray = [243, 244, 246];
-                    const borderGray = [229, 231, 235];
-                    const brandAccent = [2, 132, 199]; 
-                    
-                    const logoObj = await getBase64ImageFromURL(LOGO_URL);
-
-                    let y = 0;
-
-                    const addHeader = (isFirstPage = false) => {
-                        doc.setFillColor(...brandAccent);
-                        doc.rect(0, 0, 210, 4, 'F');
-                        
-                        y = 15;
-                        let currentLogoHeight = 20; 
-                        
-                        if (logoObj && logoObj.data) {
-                            const targetWidth = 45; 
-                            currentLogoHeight = (logoObj.h / logoObj.w) * targetWidth;
-                            doc.addImage(logoObj.data, 'PNG', 15, y, targetWidth, currentLogoHeight);
-                        } else {
-                            doc.setFont("helvetica", "bold");
-                            doc.setFontSize(22);
-                            doc.setTextColor(...brandBlack);
-                            doc.text("FASTNET BLINDS", 15, y + 10);
-                        }
-
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(10);
-                        doc.setTextColor(...brandBlack);
-                        doc.text("Fastnet Awnings & Shutters Limited", 195, y + 4, { align: "right" });
-                        
-                        doc.setFont("helvetica", "normal");
-                        doc.setFontSize(8.5);
-                        doc.setTextColor(...brandGray);
-                        const companyDetails = [
-                            "Kilnagleary, Carrigaline",
-                            "P43 HF59, Co Cork",
-                            "Tel: +353 87 627 9456",
-                            "Web: www.fastnetblinds.ie",
-                            "VAT No: 3668036EH"
-                        ];
-                        
-                        companyDetails.forEach((line, idx) => {
-                            doc.text(line, 195, y + 9 + (idx * 4.5), { align: "right" });
-                        });
-
-                        y = y + Math.max(currentLogoHeight, 30) + 8;
-                        
-                        doc.setDrawColor(...borderGray);
-                        doc.setLineWidth(0.5);
-                        doc.line(15, y, 195, y);
-                        y += 12;
-                    };
-
-                    addHeader(true);
-
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(18);
-                    doc.setTextColor(...brandBlack);
-                    doc.text("QUOTATION", 15, y);
-
-                    doc.setFillColor(...lightGray);
-                    doc.roundedRect(125, y - 8, 70, 28, 2, 2, 'F');
-                    
-                    doc.setFontSize(8.5);
-                    const metaX = 130;
-                    let metaY = y - 2;
-                    
-                    doc.setTextColor(...brandGray); doc.text("Quote Ref:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(quoteRef, metaX + 35, metaY);
-                    
-                    metaY += 6;
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandGray); doc.text("Date:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.date.split('-').reverse().join('/'), metaX + 35, metaY);
-                    
-                    metaY += 6;
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandGray); doc.text("Account Mgr:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text(formData.adviserName, metaX + 35, metaY);
-
-                    metaY += 6;
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandGray); doc.text("Valid For:", metaX, metaY);
-                    doc.setTextColor(...brandBlack); doc.setFont("helvetica", "bold"); doc.text("30 Days", metaX + 35, metaY);
-
-                    y += 15;
-
-                    doc.setFontSize(9);
-                    doc.setTextColor(...brandAccent);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("PREPARED FOR:", 15, y);
-                    y += 5;
-                    
-                    doc.setTextColor(...brandBlack);
-                    doc.text(formData.clientName || "Valued Client", 15, y);
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandGray);
-                    
-                    if (formData.siteAddress) {
-                        const addrLines = doc.splitTextToSize(formData.siteAddress, 80);
-                        addrLines.forEach(line => { y += 4.5; doc.text(line, 15, y); });
-                    }
-                    if (formData.clientPhone) { y += 4.5; doc.text(`Tel: ${formData.clientPhone}`, 15, y); }
-                    if (formData.clientEmail) { y += 4.5; doc.text(`Email: ${formData.clientEmail}`, 15, y); }
-                    
-                    y += 15;
-
-                    const tableCols = [
-                        { label: "Description", x: 15, w: 100, align: "left" },
-                        { label: "Qty", x: 125, w: 15, align: "center" },
-                        { label: "Unit Price", x: 155, w: 20, align: "right" },
-                        { label: "Total Net", x: 195, w: 20, align: "right" }
-                    ];
-
-                    doc.setFillColor(...brandBlack);
-                    doc.rect(12, y, 186, 8, 'F');
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(8.5);
-                    
-                    tableCols.forEach(col => {
-                        doc.text(col.label, col.x, y + 5.5, { align: col.align });
-                    });
-                    
-                    y += 8;
-
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandBlack);
-                    let altRow = false;
-
-                    items.forEach((item, index) => {
-                        const itemTotal = parseFloat(item.qty || 0) * parseFloat(item.unitPrice || 0);
-                        const descLines = doc.splitTextToSize(item.description || "Item", 95);
-                        const rowH = Math.max(8, descLines.length * 5 + 3);
-
-                        if (y + rowH > 240) {
-                            doc.addPage();
-                            addHeader();
-                            doc.setFillColor(...brandBlack);
-                            doc.rect(12, y, 186, 8, 'F');
-                            doc.setTextColor(255, 255, 255);
-                            doc.setFont("helvetica", "bold");
-                            tableCols.forEach(col => { doc.text(col.label, col.x, y + 5.5, { align: col.align }); });
-                            y += 8;
-                            doc.setFont("helvetica", "normal");
-                            doc.setTextColor(...brandBlack);
-                        }
-
-                        if (altRow) {
-                            doc.setFillColor(...lightGray);
-                            doc.rect(12, y, 186, rowH, 'F');
-                        }
-
-                        descLines.forEach((line, i) => {
-                            doc.text(line, tableCols[0].x, y + 5.5 + (i * 4.5));
-                        });
-                        
-                        doc.text(String(item.qty), tableCols[1].x, y + 5.5, { align: tableCols[1].align });
-                        doc.text(`€${formatCurrency(item.unitPrice)}`, tableCols[2].x, y + 5.5, { align: tableCols[2].align });
-                        doc.text(`€${formatCurrency(itemTotal)}`, tableCols[3].x, y + 5.5, { align: tableCols[3].align });
-
-                        y += rowH;
-                        altRow = !altRow;
-                        
-                        doc.setDrawColor(240, 240, 240);
-                        doc.setLineWidth(0.1);
-                        doc.line(12, y, 198, y);
-                    });
-
-                    y += 5;
-
-                    const totalsX = 135;
-                    const totalsW = 60;
-                    
-                    if (y > 210) { doc.addPage(); addHeader(); }
-
-                    const drawTotalRow = (label, value, isBold = false, isHighlight = false) => {
-                        if (isHighlight) {
-                            doc.setFillColor(...brandBlack);
-                            doc.rect(totalsX - 3, y, totalsW + 6, 9, 'F');
-                            doc.setTextColor(255, 255, 255);
-                        } else {
-                            doc.setTextColor(...brandBlack);
-                        }
-                        
-                        doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        doc.text(label, totalsX, y + 6);
-                        doc.text(`€${formatCurrency(value)}`, totalsX + totalsW, y + 6, { align: "right" });
-                        
-                        if (!isHighlight) {
-                            doc.setDrawColor(...borderGray);
-                            doc.setLineWidth(0.2);
-                            doc.line(totalsX - 3, y + 9, totalsX + totalsW + 3, y + 9);
-                        }
-                        y += 9;
-                    };
-
-                    drawTotalRow("Subtotal", subtotal);
-                    if (discountAmt > 0) {
-                        drawTotalRow(`Discount (${discountPerc}%)`, -discountAmt);
-                        drawTotalRow("Total Net", netTotal);
-                    }
-                    
-                    if (formData.includeVat) {
-                        drawTotalRow("VAT Rate (13.5%)", vatAmount);
-                    } else {
-                        drawTotalRow("VAT Rate (0%)", vatAmount);
-                    }
-                    
-                    y += 1;
-                    drawTotalRow("TOTAL GROSS", grossTotal, true, true);
-
-                    let footerY = Math.max(y + 15, 225); 
-                    
-                    doc.setFillColor(...lightGray);
-                    doc.roundedRect(15, footerY, 180, 45, 2, 2, 'F');
-                    
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(9);
-                    doc.setTextColor(...brandAccent);
-                    doc.text("PAYMENT ADVICE", 20, footerY + 8);
-                    
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(8);
-                    doc.setTextColor(...brandBlack);
-                    doc.text("Fastnet Awnings & Shutters Ltd", 20, footerY + 13);
-                    
-                    doc.setFont("helvetica", "normal");
-                    doc.setTextColor(...brandGray);
-                    const bankInfo = [
-                        "Bank Name: Bank of Ireland",
-                        "Account No: 82982297",
-                        "Sort Code: 902709",
-                        "BIC/SWIFT: BOFIIE2D",
-                        "IBAN: IE51BOFI90270982982297"
-                    ];
-                    bankInfo.forEach((line, i) => { doc.text(line, 20, footerY + 18 + (i * 4)); });
-
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(9);
-                    doc.setTextColor(...brandAccent);
-                    doc.text("TERMS & CONDITIONS", 110, footerY + 8);
-                    
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(7.5);
-                    doc.setTextColor(...brandGray);
-                    const termsText = "Please note: This quotation is based on a single call-out and fit unless otherwise specified. Unless otherwise specified all invoices are due net 30 days from date of Shipment. PRICES INVOICED WILL BE THOSE IN EFFECT AT TIME OF SHIPMENT. All prices are f.o.b. point of manufacture. Seller reserves the right to place a service charge on past due accounts at the highest rate permitted by law.";
-                    const termsLines = doc.splitTextToSize(termsText, 80);
-                    doc.text(termsLines, 110, footerY + 13);
-
-                    const blob = doc.output('blob');
-                    const file = new File([blob], `${quoteRef}.pdf`, { type: 'application/pdf' });
-                    
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({ files: [file], title: `Fastnet Quote ${quoteRef}` });
-                        setStatusMsg('Quote Shared Successfully');
-                    } else {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a'); a.href = url; a.download = file.name; a.click();
-                        setStatusMsg('Quote Downloaded Successfully');
-                    }
-                } catch (err) { 
-                    console.error(err); 
-                    setStatusMsg(`Error: ${err.message}`); 
+                    const auth = { code: code.trim(), password };
+                    await callApi(auth, 'login');
+                    write(LS.auth, auth);
+                    onAuthed(auth);
+                } catch (e) {
+                    setErr(e.message || 'Could not sign in.');
+                } finally {
+                    setBusy(false);
                 }
-                
-                setTimeout(() => { setIsGenerating(false); setStatusMsg(''); }, 3000);
             };
 
             return (
-                <div className="min-h-screen pb-24 font-sans text-slate-800">
-                    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
-                        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-                             <div className="flex items-center gap-3">
-                                <img src={LOGO_URL} alt="Fastnet Blinds" className="h-8 w-auto object-contain" />
-                             </div>
-                             <div className="px-3 py-1 flex items-center gap-2 bg-slate-100 rounded-md border border-slate-200">
-                                <FileText size={14} className="text-slate-500" />
-                                <span className="text-xs font-mono font-bold text-slate-700 tracking-wide">
-                                    {quoteRef}
-                                </span>
-                             </div>
-                        </div>
-                    </nav>
-
-                    <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-                        
-                        <div className="glass-panel p-6 rounded-2xl relative overflow-hidden bg-gradient-to-r from-sky-50 to-white">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-1">
-                                Fastnet Quote Generator
-                            </h1>
-                            <p className="text-sm text-slate-500">Create and export PDF quotes for Blinds, Awnings & Shutters.</p>
+                <div className="min-h-screen flex items-center justify-center px-5 bg-gradient-to-b from-slate-100 to-white">
+                    <div className="w-full max-w-sm">
+                        <div className="text-center mb-8">
+                            <img src={LOGO_URL} alt="Fastnet" className="h-20 w-20 mx-auto object-contain rounded-2xl shadow-lg border border-slate-200 bg-white" />
+                            <h1 className="mt-5 text-xl font-black text-slate-900 tracking-tight">Quotes &amp; Invoices</h1>
+                            <p className="text-xs text-slate-500 mt-1">Staff access only. You only need to do this once on this device.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            <div className="space-y-4">
-                                <div className="glass-panel p-5 rounded-2xl space-y-4">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
-                                        <User size={16} className="text-sky-500"/> Client Information
-                                    </h3>
-                                    <InputGroup label="Client / Company Name">
-                                        <TextInput name="clientName" placeholder="e.g. John Doe" value={formData.clientName} onChange={handleFormChange} />
-                                    </InputGroup>
-                                    <InputGroup label="Site Address" icon={MapPin}>
-                                        <TextInput name="siteAddress" placeholder="e.g. Midleton, Co. Cork" value={formData.siteAddress} onChange={handleFormChange} />
-                                    </InputGroup>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputGroup label="Email" icon={Mail}>
-                                            <TextInput type="email" name="clientEmail" placeholder="john@email.com" value={formData.clientEmail} onChange={handleFormChange} />
-                                        </InputGroup>
-                                        <InputGroup label="Phone" icon={Phone}>
-                                            <TextInput type="tel" name="clientPhone" placeholder="08x..." value={formData.clientPhone} onChange={handleFormChange} />
-                                        </InputGroup>
-                                    </div>
-                                </div>
+                        <div className="glass-panel rounded-2xl p-5 space-y-4">
+                            <InputGroup label="Access Code (last 10 characters)" icon={KeyRound}>
+                                <TextInput
+                                    type="text" autoComplete="off" autoCapitalize="none" spellCheck="false"
+                                    maxLength={10} placeholder="e.g. 9fJ2kQp1Az"
+                                    value={code} onChange={(e) => setCode(e.target.value)} />
+                            </InputGroup>
 
-                                <div className="glass-panel p-5 rounded-2xl space-y-4">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
-                                        <Settings size={16} className="text-sky-500"/> Quote Settings
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputGroup label="Account Manager">
-                                            <select name="adviserName" value={formData.adviserName} onChange={handleFormChange} className="w-full bg-transparent outline-none text-slate-800 font-semibold text-sm cursor-pointer">
-                                                {ADVISERS.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                                            </select>
-                                        </InputGroup>
-                                        <InputGroup label="Quote Date" icon={Calendar}>
-                                            <TextInput type="date" name="date" value={formData.date} onChange={handleFormChange} />
-                                        </InputGroup>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 items-center">
-                                        <InputGroup label="Discount Applied (%)" icon={Percent}>
-                                            <TextInput type="number" min="0" max="100" name="discount" value={formData.discount} onChange={handleFormChange} placeholder="0" />
-                                        </InputGroup>
-                                        <div className="flex items-center justify-start pl-2">
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="includeVat" checked={formData.includeVat} onChange={handleFormChange} className="sr-only peer" />
-                                                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
-                                                <span className="ml-2 text-sm font-bold text-slate-600">Include VAT</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <InputGroup label="Password" icon={Lock}>
+                                <TextInput
+                                    type="password" autoComplete="current-password"
+                                    placeholder="••••••••"
+                                    value={password} onChange={(e) => setPassword(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} />
+                            </InputGroup>
 
-                            <div className="glass-panel p-5 rounded-2xl flex flex-col h-full overflow-visible">
-                                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                        <Home size={16} className="text-sky-500"/> Products & Services
-                                    </h3>
-                                    <button onClick={addItem} className="text-xs font-bold bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg hover:bg-sky-100 transition-colors flex items-center gap-1">
-                                        <Plus size={14} /> Add Item
-                                    </button>
+                            {err && (
+                                <div className="flex items-start gap-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-3">
+                                    <AlertCircle size={14} className="mt-0.5 shrink-0" /> <span>{err}</span>
                                 </div>
-                                
-                                <div className="space-y-4 flex-grow overflow-y-auto max-h-[600px] pr-2 pb-10">
-                                    {items.map((item, idx) => (
-                                        <div key={item.id} id={`item-${item.id}`} className="bg-slate-50 border border-slate-200 rounded-xl p-3 animate-fade-in relative group overflow-visible">
-                                            {items.length > 1 && (
-                                                <button onClick={() => removeItem(item.id)} className="absolute -right-2 -top-2 bg-red-100 text-red-500 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200 z-50">
-                                                    <X size={14} />
-                                                </button>
-                                            )}
-                                            <div className="flex flex-col gap-2 overflow-visible">
-                                                <div className="relative overflow-visible">
-                                                    <div className="flex items-center gap-1 mb-1">
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Description</span>
-                                                        <ChevronDown size={10} className="text-slate-300" />
-                                                    </div>
-                                                    <input 
-                                                        type="text" 
-                                                        autoComplete="off"
-                                                        placeholder="Select or type blind type..." 
-                                                        value={item.description} 
-                                                        onChange={(e) => {
-                                                            handleItemChange(item.id, 'description', e.target.value);
-                                                            setActiveDropdown(item.id);
-                                                        }}
-                                                        onFocus={() => setActiveDropdown(item.id)}
-                                                        className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400 shadow-sm"
-                                                    />
-                                                    
-                                                    {activeDropdown === item.id && (
-                                                        <div className="absolute z-[100] w-full bg-white border border-slate-200 shadow-2xl rounded-xl mt-1 max-h-56 overflow-y-auto animate-slide-up ring-4 ring-black/5">
-                                                            <div className="sticky top-0 bg-slate-50 p-2 border-b border-slate-100 flex justify-between items-center">
-                                                                <span className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-tighter">Suggestions</span>
-                                                                <button onMouseDown={(e) => { e.preventDefault(); setActiveDropdown(null); }} className="p-1 hover:bg-slate-200 rounded-full"><X size={12}/></button>
-                                                            </div>
-                                                            {BLIND_TYPES
-                                                                .filter(type => !item.description || type.toLowerCase().includes(item.description.toLowerCase()))
-                                                                .map(type => (
-                                                                <div 
-                                                                    key={type}
-                                                                    onMouseDown={(e) => {
-                                                                        e.preventDefault(); 
-                                                                        handleItemChange(item.id, 'description', type);
-                                                                        setActiveDropdown(null);
-                                                                    }}
-                                                                    className="p-3.5 hover:bg-sky-50 border-b border-slate-100 last:border-0 cursor-pointer text-sm font-bold text-slate-700 active:bg-sky-100"
-                                                                >
-                                                                    {type}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-3 mt-1">
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Quantity</span>
-                                                        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
-                                                            <input type="number" min="1" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} className="w-full py-2.5 text-sm outline-none font-bold text-slate-700"/>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Unit Price</span>
-                                                        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
-                                                            <span className="text-xs text-slate-400 font-bold mr-2">€</span>
-                                                            <input type="number" min="0" placeholder="0.00" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} className="w-full py-2.5 text-sm outline-none font-bold text-slate-700 text-right"/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            )}
 
-                                <div className="mt-auto pt-6 border-t border-slate-200 space-y-2.5">
-                                    <div className="flex justify-between text-sm text-slate-500 font-bold">
-                                        <span>Subtotal</span>
-                                        <span>€{formatCurrency(subtotal)}</span>
-                                    </div>
-                                    {discountAmt > 0 && (
-                                        <div className="flex justify-between text-sm text-emerald-600 font-bold">
-                                            <span>Discount ({discountPerc}%)</span>
-                                            <span>-€{formatCurrency(discountAmt)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between text-sm text-slate-500 font-bold">
-                                        <span>VAT {formData.includeVat ? '(13.5%)' : '(0%)'}</span>
-                                        <span>€{formatCurrency(vatAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xl font-black text-slate-900 pt-3 border-t border-slate-300">
-                                        <span>Total Gross</span>
-                                        <span>€{formatCurrency(grossTotal)}</span>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </main>
-
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 z-[200] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)]">
-                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
-                            <div className="text-xs font-black text-sky-600 tracking-tighter uppercase animate-pulse">
-                                {statusMsg}
-                            </div>
-                            <button 
-                                onClick={generatePDF} 
-                                disabled={isGenerating || !formData.clientName} 
-                                className="w-full md:w-auto px-10 py-4 bg-slate-900 hover:bg-black text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                            >
-                                {isGenerating ? <span>Formatting...</span> : <><Download size={20} /> Generate & Export</>}
+                            <button
+                                onClick={submit} disabled={busy}
+                                className="w-full py-4 bg-slate-900 hover:bg-black text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                                {busy ? 'Checking...' : <><Lock size={16} /> Unlock</>}
                             </button>
+
+                            <p className="text-[10px] text-center text-slate-400 leading-relaxed">
+                                Both details are supplied by the office. They are stored on this device only so the app opens straight away next time.
+                            </p>
                         </div>
                     </div>
                 </div>
             );
         }
 
+        /* ==================================================================
+           5.  LINE ITEM EDITOR
+           ================================================================== */
+
+        function ItemRow({ item, canRemove, onChange, onRemove, openId, setOpenId }) {
+            const typed = item.mode === 'typed';
+            const lineTotal = (typed ? 1 : parseFloat(item.qty || 0)) * parseFloat(item.unitPrice || 0);
+
+            const pick = (value) => {
+                if (value === TYPED_QUOTE) {
+                    onChange(item.id, { mode: 'typed', description: TYPED_QUOTE });
+                } else {
+                    onChange(item.id, { mode: 'line', description: value });
+                }
+                setOpenId(null);
+            };
+
+            return (
+                <div id={`item-${item.id}`} className="bg-slate-50 border border-slate-200 rounded-xl p-3 animate-fade-in relative group overflow-visible">
+                    {canRemove && (
+                        <button onClick={() => onRemove(item.id)} className="absolute -right-2 -top-2 bg-red-100 text-red-500 p-1.5 rounded-full shadow-sm hover:bg-red-200 z-50">
+                            <X size={14} />
+                        </button>
+                    )}
+
+                    <div className="flex flex-col gap-2 overflow-visible">
+                        <div className="relative overflow-visible">
+                            <div className="flex items-center gap-1 mb-1">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Description</span>
+                                <ChevronDown size={10} className="text-slate-300" />
+                            </div>
+                            <input
+                                type="text" autoComplete="off"
+                                placeholder="Select or type..."
+                                value={item.description}
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    onChange(item.id, { description: v, mode: v === TYPED_QUOTE ? 'typed' : 'line' });
+                                    setOpenId(item.id);
+                                }}
+                                onFocus={() => setOpenId(item.id)}
+                                className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400 shadow-sm" />
+
+                            {openId === item.id && (
+                                <div className="absolute z-[100] w-full bg-white border border-slate-200 shadow-2xl rounded-xl mt-1 max-h-56 overflow-y-auto animate-slide-up ring-4 ring-black/5">
+                                    <div className="sticky top-0 bg-slate-50 p-2 border-b border-slate-100 flex justify-between items-center">
+                                        <span className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-tighter">Suggestions</span>
+                                        <button onMouseDown={(e) => { e.preventDefault(); setOpenId(null); }} className="p-1 hover:bg-slate-200 rounded-full"><X size={12} /></button>
+                                    </div>
+                                    {BLIND_TYPES
+                                        .filter(t => !item.description || t === TYPED_QUOTE || t.toLowerCase().includes(item.description.toLowerCase()))
+                                        .map(t => (
+                                            <div key={t}
+                                                onMouseDown={(e) => { e.preventDefault(); pick(t); }}
+                                                className={`p-3.5 border-b border-slate-100 last:border-0 cursor-pointer text-sm font-bold active:bg-sky-100 hover:bg-sky-50 flex items-center gap-2 ${t === TYPED_QUOTE ? 'text-sky-700 bg-sky-50/60' : 'text-slate-700'}`}>
+                                                {t === TYPED_QUOTE && <Type size={14} />} {t}
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {typed ? (
+                            <div className="space-y-2 mt-1">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Quote Wording</span>
+                                <textarea
+                                    rows={8}
+                                    placeholder={'Type the full quote wording here.\n\nFor example:\nTo supply and fit blinds throughout as surveyed on site, including all fabrics, brackets, motorisation and making good on completion.'}
+                                    value={item.longText || ''}
+                                    onChange={(e) => onChange(item.id, { longText: e.target.value })}
+                                    className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-800 outline-none focus:border-sky-400 shadow-sm leading-relaxed resize-y" />
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Price (excluding VAT)</span>
+                                    <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
+                                        <span className="text-xs text-slate-400 font-bold mr-2">€</span>
+                                        <input type="number" min="0" step="0.01" placeholder="0.00"
+                                            value={item.unitPrice}
+                                            onChange={(e) => onChange(item.id, { unitPrice: e.target.value })}
+                                            className="w-full py-2.5 text-sm outline-none font-bold text-slate-700 text-right" />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-3 mt-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Quantity</span>
+                                    <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
+                                        <input type="number" min="1" value={item.qty}
+                                            onChange={(e) => onChange(item.id, { qty: e.target.value })}
+                                            className="w-full py-2.5 text-sm outline-none font-bold text-slate-700" />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">Unit Price</span>
+                                    <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 shadow-sm">
+                                        <span className="text-xs text-slate-400 font-bold mr-2">€</span>
+                                        <input type="number" min="0" step="0.01" placeholder="0.00" value={item.unitPrice}
+                                            onChange={(e) => onChange(item.id, { unitPrice: e.target.value })}
+                                            className="w-full py-2.5 text-sm outline-none font-bold text-slate-700 text-right" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {lineTotal > 0 && (
+                            <div className="text-right text-[11px] font-black text-slate-500 pr-1">Line total €{fmt(lineTotal)}</div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        /* ==================================================================
+           6.  EDITOR PAGE
+           ================================================================== */
+
+        function Editor({ doc, setDoc, onSave, onExport, saving, exporting, status }) {
+            const [openId, setOpenId] = useState(null);
+            const t = totalsFor(doc);
+            const isInvoice = doc.type === 'invoice';
+
+            const set = (patch) => setDoc(prev => Object.assign({}, prev, patch));
+            const onField = (e) => {
+                const { name, value, type, checked } = e.target;
+                set({ [name]: type === 'checkbox' ? checked : value });
+            };
+
+            const changeItem = (id, patch) =>
+                set({ items: doc.items.map(it => it.id === id ? Object.assign({}, it, patch) : it) });
+
+            const addItem = () => {
+                const id = uid();
+                set({ items: doc.items.concat([{ id, mode: 'line', description: '', longText: '', qty: 1, unitPrice: '' }]) });
+                setTimeout(() => {
+                    const el = document.getElementById('item-' + id);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            };
+
+            const removeItem = (id) => {
+                if (doc.items.length > 1) set({ items: doc.items.filter(it => it.id !== id) });
+            };
+
+            return (
+                <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+                    <div className="glass-panel p-5 rounded-2xl bg-gradient-to-r from-sky-50 to-white flex items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+                                {doc.ref ? (isInvoice ? 'Edit Invoice' : 'Edit Quote') : (isInvoice ? 'New Invoice' : 'New Quote')}
+                            </h1>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                                {doc.ref ? doc.ref : 'Reference is issued when you save'}
+                                {doc.sourceRef ? ' · from ' + doc.sourceRef : ''}
+                            </p>
+                        </div>
+                        <div className="flex bg-slate-100 rounded-xl p-1">
+                            {['quote', 'invoice'].map(k => (
+                                <button key={k} onClick={() => set({ type: k })}
+                                    className={`px-3 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${doc.type === k ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>
+                                    {k}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <div className="glass-panel p-5 rounded-2xl space-y-4">
+                                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                                    <User size={16} className="text-sky-500" /> Client Information
+                                </h3>
+                                <InputGroup label="Client / Company Name">
+                                    <TextInput name="clientName" placeholder="e.g. John Doe" value={doc.clientName} onChange={onField} />
+                                </InputGroup>
+                                <InputGroup label="Site Address" icon={MapPin}>
+                                    <TextInput name="siteAddress" placeholder="e.g. Midleton, Co. Cork" value={doc.siteAddress} onChange={onField} />
+                                </InputGroup>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputGroup label="Email" icon={Mail}>
+                                        <TextInput type="email" name="clientEmail" placeholder="john@email.com" value={doc.clientEmail} onChange={onField} />
+                                    </InputGroup>
+                                    <InputGroup label="Phone" icon={Phone}>
+                                        <TextInput type="tel" name="clientPhone" placeholder="08x..." value={doc.clientPhone} onChange={onField} />
+                                    </InputGroup>
+                                </div>
+                            </div>
+
+                            <div className="glass-panel p-5 rounded-2xl space-y-4">
+                                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                                    <Settings size={16} className="text-sky-500" /> {isInvoice ? 'Invoice' : 'Quote'} Settings
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputGroup label="Account Manager">
+                                        <select name="manager" value={doc.manager} onChange={onField} className="w-full bg-transparent outline-none text-slate-800 font-semibold text-sm cursor-pointer">
+                                            {ADVISERS.map(a => <option key={a} value={a}>{a}</option>)}
+                                        </select>
+                                    </InputGroup>
+                                    <InputGroup label={isInvoice ? 'Invoice Date' : 'Quote Date'} icon={Calendar}>
+                                        <TextInput type="date" name="date" value={doc.date} onChange={onField} />
+                                    </InputGroup>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputGroup label={isInvoice ? 'Payment Due' : 'Valid Until'} icon={Calendar}>
+                                        <TextInput type="date" name="dueDate" value={doc.dueDate} onChange={onField} />
+                                    </InputGroup>
+                                    <InputGroup label="Status">
+                                        <select name="status" value={doc.status} onChange={onField} className="w-full bg-transparent outline-none text-slate-800 font-semibold text-sm cursor-pointer">
+                                            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </InputGroup>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 items-center">
+                                    <InputGroup label="Discount Applied (%)" icon={Percent}>
+                                        <TextInput type="number" min="0" max="100" name="discountPct" value={doc.discountPct} onChange={onField} placeholder="0" />
+                                    </InputGroup>
+                                    <div className="flex items-center justify-start pl-2">
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="includeVat" checked={doc.includeVat} onChange={onField} className="sr-only peer" />
+                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                                            <span className="ml-2 text-sm font-bold text-slate-600">Include VAT</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {isInvoice && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <InputGroup label="Deposit Received" icon={Euro}>
+                                            <TextInput type="number" min="0" step="0.01" name="deposit" value={doc.deposit} onChange={onField} placeholder="0.00" />
+                                        </InputGroup>
+                                        <InputGroup label="Customer Order / PO Ref">
+                                            <TextInput name="poRef" value={doc.poRef} onChange={onField} placeholder="Optional" />
+                                        </InputGroup>
+                                    </div>
+                                )}
+                                <InputGroup label="Notes shown on the document">
+                                    <textarea name="notes" rows={2} value={doc.notes} onChange={onField}
+                                        placeholder="Optional, e.g. lead time 4 to 5 weeks from order."
+                                        className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder-slate-400 text-sm resize-y" />
+                                </InputGroup>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-5 rounded-2xl flex flex-col h-full overflow-visible">
+                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <Home size={16} className="text-sky-500" /> Products &amp; Services
+                                </h3>
+                                <button onClick={addItem} className="text-xs font-bold bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg hover:bg-sky-100 flex items-center gap-1">
+                                    <Plus size={14} /> Add Item
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 flex-grow overflow-y-auto max-h-[620px] pr-2 pb-6">
+                                {doc.items.map(item => (
+                                    <ItemRow key={item.id} item={item} canRemove={doc.items.length > 1}
+                                        onChange={changeItem} onRemove={removeItem}
+                                        openId={openId} setOpenId={setOpenId} />
+                                ))}
+                            </div>
+
+                            <div className="mt-auto pt-6 border-t border-slate-200 space-y-2.5">
+                                <div className="flex justify-between text-sm text-slate-500 font-bold">
+                                    <span>Subtotal</span><span>€{fmt(t.subtotal)}</span>
+                                </div>
+                                {t.discountAmt > 0 && (
+                                    <div className="flex justify-between text-sm text-emerald-600 font-bold">
+                                        <span>Discount ({t.discountPct}%)</span><span>-€{fmt(t.discountAmt)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm text-slate-500 font-bold">
+                                    <span>VAT {doc.includeVat ? '(13.5%)' : '(0%)'}</span><span>€{fmt(t.vat)}</span>
+                                </div>
+                                <div className="flex justify-between text-xl font-black text-slate-900 pt-3 border-t border-slate-300">
+                                    <span>Total Gross</span><span>€{fmt(t.gross)}</span>
+                                </div>
+                                {isInvoice && t.deposit > 0 && (
+                                    <>
+                                        <div className="flex justify-between text-sm text-slate-500 font-bold">
+                                            <span>Less Deposit</span><span>-€{fmt(t.deposit)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-lg font-black text-sky-700">
+                                            <span>Balance Due</span><span>€{fmt(t.balance)}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="h-4"></div>
+
+                    <div className="fixed bottom-[64px] left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 z-[200] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.08)]">
+                        <div className="max-w-4xl mx-auto flex gap-3 items-center">
+                            <div className="hidden sm:block text-[11px] font-black text-sky-600 tracking-tight uppercase flex-1 truncate">{status}</div>
+                            <button onClick={onSave} disabled={saving || !doc.clientName}
+                                className="flex-1 sm:flex-none px-5 py-3.5 bg-white border-2 border-slate-900 text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                <Save size={16} /> {saving ? 'Saving' : 'Save'}
+                            </button>
+                            <button onClick={onExport} disabled={exporting || !doc.clientName}
+                                className="flex-1 sm:flex-none px-5 py-3.5 bg-slate-900 hover:bg-black text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                <Download size={16} /> {exporting ? 'Working' : 'PDF'}
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        /* ==================================================================
+           7.  DOCUMENTS LIST
+           ================================================================== */
+
+        function DocsList({ docs, onOpen, onConvert, onDuplicate, onDelete, onRefresh, refreshing }) {
+            const [manager, setManager] = useState('All');
+            const [type, setType] = useState('All');
+            const [status, setStatus] = useState('All');
+            const [q, setQ] = useState('');
+
+            const filtered = useMemo(() => {
+                const term = q.trim().toLowerCase();
+                return docs.filter(d => {
+                    if (manager !== 'All' && d.Manager !== manager) return false;
+                    if (type !== 'All' && d.Type !== type) return false;
+                    if (status !== 'All' && d.Status !== status) return false;
+                    if (term) {
+                        const hay = [d.Ref, d.ClientName, d.SiteAddress, d.PORef].join(' ').toLowerCase();
+                        if (hay.indexOf(term) === -1) return false;
+                    }
+                    return true;
+                }).sort((a, b) => String(b.Ref).localeCompare(String(a.Ref)));
+            }, [docs, manager, type, status, q]);
+
+            const value = filtered.reduce((s, d) => s + parseFloat(d.Gross || 0), 0);
+
+            return (
+                <main className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+                    <div className="glass-panel p-4 rounded-2xl space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 shadow-sm">
+                                <Search size={15} className="text-slate-400" />
+                                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search client, reference or address"
+                                    className="w-full py-2.5 text-sm outline-none font-semibold text-slate-700" />
+                            </div>
+                            <button onClick={onRefresh} className="p-3 bg-slate-100 rounded-xl active:scale-95">
+                                <RefreshCw size={16} className={refreshing ? 'animate-spin text-sky-600' : 'text-slate-500'} />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                            <select value={manager} onChange={(e) => setManager(e.target.value)}
+                                className="bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-xs font-bold text-slate-700 outline-none">
+                                <option value="All">All managers</option>
+                                {ADVISERS.map(a => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                            <select value={type} onChange={(e) => setType(e.target.value)}
+                                className="bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-xs font-bold text-slate-700 outline-none">
+                                <option value="All">Quotes &amp; invoices</option>
+                                <option value="quote">Quotes only</option>
+                                <option value="invoice">Invoices only</option>
+                            </select>
+                            <select value={status} onChange={(e) => setStatus(e.target.value)}
+                                className="bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-xs font-bold text-slate-700 outline-none">
+                                <option value="All">Any status</option>
+                                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="flex justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
+                            <span>{filtered.length} document{filtered.length === 1 ? '' : 's'}</span>
+                            <span>€{fmt(value)} gross</span>
+                        </div>
+                    </div>
+
+                    {filtered.length === 0 && (
+                        <div className="text-center py-16 text-slate-400">
+                            <FolderOpen size={40} className="mx-auto mb-3 opacity-40" />
+                            <p className="text-sm font-bold">Nothing here yet.</p>
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        {filtered.map(d => (
+                            <div key={d.Ref} className="glass-panel rounded-2xl p-4 animate-fade-in">
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-mono text-[11px] font-black text-slate-500">{d.Ref}</span>
+                                            <Pill status={d.Status} />
+                                            {d._pending && <span className="text-[10px] font-black text-amber-600 uppercase">Not synced</span>}
+                                        </div>
+                                        <p className="font-black text-slate-900 truncate mt-1">{d.ClientName || 'No name'}</p>
+                                        <p className="text-xs text-slate-500 truncate">{d.SiteAddress}</p>
+                                        <p className="text-[11px] text-slate-400 mt-1">{dmy(d.Date)} · {d.Manager}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-lg font-black text-slate-900">€{fmt(d.Gross)}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{d.Type}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100 flex-wrap">
+                                    <button onClick={() => onOpen(d)} className="text-[11px] font-black uppercase tracking-wider bg-slate-900 text-white px-3 py-2 rounded-lg flex items-center gap-1.5 active:scale-95">
+                                        <Pencil size={12} /> Edit
+                                    </button>
+                                    {d.Type === 'quote' && (
+                                        <button onClick={() => onConvert(d)} className="text-[11px] font-black uppercase tracking-wider bg-sky-50 text-sky-700 px-3 py-2 rounded-lg flex items-center gap-1.5 active:scale-95">
+                                            <ArrowRightLeft size={12} /> To Invoice
+                                        </button>
+                                    )}
+                                    <button onClick={() => onDuplicate(d)} className="text-[11px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-2 rounded-lg flex items-center gap-1.5 active:scale-95">
+                                        <Copy size={12} /> Duplicate
+                                    </button>
+                                    <button onClick={() => onDelete(d)} className="text-[11px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 px-3 py-2 rounded-lg flex items-center gap-1.5 active:scale-95 ml-auto">
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </main>
+            );
+        }
+
+        /* ==================================================================
+           8.  DASHBOARD
+           ================================================================== */
+
+        function Dashboard({ docs }) {
+            const [manager, setManager] = useState('All');
+
+            const rows = useMemo(
+                () => docs.filter(d => manager === 'All' || d.Manager === manager),
+                [docs, manager]
+            );
+
+            const num = (v) => parseFloat(v || 0);
+            const thisMonth = today().slice(0, 7);
+
+            const quotes = rows.filter(d => d.Type === 'quote');
+            const invoices = rows.filter(d => d.Type === 'invoice');
+            const accepted = quotes.filter(d => d.Status === 'Accepted' || d.Status === 'Invoiced' || d.Status === 'Paid');
+            const outstanding = invoices.filter(d => d.Status !== 'Paid');
+            const monthInv = invoices.filter(d => String(d.Date).slice(0, 7) === thisMonth);
+
+            const winRate = quotes.length ? Math.round((accepted.length / quotes.length) * 100) : 0;
+
+            const cards = [
+                { label: 'Quotes issued', value: quotes.length, sub: '€' + fmt(quotes.reduce((s, d) => s + num(d.Gross), 0)) },
+                { label: 'Conversion rate', value: winRate + '%', sub: accepted.length + ' of ' + quotes.length + ' accepted' },
+                { label: 'Invoiced this month', value: '€' + fmt(monthInv.reduce((s, d) => s + num(d.Gross), 0)), sub: monthInv.length + ' invoice' + (monthInv.length === 1 ? '' : 's') },
+                { label: 'Outstanding balance', value: '€' + fmt(outstanding.reduce((s, d) => s + num(d.Balance || d.Gross), 0)), sub: outstanding.length + ' unpaid' }
+            ];
+
+            const byManager = ADVISERS.map(a => {
+                const mine = docs.filter(d => d.Manager === a);
+                const mq = mine.filter(d => d.Type === 'quote');
+                const mi = mine.filter(d => d.Type === 'invoice');
+                const won = mq.filter(d => ['Accepted', 'Invoiced', 'Paid'].indexOf(d.Status) > -1).length;
+                return {
+                    name: a,
+                    quotes: mq.length,
+                    quoteValue: mq.reduce((s, d) => s + num(d.Gross), 0),
+                    invoiced: mi.reduce((s, d) => s + num(d.Gross), 0),
+                    rate: mq.length ? Math.round((won / mq.length) * 100) : 0
+                };
+            });
+
+            const maxVal = Math.max(1, ...byManager.map(m => m.invoiced));
+
+            return (
+                <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+                        <select value={manager} onChange={(e) => setManager(e.target.value)}
+                            className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none shadow-sm">
+                            <option value="All">All managers</option>
+                            {ADVISERS.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {cards.map(c => (
+                            <div key={c.label} className="glass-panel rounded-2xl p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{c.label}</p>
+                                <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{c.value}</p>
+                                <p className="text-[11px] text-slate-500 font-semibold mt-0.5">{c.sub}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="glass-panel rounded-2xl p-4">
+                        <h3 className="text-sm font-black text-slate-800 mb-3">Invoiced by account manager</h3>
+                        <div className="space-y-3">
+                            {byManager.map(m => (
+                                <div key={m.name}>
+                                    <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                                        <span>{m.name}</span>
+                                        <span>€{fmt(m.invoiced)}</span>
+                                    </div>
+                                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-sky-500 rounded-full transition-all" style={{ width: (m.invoiced / maxVal * 100) + '%' }}></div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-1">
+                                        {m.quotes} quotes · €{fmt(m.quoteValue)} quoted · {m.rate}% converted
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="glass-panel rounded-2xl p-4">
+                        <h3 className="text-sm font-black text-slate-800 mb-3">Status breakdown</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                            {STATUSES.map(s => {
+                                const n = rows.filter(d => d.Status === s).length;
+                                return (
+                                    <div key={s} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5">
+                                        <Pill status={s} />
+                                        <span className="text-sm font-black text-slate-700">{n}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        /* ==================================================================
+           9.  PDF
+           ================================================================== */
+
+        const imgToData = (url) => new Promise((resolve) => {
+            const img = new Image();
+            img.setAttribute('crossOrigin', 'anonymous');
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = img.width; c.height = img.height;
+                c.getContext('2d').drawImage(img, 0, 0);
+                resolve({ data: c.toDataURL('image/png'), w: img.width, h: img.height });
+            };
+            img.onerror = () => resolve(null);
+            img.src = url;
+        });
+
+        async function buildPdf(doc, ref) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            const t = totalsFor(doc);
+            const isInvoice = doc.type === 'invoice';
+
+            const black = [17, 24, 39], gray = [75, 85, 99], light = [243, 244, 246],
+                  border = [229, 231, 235], accent = [2, 132, 199];
+
+            const logo = await imgToData(LOGO_URL);
+            let y = 0;
+
+            const header = () => {
+                pdf.setFillColor(...accent);
+                pdf.rect(0, 0, 210, 4, 'F');
+                y = 15;
+                let logoH = 20;
+                if (logo && logo.data) {
+                    const w = 32;
+                    logoH = (logo.h / logo.w) * w;
+                    pdf.addImage(logo.data, 'PNG', 15, y, w, logoH);
+                } else {
+                    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(20); pdf.setTextColor(...black);
+                    pdf.text('FASTNET BLINDS', 15, y + 10);
+                }
+                pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(...black);
+                pdf.text(COMPANY.name, 195, y + 4, { align: 'right' });
+                pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(...gray);
+                const lines = COMPANY.address.concat(['Tel: ' + COMPANY.tel, 'Web: ' + COMPANY.web, 'VAT No: ' + COMPANY.vat]);
+                lines.forEach((l, i) => pdf.text(l, 195, y + 9 + i * 4.5, { align: 'right' }));
+                y = y + Math.max(logoH, 30) + 8;
+                pdf.setDrawColor(...border); pdf.setLineWidth(0.5);
+                pdf.line(15, y, 195, y);
+                y += 12;
+            };
+
+            header();
+
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18); pdf.setTextColor(...black);
+            pdf.text(isInvoice ? 'INVOICE' : 'QUOTATION', 15, y);
+
+            pdf.setFillColor(...light);
+            pdf.roundedRect(125, y - 8, 70, 28, 2, 2, 'F');
+            pdf.setFontSize(8.5);
+            let mx = 130, my = y - 2;
+            const meta = [
+                [isInvoice ? 'Invoice No:' : 'Quote Ref:', ref],
+                ['Date:', dmy(doc.date)],
+                ['Account Mgr:', doc.manager],
+                [isInvoice ? 'Payment Due:' : 'Valid Until:', dmy(doc.dueDate)]
+            ];
+            meta.forEach(([k, v]) => {
+                pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...gray); pdf.text(k, mx, my);
+                pdf.setFont('helvetica', 'bold'); pdf.setTextColor(...black); pdf.text(String(v || ''), mx + 35, my);
+                my += 6;
+            });
+
+            y += 15;
+            pdf.setFontSize(9); pdf.setTextColor(...accent); pdf.setFont('helvetica', 'bold');
+            pdf.text(isInvoice ? 'INVOICE TO:' : 'PREPARED FOR:', 15, y);
+            y += 5;
+            pdf.setTextColor(...black);
+            pdf.text(doc.clientName || 'Valued Client', 15, y);
+            pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...gray);
+            if (doc.siteAddress) pdf.splitTextToSize(doc.siteAddress, 80).forEach(l => { y += 4.5; pdf.text(l, 15, y); });
+            if (doc.clientPhone) { y += 4.5; pdf.text('Tel: ' + doc.clientPhone, 15, y); }
+            if (doc.clientEmail) { y += 4.5; pdf.text('Email: ' + doc.clientEmail, 15, y); }
+            if (doc.poRef) { y += 4.5; pdf.text('Your Ref: ' + doc.poRef, 15, y); }
+
+            y += 14;
+
+            const cols = [
+                { label: 'Description', x: 15, align: 'left' },
+                { label: 'Qty', x: 125, align: 'center' },
+                { label: 'Unit Price', x: 158, align: 'right' },
+                { label: 'Total Net', x: 195, align: 'right' }
+            ];
+
+            const drawHead = () => {
+                pdf.setFillColor(...black);
+                pdf.rect(12, y, 186, 8, 'F');
+                pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
+                cols.forEach(c => pdf.text(c.label, c.x, y + 5.5, { align: c.align }));
+                y += 8;
+                pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...black);
+            };
+
+            drawHead();
+            let alt = false;
+
+            doc.items.forEach(item => {
+                const typed = item.mode === 'typed';
+                const qty = typed ? 1 : parseFloat(item.qty || 0);
+                const price = parseFloat(item.unitPrice || 0);
+                const total = qty * price;
+                const text = typed ? (item.longText || 'As discussed on site.') : (item.description || 'Item');
+                const descLines = pdf.splitTextToSize(text, 100);
+                const rowH = Math.max(8, descLines.length * 4.6 + 4);
+
+                if (y + rowH > 240) { pdf.addPage(); header(); drawHead(); }
+
+                if (alt) { pdf.setFillColor(...light); pdf.rect(12, y, 186, rowH, 'F'); }
+
+                pdf.setFontSize(typed ? 8.5 : 9);
+                descLines.forEach((l, i) => pdf.text(l, cols[0].x, y + 5.5 + i * 4.6));
+                pdf.setFontSize(9);
+
+                if (!typed) {
+                    pdf.text(String(item.qty), cols[1].x, y + 5.5, { align: 'center' });
+                    pdf.text('€' + fmt(price), cols[2].x, y + 5.5, { align: 'right' });
+                }
+                pdf.text('€' + fmt(total), cols[3].x, y + 5.5, { align: 'right' });
+
+                y += rowH;
+                alt = !alt;
+                pdf.setDrawColor(240, 240, 240); pdf.setLineWidth(0.1);
+                pdf.line(12, y, 198, y);
+            });
+
+            y += 5;
+            if (y > 200) { pdf.addPage(); header(); }
+
+            const tx = 135, tw = 60;
+            const row = (label, value, bold, hi) => {
+                if (hi) { pdf.setFillColor(...black); pdf.rect(tx - 3, y, tw + 6, 9, 'F'); pdf.setTextColor(255, 255, 255); }
+                else pdf.setTextColor(...black);
+                pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+                pdf.setFontSize(9);
+                pdf.text(label, tx, y + 6);
+                pdf.text('€' + fmt(value), tx + tw, y + 6, { align: 'right' });
+                if (!hi) { pdf.setDrawColor(...border); pdf.setLineWidth(0.2); pdf.line(tx - 3, y + 9, tx + tw + 3, y + 9); }
+                y += 9;
+            };
+
+            row('Subtotal', t.subtotal);
+            if (t.discountAmt > 0) { row('Discount (' + t.discountPct + '%)', -t.discountAmt); row('Total Net', t.net); }
+            row('VAT Rate (' + (doc.includeVat ? '13.5%' : '0%') + ')', t.vat);
+            y += 1;
+            row('TOTAL GROSS', t.gross, true, true);
+            if (isInvoice && t.deposit > 0) {
+                row('Deposit Received', -t.deposit);
+                y += 1;
+                row('BALANCE DUE', t.balance, true, true);
+            }
+
+            if (doc.notes) {
+                y += 8;
+                if (y > 230) { pdf.addPage(); header(); }
+                pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5); pdf.setTextColor(...accent);
+                pdf.text('NOTES', 15, y);
+                pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...gray);
+                pdf.splitTextToSize(doc.notes, 180).forEach((l, i) => pdf.text(l, 15, y + 5 + i * 4.2));
+                y += 8 + pdf.splitTextToSize(doc.notes, 180).length * 4.2;
+            }
+
+            let fy = Math.max(y + 12, 225);
+            if (fy > 245) { pdf.addPage(); header(); fy = y; }
+
+            pdf.setFillColor(...light);
+            pdf.roundedRect(15, fy, 180, 45, 2, 2, 'F');
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(...accent);
+            pdf.text('PAYMENT ADVICE', 20, fy + 8);
+            pdf.setFontSize(8); pdf.setTextColor(...black);
+            pdf.text('Fastnet Awnings & Shutters Ltd', 20, fy + 13);
+            pdf.setFont('helvetica', 'normal'); pdf.setTextColor(...gray);
+            COMPANY.bank.forEach((l, i) => pdf.text(l, 20, fy + 18 + i * 4));
+
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(...accent);
+            pdf.text('TERMS & CONDITIONS', 110, fy + 8);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...gray);
+            const terms = isInvoice
+                ? 'Payment is due by the date shown above. Please quote the invoice number with your payment. Goods remain the property of Fastnet Awnings & Shutters Ltd until paid for in full. Seller reserves the right to place a service charge on past due accounts at the highest rate permitted by law.'
+                : 'This quotation is based on a single call out and fit unless otherwise specified. Unless otherwise specified all invoices are due net 30 days from date of shipment. Prices invoiced will be those in effect at time of shipment. All prices are f.o.b. point of manufacture. Seller reserves the right to place a service charge on past due accounts at the highest rate permitted by law.';
+            pdf.text(pdf.splitTextToSize(terms, 80), 110, fy + 13);
+
+            return pdf;
+        }
+
+        /* ==================================================================
+           10.  APP SHELL
+           ================================================================== */
+
+        function App() {
+            const [auth, setAuth] = useState(() => read(LS.auth, null));
+            const [tab, setTab] = useState('quote');
+            const [doc, setDoc] = useState(() => blankDoc('quote'));
+            const [docs, setDocs] = useState(() => read(LS.docs, []));
+            const [saving, setSaving] = useState(false);
+            const [exporting, setExporting] = useState(false);
+            const [refreshing, setRefreshing] = useState(false);
+            const [status, setStatus] = useState('');
+            const [online, setOnline] = useState(navigator.onLine);
+            const [showSettings, setShowSettings] = useState(false);
+
+            const flash = (m) => { setStatus(m); setTimeout(() => setStatus(''), 3500); };
+
+            useEffect(() => {
+                const up = () => setOnline(true), down = () => setOnline(false);
+                window.addEventListener('online', up);
+                window.addEventListener('offline', down);
+                return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); };
+            }, []);
+
+            const refresh = async (silent) => {
+                if (!auth) return;
+                setRefreshing(true);
+                try {
+                    await flushQueue();
+                    const list = await callApi(auth, 'list');
+                    setDocs(list);
+                    write(LS.docs, list);
+                    if (!silent) flash('Up to date');
+                } catch (e) {
+                    if (e.code === 'AUTH') { logout(); return; }
+                    if (!silent) flash('Offline, showing saved copy');
+                } finally {
+                    setRefreshing(false);
+                }
+            };
+
+            useEffect(() => { if (auth) refresh(true); }, [auth]);
+
+            const flushQueue = async () => {
+                const queue = read(LS.queue, []);
+                if (!queue.length) return;
+                const remaining = [];
+                for (const q of queue) {
+                    try { await callApi(auth, 'save', { doc: q }); }
+                    catch (e) { remaining.push(q); }
+                }
+                write(LS.queue, remaining);
+            };
+
+            const logout = () => {
+                localStorage.removeItem(LS.auth);
+                localStorage.removeItem(LS.docs);
+                setAuth(null);
+                setDocs([]);
+            };
+
+            const payload = (d) => {
+                const t = totalsFor(d);
+                return Object.assign({}, d, {
+                    subtotal: t.subtotal, discountAmt: t.discountAmt, net: t.net,
+                    vat: t.vat, gross: t.gross, deposit: t.deposit, balance: t.balance
+                });
+            };
+
+            const save = async () => {
+                setSaving(true);
+                try {
+                    const res = await callApi(auth, 'save', { doc: payload(doc) });
+                    setDoc(prev => Object.assign({}, prev, { ref: res.ref }));
+                    flash('Saved as ' + res.ref);
+                    await refresh(true);
+                    return res.ref;
+                } catch (e) {
+                    if (e.code === 'AUTH') { logout(); return null; }
+                    const local = Object.assign({}, payload(doc), { ref: doc.ref || 'LOCAL-' + uid() });
+                    write(LS.queue, read(LS.queue, []).concat([local]));
+                    flash('No connection, queued for sync');
+                    return local.ref;
+                } finally {
+                    setSaving(false);
+                }
+            };
+
+            const exportPdf = async () => {
+                if (!window.jspdf) { flash('PDF library still loading'); return; }
+                setExporting(true);
+                try {
+                    let ref = doc.ref;
+                    if (!ref) ref = await save();
+                    if (!ref) { setExporting(false); return; }
+                    const pdf = await buildPdf(doc, ref);
+                    const blob = pdf.output('blob');
+                    const file = new File([blob], ref + '.pdf', { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'Fastnet ' + ref });
+                        flash('Shared');
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = file.name; a.click();
+                        setTimeout(() => URL.revokeObjectURL(url), 4000);
+                        flash('Downloaded');
+                    }
+                } catch (e) {
+                    flash('Error: ' + e.message);
+                } finally {
+                    setExporting(false);
+                }
+            };
+
+            const toEditable = (row) => ({
+                ref: row.Ref,
+                type: row.Type,
+                status: row.Status,
+                date: row.Date || today(),
+                dueDate: row.DueDate || addDays(today(), 30),
+                manager: row.Manager || ADVISERS[0],
+                clientName: row.ClientName || '',
+                clientEmail: row.ClientEmail || '',
+                clientPhone: row.ClientPhone || '',
+                siteAddress: row.SiteAddress || '',
+                poRef: row.PORef || '',
+                discountPct: row.DiscountPct || '',
+                includeVat: String(row.IncludeVAT).toUpperCase() !== 'NO',
+                deposit: row.Deposit || '',
+                notes: row.Notes || '',
+                sourceRef: row.SourceRef || '',
+                createdAt: row.CreatedAt || '',
+                items: (row.items && row.items.length ? row.items : [{ id: uid(), mode: 'line', description: '', longText: '', qty: 1, unitPrice: '' }])
+                    .map(it => Object.assign({ id: uid(), mode: 'line', longText: '', qty: 1, unitPrice: '' }, it))
+            });
+
+            const openDoc = (row) => { setDoc(toEditable(row)); setTab('quote'); };
+
+            const convert = (row) => {
+                const d = toEditable(row);
+                setDoc(Object.assign({}, d, {
+                    ref: '', type: 'invoice', status: 'Draft', sourceRef: row.Ref,
+                    date: today(), dueDate: addDays(today(), 30), createdAt: ''
+                }));
+                setTab('quote');
+                flash('Converted from ' + row.Ref + '. Save to issue an invoice number.');
+            };
+
+            const duplicate = (row) => {
+                const d = toEditable(row);
+                setDoc(Object.assign({}, d, { ref: '', status: 'Draft', sourceRef: row.Ref, date: today(), createdAt: '' }));
+                setTab('quote');
+                flash('Copied from ' + row.Ref);
+            };
+
+            const remove = async (row) => {
+                if (!confirm('Delete ' + row.Ref + '? This removes it from the sheet.')) return;
+                try {
+                    await callApi(auth, 'delete', { ref: row.Ref });
+                    flash('Deleted ' + row.Ref);
+                    refresh(true);
+                } catch (e) { flash('Could not delete: ' + e.message); }
+            };
+
+            if (!auth) return <Gate onAuthed={setAuth} />;
+
+            const tabs = [
+                { key: 'quote', label: 'New', icon: FilePlus2 },
+                { key: 'docs', label: 'Documents', icon: FolderOpen },
+                { key: 'dash', label: 'Dashboard', icon: LayoutDashboard }
+            ];
+
+            return (
+                <div className="min-h-screen pb-40 font-sans text-slate-800">
+                    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
+                        <div className="max-w-4xl mx-auto px-4 py-2.5 flex justify-between items-center">
+                            <img src={LOGO_URL} alt="Fastnet" className="h-9 w-9 object-contain rounded-lg" />
+                            <div className="flex items-center gap-2">
+                                <div className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-100 rounded-md border border-slate-200">
+                                    {online ? <Cloud size={12} className="text-emerald-500" /> : <CloudOff size={12} className="text-amber-500" />}
+                                    <span className="text-[10px] font-mono font-bold text-slate-600">{doc.ref || 'Draft'}</span>
+                                </div>
+                                <button onClick={() => setShowSettings(true)} className="p-2 rounded-lg hover:bg-slate-100">
+                                    <Settings size={16} className="text-slate-500" />
+                                </button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {status && (
+                        <div className="max-w-4xl mx-auto px-4 pt-3">
+                            <div className="bg-sky-50 border border-sky-100 text-sky-800 text-xs font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 animate-fade-in">
+                                <CheckCircle2 size={14} /> {status}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'quote' && (
+                        <Editor doc={doc} setDoc={setDoc} onSave={save} onExport={exportPdf}
+                            saving={saving} exporting={exporting} status={status} />
+                    )}
+                    {tab === 'docs' && (
+                        <DocsList docs={docs} onOpen={openDoc} onConvert={convert} onDuplicate={duplicate}
+                            onDelete={remove} onRefresh={() => refresh(false)} refreshing={refreshing} />
+                    )}
+                    {tab === 'dash' && <Dashboard docs={docs} />}
+
+                    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[300] safe-bottom">
+                        <div className="max-w-4xl mx-auto grid grid-cols-3">
+                            {tabs.map(x => (
+                                <button key={x.key}
+                                    onClick={() => {
+                                        if (x.key === 'quote' && tab !== 'quote' && !doc.ref && !doc.clientName) setDoc(blankDoc('quote'));
+                                        setTab(x.key);
+                                    }}
+                                    className={`py-3 flex flex-col items-center gap-0.5 transition-colors ${tab === x.key ? 'text-sky-600' : 'text-slate-400'}`}>
+                                    <x.icon size={20} />
+                                    <span className="text-[10px] font-black uppercase tracking-wider">{x.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    {showSettings && (
+                        <div className="fixed inset-0 bg-black/40 z-[400] flex items-end sm:items-center justify-center p-4" onClick={() => setShowSettings(false)}>
+                            <div className="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                                <h3 className="font-black text-slate-900">Settings</h3>
+                                <button onClick={() => { setDoc(blankDoc('quote')); setTab('quote'); setShowSettings(false); }}
+                                    className="w-full py-3 bg-slate-100 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                                    <FilePlus2 size={16} /> Start a blank quote
+                                </button>
+                                <button onClick={() => { refresh(false); setShowSettings(false); }}
+                                    className="w-full py-3 bg-slate-100 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                                    <RefreshCw size={16} /> Sync with Google Sheets
+                                </button>
+                                <button onClick={() => { if (confirm('Sign out of this device? You will need the access code and password again.')) logout(); }}
+                                    className="w-full py-3 bg-rose-50 text-rose-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                                    <LogOut size={16} /> Forget this device
+                                </button>
+                                <button onClick={() => setShowSettings(false)} className="w-full py-3 text-slate-500 font-bold text-sm">Close</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         const root = createRoot(document.getElementById('root'));
-        root.render(<ErrorBoundary><AppContent /></ErrorBoundary>);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
-
