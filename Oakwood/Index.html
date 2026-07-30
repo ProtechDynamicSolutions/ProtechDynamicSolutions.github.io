@@ -1,0 +1,949 @@
+
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oakwood Construction Consultants | Quantity Surveying</title>
+    
+    <!-- Custom Acorn Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232e4c34'><path d='M12,2 C12,2 12,4.5 13.5,5' stroke='%232e4c34' stroke-width='2' stroke-linecap='round' fill='none'/><path d='M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z'/><path d='M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z'/></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'oak-green': '#2e4c34',
+                        'oak-light': '#517a58',
+                        'oak-grid': '#5e9c6c', /* Softer, natural moss green */
+                        'parchment': '#f5f2eb',
+                        'oak-dark': '#1a291d',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --oak-green: #2e4c34;
+            --oak-grid: #5e9c6c;
+            --parchment: #f5f2eb;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--oak-green);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7));
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--parchment);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--oak-green);
+        }
+
+        /* Smooth reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* -----------------------------------
+           Animated "Grid" Scroll Lines 
+           ----------------------------------- */
+        .cad-line-container, .cad-line-container-h {
+            position: relative;
+        }
+
+        /* Vertical Scroll Lines */
+        .cad-line-container.drawing .draw-line-v {
+            animation: drawLineHeight 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+        .cad-line-container.drawing .cad-cursor-v {
+            animation: moveCadCursorV 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+        .cad-line-container.drawing .cad-cursor-v-hide {
+            animation: moveCadCursorVHide 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Horizontal Scroll Lines */
+        .cad-line-container-h.drawing .draw-line-h {
+            animation: drawLineWidth 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+        .cad-line-container-h.drawing .cad-cursor-h {
+            animation: moveCadCursorH 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        /* Keyframes for Line Growth */
+        @keyframes drawLineHeight {
+            0% { height: 0; }
+            100% { height: 100%; }
+        }
+        @keyframes drawLineWidth {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        /* Keyframes for Cursor Movement */
+        @keyframes moveCadCursorVHide {
+            0% { top: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            90% { top: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { top: 100%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.5); }
+        }
+        @keyframes moveCadCursorH {
+            0% { left: 0%; opacity: 0; transform: translateX(-50%) translateY(-50%) scale(1.5); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+            100% { left: 100%; opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+        }
+
+        /* Hide Scrollbar for Horizontal Galleries */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 overflow-x-hidden">
+
+    <nav class="fixed w-full z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-4 flex justify-between items-center">
+            
+            <div class="flex items-center gap-3 sm:gap-4">
+                <img src="gemini_generated_video_5560e085.jpg" alt="Oakwood Logo" class="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full mix-blend-multiply border border-gray-100">
+                
+                <span class="serif text-2xl sm:text-3xl font-bold tracking-tighter text-oak-green">Oakwood</span>
+                
+                <div class="cad-line-container relative h-6 sm:h-8 w-[1.5px] mx-0.5 sm:mx-1">
+                    <div class="absolute top-0 left-0 w-full bg-oak-grid h-0 draw-line-v"></div>
+                    <!-- Custom Acorn Icon Cursor -->
+                    <div class="absolute w-5 h-5 text-oak-green left-1/2 cad-cursor-v-hide pointer-events-none opacity-0 bg-white rounded-full p-0.5">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                            <path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/>
+                            <path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex flex-col leading-none">
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Construction</span>
+                    <span class="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-600">Consultants Ltd.</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-800">
+                <a href="#" onclick="window.scrollTo(0,0); return false;" class="nav-link">Home</a>
+                <a href="#practice" class="nav-link">Practice</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#work" class="nav-link">Projects</a>
+                <a href="#testimonials" class="nav-link">Testimonials</a>
+                <a href="#contact" class="px-5 py-2.5 border border-oak-green text-oak-green hover:bg-oak-green hover:text-white transition-all duration-300">Contact</a>
+            </div>
+
+            <button class="md:hidden p-2 text-oak-green" id="menuToggle" aria-label="Open Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div id="mobileMenu" class="fixed inset-0 bg-parchment z-[110] flex flex-col items-center justify-center gap-8 text-xl uppercase tracking-widest font-light transform translate-x-full transition-transform duration-500 ease-in-out md:hidden">
+        <button id="closeMenu" class="absolute top-6 right-6 p-2 text-3xl text-oak-green" aria-label="Close Menu">&times;</button>
+        <a href="#" onclick="window.scrollTo(0,0); return false;" class="mobile-nav-link hover:text-oak-green">Home</a>
+        <a href="#practice" class="mobile-nav-link hover:text-oak-green">Practice</a>
+        <a href="#services" class="mobile-nav-link hover:text-oak-green">Services</a>
+        <a href="#work" class="mobile-nav-link hover:text-oak-green">Projects</a>
+        <a href="#testimonials" class="mobile-nav-link hover:text-oak-green">Testimonials</a>
+        <a href="#contact" class="mobile-nav-link hover:text-oak-green">Contact</a>
+    </div>
+
+    <!-- Hero Section with Video Background -->
+    <section class="relative min-h-[70vh] md:h-screen w-full flex items-center justify-center overflow-hidden pt-16 md:pt-0">
+        <div class="absolute inset-0 z-0 bg-oak-dark">
+            <video autoplay loop muted playsinline class="w-full h-full object-cover opacity-80">
+                <source src="gemini_generated_video_5560e085.mp4" type="video/mp4">
+            </video>
+            <div class="absolute inset-0 hero-gradient"></div>
+        </div>
+        
+        <div class="relative z-10 text-center text-white px-6 mt-12 md:mt-0">
+            
+            <div class="flex flex-col items-center justify-center gap-4 md:gap-6 mb-12 opacity-0 translate-y-10 transition-all duration-1000 ease-out" id="heroTitle">
+                
+                <div class="flex items-center gap-4 md:gap-8">
+                    <!-- Logo in Hero -->
+                    <img src="gemini_generated_video_5560e085.jpg" alt="Oakwood Logo" class="w-16 h-16 md:w-24 md:h-24 object-cover rounded-full shadow-2xl border-2 border-white/20 hidden sm:block">
+                    
+                    <span class="serif text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-white drop-shadow-lg">Oakwood</span>
+                    
+                    <div class="cad-line-container relative h-16 sm:h-20 md:h-32 w-[2px] mx-1 md:mx-2">
+                        <div class="absolute top-0 left-0 w-full bg-oak-grid h-0 draw-line-v"></div>
+                        <div class="absolute w-6 h-6 text-oak-grid left-1/2 cad-cursor-v-hide pointer-events-none opacity-0 bg-black/50 rounded-full p-1 backdrop-blur-sm">
+                            <!-- Custom Acorn Icon Cursor -->
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                                <path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/>
+                                <path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col leading-tight text-left justify-center">
+                        <span class="text-[10px] sm:text-xs md:text-xl uppercase tracking-[0.3em] font-semibold text-white drop-shadow-md">Construction</span>
+                        <span class="text-[10px] sm:text-xs md:text-xl uppercase tracking-[0.3em] font-light text-white/90 drop-shadow-md">Consultants Ltd.</span>
+                    </div>
+                </div>
+                <p class="text-sm md:text-base font-light tracking-widest uppercase mt-4 text-white/80">Precision Quantity Surveying & Cost Management</p>
+            </div>
+
+            <div class="flex flex-col items-center mt-8 md:mt-16">
+                <a href="#practice" class="px-8 py-4 bg-oak-green/80 backdrop-blur-sm border border-oak-light text-white text-xs uppercase tracking-[0.3em] font-bold hover:bg-oak-grid hover:border-oak-grid hover:text-oak-dark transition-all duration-300 shadow-xl">
+                    Discover Our Approach
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="practice" class="py-24 bg-parchment overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                
+                <div class="w-full lg:w-1/2 relative reveal">
+                    <img src="gemini_generated_video_5560e085(2).jpg" alt="Oakwood Tech Analysis" class="w-full aspect-[4/5] object-cover shadow-2xl rounded-sm border-4 border-white" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?auto=format&fit=crop&q=80&w=800';">
+                </div>
+
+                <div class="w-full lg:w-1/2 reveal delay-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="cad-line-container-h relative w-12 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full">
+                                <!-- Custom Acorn Icon Cursor -->
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                                    <path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/>
+                                    <path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-oak-green font-bold">The Practice</h2>
+                    </div>
+                    <h3 class="serif text-4xl mb-12 text-oak-dark">Precision, Control, and Value.</h3>
+                    
+                    <div class="space-y-10 text-gray-700 font-light leading-relaxed text-sm md:text-base">
+                        
+                        <div>
+                            <h4 class="serif text-2xl text-oak-green mb-3">Who we are</h4>
+                            <p>
+                                Based in Cork, Ireland, Oakwood Construction Consultants Ltd. provides expert quantity surveying and commercial management services. We bridge the gap between architectural vision and financial reality, ensuring that every Euro is accounted for and maximised.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="serif text-2xl text-oak-green mb-3">How we do it</h4>
+                            <p>
+                                Construction projects are complex, but cost control shouldn't be. Through rigorous measurement, proactive procurement strategies, and robust contract administration, we mitigate financial risks. From bespoke residential builds to multi-million Euro commercial developments, we safeguard your budget from inception to the final account.
+                            </p>
+                        </div>
+
+                    </div>
+                    
+                    <div class="mt-12">
+                        <a href="#contact" class="inline-flex items-center gap-4 text-xs uppercase tracking-widest font-bold text-oak-green hover:text-oak-grid transition-colors group">
+                            <span>Discuss your project</span>
+                            <div class="cad-line-container-h relative w-12 h-[2px]">
+                                <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                                <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid transition-colors top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                                        <path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/>
+                                        <path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-oak-green font-bold mb-4">Our Expertise</h2>
+                <h3 class="serif text-4xl mb-6 text-oak-dark">Professional QS Services</h3>
+                
+                <p class="max-w-2xl mx-auto text-gray-500 font-light leading-relaxed text-sm md:text-base">
+                    Delivering cost certainty and value engineering at every stage of the construction lifecycle.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Service 1 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Cost Planning & Estimating</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Accurate and realistic preliminary cost advice. We develop detailed cost plans to establish feasible budgets in Euros, giving you financial clarity before design works are fully committed.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Bills of Quantities</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Preparation of precise and comprehensive Bills of Quantities (BoQ) in accordance with ARM4, allowing for accurate contractor pricing and streamlined evaluation.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Value Engineering</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Systematic reviews to improve value. We identify alternative methods and materials to reduce lifecycle costs without compromising the quality, functionality, or aesthetic of the build.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Tendering & Procurement</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Managing the entire tender process. We draft tender documents, advise on the most suitable procurement routes, and provide detailed analytical reports on contractor submissions.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal delay-100 flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Contract Administration</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Acting as the independent certifier. We prepare contract documents (RIAI, Public Works), value monthly progress payments, and rigorously assess any claims for variations or delays.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 6 -->
+                <div class="p-10 bg-parchment border border-transparent hover:border-oak-green hover:shadow-xl transition-all duration-500 group reveal delay-200 flex flex-col justify-between h-full">
+                    <div>
+                        <div class="text-oak-light mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h4 class="serif text-2xl mb-5 text-gray-900 group-hover:text-oak-green transition-colors">Final Account Settlement</h4>
+                        <p class="text-gray-600 leading-relaxed mb-8 text-sm">
+                            Bringing projects to a successful financial close. We meticulously review all variations, provisional sums, and dayworks to negotiate and agree on a fair and conclusive final account.
+                        </p>
+                    </div>
+                    <div class="cad-line-container-h relative w-8 h-[2px] group-hover:w-full transition-all duration-500">
+                        <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                        <div class="absolute w-4 h-4 text-oak-green group-hover:text-oak-grid top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-parchment p-0.5 rounded-full transition-colors">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section adapted for QS -->
+    <section id="work" class="py-20 md:py-32 px-6 bg-white overflow-hidden border-t border-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
+                <div class="reveal">
+                    <h2 class="text-[10px] uppercase tracking-[0.4em] text-oak-green font-bold mb-4">Managed Portfolios</h2>
+                    <h3 class="serif text-3xl md:text-5xl text-oak-dark">Cost Managed Projects</h3>
+                </div>
+                <div class="reveal delay-200">
+                    <p class="text-gray-500 max-w-md text-sm md:text-base">Ensuring commercial viability and budget adherence across residential and commercial developments.</p>
+                </div>
+            </div>
+
+            <!-- Main Feature: Murphy Residence - New Build (First Shown) -->
+            <div class="mb-24 reveal">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-white p-0.5 rounded-full transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h4 class="serif text-2xl md:text-3xl text-gray-900">Murphy Residence, New Build</h4>
+                    </div>
+                </div>
+                
+                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
+                    <!-- Construction Site Framing (No people, just the build) -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=800" alt="Murphy New Home Construction" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                            <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Site Progress & Valuation</span>
+                            <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Gantt Chart / Cost Plan -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800" alt="Oakwood Gantt Chart and Cost Plan" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                             <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Project Scheduling & Cost Control</span>
+                             <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Finished Residential Exterior -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800" alt="Finished Residential Property" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                             <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Final Account & Handover</span>
+                             <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Feature: Bespoke Residential, Glanmire -->
+            <div class="reveal delay-100">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="cad-line-container-h relative w-12 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-white p-0.5 rounded-full transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h4 class="serif text-2xl md:text-3xl text-gray-900">Bespoke Residential, Glanmire</h4>
+                    </div>
+                </div>
+                
+                <div class="horizontal-gallery flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory hide-scrollbar -mx-6 px-6">
+                    <!-- Architectural Plans/Desk -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=800" alt="Architectural Plans and Cost Analysis" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                            <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Cost Planning & Tendering</span>
+                            <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Modern House Exterior -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800" alt="Glanmire Residential Exterior" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                            <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Value Engineering</span>
+                            <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Modern Interior Finish -->
+                    <div class="flex-none w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[40vw] relative aspect-[4/3] overflow-hidden bg-gray-200 group snap-start cursor-pointer" onclick="openLightbox(this)">
+                        <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="High-end Interior Finish" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-oak-dark/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center">
+                            <span class="text-white text-sm uppercase tracking-widest font-bold mb-2">Delivered 5% Under Budget</span>
+                            <span class="text-white text-xs border border-white px-4 py-2 mt-2 uppercase tracking-widest">Expand Image</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="testimonials" class="py-24 bg-parchment">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-oak-green font-bold mb-4">Client Voices</h2>
+                <h3 class="serif text-4xl text-oak-dark">Testimonials</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-7xl mx-auto">
+                <div class="reveal bg-white p-8 shadow-sm flex flex-col">
+                    <svg class="w-8 h-8 text-oak-green/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"We engaged Oakwood to manage the tendering and cost control for our new commercial premises. Their Bill of Quantities was incredibly detailed, preventing hidden costs down the line. They provided immense value engineering options that saved us thousands of Euros without impacting the final finish."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-white p-0.5 rounded-full transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">David McCarthy</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Property Developer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal delay-100 bg-white p-8 shadow-sm flex flex-col">
+                    <svg class="w-8 h-8 text-oak-green/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"Oakwood Construction Consultants were instrumental during our bespoke house build. Their initial cost plans were highly accurate, and they rigorously assessed every contractor valuation. It gave us huge peace of mind knowing a professional was monitoring the budget so closely."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-white p-0.5 rounded-full transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Sarah O'Sullivan</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Private Client, Cork</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reveal delay-200 bg-white p-8 shadow-sm flex flex-col">
+                    <svg class="w-8 h-8 text-oak-green/30 mb-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    <p class="serif text-base md:text-lg font-light leading-relaxed text-gray-800 mb-8 italic flex-grow">"An absolute necessity for any serious construction project. The team handled the final account settlement with our main contractor brilliantly, resolving disputes efficiently and securing a fair financial outcome. We will definitely use them on our next phase."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="cad-line-container-h relative w-8 h-[2px]">
+                            <div class="absolute top-0 left-0 h-full bg-oak-grid w-0 draw-line-h"></div>
+                            <div class="absolute w-4 h-4 text-oak-green top-1/2 cad-cursor-h pointer-events-none opacity-0 bg-white p-0.5 rounded-full transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-gray-900">Mark Fitzgerald</p>
+                            <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Project Sponsor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="bg-oak-dark text-white py-24 md:py-32 relative overflow-hidden">
+        
+        <div class="absolute inset-0 opacity-[0.04] pointer-events-none flex items-center justify-center">
+            <!-- Background element changed to a measurement grid aesthetic to suit QS -->
+            <svg viewBox="0 0 1000 600" fill="none" stroke="white" stroke-width="1" class="w-full max-w-5xl h-auto">
+                <defs>
+                    <pattern id="qs-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="1000" height="600" fill="url(#qs-grid)" />
+                <line x1="100" y1="100" x2="900" y2="100" stroke-width="2"/>
+                <text x="100" y="90" fill="white" font-family="sans-serif" font-size="14" letter-spacing="0.1em">COST PLAN REV C.</text>
+                <line x1="500" y1="100" x2="500" y2="500" stroke-dasharray="5 5" stroke-width="1.5"/>
+            </svg>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="serif text-4xl md:text-6xl mb-12 leading-tight">Secure your <span class="text-oak-grid italic">budget</span> with us.</h2>
+            
+            <div class="flex flex-col md:flex-row gap-6 md:gap-12 justify-center mb-16">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-oak-grid mb-2 font-bold">Email Us</span>
+                    <a href="mailto:hello@oakwoodconsultants.ie" class="text-lg md:text-xl hover:text-oak-grid transition-colors">hello@oakwoodconsultants.ie</a>
+                </div>
+                <div class="w-px h-10 bg-white/10 hidden md:block"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] uppercase tracking-widest text-oak-grid mb-2 font-bold">Office</span>
+                    <p class="text-lg md:text-xl">Cork, Ireland</p>
+                </div>
+            </div>
+
+            <form class="mt-8 max-w-2xl mx-auto text-left space-y-8" onsubmit="event.preventDefault(); alert('Enquiry submitted! A member of our QS team will review your project details and contact you shortly.');">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-oak-grid mb-2 font-bold">Full Name</label>
+                        <input type="text" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-oak-grid transition-colors placeholder-white/30" placeholder="Jane Doe" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-oak-grid mb-2 font-bold">Email Address</label>
+                        <input type="email" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-oak-grid transition-colors placeholder-white/30" placeholder="jane@example.com" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-oak-grid mb-2 font-bold">Project Details (Est. Value in €)</label>
+                    <textarea rows="4" class="w-full bg-transparent border-b border-white/20 px-0 py-3 text-white focus:outline-none focus:border-oak-grid transition-colors resize-none placeholder-white/30" placeholder="Provide a brief outline of the construction works, location, and estimated budget..." required></textarea>
+                </div>
+                <div class="text-center pt-8">
+                    <button type="submit" class="border border-white bg-transparent text-white px-10 py-5 uppercase tracking-[0.3em] font-bold text-xs hover:bg-oak-green hover:border-oak-green transition-all duration-500 shadow-2xl group">
+                        <span class="group-hover:text-white transition-colors">Request a Consultation</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer class="bg-white py-16 px-6 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    
+                    <img src="gemini_generated_video_5560e085.jpg" alt="Oakwood Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full mix-blend-multiply border border-gray-100">
+
+                    <span class="serif text-3xl font-bold tracking-tighter text-oak-green">Oakwood</span>
+                    
+                    <div class="cad-line-container relative h-8 w-[1.5px]">
+                        <div class="absolute top-0 left-0 w-full bg-oak-grid h-0 draw-line-v"></div>
+                        <div class="absolute w-5 h-5 text-oak-green left-1/2 cad-cursor-v-hide pointer-events-none opacity-0 bg-white rounded-full p-0.5">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2 C12,2 12,4.5 13.5,5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M5,9 C5,6 8,5 12,5 C16,5 19,6 19,9 Z"/><path d="M6.5,10 C6.5,15 9,21 12,21 C15,21 17.5,15 17.5,10 Z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col leading-none">
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-800">Construction</span>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-800">Consultants Ltd.</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-gray-400">
+                    <a href="#" class="hover:text-oak-green transition-colors">LinkedIn</a>
+                    <a href="#" class="hover:text-oak-green transition-colors">Services</a>
+                    <a href="#" class="hover:text-oak-green transition-colors">Privacy Policy</a>
+                </div>
+
+                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-medium">
+                    &copy; 2026 Oakwood Construction Consultants Ltd.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="fixed inset-0 z-[200] bg-oak-dark/95 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white text-4xl hover:text-oak-grid transition-colors z-[210]">&times;</button>
+        
+        <button onclick="changeImage(-1, event)" id="prevBtn" class="absolute left-4 md:left-10 text-white/50 hover:text-oak-grid z-[210] transition-colors hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-16 md:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button onclick="changeImage(1, event)" id="nextBtn" class="absolute right-4 md:right-10 text-white/50 hover:text-oak-grid z-[210] transition-colors hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-16 md:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+
+        <img id="lightboxImg" src="" alt="Full size project image" class="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl transition-opacity duration-200">
+    </div>
+
+    <script>
+        // Hero Entrance Animation
+        window.addEventListener('load', () => {
+            const title = document.getElementById('heroTitle');
+            if (title) title.classList.remove('opacity-0', 'translate-y-10');
+            revealElements();
+        });
+
+        // Mobile Menu Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closeFunc = () => {
+            mobileMenu.classList.add('translate-x-full');
+            document.body.style.overflow = 'auto';
+        };
+
+        closeMenu.addEventListener('click', closeFunc);
+        mobileLinks.forEach(link => link.addEventListener('click', closeFunc));
+
+        // Scroll Reveal logic
+        function revealElements() {
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", revealElements);
+
+        // Intersection Observer strictly for triggering animated drawing lines
+        const lineObserverOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.2
+        };
+
+        const lineObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('drawing');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, lineObserverOptions);
+
+        document.querySelectorAll('.cad-line-container, .cad-line-container-h').forEach(container => {
+            lineObserver.observe(container);
+        });
+
+        // Gallery Auto-Scroll Logic
+        document.querySelectorAll('.horizontal-gallery').forEach(gallery => {
+            let autoScrollTimer;
+            let isHovering = false;
+
+            const autoScroll = () => {
+                if(!isHovering) {
+                    if (gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 10) {
+                        gallery.scrollTo({left: 0, behavior: 'smooth'}); 
+                    } else {
+                        gallery.scrollBy({ left: window.innerWidth * 0.7, behavior: 'smooth' }); 
+                    }
+                }
+            };
+
+            const startTimer = () => {
+                autoScrollTimer = setInterval(autoScroll, 4000);
+            };
+
+            const stopTimer = () => {
+                if(autoScrollTimer) clearInterval(autoScrollTimer);
+            };
+
+            gallery.addEventListener('mouseenter', () => { isHovering = true; stopTimer(); });
+            gallery.addEventListener('mouseleave', () => { isHovering = false; startTimer(); });
+            gallery.addEventListener('touchstart', () => { isHovering = true; stopTimer(); }, {passive:true});
+            gallery.addEventListener('touchend', () => { isHovering = false; startTimer(); }, {passive:true});
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) startTimer();
+                    else stopTimer();
+                });
+            });
+            observer.observe(gallery);
+        });
+
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentGalleryImages = [];
+        let currentImageIndex = 0;
+
+        function openLightbox(element) {
+            const galleryContainer = element.closest('.horizontal-gallery');
+            const images = galleryContainer.querySelectorAll('img');
+            currentGalleryImages = Array.from(images).map(img => img.src);
+            
+            const clickedSrc = element.querySelector('img').src;
+            currentImageIndex = currentGalleryImages.indexOf(clickedSrc);
+            
+            updateLightboxImage();
+            
+            if(currentGalleryImages.length > 1) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            }
+
+            lightbox.classList.remove('hidden');
+            setTimeout(() => { lightbox.classList.remove('opacity-0'); }, 10);
+            document.body.style.overflow = 'hidden'; 
+            
+            document.addEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function updateLightboxImage() {
+            lightboxImg.style.opacity = 0; 
+            setTimeout(() => {
+                lightboxImg.src = currentGalleryImages[currentImageIndex];
+                lightboxImg.style.opacity = 1; 
+            }, 150);
+        }
+
+        function changeImage(direction, event) {
+            if(event) event.stopPropagation(); 
+            
+            currentImageIndex += direction;
+            if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
+            if (currentImageIndex < 0) currentImageIndex = currentGalleryImages.length - 1;
+            
+            updateLightboxImage();
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                lightboxImg.src = '';
+                document.body.style.overflow = 'auto'; 
+            }, 300);
+            
+            document.removeEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function lightboxKeyHandler(e) {
+            if (e.key === 'ArrowRight') changeImage(1);
+            if (e.key === 'ArrowLeft') changeImage(-1);
+            if (e.key === 'Escape') closeLightbox();
+        }
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // Mobile Swipe Support for Lightbox
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        lightbox.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        lightbox.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                if (currentGalleryImages.length > 1) changeImage(1);
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                if (currentGalleryImages.length > 1) changeImage(-1);
+            }
+        }
+
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+    </script>
+</body>
+</html>
