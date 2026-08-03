@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Membership Application | Schull Harbour Sailing Club</title>
+<style>
+:root{
+  --shsc-blue:#1163b0;
+  --shsc-navy:#0b3d6b;
+  --shsc-green:#1f9245;
+  --shsc-sea:#6cb8e4;
+  --shsc-red:#c62828;
+  --paper:#ffffff;
+  --wash:#f2f6fa;
+  --line:#d7e1ea;
+  --ink:#16232e;
+  --muted:#5d7080;
+  --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  background:var(--wash);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+.shell{max-width:900px;margin:0 auto;background:var(--paper);box-shadow:0 0 24px rgba(11,61,107,.10)}
+
+/* ---------- club header ---------- */
+.topbar{background:var(--shsc-blue);color:#fff;padding:8px 16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.02em}
+.topbar span{opacity:.92}
+.bannerimg{display:block;width:100%;height:auto;background:#f1f1f1;min-height:60px}
+.navbar{background:var(--shsc-blue);color:#fff;text-align:center;padding:12px 16px;font-size:18px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.crumb{padding:12px 24px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.crumb b{color:var(--shsc-navy);font-weight:600}
+
+.masthead{padding:26px 24px 6px}
+.masthead h1{
+  margin:0;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:34px;
+  line-height:1.15;
+  color:var(--shsc-navy);
+  font-weight:700;
+}
+.rule{height:3px;background:linear-gradient(90deg,var(--shsc-blue) 0 55%,var(--shsc-green) 55% 100%);margin:14px 0 0;border-radius:2px}
+.masthead p{color:var(--muted);font-size:15px;margin:14px 0 0;max-width:62ch}
+
+/* ---------- sections ---------- */
+form{padding:0 24px 40px}
+fieldset{border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 20px;margin:26px 0 0;background:var(--paper)}
+legend{
+  font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--shsc-blue);padding:0 8px;
+}
+.hint{font-size:13px;color:var(--muted);margin:0 0 14px}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.full{grid-column:1/-1}
+@media(max-width:640px){.grid,.grid.three{grid-template-columns:1fr}}
+
+label{display:block;font-size:13px;font-weight:600;color:var(--shsc-navy);margin:0 0 5px}
+label .opt{font-weight:400;color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],textarea,select{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);
+  font:inherit;font-size:15px;color:var(--ink);background:#fcfdfe;
+}
+textarea{resize:vertical;min-height:74px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--shsc-sea);outline-offset:1px;border-color:var(--shsc-blue);background:#fff}
+input.bad,select.bad{border-color:var(--shsc-red);background:#fff6f6}
+
+/* ---------- membership choice ---------- */
+.tiers{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:700px){.tiers{grid-template-columns:1fr}}
+.tier{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:16px;cursor:pointer;background:#fcfdfe;transition:border-color .15s,box-shadow .15s,background .15s}
+.tier:hover{border-color:var(--shsc-sea)}
+.tier input{position:absolute;opacity:0;width:0;height:0}
+.tier .tname{font-weight:700;color:var(--shsc-navy);font-size:16px}
+.tier .tsub{font-size:12.5px;color:var(--muted);min-height:32px;margin-top:2px}
+.tier .tprice{font-family:Georgia,serif;font-size:26px;color:var(--shsc-blue);margin-top:8px;font-weight:700}
+.tier .tearly{font-size:12.5px;color:var(--shsc-green);font-weight:600}
+.tier.sel{border-color:var(--shsc-blue);background:#f2f8fd;box-shadow:inset 0 0 0 1px var(--shsc-blue)}
+.tier.sel::after{content:"Selected";position:absolute;top:-9px;right:12px;background:var(--shsc-blue);color:#fff;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:10px}
+.tier:focus-within{outline:2px solid var(--shsc-sea);outline-offset:2px}
+
+/* ---------- children ---------- */
+.kid{display:grid;gap:12px;grid-template-columns:1fr 190px 150px 40px;align-items:end;padding:12px 0;border-bottom:1px dashed var(--line)}
+@media(max-width:700px){.kid{grid-template-columns:1fr 1fr;}.kid .agecell{grid-column:1/-1}}
+.kid:last-of-type{border-bottom:0}
+.agebadge{font-size:12.5px;padding:8px 10px;border-radius:20px;background:var(--wash);color:var(--muted);text-align:center;white-space:nowrap}
+.agebadge.junior{background:#e8f6ec;color:#14682f;font-weight:600}
+.iconbtn{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--radius);height:41px;width:40px;font-size:19px;line-height:1;cursor:pointer}
+.iconbtn:hover{border-color:var(--shsc-red);color:var(--shsc-red)}
+
+.btn{
+  display:inline-block;border:0;border-radius:var(--radius);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;
+}
+.btn.ghost{background:#fff;border:1px solid var(--shsc-blue);color:var(--shsc-blue)}
+.btn.ghost:hover{background:#f2f8fd}
+.btn.solid{background:var(--shsc-blue);color:#fff}
+.btn.solid:hover{background:var(--shsc-navy)}
+.btn.wide{width:100%;padding:14px}
+
+/* ---------- fee summary ---------- */
+.fee{border:1px solid var(--line);border-left:4px solid var(--shsc-green);border-radius:var(--radius);background:#fbfdfb;padding:16px 18px;margin-top:16px}
+.feerow{display:flex;justify-content:space-between;gap:12px;font-size:14.5px;padding:4px 0}
+.feerow.total{border-top:1px solid var(--line);margin-top:8px;padding-top:10px;font-size:19px;font-weight:700;color:var(--shsc-navy);font-family:Georgia,serif}
+.feerow .muted{color:var(--muted)}
+.feerow.off{color:#9aa8b3;text-decoration:line-through}
+.notice{font-size:13px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+/* ---------- signature ---------- */
+.sigwrap{border:1px solid var(--line);border-radius:var(--radius);background:#fcfdfe;position:relative;overflow:hidden}
+#sigpad{display:block;width:100%;height:170px;touch-action:none;cursor:crosshair}
+.sigline{position:absolute;left:24px;right:24px;bottom:38px;border-bottom:1px solid #c3d1dc;pointer-events:none}
+.sigtag{position:absolute;left:24px;bottom:16px;font-size:12px;color:#9aa8b3;pointer-events:none;letter-spacing:.04em}
+.sigtools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;font-size:13px;color:var(--muted)}
+
+/* ---------- payment ---------- */
+.paycard{border:1px solid var(--line);border-radius:8px;background:#fff;padding:20px;box-shadow:0 1px 3px rgba(11,61,107,.08)}
+.stripefield{border:1px solid #e0e6eb;border-radius:6px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.03);overflow:hidden}
+.stripefield input{border:0;border-radius:0;background:transparent;padding:12px 12px;font-size:15px}
+.stripefield input:focus{outline:0;background:#fff}
+.stripefield .row2{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e0e6eb}
+.stripefield .row2 input+input{border-left:1px solid #e0e6eb}
+.paybtn{background:#635bff;color:#fff;border:0;border-radius:6px;width:100%;padding:14px;font:inherit;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px}
+.paybtn:hover{background:#5851e8}
+.paymeta{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:#8a94a6;margin-top:12px}
+.brandrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.brandrow .amt{font-family:Georgia,serif;font-size:22px;font-weight:700;color:var(--shsc-navy)}
+.brandrow .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.eft{background:var(--wash);border-radius:var(--radius);padding:16px;margin-top:16px;font-size:14px}
+.eft dt{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.eft dd{margin:2px 0 10px;font-weight:600;color:var(--shsc-navy);word-break:break-all}
+.eft dd:last-child{margin-bottom:0}
+.copy{border:1px solid var(--line);background:#fff;border-radius:4px;font-size:12px;padding:3px 8px;cursor:pointer;margin-left:8px;color:var(--shsc-blue);font-weight:600}
+
+/* ---------- modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(11,35,54,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.veil.on{display:flex}
+.modal{background:#fff;border-radius:10px;max-width:420px;width:100%;padding:26px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal h3{margin:14px 0 8px;font-size:20px;color:var(--shsc-navy);font-family:Georgia,serif}
+.modal p{margin:0 0 18px;font-size:14.5px;color:var(--muted)}
+.modal .chip{display:inline-block;background:#eeecff;color:#635bff;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;border-radius:20px}
+.modal code{background:var(--wash);padding:2px 6px;border-radius:4px;font-size:13px;color:var(--ink)}
+
+.errbox{display:none;background:#fff6f6;border:1px solid #f0c4c4;border-left:4px solid var(--shsc-red);border-radius:var(--radius);padding:12px 16px;margin-top:18px;font-size:14px;color:#8c2020}
+.errbox.on{display:block}
+
+footer.club{background:var(--shsc-navy);color:#c7dcee;font-size:13px;padding:22px 24px;line-height:1.7}
+footer.club b{color:#fff}
+
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.actions .btn{flex:1;min-width:180px}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff;font-size:9.6pt;line-height:1.32}
+  .shell{box-shadow:none;max-width:none}
+  .topbar,.crumb,.actions,.noprint,.veil,.paycard,.copy,.iconbtn,
+  .navbar,.hint,.notice,.sigtools,.errbox,.masthead p,footer.club{display:none !important}
+  .bannerimg{max-height:15mm;object-fit:cover;object-position:left center}
+  form{padding:0}
+  .masthead{padding:0 0 2mm}
+  .masthead h1{font-size:15pt}
+  .rule{margin:2mm 0 0;height:2px}
+  .printhead{display:block !important;font-size:9pt;color:#333;margin-top:2mm}
+  fieldset{break-inside:avoid;page-break-inside:avoid;border:1px solid #b9c6d2;border-radius:3px;margin:3mm 0 0;padding:2.5mm 3mm 3mm}
+  legend{font-size:7.5pt;letter-spacing:.1em;padding:0 4px}
+  .grid,.grid.three{gap:2mm 4mm}
+  label{font-size:7pt;margin:0 0 0.4mm;letter-spacing:.03em}
+  input,textarea,select{border:0;border-bottom:1px solid #8c9aa6;border-radius:0;background:#fff;padding:0 0 0.6mm;font-size:9.6pt;min-height:0}
+  textarea{min-height:0;height:auto;overflow:hidden}
+  .tier{display:none}
+  .tier.sel{display:block;border:1px solid #333;padding:2.5mm}
+  .tier.sel::after{display:none}
+  .tier .tprice{font-size:13pt;margin-top:2mm}
+  .tiers{display:block}
+  .fee{padding:2.5mm 3mm;margin-top:3mm;background:#fff}
+  .feerow{padding:0.6mm 0;font-size:9.6pt}
+  .feerow.total{font-size:11.5pt;margin-top:2mm;padding-top:2mm}
+  .kid{padding:1.5mm 0;gap:4mm;grid-template-columns:1fr 40mm 34mm}
+  .kid .iconbtn,.agebadge{display:none}
+  .kid.blank{display:none}
+  .sigwrap{border:1px solid #b9c6d2}
+  #sigpad{height:22mm}
+  .sigline{bottom:5mm;left:6mm;right:6mm}
+  .sigtag{display:none}
+  .eft{background:#fff;border:1px solid #b9c6d2;padding:2.5mm 3mm;margin-top:3mm;font-size:9pt}
+  .eft dt{font-size:7pt}
+  .eft dd{margin:0 0 1.5mm;font-size:9.5pt}
+  .printfoot{display:block !important;font-size:8pt;color:#444;margin-top:4mm;border-top:1px solid #b9c6d2;padding-top:2mm}
+  @page{size:A4;margin:11mm}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar noprint">
+    <span>Schull Harbour Sailing Club</span>
+    <span>Est. Roaringwater Bay</span>
+  </div>
+
+  <img class="bannerimg" id="bannerimg" src="" alt="Schull Harbour Sailing Club">
+
+  <div class="navbar">Membership</div>
+
+  <div class="crumb noprint">Home / Membership / <b>Application form</b></div>
+
+  <div class="masthead">
+    <h1>Membership application</h1>
+    <div class="rule"></div>
+      <div class="printhead" id="printhead" style="display:none"></div>
+    <p>Complete the form below, sign it and pay online. Applications are ratified by the general committee, and membership begins once that approval is given.</p>
+  </div>
+
+  <form id="app" novalidate>
+
+    <fieldset>
+      <legend>Applicant</legend>
+      <div class="grid">
+        <div><label for="first">First name</label><input id="first" type="text" autocomplete="given-name" required></div>
+        <div><label for="surname">Surname</label><input id="surname" type="text" autocomplete="family-name" required></div>
+        <div class="full"><label for="spouse">Spouse or partner name <span class="opt">(family membership only)</span></label><input id="spouse" type="text"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Addresses</legend>
+      <div class="grid">
+        <div>
+          <label for="home">Home address</label>
+          <textarea id="home" rows="4" autocomplete="street-address" required></textarea>
+          <div style="margin-top:12px"><label for="homeeir">Eircode</label><input id="homeeir" type="text" style="text-transform:uppercase" maxlength="8"></div>
+        </div>
+        <div>
+          <label for="schull">Schull address <span class="opt">(if you have one)</span></label>
+          <textarea id="schull" rows="4"></textarea>
+          <div style="margin-top:12px"><label for="scheir">Eircode</label><input id="scheir" type="text" style="text-transform:uppercase" maxlength="8"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact</legend>
+      <div class="grid">
+        <div><label for="email">Email</label><input id="email" type="email" autocomplete="email" required></div>
+        <div><label for="mob">Mobile</label><input id="mob" type="tel" autocomplete="tel" placeholder="087 000 0000" required></div>
+        <div class="full"><label for="work">Work address <span class="opt">(optional)</span></label><textarea id="work" rows="2"></textarea></div>
+        <div><label for="worktel">Work telephone <span class="opt">(optional)</span></label><input id="worktel" type="tel"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Children</legend>
+      <p class="hint">Add each child with their date of birth. Anyone aged 10 to 16 is eligible for the club junior sailing programme.</p>
+      <div id="kids"></div>
+      <button type="button" class="btn ghost noprint" id="addkid" style="margin-top:14px">Add a child</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Membership type</legend>
+      <div class="tiers">
+        <label class="tier" data-tier="owner">
+          <input type="radio" name="tier" value="owner">
+          <div class="tname">Boat owner</div>
+          <div class="tsub">Yacht and powerboat owners</div>
+          <div class="tprice">&euro;190</div>
+          <div class="tearly">&euro;175 if paid by 1 June</div>
+        </label>
+        <label class="tier" data-tier="family">
+          <input type="radio" name="tier" value="family">
+          <div class="tname">Family</div>
+          <div class="tsub">Two adults and their children</div>
+          <div class="tprice">&euro;130</div>
+          <div class="tearly">&euro;120 if paid by 1 June</div>
+        </label>
+        <label class="tier" data-tier="individual">
+          <input type="radio" name="tier" value="individual">
+          <div class="tname">Individual</div>
+          <div class="tsub">A single adult member</div>
+          <div class="tprice">&euro;80</div>
+          <div class="tearly">&euro;75 if paid by 1 June</div>
+        </label>
+      </div>
+
+      <div class="fee">
+        <div class="feerow"><span id="feename" class="muted">No membership type chosen yet</span><span id="feefull" class="muted">&euro;0</span></div>
+        <div class="feerow" id="discrow" style="display:none"><span>Early payment discount</span><span id="feedisc">&minus;&euro;0</span></div>
+        <div class="feerow total"><span>Total due</span><span id="feetotal">&euro;0</span></div>
+        <div class="notice" id="feenote"></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="boatset" style="display:none">
+      <legend>Boat details</legend>
+      <div class="grid three">
+        <div><label for="btype">Type of boat</label><input id="btype" type="text" placeholder="e.g. Beneteau First 31.7"></div>
+        <div><label for="bname">Name of boat</label><input id="bname" type="text"></div>
+        <div><label for="bsail">Sail or registration number</label><input id="bsail" type="text" placeholder="IRL 7578"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Other sailing club</legend>
+      <div class="grid">
+        <div class="full"><label for="otherclub">Name of club <span class="opt">(if you are a member elsewhere)</span></label><input id="otherclub" type="text"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Declaration and signature</legend>
+      <p class="hint">I apply for membership of Schull Harbour Sailing Club and agree to abide by the rules of the club. I understand that admission does not take effect until the general committee has approved this application.</p>
+      <div class="sigwrap">
+        <canvas id="sigpad"></canvas>
+        <div class="sigline"></div>
+        <div class="sigtag">Sign above using your finger, stylus or mouse</div>
+      </div>
+      <div class="sigtools noprint">
+        <span id="sigstate">Not signed yet</span>
+        <button type="button" class="btn ghost" id="sigclear" style="padding:7px 14px;font-size:13px">Clear signature</button>
+      </div>
+      <div class="grid" style="margin-top:16px">
+        <div><label for="signame">Name in block capitals</label><input id="signame" type="text" style="text-transform:uppercase"></div>
+        <div><label for="sigdate">Date</label><input id="sigdate" type="date"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Payment</legend>
+      <div class="paycard">
+        <div class="brandrow">
+          <span class="lbl">Card payment</span>
+          <span class="amt" id="payamt">&euro;0</span>
+        </div>
+        <div class="stripefield">
+          <input id="cardnum" type="text" inputmode="numeric" placeholder="1234 1234 1234 1234" autocomplete="cc-number" maxlength="19">
+          <div class="row2">
+            <input id="cardexp" type="text" inputmode="numeric" placeholder="MM / YY" autocomplete="cc-exp" maxlength="7">
+            <input id="cardcvc" type="text" inputmode="numeric" placeholder="CVC" autocomplete="cc-csc" maxlength="4">
+          </div>
+        </div>
+        <button type="button" class="paybtn noprint" id="paybtn">Pay &euro;0</button>
+        <div class="paymeta noprint">Payments secured by Stripe</div>
+      </div>
+
+      <div class="eft">
+        <p class="hint" style="margin:0 0 12px">Prefer a bank transfer? Use the details below and put your surname in the reference.</p>
+        <dl style="margin:0">
+          <dt>Account name</dt><dd>Schull Harbour Sailing Club</dd>
+          <dt>IBAN</dt><dd>IE85 AIBK 9363 6731 3740 53 <button type="button" class="copy noprint" id="ibancopy">Copy</button></dd>
+          <dt>Reference</dt><dd id="eftref">Your surname</dd>
+        </dl>
+      </div>
+    </fieldset>
+
+    <div class="printfoot" style="display:none">
+      All membership applications are subject to ratification and approval by the general committee. Admission to membership does not take place until such approval. Return to the membership secretary, Schull Harbour Sailing Club, No. 1 Pier Road, Schull, Co. Cork.
+    </div>
+
+    <div class="errbox" id="errbox"></div>
+
+    <div class="actions noprint">
+      <button type="button" class="btn ghost" id="printbtn">Print or save as PDF</button>
+      <button type="button" class="btn solid" id="submitbtn">Submit application</button>
+    </div>
+  </form>
+
+  <footer class="club">
+    <b>Schull Harbour Sailing Club</b><br>
+    No. 1 Pier Road, Schull, Co. Cork<br>
+    Return completed forms to the membership secretary.
+  </footer>
+</div>
+
+<div class="veil" id="veil">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modaltitle">
+    <span class="chip" id="modalchip">Demo</span>
+    <h3 id="modaltitle"></h3>
+    <p id="modalbody"></p>
+    <button type="button" class="btn solid wide" id="modalclose">Close</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     CONFIG
+     Paste the Apps Script web app URL here once you deploy Code.gs.
+     Leave it blank and the form runs in demo mode: everything works,
+     nothing is sent anywhere.
+     ===================================================================== */
+  var ENDPOINT = "";
+
+  /* Club banner across the top of the form. */
+  var BANNER_URL = "https://boxstuff-development-thumbnails.s3.amazonaws.com/1431943_orig.jpg";
+
+  var LIVE = ENDPOINT.indexOf("http") === 0;
+
+  var TIERS = {
+    owner:      {name:"Boat owner membership", full:190, early:175},
+    family:     {name:"Family membership",     full:130, early:120},
+    individual: {name:"Individual membership", full:80,  early:75}
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var euro = function(n){ return "\u20ac" + n.toFixed(2).replace(/\.00$/,""); };
+
+  /* ---------- dates ---------- */
+  var today = new Date();
+  var iso = function(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  };
+  $("sigdate").value = iso(today);
+  $("sigdate").max = iso(today);
+
+  // early payment deadline is 1 June of the current membership year
+  var deadline = new Date(today.getFullYear(), 5, 1);
+  var earlyOpen = today < deadline;
+  var deadlineLabel = "1 June " + deadline.getFullYear();
+
+  /* ---------- children ---------- */
+  var kidCount = 0;
+  function addKid(){
+    kidCount++;
+    var row = document.createElement("div");
+    row.className = "kid";
+    row.innerHTML =
+      '<div><label>Child\u2019s name</label><input type="text" class="kidname"></div>' +
+      '<div><label>Date of birth</label><input type="date" class="kiddob" max="' + iso(today) + '"></div>' +
+      '<div class="agecell"><div class="agebadge">Age will show here</div></div>' +
+      '<div><button type="button" class="iconbtn noprint" title="Remove this child">&times;</button></div>';
+    $("kids").appendChild(row);
+
+    var badge = row.querySelector(".agebadge");
+    row.querySelector(".kiddob").addEventListener("change", function(){
+      var v = this.value;
+      if(!v){ badge.textContent = "Age will show here"; badge.className = "agebadge"; return; }
+      var b = new Date(v);
+      var age = today.getFullYear() - b.getFullYear();
+      var m = today.getMonth() - b.getMonth();
+      if(m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+      if(age < 0 || age > 120){ badge.textContent = "Check that date"; badge.className = "agebadge"; return; }
+      badge.textContent = "Age " + age;
+      if(age >= 10 && age <= 16){
+        badge.textContent = "Age " + age + " \u00b7 junior sailing";
+        badge.className = "agebadge junior";
+      } else {
+        badge.className = "agebadge";
+      }
+    });
+    row.querySelector(".iconbtn").addEventListener("click", function(){
+      row.remove();
+      if(!$("kids").children.length) addKid();
+    });
+  }
+  $("addkid").addEventListener("click", addKid);
+  addKid();
+
+  /* ---------- membership type and fees ---------- */
+  var chosen = null;
+  function paint(){
+    var t = chosen ? TIERS[chosen] : null;
+    if(!t){
+      $("feename").textContent = "No membership type chosen yet";
+      $("feename").className = "muted";
+      $("feefull").textContent = euro(0);
+      $("feefull").className = "muted";
+      $("discrow").style.display = "none";
+      $("feetotal").textContent = euro(0);
+      $("feenote").textContent = earlyOpen
+        ? "Pay before " + deadlineLabel + " and the early payment discount is applied automatically."
+        : "The early payment discount closed on " + deadlineLabel + ", so the standard rate applies.";
+      $("payamt").textContent = euro(0);
+      $("paybtn").textContent = "Pay " + euro(0);
+      $("boatset").style.display = "none";
+      return;
+    }
+    var total = earlyOpen ? t.early : t.full;
+    $("feename").textContent = t.name;
+    $("feename").className = "";
+    $("feefull").textContent = euro(t.full);
+    $("feefull").className = earlyOpen ? "muted" : "";
+    if(earlyOpen){
+      $("discrow").style.display = "flex";
+      $("feedisc").textContent = "\u2212" + euro(t.full - t.early);
+      $("feenote").textContent = "Early payment discount applied. It runs until " + deadlineLabel + ".";
+    } else {
+      $("discrow").style.display = "none";
+      $("feenote").textContent = "The early payment discount of " + euro(t.full - t.early) + " closed on " + deadlineLabel + ", so the standard rate applies.";
+    }
+    $("feetotal").textContent = euro(total);
+    $("payamt").textContent = euro(total);
+    $("paybtn").textContent = "Pay " + euro(total);
+    $("boatset").style.display = (chosen === "owner") ? "block" : "none";
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".tier"), function(el){
+    el.addEventListener("click", function(){
+      chosen = el.getAttribute("data-tier");
+      Array.prototype.forEach.call(document.querySelectorAll(".tier"), function(o){ o.classList.remove("sel"); });
+      el.classList.add("sel");
+      el.querySelector("input").checked = true;
+      paint();
+    });
+    el.addEventListener("keydown", function(e){
+      if(e.key === " " || e.key === "Enter"){ e.preventDefault(); el.click(); }
+    });
+  });
+  paint();
+
+  /* ---------- signature pad ---------- */
+  var pad = $("sigpad"), ctx = pad.getContext("2d"), drawing = false, signed = false, last = null;
+  function sizePad(){
+    var r = pad.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    var keep = signed ? pad.toDataURL() : null;
+    pad.width = Math.round(r.width * dpr);
+    pad.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineWidth = 2.2; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#0b3d6b";
+    if(keep){
+      var img = new Image();
+      img.onload = function(){ ctx.drawImage(img,0,0,r.width,r.height); };
+      img.src = keep;
+    }
+  }
+  function pos(e){
+    var r = pad.getBoundingClientRect();
+    return {x:e.clientX - r.left, y:e.clientY - r.top};
+  }
+  pad.addEventListener("pointerdown", function(e){
+    drawing = true; last = pos(e); pad.setPointerCapture(e.pointerId);
+  });
+  pad.addEventListener("pointermove", function(e){
+    if(!drawing) return;
+    e.preventDefault();
+    var p = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+    last = p;
+    if(!signed){ signed = true; $("sigstate").textContent = "Signed"; }
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(function(ev){
+    pad.addEventListener(ev, function(){ drawing = false; });
+  });
+  $("sigclear").addEventListener("click", function(){
+    ctx.clearRect(0,0,pad.width,pad.height);
+    signed = false;
+    $("sigstate").textContent = "Not signed yet";
+  });
+  window.addEventListener("resize", sizePad);
+  sizePad();
+
+  /* ---------- reference and copy ---------- */
+  $("surname").addEventListener("input", function(){
+    $("eftref").textContent = this.value.trim() ? "SHSC " + this.value.trim().toUpperCase() : "Your surname";
+    if(!$("signame").value) $("signame").placeholder = ($("first").value + " " + this.value).trim().toUpperCase();
+  });
+  $("ibancopy").addEventListener("click", function(){
+    var iban = "IE85AIBK93636731374053";
+    if(navigator.clipboard){ navigator.clipboard.writeText(iban); }
+    this.textContent = "Copied";
+    var b = this;
+    setTimeout(function(){ b.textContent = "Copy"; }, 1600);
+  });
+
+  /* ---------- card field formatting ---------- */
+  $("cardnum").addEventListener("input", function(){
+    var v = this.value.replace(/\D/g,"").slice(0,16);
+    this.value = v.replace(/(.{4})/g,"$1 ").trim();
+  });
+  $("cardexp").addEventListener("input", function(){
+    var v = this.value.replace(/\D/g,"").slice(0,4);
+    this.value = v.length > 2 ? v.slice(0,2) + " / " + v.slice(2) : v;
+  });
+  $("cardcvc").addEventListener("input", function(){
+    this.value = this.value.replace(/\D/g,"").slice(0,4);
+  });
+
+  /* ---------- modal ---------- */
+  function openModal(chip, title, body){
+    $("modalchip").textContent = chip;
+    $("modaltitle").textContent = title;
+    $("modalbody").innerHTML = body;
+    $("veil").classList.add("on");
+    $("modalclose").focus();
+  }
+  $("modalclose").addEventListener("click", function(){ $("veil").classList.remove("on"); });
+  $("veil").addEventListener("click", function(e){ if(e.target === $("veil")) $("veil").classList.remove("on"); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") $("veil").classList.remove("on"); });
+
+  /* ---------- validation ---------- */
+  var REQUIRED = [
+    ["first","First name"],
+    ["surname","Surname"],
+    ["home","Home address"],
+    ["email","Email"],
+    ["mob","Mobile number"]
+  ];
+  function validate(needSignature){
+    var missing = [];
+    REQUIRED.forEach(function(f){
+      var el = $(f[0]);
+      if(!el.value.trim()){ missing.push(f[1]); el.classList.add("bad"); }
+      else el.classList.remove("bad");
+    });
+    var em = $("email").value.trim();
+    if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ missing.push("A valid email address"); $("email").classList.add("bad"); }
+    if(!chosen) missing.push("Membership type");
+    if(needSignature && !signed) missing.push("Your signature");
+
+    var box = $("errbox");
+    if(missing.length){
+      box.innerHTML = "<b>Still to complete:</b> " + missing.join(", ") + ".";
+      box.classList.add("on");
+      box.scrollIntoView({behavior:"smooth", block:"center"});
+      return false;
+    }
+    box.classList.remove("on");
+    return true;
+  }
+
+  /* ---------- actions ---------- */
+  function kids(){
+    var out = [];
+    Array.prototype.forEach.call(document.querySelectorAll(".kid"), function(r){
+      var n = r.querySelector(".kidname").value.trim(), d = r.querySelector(".kiddob").value;
+      if(n || d) out.push({name:n, dob:d});
+    });
+    return out;
+  }
+
+  var reference = null;
+  function makeRef(){
+    var s = $("surname").value.trim().toUpperCase().replace(/[^A-Z]/g,"").slice(0,4) || "SHSC";
+    var n = String(Math.floor(1000 + Math.random()*9000));
+    return "SHSC-" + today.getFullYear() + "-" + s + n;
+  }
+
+  function payload(paid, method){
+    var t = TIERS[chosen];
+    return {
+      ref: reference,
+      submitted: new Date().toISOString(),
+      status: "new",
+      first: $("first").value.trim(),
+      surname: $("surname").value.trim(),
+      spouse: $("spouse").value.trim(),
+      home: $("home").value.trim(),
+      homeEir: $("homeeir").value.trim().toUpperCase(),
+      schull: $("schull").value.trim(),
+      schEir: $("scheir").value.trim().toUpperCase(),
+      email: $("email").value.trim(),
+      mob: $("mob").value.trim(),
+      work: $("work").value.trim(),
+      worktel: $("worktel").value.trim(),
+      children: kids(),
+      tier: chosen,
+      tierName: t.name,
+      feeFull: t.full,
+      feeDue: earlyOpen ? t.early : t.full,
+      earlyDiscount: earlyOpen,
+      paid: paid ? "yes" : "no",
+      payMethod: method,
+      boatType: $("btype").value.trim(),
+      boatName: $("bname").value.trim(),
+      boatSail: $("bsail").value.trim(),
+      otherClub: $("otherclub").value.trim(),
+      signName: ($("signame").value.trim() || ($("first").value + " " + $("surname").value).trim()).toUpperCase(),
+      signDate: $("sigdate").value,
+      signature: signed ? pad.toDataURL("image/png") : ""
+    };
+  }
+
+  var sending = false;
+  function send(paid, method, onDone){
+    if(sending) return;
+    reference = reference || makeRef();
+    var data = payload(paid, method);
+    if(!LIVE){ setTimeout(function(){ onDone(true); }, 400); return; }
+    sending = true;
+    fetch(ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({action:"submit", application:data})
+    }).then(function(r){ return r.json(); })
+      .then(function(r){ sending = false; onDone(r && r.ok); })
+      .catch(function(){ sending = false; onDone(false); });
+  }
+
+  function sentModal(paid){
+    openModal(
+      LIVE ? "Sent" : "Demo only",
+      LIVE ? "Application received" : "Application ready to send",
+      "Your reference is <b>" + reference + "</b>. " +
+      (LIVE
+        ? "The membership secretary has it now and the general committee will ratify it at the next meeting. You will get an email once it is approved."
+        : "In the live version this writes straight into the club register and the committee approves it in the console app. Nothing has been sent from this demo.") +
+      (paid ? "" : " Payment is still outstanding.") +
+      "<br><br>Use <b>Print or save as PDF</b> to keep a copy."
+    );
+  }
+
+  $("paybtn").addEventListener("click", function(){
+    if(!validate(true)) return;
+    var total = earlyOpen ? TIERS[chosen].early : TIERS[chosen].full;
+    reference = reference || makeRef();
+    openModal(
+      "Demo only",
+      "This is where Stripe would sit",
+      "In the live club site this opens Stripe Checkout and takes the " + euro(total) +
+      " payment, then returns a receipt and marks reference <b>" + reference + "</b> as paid in the club register. " +
+      "Nothing has been charged and no card details have left this page."
+    );
+    send(true, "Card (Stripe)", function(){});
+  });
+
+  $("submitbtn").addEventListener("click", function(){
+    if(!validate(true)) return;
+    $("submitbtn").disabled = true;
+    $("submitbtn").textContent = "Sending\u2026";
+    send(false, "Bank transfer", function(ok){
+      $("submitbtn").disabled = false;
+      $("submitbtn").textContent = "Submit application";
+      if(ok) sentModal(false);
+      else openModal("Not sent","That did not reach the club",
+        "The club register did not respond. Check your connection and try again, or print a copy and post it to the membership secretary.");
+    });
+  });
+
+  if(BANNER_URL) $("bannerimg").src = BANNER_URL;
+
+  function growAreas(){
+    ["home","schull","work"].forEach(function(id){
+      var t = $(id);
+      t.style.height = "auto";
+      t.style.height = t.value ? (t.scrollHeight + 2) + "px" : "";
+    });
+  }
+
+  $("printbtn").addEventListener("click", function(){
+    if(!$("signame").value.trim()){
+      $("signame").value = ($("first").value + " " + $("surname").value).trim().toUpperCase();
+    }
+    reference = reference || makeRef();
+    $("printhead").textContent =
+      "Membership application " + reference + "  |  " +
+      (chosen ? TIERNAME_PRINT[chosen] : "type not chosen") + "  |  printed " +
+      today.toLocaleDateString("en-IE",{day:"numeric",month:"long",year:"numeric"});
+    Array.prototype.forEach.call(document.querySelectorAll(".kid"), function(r){
+      var n = r.querySelector(".kidname").value.trim(), d = r.querySelector(".kiddob").value;
+      r.classList.toggle("blank", !n && !d);
+    });
+    growAreas();
+    window.print();
+  });
+
+  var TIERNAME_PRINT = {owner:"Boat owner", family:"Family", individual:"Individual"};
+})();
+</script>
+</body>
+</html>
