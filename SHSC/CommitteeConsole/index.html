@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Committee Console | Schull Harbour Sailing Club</title>
+<style>
+:root{
+  --shsc-blue:#1163b0; --shsc-navy:#0b3d6b; --shsc-green:#1f9245; --shsc-sea:#6cb8e4;
+  --amber:#b7791f; --red:#c62828;
+  --paper:#fff; --wash:#eef3f8; --line:#d7e1ea; --ink:#16232e; --muted:#5d7080; --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;background:var(--wash);color:var(--ink);font-size:15px;line-height:1.5}
+button{font:inherit}
+
+/* ---------- gate ---------- */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#0b3d6b 0%,#14507f 55%,#1163b0 100%)}
+.gatecard{background:#fff;border-radius:10px;max-width:400px;width:100%;padding:30px;box-shadow:0 24px 60px rgba(0,0,0,.28);text-align:center}
+.gatecard img{width:150px;height:auto;margin-bottom:14px;border-radius:4px}
+.phflag{width:52px;height:36px;flex:none;background:var(--shsc-blue);color:#fff;font:700 11px/36px Georgia,serif;text-align:center;letter-spacing:.12em;
+  clip-path:polygon(0 0,100% 6%,100% 82%,0 100%);box-shadow:inset 0 -10px 0 rgba(31,146,69,.55)}
+.phflag.big{width:120px;height:80px;font-size:20px;line-height:80px;margin:0 auto 14px;box-shadow:inset 0 -22px 0 rgba(31,146,69,.55)}
+.gatecard h1{font-family:Georgia,serif;font-size:22px;color:var(--shsc-navy);margin:0 0 4px}
+.gatecard p{color:var(--muted);font-size:13.5px;margin:0 0 20px}
+.gatecard input{width:100%;padding:12px;border:1px solid var(--line);border-radius:var(--radius);font-size:16px;text-align:center;letter-spacing:.2em}
+.gateerr{color:var(--red);font-size:13px;margin-top:10px;display:none}
+.gateerr.on{display:block}
+
+/* ---------- chrome ---------- */
+.app{display:none}
+.app.on{display:block}
+header.bar{background:var(--shsc-navy);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 20px;position:sticky;top:0;z-index:20}
+header.bar img{height:38px;width:auto;border-radius:3px;background:#fff;padding:2px}
+header.bar .ttl{font-family:Georgia,serif;font-size:17px;font-weight:700;line-height:1.1}
+header.bar .sub{font-size:11.5px;color:#a9c8e2;letter-spacing:.08em;text-transform:uppercase}
+header.bar .spacer{flex:1}
+.tabs{display:flex;gap:4px}
+.tab{background:transparent;border:0;color:#a9c8e2;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600}
+.tab.on{background:#fff;color:var(--shsc-navy)}
+.mode{font-size:11px;background:#c4881a;color:#fff;padding:3px 9px;border-radius:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.mode.live{background:var(--shsc-green)}
+.signout{background:transparent;border:1px solid rgba(255,255,255,.35);color:#cfe2f2;border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer;white-space:nowrap}
+.signout:hover{background:rgba(255,255,255,.12);color:#fff}
+@media(max-width:780px){
+  header.bar{flex-wrap:wrap;gap:10px;padding:10px 14px}
+  header.bar img,.phflag{height:32px;width:46px}
+  header.bar .ttl{font-size:15px}
+  header.bar .spacer{flex:1;order:1}
+  .mode{order:2}
+  .signout{order:3;padding:5px 11px}
+  .tabs{order:4;width:100%;gap:6px}
+  .tab{flex:1;padding:9px 6px;text-align:center;background:rgba(255,255,255,.10)}
+}
+
+main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+.page{display:none}
+.page.on{display:block}
+
+/* ---------- stats ---------- */
+.stats{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}
+@media(max-width:820px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;border-top:3px solid var(--shsc-blue)}
+.stat.green{border-top-color:var(--shsc-green)}
+.stat.amber{border-top-color:var(--amber)}
+.stat.navy{border-top-color:var(--shsc-navy)}
+.stat .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:Georgia,serif;font-size:29px;font-weight:700;color:var(--shsc-navy);line-height:1.2;margin-top:2px}
+.stat .n{font-size:12.5px;color:var(--muted)}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:20px;padding:7px 14px;cursor:pointer;font-size:13.5px;font-weight:600}
+.chip.on{background:var(--shsc-navy);border-color:var(--shsc-navy);color:#fff}
+.search{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+
+/* ---------- table ---------- */
+.tablewrap{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--line);background:#f8fafc;white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid #edf2f6;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#f4f9fd}
+.name{font-weight:600;color:var(--shsc-navy)}
+.ref{font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:12px}
+.pill.new{background:#e7f0fa;color:#12558f}
+.pill.proposed{background:#fdf3e0;color:#8a5a10}
+.pill.approved{background:#e6f6ec;color:#14682f}
+.pill.declined{background:#fbe9e9;color:#96201f}
+.pill.paid{background:#e6f6ec;color:#14682f}
+.pill.unpaid{background:#f1f4f7;color:#5d7080}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+/* ---------- drawer ---------- */
+.veil{position:fixed;inset:0;background:rgba(11,35,54,.5);display:none;z-index:40}
+.veil.on{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(620px,100%);background:#fff;z-index:41;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto;box-shadow:-10px 0 40px rgba(0,0,0,.2)}
+.drawer.on{transform:translateX(0)}
+.dhead{position:sticky;top:0;background:var(--shsc-navy);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;z-index:2}
+.dhead h2{margin:0;font-size:18px;font-family:Georgia,serif}
+.dhead .ref{color:#a9c8e2}
+.dclose{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:var(--radius);padding:6px 12px;cursor:pointer;font-size:13px}
+.dbody{padding:20px}
+.block{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.block h3{margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--shsc-blue)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:600;color:var(--ink);white-space:pre-line}
+.sigshow{border:1px solid var(--line);border-radius:var(--radius);background:#fcfdfe;padding:8px;text-align:center}
+.sigshow img{max-width:100%;height:auto;max-height:120px}
+.office{background:#f8fbfd;border-color:var(--shsc-sea)}
+.office label{display:block;font-size:12px;font-weight:600;color:var(--shsc-navy);margin:10px 0 4px}
+.office input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+.acts{display:grid;gap:10px;grid-template-columns:1fr 1fr;margin-top:14px}
+.btn{border:0;border-radius:var(--radius);padding:12px;font-size:14.5px;font-weight:600;cursor:pointer}
+.btn.solid{background:var(--shsc-green);color:#fff}
+.btn.solid:hover{filter:brightness(.93)}
+.btn.ghost{background:#fff;border:1px solid var(--shsc-blue);color:var(--shsc-blue)}
+.btn.ghost:hover{background:#f2f8fd}
+.btn.danger{background:#fff;border:1px solid var(--red);color:var(--red)}
+.btn.danger:hover{background:#fdf5f5}
+.btn.full{grid-column:1/-1}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- charts ---------- */
+.charts{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:820px){.charts{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px}
+.card h3{margin:0 0 4px;font-size:15px;color:var(--shsc-navy)}
+.card p.cap{margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+.card.wide{grid-column:1/-1}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.barrow{display:grid;grid-template-columns:110px 1fr 74px;gap:10px;align-items:center;margin-bottom:9px;font-size:13.5px}
+.track{background:var(--wash);border-radius:4px;height:20px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--shsc-blue);border-radius:4px}
+.barrow .num{text-align:right;font-weight:600;color:var(--shsc-navy)}
+
+/* ---------- print copy ---------- */
+#printcopy{display:none}
+@media print{
+  body>.app,.veil,.drawer,.gate{display:none !important}
+  #printcopy{display:block !important;font-size:11pt;color:#000}
+  @page{size:A4;margin:14mm}
+  #printcopy h1{font-family:Georgia,serif;font-size:19pt;margin:0 0 2mm;color:#0b3d6b}
+  #printcopy .pr{height:3px;background:#0b3d6b;margin-bottom:6mm}
+  #printcopy section{page-break-inside:avoid;margin-bottom:6mm}
+  #printcopy h4{font-size:9pt;letter-spacing:.1em;text-transform:uppercase;color:#1163b0;margin:0 0 2mm;border-bottom:1px solid #ccc;padding-bottom:1mm}
+  #printcopy .kv{grid-template-columns:45mm 1fr;font-size:10.5pt}
+  #printcopy img.sig{max-height:28mm}
+  #printcopy .sigline{border-bottom:1px solid #666;height:10mm;margin-top:4mm}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ gate ============ -->
+<div class="gate" id="gate">
+  <div class="gatecard">
+    <img id="gatelogo" src="" alt="Schull Harbour Sailing Club" style="display:none"><div class="phflag big" id="gateph">SHSC</div>
+    <h1>Committee console</h1>
+    <p>Membership applications, approvals and club analytics</p>
+    <input id="pin" type="password" inputmode="numeric" placeholder="Access code" autocomplete="off">
+    <div class="gateerr" id="gateerr">That code was not recognised. Try again or ask the membership secretary.</div>
+    <button class="btn solid" id="gatego" style="width:100%;margin-top:14px">Open console</button>
+    <p style="margin:14px 0 0;font-size:12px" id="gatehint"></p>
+  </div>
+</div>
+
+<!-- ============ app ============ -->
+<div class="app" id="app">
+  <header class="bar">
+    <img id="barlogo" src="" alt="" style="display:none"><div class="phflag" id="barph">SHSC</div>
+    <div>
+      <div class="ttl">Schull Harbour Sailing Club</div>
+      <div class="sub">Committee console</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="mode" id="mode">Demo data</span>
+    <button class="signout" id="signout">Sign out</button>
+    <div class="tabs">
+      <button class="tab on" data-page="apps">Applications</button>
+      <button class="tab" data-page="stats">Analytics</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- applications -->
+    <div class="page on" id="page-apps">
+      <div class="stats">
+        <div class="stat"><div class="k">Awaiting a proposer</div><div class="v" id="s-new">0</div><div class="n">not yet actioned</div></div>
+        <div class="stat amber"><div class="k">Proposed and seconded</div><div class="v" id="s-prop">0</div><div class="n">ready for ratification</div></div>
+        <div class="stat green"><div class="k">Approved this season</div><div class="v" id="s-app">0</div><div class="n">members ratified</div></div>
+        <div class="stat navy"><div class="k">Fees outstanding</div><div class="v" id="s-owed">&euro;0</div><div class="n">across all applications</div></div>
+      </div>
+
+      <div class="toolbar">
+        <button class="chip on" data-filter="all">All</button>
+        <button class="chip" data-filter="new">New</button>
+        <button class="chip" data-filter="proposed">Proposed</button>
+        <button class="chip" data-filter="approved">Approved</button>
+        <button class="chip" data-filter="declined">Declined</button>
+        <input class="search" id="search" type="search" placeholder="Search a name, reference or boat">
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>Applicant</th><th>Type</th><th>Received</th><th>Fee</th><th>Payment</th><th>Status</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="noneleft" style="display:none">No applications match that view.</div>
+      </div>
+    </div>
+
+    <!-- analytics -->
+    <div class="page" id="page-stats">
+      <div class="stats">
+        <div class="stat"><div class="k">Applications</div><div class="v" id="a-total">0</div><div class="n">this season</div></div>
+        <div class="stat green"><div class="k">Fees collected</div><div class="v" id="a-paid">&euro;0</div><div class="n">card and bank transfer</div></div>
+        <div class="stat amber"><div class="k">Outstanding</div><div class="v" id="a-owed">&euro;0</div><div class="n">awaiting payment</div></div>
+        <div class="stat navy"><div class="k">Junior sailors</div><div class="v" id="a-junior">0</div><div class="n">children aged 10 to 16</div></div>
+      </div>
+
+      <div class="charts">
+        <div class="card">
+          <h3>Membership mix</h3>
+          <p class="cap">Applications by type, with the fee income each brings in</p>
+          <div id="mixbars"></div>
+        </div>
+        <div class="card">
+          <h3>Payment status</h3>
+          <p class="cap">What is settled and what the treasurer is still chasing</p>
+          <div id="donut"></div>
+        </div>
+        <div class="card wide">
+          <h3>Applications received</h3>
+          <p class="cap">By month, with approvals shown against them</p>
+          <div id="linechart"></div>
+          <div class="legend">
+            <span><i style="background:#1163b0"></i>Received</span>
+            <span><i style="background:#1f9245"></i>Approved</span>
+          </div>
+        </div>
+        <div class="card wide">
+          <h3>Early payment discount</h3>
+          <p class="cap">How many members beat the 1 June deadline, and what the discount cost the club</p>
+          <div id="earlybars"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ drawer ============ -->
+<div class="veil" id="veil"></div>
+<aside class="drawer" id="drawer" aria-label="Application detail">
+  <div class="dhead">
+    <div>
+      <h2 id="d-name">&nbsp;</h2>
+      <div class="ref" id="d-ref">&nbsp;</div>
+    </div>
+    <button class="dclose" id="dclose">Close</button>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</aside>
+
+<!-- ============ print copy ============ -->
+<div id="printcopy"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     CONFIG
+     Same Apps Script web app URL as the membership form.
+     Blank means demo mode with the sample register below.
+     ===================================================================== */
+  var ENDPOINT = "";
+  var DEMO_CODE = "1720";
+
+  /* Club burgee, shown on the sign in card and in the header bar. */
+  var LOGO_URL = "https://static.wixstatic.com/media/ca6a09_4483746b465c4a2eab6f05020eea37c7~mv2.png/v1/fill/w_568,h_264,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/ca6a09_4483746b465c4a2eab6f05020eea37c7~mv2.png";
+  var LIVE = ENDPOINT.indexOf("http") === 0;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var euro = function(n){ return "\u20ac" + Number(n||0).toFixed(2).replace(/\.00$/,""); };
+  var esc = function(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); };
+
+  var TIERNAME = {owner:"Boat owner", family:"Family", individual:"Individual"};
+  var today = new Date();
+  var iso = function(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  var pretty = function(s){
+    if(!s) return "";
+    var d = new Date(s);
+    if(isNaN(d)) return s;
+    return d.toLocaleDateString("en-IE",{day:"numeric",month:"short",year:"numeric"});
+  };
+  var ageOf = function(dob){
+    if(!dob) return null;
+    var b = new Date(dob); if(isNaN(b)) return null;
+    var a = today.getFullYear()-b.getFullYear(), m = today.getMonth()-b.getMonth();
+    if(m<0 || (m===0 && today.getDate()<b.getDate())) a--;
+    return a;
+  };
+
+  /* ---------- demo register ---------- */
+  function demoData(){
+    var y = today.getFullYear();
+    var rows = [
+      ["MURP","Aoife","Murphy","owner",190,175,true,"approved","Ruth Collins","Declan Hayes","Ruth Collins",y+"-03-04","Sigma 33","Sceilig","IRL 3341",[["Cian",y-13],["Roisin",y-9]]],
+      ["ODRI","Barry","O'Driscoll","family",130,120,true,"approved","Declan Hayes","Ruth Collins","Declan Hayes",y+"-03-19","","","",[["Eoin",y-11],["Maeve",y-15]]],
+      ["WALS","Clodagh","Walsh","individual",80,75,true,"approved","Ruth Collins","Fiona Kelleher","Ruth Collins",y+"-04-02","","","",[]],
+      ["HAYE","Diarmuid","Hayes","owner",190,175,true,"approved","Fiona Kelleher","Declan Hayes","Fiona Kelleher",y+"-04-11","Beneteau First 31.7","VSOP","IRL 5601",[["Sean",y-16]]],
+      ["KELL","Eimear","Kelleher","family",130,120,false,"proposed","Ruth Collins","Declan Hayes","",'',"","","",[["Oisin",y-10],["Aine",y-7]]],
+      ["NOON","Fergal","Noonan","individual",80,80,true,"approved","Declan Hayes","Ruth Collins","Declan Hayes",y+"-05-28","","","",[]],
+      ["CARR","Grainne","Carroll","owner",190,190,false,"proposed","Fiona Kelleher","","",'',"Dufour 34","Roaringwater","IRL 4108",[]],
+      ["LYNC","Hugh","Lynch","family",130,130,true,"new","","","",'',"","","",[["Tadhg",y-12]]],
+      ["DALY","Iseult","Daly","individual",80,80,false,"new","","","",'',"","","",[]],
+      ["BRAD","Jer","Bradley","owner",190,190,true,"new","","","",'',"Contessa 32","Fastnet Belle","IRL 2277",[["Niamh",y-14],["Conor",y-17]]],
+      ["SHEE","Kate","Sheehan","family",130,130,false,"new","","","",'',"","","",[["Liam",y-10]]],
+      ["QUIN","Louis","Quinlan","individual",80,80,false,"declined","Ruth Collins","","",'',"","","",[]]
+    ];
+    var months = [1,2,2,3,3,4,5,5,6,6,7,7];
+    return rows.map(function(r,i){
+      return {
+        ref:"SHSC-"+y+"-"+r[0]+(1200+i*37),
+        submitted:new Date(y,months[i],3+(i*2)%22,10,0).toISOString(),
+        status:r[7], first:r[1], surname:r[2],
+        spouse:r[3]==="family"?"Partner named on the form":"",
+        home:"Ballydehob, Co. Cork", homeEir:"P81 " + ["XY42","HK09","RT77","VN31"][i%4],
+        schull:i%3===0?"Colla Road, Schull, Co. Cork":"", schEir:"",
+        email:(r[1]+"."+r[2]).toLowerCase().replace(/[^a-z.]/g,"")+"@example.ie",
+        mob:"087 "+(2000000+i*11117),
+        work:"", worktel:"",
+        children:(r[15]||[]).map(function(k){ return {name:k[0], dob:k[1]+"-06-14"}; }),
+        tier:r[3], tierName:TIERNAME[r[3]]+" membership",
+        feeFull:r[4], feeDue:r[5], earlyDiscount:r[4]!==r[5],
+        paid:r[6]?"yes":"no", payMethod:r[6]?(i%2?"Card (Stripe)":"Bank transfer"):"",
+        boatType:r[12], boatName:r[13], boatSail:r[14],
+        otherClub:i%4===0?"Royal Cork Yacht Club":"",
+        signName:(r[1]+" "+r[2]).toUpperCase(), signDate:"", signature:"",
+        proposedBy:r[8], secondedBy:r[9],
+        approvedBy:r[7]==="approved"?r[10]:"", approvedDate:r[7]==="approved"?r[11]:""
+      };
+    });
+  }
+
+  var REG = [];
+
+  /* ---------- backend ---------- */
+  function api(body){
+    return fetch(ENDPOINT, {
+      method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); });
+  }
+
+  function load(code, done){
+    if(!LIVE){ REG = demoData(); done(true); return; }
+    api({action:"list", code:code}).then(function(r){
+      if(r && r.ok){ REG = r.applications || []; done(true); }
+      else done(false);
+    }).catch(function(){ done(false); });
+  }
+
+  /* ---------- logo ---------- */
+  if(LOGO_URL){
+    [["gatelogo","gateph"],["barlogo","barph"]].forEach(function(p){
+      var img = $(p[0]);
+      img.onload = function(){ $(p[1]).style.display = "none"; img.style.display = "block"; };
+      img.src = LOGO_URL;
+    });
+  }
+
+  /* ---------- gate ---------- */
+  $("mode").textContent = LIVE ? "Live register" : "Demo data";
+  $("mode").className = LIVE ? "mode live" : "mode";
+  $("gatehint").textContent = LIVE ? "" : "Demo mode. The code is " + DEMO_CODE + ".";
+
+  function tryOpen(){
+    var code = $("pin").value.trim();
+    if(!LIVE && code !== DEMO_CODE){ $("gateerr").classList.add("on"); return; }
+    $("gatego").disabled = true; $("gatego").textContent = "Opening\u2026";
+    load(code, function(ok){
+      $("gatego").disabled = false; $("gatego").textContent = "Open console";
+      if(!ok){ $("gateerr").classList.add("on"); return; }
+      ACCESS = code;
+      $("gate").style.display = "none";
+      $("app").classList.add("on");
+      render();
+    });
+  }
+  var ACCESS = "";
+  $("gatego").addEventListener("click", tryOpen);
+  $("signout").addEventListener("click", function(){
+    close();
+    REG = []; ACCESS = ""; $("pin").value = "";
+    $("app").classList.remove("on");
+    $("gate").style.display = "flex";
+  });
+  $("pin").addEventListener("keydown", function(e){ if(e.key==="Enter") tryOpen(); });
+  $("pin").addEventListener("input", function(){ $("gateerr").classList.remove("on"); });
+
+  /* ---------- tabs ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
+    t.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(o){ o.classList.remove("on"); });
+      Array.prototype.forEach.call(document.querySelectorAll(".page"), function(o){ o.classList.remove("on"); });
+      t.classList.add("on");
+      $("page-" + t.getAttribute("data-page")).classList.add("on");
+      if(t.getAttribute("data-page")==="stats") drawStats();
+    });
+  });
+
+  /* ---------- list ---------- */
+  var filter = "all", term = "";
+  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(c){
+    c.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(o){ o.classList.remove("on"); });
+      c.classList.add("on"); filter = c.getAttribute("data-filter"); renderRows();
+    });
+  });
+  $("search").addEventListener("input", function(){ term = this.value.toLowerCase().trim(); renderRows(); });
+
+  function visible(){
+    return REG.filter(function(a){
+      if(filter !== "all" && a.status !== filter) return false;
+      if(!term) return true;
+      return [a.first,a.surname,a.ref,a.boatName,a.email].join(" ").toLowerCase().indexOf(term) > -1;
+    });
+  }
+
+  function renderRows(){
+    var list = visible().sort(function(x,y){ return new Date(y.submitted) - new Date(x.submitted); });
+    $("rows").innerHTML = list.map(function(a,i){
+      return '<tr data-ref="' + esc(a.ref) + '">' +
+        '<td><div class="name">' + esc(a.first + " " + a.surname) + '</div><div class="ref">' + esc(a.ref) + '</div></td>' +
+        '<td>' + esc(TIERNAME[a.tier] || a.tier) + (a.boatName ? '<div class="ref">' + esc(a.boatName) + '</div>' : '') + '</td>' +
+        '<td>' + pretty(a.submitted) + '</td>' +
+        '<td>' + euro(a.feeDue) + (a.earlyDiscount ? '<div class="ref">early rate</div>' : '') + '</td>' +
+        '<td><span class="pill ' + (a.paid==="yes"?"paid":"unpaid") + '">' + (a.paid==="yes"?"Paid":"Owing") + '</span></td>' +
+        '<td><span class="pill ' + esc(a.status) + '">' + esc(a.status) + '</span></td>' +
+      '</tr>';
+    }).join("");
+    $("noneleft").style.display = list.length ? "none" : "block";
+    Array.prototype.forEach.call($("rows").querySelectorAll("tr"), function(tr){
+      tr.addEventListener("click", function(){ openDrawer(tr.getAttribute("data-ref")); });
+    });
+  }
+
+  function headline(){
+    var owed = REG.filter(function(a){ return a.paid !== "yes" && a.status !== "declined"; })
+                  .reduce(function(s,a){ return s + Number(a.feeDue||0); }, 0);
+    $("s-new").textContent = REG.filter(function(a){ return a.status==="new"; }).length;
+    $("s-prop").textContent = REG.filter(function(a){ return a.status==="proposed"; }).length;
+    $("s-app").textContent = REG.filter(function(a){ return a.status==="approved"; }).length;
+    $("s-owed").textContent = euro(owed);
+  }
+
+  function render(){ headline(); renderRows(); }
+
+  /* ---------- drawer ---------- */
+  var current = null;
+  function find(ref){ for(var i=0;i<REG.length;i++) if(REG[i].ref===ref) return REG[i]; return null; }
+
+  function kv(pairs){
+    return '<dl class="kv">' + pairs.filter(function(p){ return p[1]; })
+      .map(function(p){ return '<dt>' + p[0] + '</dt><dd>' + esc(p[1]) + '</dd>'; }).join("") + '</dl>';
+  }
+
+  function kidList(a){
+    if(!a.children || !a.children.length) return "";
+    return a.children.map(function(k){
+      var age = ageOf(k.dob);
+      var jr = (age!==null && age>=10 && age<=16) ? " \u00b7 junior sailing" : "";
+      return esc(k.name) + (age!==null ? " (age " + age + jr + ")" : "");
+    }).join("\n");
+  }
+
+  function openDrawer(ref){
+    var a = find(ref); if(!a) return;
+    current = a;
+    $("d-name").textContent = a.first + " " + a.surname;
+    $("d-ref").textContent = a.ref + " \u00b7 received " + pretty(a.submitted);
+
+    var html = "";
+    html += '<div class="block"><h3>Membership</h3>' + kv([
+      ["Type", (TIERNAME[a.tier]||a.tier) + " membership"],
+      ["Fee due", euro(a.feeDue) + (a.earlyDiscount ? " (early rate, standard " + euro(a.feeFull) + ")" : "")],
+      ["Payment", a.paid==="yes" ? "Paid by " + (a.payMethod||"card") : "Outstanding"],
+      ["Status", a.status]
+    ]) + '</div>';
+
+    html += '<div class="block"><h3>Contact</h3>' + kv([
+      ["Email", a.email], ["Mobile", a.mob],
+      ["Home address", a.home + (a.homeEir ? "\n" + a.homeEir : "")],
+      ["Schull address", a.schull ? a.schull + (a.schEir ? "\n" + a.schEir : "") : ""],
+      ["Work", a.work], ["Work telephone", a.worktel]
+    ]) + '</div>';
+
+    var kids = kidList(a);
+    if(kids) html += '<div class="block"><h3>Children</h3>' + kv([["Named on form", kids]]) + '</div>';
+
+    if(a.boatName || a.boatType) html += '<div class="block"><h3>Boat</h3>' + kv([
+      ["Type", a.boatType], ["Name", a.boatName], ["Sail number", a.boatSail]
+    ]) + '</div>';
+
+    if(a.otherClub) html += '<div class="block"><h3>Other club</h3>' + kv([["Member of", a.otherClub]]) + '</div>';
+
+    html += '<div class="block"><h3>Signature</h3>' +
+      (a.signature ? '<div class="sigshow"><img src="' + a.signature + '" alt="Applicant signature"></div>'
+                   : '<p style="margin:0;color:#5d7080;font-size:13.5px">No signature captured. Ask for a signed copy before ratifying.</p>') +
+      kv([["Signed", a.signName], ["Dated", pretty(a.signDate)]]) + '</div>';
+
+    html += '<div class="block office"><h3>Club office use</h3>' +
+      '<label for="f-prop">Proposed by</label><input id="f-prop" type="text" value="' + esc(a.proposedBy||"") + '">' +
+      '<label for="f-sec">Seconded by</label><input id="f-sec" type="text" value="' + esc(a.secondedBy||"") + '">' +
+      '<label for="f-appby">Approved by</label><input id="f-appby" type="text" value="' + esc(a.approvedBy||"") + '">' +
+      '<label for="f-appdate">Date approved</label><input id="f-appdate" type="date" value="' + esc(a.approvedDate||"") + '">' +
+      '<div class="acts">' +
+        '<button class="btn ghost" id="b-prop">Record proposer</button>' +
+        '<button class="btn ghost" id="b-paid">' + (a.paid==="yes" ? "Mark as unpaid" : "Mark as paid") + '</button>' +
+        '<button class="btn solid" id="b-approve">Approve membership</button>' +
+        '<button class="btn danger" id="b-decline">Decline</button>' +
+        '<button class="btn ghost full" id="b-print">Print club copy (PDF)</button>' +
+      '</div></div>';
+
+    $("dbody").innerHTML = html;
+    $("veil").classList.add("on");
+    $("drawer").classList.add("on");
+
+    $("b-prop").addEventListener("click", function(){
+      grab(a);
+      if(!a.proposedBy || !a.secondedBy){ flash("Both a proposer and a seconder are needed."); return; }
+      save(a, "proposed");
+    });
+    $("b-paid").addEventListener("click", function(){
+      grab(a);
+      a.paid = a.paid==="yes" ? "no" : "yes";
+      if(a.paid==="yes" && !a.payMethod) a.payMethod = "Recorded by committee";
+      save(a, a.status);
+    });
+    $("b-approve").addEventListener("click", function(){
+      grab(a);
+      if(!a.proposedBy || !a.secondedBy){ flash("Record a proposer and a seconder first."); return; }
+      if(!a.approvedBy){ flash("Enter who approved it on behalf of the committee."); return; }
+      if(!a.approvedDate){ a.approvedDate = iso(today); }
+      save(a, "approved");
+    });
+    $("b-decline").addEventListener("click", function(){
+      grab(a); save(a, "declined");
+    });
+    $("b-print").addEventListener("click", function(){ grab(a); printCopy(a); });
+  }
+
+  function grab(a){
+    a.proposedBy = $("f-prop").value.trim();
+    a.secondedBy = $("f-sec").value.trim();
+    a.approvedBy = $("f-appby").value.trim();
+    a.approvedDate = $("f-appdate").value;
+  }
+
+  function flash(msg){
+    var b = document.createElement("div");
+    b.textContent = msg;
+    b.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0b3d6b;color:#fff;padding:12px 20px;border-radius:24px;z-index:60;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)";
+    document.body.appendChild(b);
+    setTimeout(function(){ b.remove(); }, 2600);
+  }
+
+  function save(a, status){
+    a.status = status;
+    if(!LIVE){ close(); render(); flash("Saved. Demo only, nothing was written to a sheet."); return; }
+    api({action:"update", code:ACCESS, application:a}).then(function(r){
+      if(r && r.ok){ close(); render(); flash("Saved to the club register."); }
+      else flash("That did not save. Try again.");
+    }).catch(function(){ flash("No connection to the club register."); });
+  }
+
+  function close(){ $("veil").classList.remove("on"); $("drawer").classList.remove("on"); current = null; }
+  $("dclose").addEventListener("click", close);
+  $("veil").addEventListener("click", close);
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") close(); });
+
+  /* ---------- print club copy ---------- */
+  function printCopy(a){
+    var kids = kidList(a);
+    var sec = function(title, inner){ return inner ? '<section><h4>' + title + '</h4>' + inner + '</section>' : ""; };
+    $("printcopy").innerHTML =
+      '<h1>Schull Harbour Sailing Club</h1><div class="pr"></div>' +
+      '<p style="margin:0 0 5mm"><b>Membership application</b> &nbsp;|&nbsp; ' + esc(a.ref) +
+      ' &nbsp;|&nbsp; received ' + pretty(a.submitted) + '</p>' +
+      sec("Applicant", kv([
+        ["Name", a.first + " " + a.surname], ["Spouse or partner", a.spouse],
+        ["Home address", a.home + (a.homeEir ? "\n" + a.homeEir : "")],
+        ["Schull address", a.schull ? a.schull + (a.schEir ? "\n" + a.schEir : "") : ""],
+        ["Email", a.email], ["Mobile", a.mob], ["Work", a.work], ["Work telephone", a.worktel]
+      ])) +
+      sec("Children", kids ? kv([["Named on form", kids]]) : "") +
+      sec("Membership", kv([
+        ["Type", (TIERNAME[a.tier]||a.tier) + " membership"],
+        ["Fee due", euro(a.feeDue) + (a.earlyDiscount ? " (early payment rate)" : "")],
+        ["Payment", a.paid==="yes" ? "Paid by " + (a.payMethod||"card") : "Outstanding"]
+      ])) +
+      sec("Boat", (a.boatType||a.boatName) ? kv([["Type", a.boatType],["Name", a.boatName],["Sail number", a.boatSail]]) : "") +
+      sec("Other club", a.otherClub ? kv([["Member of", a.otherClub]]) : "") +
+      sec("Declaration", '<p style="margin:0 0 3mm;font-size:10pt">I apply for membership of Schull Harbour Sailing Club and agree to abide by the rules of the club.</p>' +
+        (a.signature ? '<img class="sig" src="' + a.signature + '" alt="">' : '<div class="sigline"></div>') +
+        kv([["Signed", a.signName], ["Dated", pretty(a.signDate)]])) +
+      sec("Club office use", kv([
+        ["Proposed by", a.proposedBy || "\u2014"],
+        ["Seconded by", a.secondedBy || "\u2014"],
+        ["Approved by", a.approvedBy || "\u2014"],
+        ["Date approved", a.approvedDate ? pretty(a.approvedDate) : "\u2014"],
+        ["Status", a.status]
+      ]) + '<p style="margin:4mm 0 0;font-size:9.5pt">All membership applications are subject to ratification and approval by the general committee. Admission to membership does not take place until such approval.</p>');
+    window.print();
+  }
+
+  /* ---------- analytics ---------- */
+  function drawStats(){
+    var live = REG.filter(function(a){ return a.status !== "declined"; });
+    var paid = live.filter(function(a){ return a.paid==="yes"; }).reduce(function(s,a){ return s+Number(a.feeDue||0); },0);
+    var owed = live.filter(function(a){ return a.paid!=="yes"; }).reduce(function(s,a){ return s+Number(a.feeDue||0); },0);
+    var juniors = 0;
+    REG.forEach(function(a){ (a.children||[]).forEach(function(k){ var g=ageOf(k.dob); if(g!==null&&g>=10&&g<=16) juniors++; }); });
+    $("a-total").textContent = REG.length;
+    $("a-paid").textContent = euro(paid);
+    $("a-owed").textContent = euro(owed);
+    $("a-junior").textContent = juniors;
+
+    // mix
+    var mix = {owner:{n:0,v:0},family:{n:0,v:0},individual:{n:0,v:0}};
+    live.forEach(function(a){ if(mix[a.tier]){ mix[a.tier].n++; mix[a.tier].v += Number(a.feeDue||0); } });
+    var maxn = Math.max(1, mix.owner.n, mix.family.n, mix.individual.n);
+    $("mixbars").innerHTML = Object.keys(mix).map(function(k){
+      return '<div class="barrow"><span>' + TIERNAME[k] + '</span>' +
+        '<span class="track"><i style="width:' + (mix[k].n/maxn*100) + '%"></i></span>' +
+        '<span class="num">' + mix[k].n + ' &middot; ' + euro(mix[k].v) + '</span></div>';
+    }).join("");
+
+    // donut
+    var np = live.filter(function(a){ return a.paid==="yes"; }).length, nu = live.length - np;
+    var pct = live.length ? np/live.length : 0;
+    var r = 62, c = 2*Math.PI*r;
+    $("donut").innerHTML =
+      '<svg viewBox="0 0 200 160" role="img" aria-label="Payment status">' +
+      '<g transform="translate(100,80)">' +
+      '<circle r="' + r + '" fill="none" stroke="#eef3f8" stroke-width="24"></circle>' +
+      '<circle r="' + r + '" fill="none" stroke="#1f9245" stroke-width="24" stroke-linecap="round" ' +
+      'stroke-dasharray="' + (c*pct) + ' ' + c + '" transform="rotate(-90)"></circle>' +
+      '<text y="-2" text-anchor="middle" font-size="30" font-family="Georgia,serif" font-weight="700" fill="#0b3d6b">' + Math.round(pct*100) + '%</text>' +
+      '<text y="20" text-anchor="middle" font-size="12" fill="#5d7080">settled</text>' +
+      '</g></svg>' +
+      '<div class="legend"><span><i style="background:#1f9245"></i>' + np + ' paid</span>' +
+      '<span><i style="background:#eef3f8;border:1px solid #d7e1ea"></i>' + nu + ' owing</span></div>';
+
+    // monthly line
+    var names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var rec = new Array(12).fill(0), app = new Array(12).fill(0);
+    REG.forEach(function(a){
+      var d = new Date(a.submitted); if(!isNaN(d)) rec[d.getMonth()]++;
+      if(a.status==="approved" && a.approvedDate){ var e = new Date(a.approvedDate); if(!isNaN(e)) app[e.getMonth()]++; }
+    });
+    var lastM = today.getMonth();
+    var mons = [], R = [], A = [];
+    for(var m=0;m<=lastM;m++){ mons.push(names[m]); R.push(rec[m]); A.push(app[m]); }
+    var W = 760, H = 220, pad = 34;
+    var top = Math.max(1, Math.max.apply(null, R.concat(A)));
+    var px = function(i){ return pad + (mons.length>1 ? i*(W-pad*2)/(mons.length-1) : 0); };
+    var py = function(v){ return H - pad - (v/top)*(H-pad*2); };
+    var path = function(arr){ return arr.map(function(v,i){ return (i?"L":"M") + px(i).toFixed(1) + " " + py(v).toFixed(1); }).join(" "); };
+    var dots = function(arr,col){ return arr.map(function(v,i){ return '<circle cx="'+px(i).toFixed(1)+'" cy="'+py(v).toFixed(1)+'" r="4" fill="'+col+'"></circle>'; }).join(""); };
+    var grid = "";
+    for(var g=0; g<=top; g += Math.max(1, Math.ceil(top/4))){
+      grid += '<line x1="'+pad+'" x2="'+(W-pad)+'" y1="'+py(g)+'" y2="'+py(g)+'" stroke="#eef3f8"></line>' +
+              '<text x="'+(pad-10)+'" y="'+(py(g)+4)+'" text-anchor="end" font-size="11" fill="#5d7080">'+g+'</text>';
+    }
+    $("linechart").innerHTML =
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Applications by month">' + grid +
+      '<path d="'+path(R)+'" fill="none" stroke="#1163b0" stroke-width="2.5"></path>' +
+      '<path d="'+path(A)+'" fill="none" stroke="#1f9245" stroke-width="2.5" stroke-dasharray="5 4"></path>' +
+      dots(R,"#1163b0") + dots(A,"#1f9245") +
+      mons.map(function(n,i){ return '<text x="'+px(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="#5d7080">'+n+'</text>'; }).join("") +
+      '</svg>';
+
+    // early discount
+    var early = live.filter(function(a){ return a.earlyDiscount; }).length;
+    var lateN = live.length - early;
+    var given = live.filter(function(a){ return a.earlyDiscount; })
+                    .reduce(function(s,a){ return s + (Number(a.feeFull||0) - Number(a.feeDue||0)); }, 0);
+    var mx = Math.max(1, early, lateN);
+    $("earlybars").innerHTML =
+      '<div class="barrow"><span>Early rate</span><span class="track"><i style="width:'+(early/mx*100)+'%;background:#1f9245"></i></span><span class="num">'+early+'</span></div>' +
+      '<div class="barrow"><span>Standard rate</span><span class="track"><i style="width:'+(lateN/mx*100)+'%"></i></span><span class="num">'+lateN+'</span></div>' +
+      '<p class="cap" style="margin:12px 0 0">Discounts given so far this season: <b style="color:#0b3d6b">'+euro(given)+'</b>. ' +
+      'The deadline is 1 June, so anything after that pays the standard rate.</p>';
+  }
+})();
+</script>
+</body>
+</html>
