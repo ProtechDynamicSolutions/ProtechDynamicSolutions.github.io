@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreLocal Storage Size Simulator</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script>
+        // If either CDN file fails, fall back rather than leaving a blank page
+        if (!window.React || !window.ReactDOM) {
+            document.write('<scr' + 'ipt crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/scr' + 'ipt>');
+            document.write('<scr' + 'ipt crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/scr' + 'ipt>');
+        }
+    </script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: {
+                            850: '#1f1f22',
+                            900: '#18181b',
+                            950: '#09090b',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #09090b; color: #fff; }
+        
+        /* Custom Scrollbar - Darker for visibility on white/light panels */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
+        /* Changed to Zinc-600 (#52525b) for better contrast on white */
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #52525b; border-radius: 4px; border: 2px solid rgba(0,0,0,0.05); background-clip: padding-box; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; border: 2px solid rgba(0,0,0,0.05); }
+        
+        /* Firefox Scrollbar */
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #52525b rgba(0,0,0,0.05); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .text-shadow-glow { text-shadow: 0 0 20px rgba(37, 99, 235, 0.3); }
+        /* Stops the browser stealing drag gestures from the 3D viewer on touch screens */
+        /* A vertical swipe anywhere on the canvas used to be swallowed by the 3D view.
+           The page scrolls by default, and only the middle band takes the gesture. */
+        .viewer-3d { touch-action: pan-y; }
+        .viewer-grab { touch-action: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- UTILS & STYLES ---
+        const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")`;
+        const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+
+        // --- COMPONENTS ---
+
+        // Premium Button
+        const PremiumButton = ({ children, onClick, active = false, variant = 'default', className = '', disabled = false }) => {
+            const [xy, setXY] = useState({ x: 0, y: 0 });
+            const btnRef = useRef(null);
+
+            const handleMouseMove = (e) => {
+                if (!btnRef.current) return;
+                const rect = btnRef.current.getBoundingClientRect();
+                setXY({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+            };
+
+            const baseStyles = `relative overflow-hidden group rounded-xl transition-all duration-300 border outline-none select-none`;
+            
+            const variants = {
+                default: `bg-zinc-900/40 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-800/60 text-zinc-100 backdrop-blur-sm`,
+                tab: `${active ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] font-black' : 'bg-white border-zinc-200 text-zinc-600 hover:border-blue-500 hover:text-zinc-900 shadow-sm hover:shadow-md'}`,
+                ghost: `bg-transparent border-transparent hover:bg-zinc-100/5 text-zinc-400 hover:text-zinc-200`,
+                cta: `bg-amber-500 border-amber-400 text-zinc-950 font-black tracking-widest uppercase shadow-[0_4px_14px_0_rgba(245,158,11,0.39)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.23)] hover:bg-amber-400`,
+                glass: `bg-white/5 border-white/10 hover:bg-white/10 text-white backdrop-blur-sm`
+            };
+
+            const activeTransform = variant === 'tab' && active ? "scale-[1.02] -translate-y-[1px]" : "active:scale-[0.98] active:translate-y-[1px]";
+
+            return (
+                <button
+                    ref={btnRef}
+                    onClick={onClick}
+                    onMouseMove={handleMouseMove}
+                    disabled={disabled}
+                    style={{ transitionTimingFunction: SPRING_EASE }}
+                    className={`${baseStyles} ${variants[variant] || variants.default} ${activeTransform} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer'}`}
+                >
+                    {!disabled && variant !== 'ghost' && variant !== 'tab' && (
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0" style={{ background: `radial-gradient(300px circle at ${xy.x}px ${xy.y}px, rgba(255,255,255,0.08), transparent 40%)` }} />
+                    )}
+                    <div className="absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: NOISE_SVG }}></div>
+                    <div className="relative z-10 flex items-center justify-center w-full h-full">{children}</div>
+                </button>
+            );
+        };
+
+        // Premium Card
+        // tone: 'dark' is the default shell. The client builds set CARD_TONE to 'light' and the
+        // hero panels opt back into dark individually.
+        const CARD_TONE = 'light';
+        const PremiumCard = ({ children, className = '', contentClassName = '', tone = CARD_TONE }) => (
+            <div className={`relative ${tone === 'light' ? 'bg-white border-zinc-200 shadow-xl' : 'bg-zinc-900/80 border-white/5 shadow-2xl'} backdrop-blur-xl border rounded-2xl overflow-hidden ${className}`}>
+                <div className={`absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent ${tone === 'light' ? 'via-black/10' : 'via-white/20'} to-transparent opacity-50`}></div>
+                <div className={`relative z-10 h-full ${contentClassName}`}>
+                    {children}
+                </div>
+                <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
+            </div>
+        );
+
+        // --- CONSTANTS ---
+        const CATEGORY_COLORS = { "Living Room": '#f97316', "Bedroom": '#3b82f6', "Dining & Kitchen": '#10b981', "Boxes & Misc": '#eab308' };
+        
+        // Packing rules per item:
+        //   floorOnly     must sit on the floor, never on top of something else
+        //   stackable     false means nothing may be placed on top of it
+        // Anything without a flag is treated as stackable and free to sit on a stack.
+        const ROOM_CATEGORIES = {
+            "Living Room": [
+                { id: 'sofa_2', type: 'sofa', name: 'Sofa (2 Seater)', width: 1.5, depth: 0.9, height: 0.9, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'sofa_3', type: 'sofa', name: 'Sofa (3 Seater)', width: 2.1, depth: 0.9, height: 0.9, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'sofa_corner', type: 'sofa_corner', name: 'Corner Sofa', width: 2.2, depth: 2.2, height: 0.9, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'armchair', type: 'chair', name: 'Armchair', width: 0.9, depth: 0.9, height: 0.9, floorOnly: true, stackable: false },
+                { id: 'bean_bag', type: 'beanbag', name: 'Bean Bag', width: 0.8, depth: 0.8, height: 0.8, stackable: false },
+                { id: 'tv_unit', type: 'cabinet_tv', name: 'TV Unit', width: 1.2, depth: 0.4, height: 0.5 },
+                { id: 'coffee_table', type: 'table', name: 'Coffee Table', width: 1.0, depth: 0.6, height: 0.4, tiltable: true },
+                { id: 'bookcase', type: 'cabinet', name: 'Bookcase', width: 0.8, depth: 0.3, height: 1.8, floorOnly: true, tiltable: true },
+                { id: 'rug', type: 'cylinder', name: 'Rug (Rolled)', width: 0.3, depth: 0.3, height: 2.0, stackable: false },
+            ],
+            "Bedroom": [
+                { id: 'bed_single', type: 'bed', name: 'Bed (Single)', width: 0.9, depth: 1.9, height: 0.6, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'bed_double', type: 'bed', name: 'Bed (Double)', width: 1.35, depth: 1.9, height: 0.6, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'bed_king', type: 'bed', name: 'Bed (King)', width: 1.55, depth: 2.0, height: 0.6, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'bed_super_king', type: 'bed', name: 'Bed (Super King)', width: 1.8, depth: 2.0, height: 0.6, floorOnly: true, stackable: false, tiltable: true },
+                { id: 'wardrobe', type: 'wardrobe', name: 'Wardrobe', width: 1.0, depth: 0.6, height: 2.0, floorOnly: true, tiltable: true },
+                { id: 'chest_drawers', type: 'cabinet', name: 'Chest of Drawers', width: 0.9, depth: 0.5, height: 0.9, floorOnly: true },
+                { id: 'bedside', type: 'cabinet', name: 'Bedside Table', width: 0.4, depth: 0.4, height: 0.5 },
+                { id: 'cot', type: 'bed', name: 'Cot', width: 0.7, depth: 1.3, height: 0.9, stackable: false },
+            ],
+            "Dining & Kitchen": [
+                { id: 'dining_table', type: 'table', name: 'Dining Table', width: 1.6, depth: 0.9, height: 0.8, floorOnly: true, tiltable: true },
+                { id: 'chair', type: 'chair_simple', name: 'Dining Chair', width: 0.5, depth: 0.5, height: 0.9, stackable: false },
+                { id: 'stool', type: 'cylinder_stool', name: 'Bar Stool', width: 0.4, depth: 0.4, height: 0.8, stackable: false },
+                { id: 'sideboard', type: 'cabinet', name: 'Sideboard', width: 1.5, depth: 0.5, height: 0.8, floorOnly: true, tiltable: true },
+                { id: 'fridge', type: 'fridge', name: 'Fridge', width: 0.6, depth: 0.6, height: 1.7, floorOnly: true, stackable: false },
+                { id: 'washing_machine', type: 'washer', name: 'Washing Machine', width: 0.6, depth: 0.6, height: 0.85, floorOnly: true, stackable: false },
+                { id: 'tumble_dryer', type: 'washer', name: 'Tumble Dryer', width: 0.6, depth: 0.6, height: 0.85, floorOnly: true, stackable: false },
+                { id: 'dishwasher', type: 'washer', name: 'Dishwasher', width: 0.6, depth: 0.6, height: 0.85, floorOnly: true, stackable: false },
+                { id: 'microwave', type: 'box', name: 'Microwave', width: 0.5, depth: 0.4, height: 0.3, stackable: false },
+            ],
+            "Boxes & Misc": [
+                { id: 'box_m', type: 'box', name: 'Medium Box', width: 0.4, depth: 0.4, height: 0.4 },
+                { id: 'box_l', type: 'box', name: 'Large Box', width: 0.5, depth: 0.5, height: 0.5 },
+                { id: 'suitcase', type: 'box', name: 'Suitcase', width: 0.5, depth: 0.3, height: 0.7 },
+                { id: 'bicycle', type: 'bike', name: 'Bicycle', width: 1.7, depth: 0.4, height: 1.0, floorOnly: true, stackable: false },
+                { id: 'golf_clubs', type: 'cylinder', name: 'Golf Clubs', width: 0.3, depth: 0.3, height: 1.2, stackable: false },
+                { id: 'lamp', type: 'cylinder', name: 'Floor Lamp', width: 0.3, depth: 0.3, height: 1.5, stackable: false },
+                { id: 'vacuum', type: 'cylinder', name: 'Vacuum Cleaner', width: 0.4, depth: 0.4, height: 1.2, stackable: false },
+                { id: 'ironing_board', type: 'box', name: 'Ironing Board', width: 0.4, depth: 0.1, height: 1.5, stackable: false },
+                { id: 'lawnmower', type: 'lawnmower', name: 'Lawnmower', width: 0.6, depth: 0.9, height: 0.5, floorOnly: true, stackable: false, warning: "Warning: Equipment with fuel tanks (like lawnmowers) must be fully drained and inspected before storage due to fire safety regulations." },
+                { id: 'bbq', type: 'box', name: 'BBQ', width: 1.0, depth: 0.6, height: 1.0, floorOnly: true, stackable: false, warning: "Warning: Gas canisters must be removed and BBQs thoroughly cleaned of grease before storage." },
+                { id: 'garden_chair', type: 'chair_simple', name: 'Garden Chair', width: 0.6, depth: 0.6, height: 0.9, stackable: false },
+            ]
+        };
+
+        // Guide rate per week in Australian dollars. PLACEHOLDER PRICING: set these from the
+        // real rate card before this goes anywhere near a customer.
+        const UNIT_TIERS = [
+            { id: 'sl1_5', name: '1.5 m\u00b2 Locker', label: '1.5 m\u00b2', width: 1.5, depth: 1.0, height: 2.4, sqft: 16, price: 20 },
+            { id: 'sl3', name: '3 m\u00b2 (Studio or Garage Tidy)', label: '3 m\u00b2', width: 2.0, depth: 1.5, height: 2.4, sqft: 32, price: 35 },
+            { id: 'sl6', name: '6 m\u00b2 (1 Bedroom Unit)', label: '6 m\u00b2', width: 3.0, depth: 2.0, height: 2.4, sqft: 65, price: 55 },
+            { id: 'sl9', name: '9 m\u00b2 (2 Bedroom Unit)', label: '9 m\u00b2', width: 3.0, depth: 3.0, height: 2.4, sqft: 97, price: 75 },
+            { id: 'sl12', name: '12 m\u00b2 (3 Bedroom House)', label: '12 m\u00b2', width: 4.0, depth: 3.0, height: 2.4, sqft: 129, price: 95 },
+            { id: 'sl15', name: '15 m\u00b2 (3-4 Bedroom House)', label: '15 m\u00b2', width: 5.0, depth: 3.0, height: 2.4, sqft: 161, price: 115 },
+            { id: 'sl18', name: '18 m\u00b2 (4 Bedroom House)', label: '18 m\u00b2', width: 6.0, depth: 3.0, height: 2.4, sqft: 194, price: 135 },
+            { id: 'sl24', name: '24 m\u00b2 (Large Home or Business)', label: '24 m\u00b2', width: 8.0, depth: 3.0, height: 2.4, sqft: 258, price: 175 },
+        ];
+
+        // Tuning. PACK_EFFICIENCY is how much of the internal cube a real load fills once
+        // things are nested and there is room to get in. Raise or lower it against real
+        // move ins. FLOOR_EFFICIENCY is how much of the floor may be covered by things
+        // that have to stand on it.
+        const MAX_STACK_HEIGHT = 2.05;
+        const MAX_UNIT_HEIGHT = 2.4;
+        const PACK_EFFICIENCY = 0.65;
+        const FLOOR_EFFICIENCY = 0.9;
+
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+        const itemVolume = (i) => i.width * i.depth * i.height;
+
+        const ICONS = {
+            Plus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Minus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Trash: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+            Box: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>,
+            Truck: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>,
+            Rotate: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>,
+            Alert: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        };
+
+        // --- LOGIC ---
+        // Candidate orientations. Tiltable things (beds, tables, sofas, wardrobes) get stood
+        // on edge the way a removals crew would actually load them.
+        const orientationsFor = (item) => {
+            const list = [{ tilt: null, w: item.width, d: item.depth, h: item.height }];
+            if (item.tiltable) {
+                list.push({ tilt: 'x', w: item.width, d: item.height, h: item.depth });
+                list.push({ tilt: 'z', w: item.height, d: item.depth, h: item.width });
+            }
+            // Smallest footprint first, so tall things end up standing on edge like a real load
+            return list.sort((a, b) => (a.w * a.d) - (b.w * b.d));
+        };
+
+        // Axes: x = width, y = depth, z = height.
+        // Extreme point packing: every time something is placed it offers three new corner
+        // points, including the one directly on its top face, which is what lets boxes stack.
+        const EPS = 0.001;
+
+        class Packer {
+            constructor(w, d, h, stackLimit) {
+                this.w = w; this.d = d; this.h = h;
+                this.stackLimit = stackLimit || h;
+                this.placedItems = [];
+                this.points = [{ x: 0, y: 0, z: 0 }];
+            }
+
+            fits(x, y, z, w, d, h) {
+                if (x + w > this.w + EPS || y + d > this.d + EPS || z + h > this.h + EPS) return false;
+                for (const o of this.placedItems) {
+                    if (x < o.x + o.actualW - EPS && x + w > o.x + EPS &&
+                        y < o.y + o.actualD - EPS && y + d > o.y + EPS &&
+                        z < o.z + o.actualH - EPS && z + h > o.z + EPS) return false;
+                }
+                return true;
+            }
+
+            // Anything off the floor has to be carried by item tops that can take a load
+            isSupported(x, y, z, w, d) {
+                let covered = 0;
+                for (const o of this.placedItems) {
+                    if (Math.abs(o.z + o.actualH - z) > EPS) continue;
+                    const ox = Math.min(x + w, o.x + o.actualW) - Math.max(x, o.x);
+                    const oy = Math.min(y + d, o.y + o.actualD) - Math.max(y, o.y);
+                    if (ox <= EPS || oy <= EPS) continue;
+                    if (o.stackable === false || o.tilt) return false;
+                    covered += ox * oy;
+                }
+                return covered >= w * d * 0.9;
+            }
+
+            placeItem(item) {
+                const orientations = orientationsFor(item);
+                // Lowest, then furthest back, then left: the unit loads from the back wall up
+                this.points.sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x);
+                for (const pt of this.points) {
+                    const onFloor = pt.z < EPS;
+                    if (item.floorOnly && !onFloor) continue;
+                    const ceiling = onFloor ? this.h : this.stackLimit;
+                    for (const o of orientations) {
+                        if (pt.z + o.h > ceiling + EPS) continue;
+                        for (const rotated of [false, true]) {
+                            const w = rotated ? o.d : o.w;
+                            const d = rotated ? o.w : o.d;
+                            if (!this.fits(pt.x, pt.y, pt.z, w, d, o.h)) continue;
+                            if (!onFloor && !this.isSupported(pt.x, pt.y, pt.z, w, d)) continue;
+                            this.commit(item, pt, w, d, o, rotated);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            commit(item, pt, w, d, o, rotated) {
+                this.placedItems.push({ ...item, x: pt.x, y: pt.y, z: pt.z, actualW: w, actualD: d, actualH: o.h, rotated: rotated, tilt: o.tilt });
+                this.points = this.points.filter(p => p !== pt);
+                const add = (x, y, z) => {
+                    if (x > this.w - EPS || y > this.d - EPS || z > this.h - EPS) return;
+                    if (this.points.some(q => Math.abs(q.x - x) < EPS && Math.abs(q.y - y) < EPS && Math.abs(q.z - z) < EPS)) return;
+                    this.points.push({ x: x, y: y, z: z });
+                };
+                add(pt.x + w, pt.y, pt.z);
+                add(pt.x, pt.y + d, pt.z);
+                // Only offer the top face if this item can carry a load and is not stood on edge
+                if (item.stackable !== false && !o.tilt) add(pt.x, pt.y, pt.z + o.h);
+                if (this.points.length > 600) this.points.length = 600;
+            }
+        }
+
+        const packTier = (tier, items) => {
+            const packer = new Packer(tier.width, tier.depth, tier.height, MAX_STACK_HEIGHT);
+            const failed = [];
+            items.forEach(item => { if (!packer.placeItem(item)) failed.push(item); });
+            return { packed: packer.placedItems, failed: failed };
+        };
+
+        const internalVolume = (tier) => tier.width * tier.depth * tier.height;
+        const floorArea = (tier) => tier.width * tier.depth;
+
+        // Smallest footprint the item can be loaded on, allowing for standing it on edge
+        const footprintOf = (item) => {
+            let best = Infinity;
+            orientationsFor(item).forEach(o => { if (o.h <= MAX_UNIT_HEIGHT + EPS) best = Math.min(best, o.w * o.d); });
+            return best === Infinity ? item.width * item.depth : best;
+        };
+
+        const loadStats = (items) => {
+            let volume = 0, floor = 0;
+            items.forEach(i => {
+                volume += itemVolume(i);
+                if (i.floorOnly) floor += footprintOf(i);
+            });
+            return { volume: volume, floor: floor };
+        };
+
+        const tierHolds = (tier, stats) =>
+            stats.volume <= internalVolume(tier) * PACK_EFFICIENCY &&
+            stats.floor <= floorArea(tier) * FLOOR_EFFICIENCY;
+
+        // Sizing is a volume and floor area rule, which is how a load actually behaves once
+        // things are nested and voids are filled. The packer then illustrates that unit.
+        const packIntoRooms = (inventory, availableTiers) => {
+            // Cheapest first, since that is what the customer is picking on. Note the tiers
+            // are not in volume order: the 20ft container has less internal volume than the
+            // 150 sq.ft room despite the larger label.
+            const tiers = [...availableTiers].sort((a, b) => (a.price || 0) - (b.price || 0) || internalVolume(a) - internalVolume(b));
+            const biggest = tiers.reduce((best, t) => internalVolume(t) > internalVolume(best) ? t : best, tiers[0]);
+            let remaining = [...inventory].sort((a, b) =>
+                (b.floorOnly ? 1 : 0) - (a.floorOnly ? 1 : 0) || itemVolume(b) - itemVolume(a));
+            const rooms = [];
+            const unplaceable = [];
+            let guard = 0;
+
+            while (remaining.length > 0 && guard < 12) {
+                guard++;
+                const stats = loadStats(remaining);
+                let tier = null;
+                let packed = null;
+                let take = remaining;
+
+                for (const t of tiers) {
+                    if (stats.floor > floorArea(t) * FLOOR_EFFICIENCY) continue;
+                    // The rule of thumb comes first, since a real load nests in ways the
+                    // packer cannot. If it fails, the packer still gets a say: uniform loads
+                    // like a wall of boxes genuinely do pack tighter than the rule allows.
+                    if (tierHolds(t, stats)) { tier = t; break; }
+                    if (stats.volume <= internalVolume(t) * 0.85) {
+                        const trial = packTier(t, remaining);
+                        if (trial.failed.length === 0) { tier = t; packed = trial; break; }
+                    }
+                }
+
+                if (!tier) {
+                    // More than one unit needed, so fill the largest unit and carry the rest over
+                    tier = biggest;
+                    const volCap = internalVolume(tier) * PACK_EFFICIENCY;
+                    const floorCap = floorArea(tier) * FLOOR_EFFICIENCY;
+                    let v = 0, f = 0;
+                    take = [];
+                    remaining.forEach(i => {
+                        const iv = itemVolume(i);
+                        const ifp = i.floorOnly ? footprintOf(i) : 0;
+                        if (v + iv <= volCap && f + ifp <= floorCap) { take.push(i); v += iv; f += ifp; }
+                    });
+                    if (take.length === 0) { unplaceable.push(...remaining); break; }
+                }
+
+                const result = (packed && take === remaining) ? packed : packTier(tier, take);
+                const taken = loadStats(take);
+                rooms.push({
+                    unit: tier,
+                    items: result.packed,
+                    hidden: result.failed.length,
+                    total: take.length,
+                    fill: taken.volume / internalVolume(tier)
+                });
+                const takenIds = new Set(take.map(i => i.uid));
+                remaining = remaining.filter(i => !takenIds.has(i.uid));
+            }
+
+            if (remaining.length > 0) unplaceable.push(...remaining);
+            return { rooms: rooms, unplaceable: unplaceable };
+        };
+
+        // Builds the mesh for one item. Hoisted out of the render effect so it is not rebuilt every time.
+        const createItemMesh = (THREE, item) => {
+                    const group = new THREE.Group();
+                    const w = item.width; const d = item.depth; const h = item.height;
+                    const color = new THREE.Color(item.color);
+                    const darkColor = color.clone().multiplyScalar(0.7);
+                    const chromeColor = new THREE.Color(0xdddddd);
+                    const blackColor = new THREE.Color(0x555555); 
+                    
+                    // --- RED MATERIAL FOR BIKES & MOWERS ---
+                    const redMaterial = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.5 }); // Tailwind red-600
+
+                    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+                    const darkMaterial = new THREE.MeshStandardMaterial({ color: darkColor, roughness: 0.8 });
+                    const chromeMaterial = new THREE.MeshStandardMaterial({ color: chromeColor, roughness: 0.2, metalness: 0.8 });
+                    const blackMaterial = new THREE.MeshStandardMaterial({ color: blackColor, roughness: 0.9 });
+                    
+                    const createBox = (bw, bh, bd, bx, by, bz, mat = material) => {
+                        const geom = new THREE.BoxGeometry(bw, bh, bd);
+                        const mesh = new THREE.Mesh(geom, mat);
+                        mesh.position.set(bx, by, bz);
+                        mesh.castShadow = true; mesh.receiveShadow = true;
+                        return mesh;
+                    };
+                    const createCylinder = (rad, len, cx, cy, cz, rotationX = 0, rotationZ = 0, mat = material) => {
+                        const geom = new THREE.CylinderGeometry(rad, rad, len, 16);
+                        const mesh = new THREE.Mesh(geom, mat);
+                        mesh.position.set(cx, cy, cz);
+                        if(rotationX) mesh.rotation.x = rotationX;
+                        if(rotationZ) mesh.rotation.z = rotationZ;
+                        mesh.castShadow = true;
+                        return mesh;
+                    }
+
+                    switch(item.type) {
+                        case 'sofa_corner':
+                            const thickness = Math.min(w, d) * 0.35; const seatH = h * 0.4; const backH = h * 0.6; const backThick = thickness * 0.3;
+                            group.add(createBox(w, seatH, thickness, 0, seatH/2, -d/2 + thickness/2));
+                            group.add(createBox(w, backH, backThick, 0, seatH + backH/2, -d/2 + backThick/2));
+                            const lLength = d - thickness; 
+                            group.add(createBox(thickness, seatH, lLength, -w/2 + thickness/2, seatH/2, -d/2 + thickness + lLength/2));
+                            group.add(createBox(thickness, h*0.2, thickness*0.2, -w/2 + thickness/2, seatH + h*0.1, d/2 - thickness*0.1));
+                            break;
+                        case 'sofa':
+                            group.add(createBox(w, h * 0.4, d, 0, h * 0.2, 0));
+                            group.add(createBox(w, h * 0.6, d * 0.25, 0, h * 0.7, -d * 0.375));
+                            group.add(createBox(w * 0.15, h * 0.4, d, -w * 0.425, h * 0.6, 0));
+                            group.add(createBox(w * 0.15, h * 0.4, d, w * 0.425, h * 0.6, 0));
+                            break;
+                        case 'bed':
+                            group.add(createBox(w, h * 0.3, d, 0, h * 0.15, 0, darkMaterial));
+                            const mattressMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+                            group.add(createBox(w * 0.95, h * 0.2, d * 0.95, 0, h * 0.4, 0, mattressMat));
+                            group.add(createBox(w, h * 0.5, d * 0.05, 0, h * 0.5, -d * 0.475, darkMaterial));
+                            group.add(createBox(w * 0.4, h * 0.1, d * 0.15, 0, h * 0.55, -d * 0.35, mattressMat));
+                            break;
+                        case 'wardrobe':
+                            group.add(createBox(w, h, d, 0, h/2, 0, material));
+                            group.add(createBox(w*0.01, h*0.9, d*0.05, 0, h/2, d/2, darkMaterial));
+                            group.add(createBox(w*0.05, h*0.1, d*0.05, -w*0.1, h*0.5, d/2+0.01, chromeMaterial));
+                            group.add(createBox(w*0.05, h*0.1, d*0.05, w*0.1, h*0.5, d/2+0.01, chromeMaterial));
+                            break;
+                        case 'washer':
+                            const wBody = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+                            group.add(createBox(w, h, d, 0, h/2, 0, wBody));
+                            group.add(createBox(w, h*0.15, d*0.05, 0, h*0.9, d/2, wBody));
+                            const doorRad = Math.min(w,h)*0.35;
+                            group.add(createCylinder(doorRad, d*0.05, 0, h*0.5, d/2, Math.PI/2, 0, chromeMaterial));
+                            const glassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.6, roughness: 0 });
+                            group.add(createCylinder(doorRad*0.8, d*0.06, 0, h*0.5, d/2, Math.PI/2, 0, glassMat));
+                            break;
+                        case 'fridge':
+                            const fBody = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 });
+                            group.add(createBox(w, h, d, 0, h/2, 0, fBody));
+                            group.add(createBox(w*0.95, h*0.01, d*0.05, 0, h*0.65, d/2, darkMaterial));
+                            group.add(createBox(w*0.05, h*0.2, d*0.05, -w*0.4, h*0.8, d/2, chromeMaterial));
+                            group.add(createBox(w*0.05, h*0.2, d*0.05, -w*0.4, h*0.5, d/2, chromeMaterial));
+                            break;
+                        case 'cabinet_tv':
+                            group.add(createBox(w, h, d, 0, h/2, 0, material));
+                            group.add(createBox(w*0.9, h*0.4, d*0.05, 0, h*0.6, d/2, blackMaterial));
+                            group.add(createBox(w*0.4, h*0.3, d*0.02, -w*0.22, h*0.2, d/2, darkMaterial));
+                            group.add(createBox(w*0.4, h*0.3, d*0.02, w*0.22, h*0.2, d/2, darkMaterial));
+                            break;
+                        case 'table':
+                            group.add(createBox(w, h * 0.05, d, 0, h - (h*0.025), 0));
+                            const legW = w * 0.1; const legD = d * 0.1; const legH = h * 0.95;
+                            group.add(createBox(legW, legH, legD, -w/2 + legW, legH/2, -d/2 + legD));
+                            group.add(createBox(legW, legH, legD, w/2 - legW, legH/2, -d/2 + legD));
+                            group.add(createBox(legW, legH, legD, -w/2 + legW, legH/2, d/2 - legD));
+                            group.add(createBox(legW, legH, legD, w/2 - legW, legH/2, d/2 - legD));
+                            break;
+                        
+                        // --- UPDATED BIKE WITH RED MATERIAL ---
+                        case 'bike':
+                            const wheelRad = h * 0.35;
+                            group.add(createCylinder(wheelRad, w*0.02, -w*0.35, wheelRad, 0, Math.PI/2, 0, blackMaterial)); 
+                            group.add(createCylinder(wheelRad, w*0.02, w*0.35, wheelRad, 0, Math.PI/2, 0, blackMaterial)); 
+                            const frameThick = h * 0.05;
+                            // Using redMaterial here
+                            group.add(createBox(w*0.5, frameThick, frameThick, 0, h*0.5, 0, redMaterial)); 
+                            group.add(createBox(frameThick, h*0.6, frameThick, 0, h*0.4, 0, redMaterial)); 
+                            group.add(createBox(w*0.05, frameThick, d*0.6, w*0.3, h*0.8, 0, chromeMaterial));
+                            break;
+                        
+                        // --- UPDATED LAWNMOWER WITH RED MATERIAL ---
+                        case 'lawnmower':
+                            // Using redMaterial here
+                            group.add(createBox(w, h*0.4, d, 0, h*0.2, 0, redMaterial));
+                            group.add(createBox(w*0.6, h*0.3, d*0.6, 0, h*0.5, 0, blackMaterial));
+                            const handleH = h;
+                            group.add(createBox(w*0.05, h*0.8, d*0.05, -w*0.4, h*0.6, 0, chromeMaterial)); 
+                            group.add(createBox(w*0.1, w*0.05, d*0.8, -w*0.5, h*0.9, 0, blackMaterial)); 
+                            break;
+                            
+                        case 'beanbag':
+                            group.add(createCylinder(w*0.5, h*0.8, 0, h*0.4, 0, 0, 0, color));
+                            break;
+                        case 'chair': case 'chair_simple': case 'garden_chair':
+                            group.add(createBox(w, h * 0.1, d, 0, h * 0.45, 0)); 
+                            group.add(createBox(w, h * 0.5, d * 0.1, 0, h * 0.75, -d * 0.45)); 
+                            const cLegW = w * 0.15;
+                            group.add(createBox(cLegW, h * 0.4, cLegW, -w * 0.35, h * 0.2, -d * 0.35));
+                            group.add(createBox(cLegW, h * 0.4, cLegW, w * 0.35, h * 0.2, -d * 0.35));
+                            group.add(createBox(cLegW, h * 0.4, cLegW, -w * 0.35, h * 0.2, d * 0.35));
+                            group.add(createBox(cLegW, h * 0.4, cLegW, w * 0.35, h * 0.2, d * 0.35));
+                            break;
+                        case 'box': default:
+                            const boxMat = new THREE.MeshStandardMaterial({ color: item.type === 'box' ? 0xdcb386 : color, roughness: 0.8 });
+                            group.add(createBox(w, h, d, 0, h/2, 0, boxMat));
+                            if (item.type === 'box') {
+                                const tape = createBox(w, h*0.01, d*0.99, 0, h, 0, new THREE.MeshBasicMaterial({color: 0xbd9266}));
+                                group.add(tape);
+                            } else {
+                                const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2 }));
+                                edges.position.set(0, h/2, 0); group.add(edges);
+                            }
+                            break;
+                    }
+                    return group;
+                };
+
+        // Two items of the same colour sitting flush against each other read as one lump,
+        // so every solid gets a thin dark outline. The 25 degree threshold keeps the lines on
+        // real corners rather than drawing them down every facet of a cylinder.
+        const addEdgeLines = (THREE, group, cache) => {
+            const meshes = [];
+            group.traverse(child => { if (child.isMesh && child.geometry) meshes.push(child); });
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
+            meshes.forEach(mesh => {
+                // Identical shapes share one outline geometry. A wall of boxes would otherwise
+                // recompute the same edges dozens of times on every single add.
+                const g = mesh.geometry;
+                const key = cache && g.parameters ? g.type + ':' + JSON.stringify(g.parameters) : null;
+                let edgeGeom = key ? cache.get(key) : null;
+                if (!edgeGeom) {
+                    edgeGeom = new THREE.EdgesGeometry(g, 25);
+                    if (key) cache.set(key, edgeGeom);
+                }
+                mesh.add(new THREE.LineSegments(edgeGeom, edgeMaterial));
+            });
+        };
+
+        const disposeObject = (obj) => {
+            obj.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                    else child.material.dispose();
+                }
+            });
+        };
+
+        const ThreeCanvas = ({ items, unit }) => {
+            const mountRef = useRef(null);
+            const stageRef = useRef(null);
+            const [engineState, setEngineState] = useState(() => (window.THREE ? 'ready' : 'loading'));
+            const [engineError, setEngineError] = useState(null);
+            const [attempt, setAttempt] = useState(0);
+
+            // Report the actual reason rather than a generic message, and log it for the console
+            const failViewer = (err, reason) => {
+                if (err) console.error('[simulator 3D]', reason, err);
+                else console.error('[simulator 3D]', reason);
+                setEngineError(reason + (err && err.message ? ': ' + err.message : ''));
+                setEngineState('error');
+            };
+
+            const sceneRef = useRef(null);
+            const cameraRef = useRef(null);
+            const rendererRef = useRef(null);
+            const contentRef = useRef(null);
+            const lightRef = useRef(null);
+            const dirtyRef = useRef(3);
+            const lastUnitRef = useRef(null);
+            const camRef = useRef({ theta: Math.PI / 4, phi: Math.PI / 3, r: 8, tx: 0, ty: 0, tz: 0 });
+            const updateCamRef = useRef(() => {});
+
+            // Load three.js once, and fail visibly rather than hanging on "loading" forever
+            useEffect(() => {
+                if (window.THREE) { setEngineState('ready'); return; }
+                const ID = 'threejs-lib';
+                let script = document.getElementById(ID);
+                if (!script) {
+                    script = document.createElement('script');
+                    script.id = ID;
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+                    script.async = true;
+                    document.body.appendChild(script);
+                }
+                const onLoad = () => setEngineState('ready');
+                const onError = () => failViewer(null, '3D library could not be downloaded. Check the connection or any content blocker');
+                script.addEventListener('load', onLoad);
+                script.addEventListener('error', onError);
+                // A CDN that hangs rather than failing would otherwise sit on "loading" forever
+                const timer = setTimeout(() => { if (!window.THREE) failViewer(null, '3D library timed out while loading'); }, 12000);
+                return () => {
+                    clearTimeout(timer);
+                    script.removeEventListener('load', onLoad);
+                    script.removeEventListener('error', onError);
+                };
+            }, [attempt]);
+
+            // Renderer, scene and input are built ONCE and torn down completely.
+            // Rebuilding these per item was leaking WebGL contexts and window listeners.
+            useEffect(() => {
+                if (engineState !== 'ready' || !mountRef.current || !stageRef.current) return;
+                const THREE = window.THREE;
+                const container = mountRef.current;
+                const stage = stageRef.current;
+                let animFrame = null;
+                let scene, camera, renderer;
+
+                try {
+                    const probe = document.createElement('canvas');
+                    const gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl');
+                    if (!gl) { failViewer(null, 'This browser has WebGL turned off or unavailable'); return; }
+                    // Hand the context straight back. Browsers cap how many can be live at once,
+                    // so a probe that holds one makes every retry worse than the last.
+                    const lose = gl.getExtension('WEBGL_lose_context');
+                    if (lose) lose.loseContext();
+                } catch (err) { failViewer(err, 'WebGL check failed'); return; }
+
+                try {
+                    scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0x18181b);
+                    camera = new THREE.PerspectiveCamera(40, 1, 0.1, 300);
+                    renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                } catch (err) { failViewer(err, 'The 3D renderer could not start'); return; }
+
+                try {
+                scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+                dirLight.castShadow = true;
+                dirLight.shadow.mapSize.width = 1024;
+                dirLight.shadow.mapSize.height = 1024;
+                scene.add(dirLight);
+                scene.add(dirLight.target);
+
+                const content = new THREE.Group();
+                scene.add(content);
+
+                while (container.firstChild) container.removeChild(container.firstChild);
+                container.appendChild(renderer.domElement);
+
+                sceneRef.current = scene;
+                cameraRef.current = camera;
+                rendererRef.current = renderer;
+                contentRef.current = content;
+                lightRef.current = dirLight;
+
+                const updateCam = () => {
+                    const c = camRef.current;
+                    camera.position.set(
+                        c.tx + c.r * Math.sin(c.phi) * Math.sin(c.theta),
+                        c.ty + c.r * Math.cos(c.phi),
+                        c.tz + c.r * Math.sin(c.phi) * Math.cos(c.theta)
+                    );
+                    camera.lookAt(c.tx, c.ty, c.tz);
+                    dirtyRef.current = 3;
+                };
+                updateCamRef.current = updateCam;
+                updateCam();
+
+                // Pointer events cover mouse, pen and touch, so this now works on a phone
+                const pointers = new Map();
+                let last = { x: 0, y: 0 };
+                let pinchDist = 0;
+
+                const spread = () => {
+                    const pts = Array.from(pointers.values());
+                    return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                };
+                const inGrabZone = (e) => !!(e.target && e.target.dataset && e.target.dataset.grab === '1');
+                const onPointerDown = (e) => {
+                    // Touch only rotates from the middle band. A mouse can drag anywhere.
+                    if (e.pointerType === 'touch' && !inGrabZone(e) && pointers.size === 0) return;
+                    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                    if (pointers.size === 1) last = { x: e.clientX, y: e.clientY };
+                    if (pointers.size === 2) pinchDist = spread();
+                    if (stage.setPointerCapture) { try { stage.setPointerCapture(e.pointerId); } catch (err) {} }
+                };
+                const onPointerMove = (e) => {
+                    if (!pointers.has(e.pointerId)) return;
+                    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                    const c = camRef.current;
+                    if (pointers.size >= 2) {
+                        const d = spread();
+                        if (pinchDist > 0 && d > 0) { c.r = clamp(c.r * (pinchDist / d), 1.5, 60); updateCam(); }
+                        pinchDist = d;
+                        return;
+                    }
+                    c.theta -= (e.clientX - last.x) * 0.01;
+                    c.phi = clamp(c.phi - (e.clientY - last.y) * 0.01, 0.15, Math.PI / 2 - 0.05);
+                    last = { x: e.clientX, y: e.clientY };
+                    updateCam();
+                };
+                const onPointerUp = (e) => {
+                    pointers.delete(e.pointerId);
+                    if (pointers.size < 2) pinchDist = 0;
+                    if (pointers.size === 1) { const p = Array.from(pointers.values())[0]; last = { x: p.x, y: p.y }; }
+                };
+                const onWheel = (e) => {
+                    // Over the edges the wheel scrolls the page, over the middle it zooms
+                    if (!inGrabZone(e)) return;
+                    e.preventDefault();
+                    const c = camRef.current;
+                    c.r = clamp(c.r * (1 + e.deltaY * 0.001), 1.5, 60);
+                    updateCam();
+                };
+
+                // Mobile browsers drop the WebGL context under memory pressure. Rebuild instead
+                // of leaving a dead canvas that only a button press would clear.
+                const canvas = renderer.domElement;
+                const onContextLost = (e) => {
+                    e.preventDefault();
+                    console.warn('[simulator 3D] WebGL context lost, rebuilding');
+                    setAttempt(a => a + 1);
+                };
+                canvas.addEventListener('webglcontextlost', onContextLost, false);
+
+                stage.addEventListener('pointerdown', onPointerDown);
+                stage.addEventListener('pointermove', onPointerMove);
+                stage.addEventListener('pointerup', onPointerUp);
+                stage.addEventListener('pointercancel', onPointerUp);
+                stage.addEventListener('pointerleave', onPointerUp);
+                stage.addEventListener('wheel', onWheel, { passive: false });
+
+                const resize = () => {
+                    const w = container.clientWidth, h = container.clientHeight;
+                    if (w === 0 || h === 0) return;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                    dirtyRef.current = 3;
+                };
+                const observer = new ResizeObserver(resize);
+                observer.observe(container);
+                resize();
+
+                // Only draws when something actually changed, which saves battery on mobile
+                const animate = () => {
+                    animFrame = requestAnimationFrame(animate);
+                    if (dirtyRef.current > 0) { renderer.render(scene, camera); dirtyRef.current -= 1; }
+                };
+                animate();
+
+                return () => {
+                    try {
+                    cancelAnimationFrame(animFrame);
+                    observer.disconnect();
+                    canvas.removeEventListener('webglcontextlost', onContextLost);
+                    stage.removeEventListener('pointerdown', onPointerDown);
+                    stage.removeEventListener('pointermove', onPointerMove);
+                    stage.removeEventListener('pointerup', onPointerUp);
+                    stage.removeEventListener('pointercancel', onPointerUp);
+                    stage.removeEventListener('pointerleave', onPointerUp);
+                    stage.removeEventListener('wheel', onWheel);
+                    disposeObject(scene);
+                    renderer.dispose();
+                    if (renderer.forceContextLoss) renderer.forceContextLoss();
+                    if (renderer.domElement && renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+                    sceneRef.current = null; cameraRef.current = null; rendererRef.current = null; contentRef.current = null; lightRef.current = null;
+                    lastUnitRef.current = null;
+                    } catch (err) { console.warn('[simulator 3D] cleanup', err); }
+                };
+                } catch (err) { failViewer(err, 'The 3D scene could not be set up'); }
+            }, [engineState, attempt]);
+
+            // Only the contents are rebuilt when the inventory or the unit changes
+            useEffect(() => {
+                const THREE = window.THREE;
+                const scene = sceneRef.current, content = contentRef.current;
+                if (!THREE || !scene || !content) return;
+                try {
+
+                while (content.children.length) {
+                    const child = content.children[0];
+                    content.remove(child);
+                    disposeObject(child);
+                }
+
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(unit.width, unit.depth), new THREE.MeshStandardMaterial({ color: 0x27272a }));
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.set(unit.width / 2, 0, unit.depth / 2);
+                floor.receiveShadow = true;
+                content.add(floor);
+
+                const walls = new THREE.LineSegments(
+                    new THREE.EdgesGeometry(new THREE.BoxGeometry(unit.width, unit.height, unit.depth)),
+                    new THREE.LineBasicMaterial({ color: 0xffa71a })
+                );
+                walls.position.set(unit.width / 2, unit.height / 2, unit.depth / 2);
+                content.add(walls);
+
+                const edgeCache = new Map();
+                items.forEach(item => {
+                    try {
+                    const mesh = createItemMesh(THREE, item);
+                    addEdgeLines(THREE, mesh, edgeCache);
+                    // Tilted items are offset back onto their new footprint, base still at floor level
+                    if (item.tilt === 'x') {
+                        mesh.rotation.x = Math.PI / 2;
+                        mesh.position.set(0, item.depth / 2, -item.height / 2);
+                    } else if (item.tilt === 'z') {
+                        mesh.rotation.z = Math.PI / 2;
+                        mesh.position.set(item.height / 2, item.width / 2, 0);
+                    }
+                    // Outer wrapper carries the footprint swap so the two rotations cannot fight
+                    const wrapper = new THREE.Group();
+                    wrapper.add(mesh);
+                    wrapper.position.set(item.x + item.actualW / 2, item.z, item.y + item.actualD / 2);
+                    if (item.rotated) wrapper.rotation.y = Math.PI / 2;
+                    content.add(wrapper);
+                    } catch (err) { console.error('[simulator 3D] could not draw', item.id, err); }
+                });
+
+                // The shadow frustum has to cover the whole unit or a 40ft container loses its shadows
+                const light = lightRef.current;
+                if (light) {
+                    const span = Math.max(unit.width, unit.depth, unit.height) * 1.2;
+                    light.position.set(unit.width / 2 + span, span * 1.8, unit.depth / 2 + span);
+                    light.target.position.set(unit.width / 2, 0, unit.depth / 2);
+                    light.target.updateMatrixWorld();
+                    const sc = light.shadow.camera;
+                    sc.left = -span * 1.6; sc.right = span * 1.6; sc.top = span * 1.6; sc.bottom = -span * 1.6;
+                    sc.near = 0.5; sc.far = span * 8;
+                    sc.updateProjectionMatrix();
+                }
+
+                const c = camRef.current;
+                c.tx = unit.width / 2; c.ty = unit.height / 2; c.tz = unit.depth / 2;
+                // Reframe on a unit change only, so adding an item does not throw away the user's zoom
+                if (lastUnitRef.current !== unit.id) {
+                    c.r = clamp(Math.max(unit.width, unit.depth) * 2.4, 3, 60);
+                    lastUnitRef.current = unit.id;
+                }
+                updateCamRef.current();
+                dirtyRef.current = 3;
+                } catch (err) { failViewer(err, 'The 3D view could not draw this load'); }
+            }, [engineState, items, unit]);
+
+            return (
+                <div ref={stageRef} className="w-full h-full relative bg-zinc-900 rounded-xl overflow-hidden group shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)] border border-white/5">
+                    <div ref={mountRef} className="w-full h-full cursor-move viewer-3d" />
+                    {/* Drag zone. Touching above or below this scrolls the page as normal. */}
+                    <div data-grab="1" className="viewer-grab absolute left-0 right-0 top-[22%] bottom-[22%] cursor-move" />
+                    {engineState === 'loading' && <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-zinc-500">Loading 3D view</div>}
+                    {engineState === 'error' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">3D view unavailable. Your unit size and price are still calculated.</div>
+                            {engineError && <div className="text-[9px] text-zinc-500 max-w-xs leading-relaxed">{engineError}</div>}
+                            <button
+                                onClick={() => { setEngineError(null); setEngineState(window.THREE ? 'ready' : 'loading'); setAttempt(a => a + 1); }}
+                                className="mt-1 px-4 py-2 rounded-full border border-white/15 bg-white/5 text-[9px] font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/10 transition-colors">
+                                Try again
+                            </button>
+                        </div>
+                    )}
+                    {engineState === 'ready' && <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-[10px] font-bold text-blue-300 flex items-center gap-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 uppercase tracking-wider shadow-lg translate-y-2 group-hover:translate-y-0 ease-out z-20"><ICONS.Rotate /> Drag the middle to rotate &bull; Swipe the edges to scroll</div>}
+                    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.4)_100%)]"></div>
+                </div>
+            );
+        };
+
+        // Flat lookup so a saved inventory always rehydrates from the current item definitions
+        const ITEM_LOOKUP = {};
+        Object.entries(ROOM_CATEGORIES).forEach(([cat, list]) => list.forEach(it => { ITEM_LOOKUP[it.id] = { item: it, category: cat }; }));
+
+        const STORAGE_KEY = 'boxed_simulator_inventory_v1';
+        let UID_SEQ = 0;
+        const nextUid = () => ++UID_SEQ;
+
+        // Stable identity, otherwise the viewer would rebuild itself on every render
+        const EMPTY_ROOM = { unit: UNIT_TIERS[0], items: [], fill: 0 };
+
+        const loadSavedInventory = () => {
+            try {
+                const raw = window.localStorage.getItem(STORAGE_KEY);
+                if (!raw) return [];
+                const ids = JSON.parse(raw);
+                if (!Array.isArray(ids)) return [];
+                return ids.map(id => ITEM_LOOKUP[id]).filter(Boolean)
+                    .map(({ item, category }) => ({ ...item, color: CATEGORY_COLORS[category] || '#999', uid: nextUid() }));
+            } catch (e) { return []; }
+        };
+
+        const App = () => {
+            const [inventory, setInventory] = useState(loadSavedInventory);
+            const [activeTab, setActiveTab] = useState("Living Room");
+            const [viewingRoomIndex, setViewingRoomIndex] = useState(0);
+
+            // Survive a refresh
+            useEffect(() => {
+                try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory.map(i => i.id))); } catch (e) {}
+            }, [inventory]);
+
+            // Functional updates, so rapid tapping cannot drop an item
+            const addItem = (item, category) => {
+                const color = CATEGORY_COLORS[category] || '#999';
+                setInventory(inv => [...inv, { ...item, color, uid: nextUid() }]);
+            };
+            const duplicateItem = (item) => setInventory(inv => [...inv, { ...item, uid: nextUid() }]);
+            const removeOneItem = (itemId) => setInventory(inv => {
+                for (let i = inv.length - 1; i >= 0; i--) {
+                    if (inv[i].id === itemId) { const copy = [...inv]; copy.splice(i, 1); return copy; }
+                }
+                return inv;
+            });
+            const clearAll = () => setInventory([]);
+
+            const itemCounts = useMemo(() => { const c = {}; inventory.forEach(i => c[i.id] = (c[i.id] || 0) + 1); return c; }, [inventory]);
+            const uniqueItems = useMemo(() => { const u = []; const s = new Set(); inventory.forEach(i => { if (!s.has(i.id)) { s.add(i.id); u.push(i); } }); return u; }, [inventory]);
+            const warnings = useMemo(() => { const s = new Set(); inventory.forEach(i => { if (i.warning) s.add(i.warning); }); return Array.from(s); }, [inventory]);
+
+            // Derived, not state. One render pass and no stale index to reset.
+            const vol = useMemo(() => inventory.reduce((acc, i) => acc + itemVolume(i), 0), [inventory]);
+            const packing = useMemo(() => packIntoRooms(inventory, UNIT_TIERS), [inventory]);
+            const roomAllocations = packing.rooms;
+            const unplaceable = packing.unplaceable;
+            const weeklyTotal = useMemo(() => roomAllocations.reduce((acc, r) => acc + (r.unit.price || 0), 0), [roomAllocations]);
+
+            const viewIndex = viewingRoomIndex < roomAllocations.length ? viewingRoomIndex : 0;
+            const currentRoom = roomAllocations[viewIndex] || EMPTY_ROOM;
+
+            const handleGetQuote = () => {
+                const roomSummary = roomAllocations.length
+                    ? roomAllocations.map((r, i) => `Unit ${i + 1}: ${r.unit.name}`).join(', ')
+                    : 'No items selected';
+                const itemsList = Object.entries(itemCounts).map(([id, count]) => {
+                    const def = ITEM_LOOKUP[id];
+                    return def ? `${count}x ${def.item.name}` : null;
+                }).filter(Boolean).join('\n');
+                const priceLine = weeklyTotal > 0 ? `\nGuide price: AUD ${weeklyTotal} per week` : '';
+
+                let payload = `Recommended: ${roomSummary}\n\nInventory:\n${itemsList}\n\nTotal volume: ${vol.toFixed(2)} m3${priceLine}`;
+                // A long inventory would blow past the practical URL limit, so switch to a compact code
+                if (encodeURIComponent(payload).length > 1500) {
+                    const code = Object.entries(itemCounts).map(([id, count]) => `${id}:${count}`).join('|');
+                    payload = `Recommended: ${roomSummary} | Volume: ${vol.toFixed(2)} m3${priceLine.replace('\n', ' | ')} | Code: ${code}`;
+                }
+                window.open(`https://www.storelocal.com.au/book-online/?enquiry=${encodeURIComponent(payload)}`, '_blank');
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-100 text-zinc-900 font-sans p-4 md:p-8 selection:bg-blue-600 selection:text-white">
+                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-12">
+                            <PremiumCard className="p-6">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                                    <div className="flex items-center gap-5">
+                                        <div className="bg-blue-600 text-white p-4 rounded-xl font-bold shadow-[0_0_25px_rgba(37,99,235,0.4)]"><ICONS.Box /></div>
+                                        <div>
+                                            <h1 className="text-4xl font-black tracking-tighter text-zinc-900 leading-none">Store<span className="text-blue-600">Local</span></h1>
+                                            <p className="text-xs text-zinc-500 font-bold uppercase tracking-[0.25em] mt-1.5 ml-0.5">Storage Size Simulator</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right hidden sm:block">
+                                        <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Total Volume</div>
+                                        <div className="font-mono text-3xl text-blue-600 font-bold tracking-tight">{vol.toFixed(2)} m³</div>
+                                    </div>
+                                </div>
+                            </PremiumCard>
+                        </div>
+
+                        <div className="lg:col-span-4 space-y-6">
+                            <PremiumCard className="p-0">
+                                <div className="bg-white p-5 rounded-xl text-zinc-900">
+                                    <h2 className="text-sm font-black mb-5 flex items-center gap-2 uppercase tracking-wide text-zinc-900"><span className="text-blue-700 drop-shadow-sm"><ICONS.Plus /></span> Add Items</h2>
+                                    <div className="grid grid-cols-2 gap-3 mb-5">
+                                        {Object.keys(ROOM_CATEGORIES).map(cat => (
+                                            <PremiumButton key={cat} onClick={() => setActiveTab(cat)} active={activeTab === cat} variant="tab" className="py-4 px-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest z-10 relative">{cat}</span>
+                                            </PremiumButton>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 pb-2">
+                                        {ROOM_CATEGORIES[activeTab].map(item => {
+                                            const count = itemCounts[item.id] || 0;
+                                            return (
+                                                <button key={item.id} onClick={() => addItem(item, activeTab)} className="group relative p-3 bg-zinc-50 border border-zinc-200 rounded-lg hover:border-blue-500 hover:bg-white text-left transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] overflow-hidden">
+                                                    <div className="absolute top-0 left-0 w-1 h-full opacity-50 transition-all group-hover:opacity-100" style={{background: CATEGORY_COLORS[activeTab]}}></div>
+                                                    <div className="flex justify-between items-start mb-2 pl-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full" style={{background: CATEGORY_COLORS[activeTab]}}></div>
+                                                        {count > 0 && <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">{count}</span>}
+                                                    </div>
+                                                    <div className="pl-2">
+                                                        <div className="text-[11px] font-bold text-zinc-800 leading-tight mb-1 group-hover:text-black">{item.name}</div>
+                                                        <div className="text-[9px] text-zinc-400 font-mono group-hover:text-zinc-500">{item.width}x{item.depth}m</div>
+                                                    </div>
+                                                    <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 duration-300">
+                                                        <div className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg"><ICONS.Plus /></div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </PremiumCard>
+
+                            <PremiumCard className="h-[350px] flex flex-col p-0">
+                                <div className="bg-white flex-1 p-5 rounded-xl flex flex-col min-h-0 h-full">
+                                    <div className="flex justify-between items-center mb-4 border-b border-zinc-100 pb-3">
+                                        <h3 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-zinc-900"><ICONS.Truck /> Your Items</h3>
+                                        {inventory.length > 0 && <button onClick={clearAll} className="text-[10px] text-red-500 hover:text-red-600 flex items-center gap-1 font-bold uppercase transition-colors hover:bg-red-50 px-2 py-1 rounded-md"><ICONS.Trash /> Clear</button>}
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar min-h-0">
+                                        {inventory.length === 0 && <div className="h-full flex flex-col items-center justify-center text-zinc-300"><div className="p-4 bg-zinc-50 rounded-full mb-3"><ICONS.Box /></div><p className="text-[10px] font-bold tracking-widest uppercase text-zinc-400">Inventory Empty</p></div>}
+                                        {uniqueItems.map(item => {
+                                            const count = itemCounts[item.id];
+                                            return (
+                                                <div key={item.id} className="group flex justify-between items-center p-2.5 bg-zinc-50/80 rounded-lg border border-zinc-100 text-sm hover:border-zinc-300 hover:shadow-sm transition-all duration-200">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-2 h-2 rounded-full shadow-sm" style={{background: item.color}}></div>
+                                                        <span className="truncate w-28 font-bold text-zinc-700 text-xs">{item.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center bg-white border border-zinc-200 rounded-md shadow-sm overflow-hidden transform transition-transform group-hover:scale-105">
+                                                        <button onClick={() => removeOneItem(item.id)} className="w-7 h-7 flex items-center justify-center hover:bg-zinc-50 text-zinc-400 hover:text-red-500 transition-colors"><ICONS.Minus /></button>
+                                                        <span className="w-8 h-7 flex items-center justify-center text-[10px] font-bold text-zinc-900 border-x border-zinc-100 bg-zinc-50/50">{count}</span>
+                                                        <button onClick={() => duplicateItem(item)} className="w-7 h-7 flex items-center justify-center hover:bg-zinc-50 text-blue-700 transition-colors"><ICONS.Plus /></button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {unplaceable.length > 0 && <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg"><div className="flex items-start gap-2 text-[10px] text-red-800 font-bold leading-tight"><span className="text-red-600 mt-0.5"><ICONS.Alert /></span>Some items are too large for a standard unit. Get in touch and we will sort a custom solution.</div></div>}
+                                    {warnings.length > 0 && <div className="mt-4 p-3 bg-amber-50/80 border border-amber-200 rounded-lg backdrop-blur-sm animate-pulse-slow">{warnings.map((msg, i) => <div key={i} className="flex items-start gap-2 text-[10px] text-amber-800 font-bold leading-tight mb-1 last:mb-0"><span className="text-amber-600 mt-0.5"><ICONS.Alert /></span>{msg}</div>)}</div>}
+                                </div>
+                            </PremiumCard>
+                        </div>
+
+                        <div className="lg:col-span-8 space-y-6">
+                            <PremiumCard tone="dark" className="bg-black overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-transparent opacity-50"></div>
+                                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] transform translate-x-1/2 -translate-y-1/2 transition-opacity duration-700 opacity-20 group-hover:opacity-40"></div>
+                                <div className="relative z-10 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                                            <div className="text-blue-600 text-[10px] font-black uppercase tracking-[0.25em]">Recommended Solution</div>
+                                        </div>
+                                        {roomAllocations.length <= 1 ? (
+                                            <>
+                                                <h2 className="text-5xl font-black text-white italic tracking-tighter drop-shadow-lg transform transition-transform duration-500 group-hover:translate-x-1">{roomAllocations[0]?.unit.name.toUpperCase() || "EMPTY"}</h2>
+                                                <p className="text-zinc-400 text-xs font-medium tracking-wide mt-2">{roomAllocations[0] ? `Sized with an access allowance, so it packs to about ${Math.round(roomAllocations[0].fill * 100)}% full.` : "Add a few items to size your unit."}</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <h2 className="text-4xl font-black text-white italic tracking-tighter">MULTIPLE UNITS REQUIRED</h2>
+                                                <div className="flex flex-wrap gap-2 mt-3">{roomAllocations.map((r, idx) => <span key={idx} className="bg-blue-600/10 border border-blue-500/30 text-blue-300 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">Unit {idx+1}: {r.unit.name}</span>)}</div>
+                                            </>
+                                        )}
+                                        {weeklyTotal > 0 && (
+                                            <div className="flex items-baseline gap-2 mt-4">
+                                                <span className="text-2xl font-black text-blue-300 tracking-tight">${weeklyTotal}</span>
+                                                <span className="text-[9px] uppercase text-zinc-500 font-bold tracking-widest">per week, guide price</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="bg-white/5 backdrop-blur-md p-5 rounded-xl border border-white/10 min-w-[140px] text-center shadow-2xl group-hover:bg-white/10 transition-colors duration-300">
+                                        <div className="text-4xl font-black text-white tracking-tight">{vol.toFixed(2)}m³</div>
+                                        <div className="text-[9px] uppercase text-zinc-400 font-bold tracking-widest mt-1">Total Volume</div>
+                                    </div>
+                                </div>
+                            </PremiumCard>
+
+                            <PremiumCard tone="dark" className="p-1 h-[600px] flex flex-col" contentClassName="flex flex-col">
+                                {roomAllocations.length > 0 && (
+                                    <div className="flex bg-black/40 p-1.5 gap-2 overflow-x-auto border-b border-white/5 backdrop-blur-md rounded-t-xl z-20 shrink-0">
+                                        {roomAllocations.map((r, idx) => (
+                                            <PremiumButton key={idx} onClick={() => setViewingRoomIndex(idx)} active={viewIndex === idx} variant={viewIndex === idx ? "default" : "glass"} className="flex-1 py-3">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Room {idx + 1}</span>
+                                                    <span className={`text-[9px] font-medium mt-0.5 ${viewIndex === idx ? "text-blue-600" : "text-zinc-500"}`}>({r.unit.label} &bull; {Math.round(r.fill * 100)}% full)</span>
+                                                </div>
+                                            </PremiumButton>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="flex-1 relative overflow-hidden rounded-b-xl bg-zinc-900 w-full">
+                                    <ThreeCanvas items={currentRoom.items} unit={currentRoom.unit} />
+                                    {currentRoom.hidden > 0 && (
+                                        <div className="absolute top-6 left-6 z-10 bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 text-[9px] font-bold text-zinc-300 uppercase tracking-wider pointer-events-none">
+                                            Showing {currentRoom.items.length} of {currentRoom.total} items. The rest pack into the gaps.
+                                        </div>
+                                    )}
+                                    <div className="absolute bottom-6 left-6 z-10 flex gap-2 pointer-events-none flex-wrap">
+                                        {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
+                                            <div key={cat} className="bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-lg">
+                                                <div className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)]" style={{background: color}}></div>
+                                                <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-wider">{cat}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </PremiumCard>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <PremiumCard tone="dark" className="p-6 group hover:border-blue-500/30 transition-colors duration-500 cursor-pointer">
+                                    <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity duration-500"><div className="w-2 h-2 bg-blue-600 rounded-full shadow-[0_0_10px_#ffa71a]"></div></div>
+                                    <h4 className="font-bold text-white uppercase tracking-widest text-sm mb-3">Packing Supplies</h4>
+                                    <p className="text-xs text-zinc-400 mb-6 leading-relaxed">Need boxes? Grab heavy duty cartons, bubble wrap, tape and covers in store.</p>
+                                    <button onClick={() => window.open('https://www.storelocal.com.au/', '_blank')} className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300">View Shop <span>→</span></button>
+                                </PremiumCard>
+                                <PremiumButton variant="cta" className="h-full rounded-2xl" onClick={handleGetQuote}>
+                                    <div className="flex flex-col items-center gap-1 z-10 relative py-6">
+                                        <span className="flex items-center gap-3 text-lg">Get a Quote <span className="opacity-50">→</span></span>
+                                        <span className="text-[9px] text-zinc-900/60 font-bold uppercase tracking-widest">No credit card required</span>
+                                    </div>
+                                </PremiumButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // A thrown effect unmounts the whole tree in React 18, which is what a blank page
+        // looks like. This keeps the failure visible instead.
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { error: null }; }
+            static getDerivedStateFromError(error) { return { error: error }; }
+            render() {
+                if (!this.state.error) return this.props.children;
+                return (
+                    <div className="min-h-screen bg-zinc-950 text-zinc-300 p-8 font-sans">
+                        <h1 className="text-blue-600 font-black uppercase tracking-widest text-sm mb-3">Simulator error</h1>
+                        <p className="text-xs text-zinc-400 mb-4">Something went wrong loading the simulator. Please refresh, or contact us for a quote.</p>
+                        <pre className="text-[10px] text-zinc-600 whitespace-pre-wrap">{String(this.state.error && this.state.error.message)}</pre>
+                    </div>
+                );
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
+    </script>
+</body>
+</html>
