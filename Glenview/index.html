@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Glenview Heating | Staff Portal</title>
+<meta name="theme-color" content="#1F2544" />
+<!--
+  Glenview Heating Staff Portal
+  Built by Protech Dynamic Solutions Ltd. Copyright (c) 2026 Protech Dynamic Solutions Ltd.
+  Single file. React 18 + Babel standalone + Tailwind + jsPDF.
+  Set CONFIG.API_URL to the Apps Script Web App /exec URL to run live on Google Sheets.
+  The app key is derived from that URL automatically, see appKey().
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { ink:'#1F2544', inksoft:'#464E75', mute:'#7A8099', gold:'#C9A063', golddeep:'#A9834A',
+            goldsoft:'#F1E6D4', paper:'#F6F4F0', line:'#E6E1D8', pass:'#2E7D5B', fail:'#B23A34' },
+  fontFamily: { display:['Poppins','system-ui','sans-serif'], body:['Inter','system-ui','sans-serif'] }
+}}};
+</script>
+<style>
+  html { -webkit-text-size-adjust:100%; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#F6F4F0; color:#1F2544; }
+  h1,h2,h3,h4,.font-display { font-family:'Poppins',system-ui,sans-serif; letter-spacing:-0.015em; }
+  .rule { border-left:3px solid #C9A063; padding-left:1rem; }
+  .pill { border-radius:999px; }
+  .fld { width:100%; border:1px solid #E6E1D8; background:#fff; border-radius:14px; padding:.7rem .85rem; font-size:.95rem; color:#1F2544; outline:none; }
+  .fld:focus { border-color:#C9A063; box-shadow:0 0 0 3px rgba(201,160,99,.22); }
+  .lbl { display:block; font-size:.72rem; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:#7A8099; margin-bottom:.35rem; }
+  .card { background:#fff; border-radius:24px; box-shadow:0 1px 2px rgba(31,37,68,.05), 0 12px 34px -22px rgba(31,37,68,.35); }
+  .sigpad { touch-action:none; background:#fff; border:1px dashed #C9A063; border-radius:16px; width:100%; height:140px; display:block; }
+  .scroll-x { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  ::-webkit-scrollbar { height:8px; width:8px; }
+  ::-webkit-scrollbar-thumb { background:#E6E1D8; border-radius:8px; }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================== CONFIG ============================== */
+const CONFIG = {
+  COMPANY:'Glenview Heating', PHONE:'027 60876', WEB:'glenviewheating.ie',
+  LOGO:'https://glenviewheating.ie/wp-content/uploads/2024/04/logo-400.png',
+  /* Optional but recommended: paste the logo as a data URL here.
+     It then works with no network, survives any change to the website,
+     and lands in the PDF without needing CORS. See the note in the reply. */
+  LOGO_DATA:'',
+  API_URL:'',                  // paste the Apps Script Web App /exec URL here
+  STANDARD_WEEK:39,
+  ANNUAL_ENTITLEMENT:21,
+  PAID_SICK_DAYS:5,
+  CERT_REQUIRED_FROM_DAY:1,
+  DEVICE_DAYS:30,              // how long a remembered device stays signed in
+  MAX_ATTEMPTS:5,
+  LOCKOUT_MINS:15,
+  JOB_PREFIX:'GH'
+};
+
+/* App key: the last 10 characters of the deployment URL before /exec.
+   The server derives the same value from its own URL and rejects anything else,
+   so a stray request with no key gets nowhere. Treat it as a gate on the
+   endpoint, not as a secret, since anything shipped to a browser can be read.
+   The real controls are the hashed PIN, the server side session and the
+   lockout below. */
+function appKey(){
+  const m = String(CONFIG.API_URL).match(/([A-Za-z0-9_-]{10})\/exec\/?$/);
+  return m ? m[1] : '';
+}
+
+/* ============================== HELPERS ============================== */
+const uid = p => p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse = s => { const a = String(s).split('-').map(Number); return new Date(a[0], a[1]-1, a[2]); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = s => { if(!s) return ''; const d = parse(s); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); };
+const fmtLong = s => { if(!s) return ''; const d = parse(s); return DAYS[d.getDay()].slice(0,3)+' '+pad(d.getDate())+' '+MONS[d.getMonth()]; };
+const eur = n => '\u20AC'+(Number(n)||0).toFixed(2);
+function weekStart(d){ const x = new Date(d); x.setDate(x.getDate()-((x.getDay()+6)%7)); x.setHours(0,0,0,0); return x; }
+function toMin(t){ if(!t) return null; const a = t.split(':').map(Number); return a[0]*60+a[1]; }
+function hoursWorked(start, finish, brk){
+  const a = toMin(start), b = toMin(finish);
+  if(a===null||b===null) return 0;
+  let d = b-a; if(d<0) d += 1440;
+  d -= (Number(brk)||0);
+  return Math.max(0, Math.round(d/6)/10);
+}
+function workingDaysBetween(a,b){ let n=0,d=parse(a),e=parse(b); while(d<=e){ const w=d.getDay(); if(w!==0&&w!==6) n++; d=addDays(d,1);} return n; }
+
+const mem = {};
+const store = {
+  get(k,fb){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : (k in mem ? mem[k] : fb); }catch(e){ return k in mem ? mem[k] : fb; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} mem[k]=v; },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} delete mem[k]; }
+};
+
+async function sha256(text){
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e){
+    let h = 5381; for(let i=0;i<text.length;i++){ h = ((h*33) ^ text.charCodeAt(i)) >>> 0; }
+    return 'fb'+h.toString(16);
+  }
+}
+const PIN_SALT = 'glenview-2026';
+const hashPin = pin => sha256(PIN_SALT+':'+String(pin).trim());
+
+function shrinkImage(file, max=1400, q=0.72){
+  return new Promise((res,rej) => {
+    const fr = new FileReader();
+    fr.onload = () => { const img = new Image();
+      img.onload = () => { const s = Math.min(1, max/Math.max(img.width,img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',q)); };
+      img.onerror = () => rej(new Error('That file could not be read as an image.')); img.src = fr.result; };
+    fr.onerror = () => rej(new Error('That file could not be read.'));
+    fr.readAsDataURL(file);
+  });
+}
+const readAsDataUrl = f => new Promise((res,rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('That file could not be read.')); fr.readAsDataURL(f); });
+
+/* ============================== API ============================== */
+async function api(action, payload){
+  if(!CONFIG.API_URL) return { ok:true, offline:true };
+  try {
+    const r = await fetch(CONFIG.API_URL, {
+      method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, key: appKey(), token: store.get('gh_token',''), payload })
+    });
+    return await r.json();
+  } catch(e){ return { ok:false, error:'No connection. Saved on this device and will send when you are back online.' }; }
+}
+
+/* ============================== SEED DATA ============================== */
+const PRODUCTS_SEED = [{"pid":"P1","code":"042","desc":"Brass bush","size":"3/8\"x1/2\"","stock":0,"cost":0.69,"price":2.0},{"pid":"P2","code":"042","desc":"Brass bush","size":"3/8\"x1/4\"","stock":0,"cost":0.65,"price":2.0},{"pid":"P3","code":"042","desc":"Brass bush","size":"1\"x1/2\"","stock":0,"cost":1.76,"price":2.0},{"pid":"P4","code":"042","desc":"Brass bush","size":"1/2\"","stock":0,"cost":0.0,"price":2.0},{"pid":"P5","code":"042","desc":"Brass bush","size":"3/4\"","stock":0,"cost":0.0,"price":2.0},{"pid":"P6","code":"042","desc":"Brass bush","size":"1\"","stock":0,"cost":0.0,"price":2.0},{"pid":"P7","code":"044","desc":"Brass nut lock (Flanged Back Nut)","size":"1/2\"","stock":0,"cost":1.38,"price":2.0},{"pid":"P8","code":"044","desc":"Brass nut lock (Flanged Back Nut)","size":"3/4\"","stock":0,"cost":1.92,"price":2.0},{"pid":"P9","code":"044","desc":"Brass nut lock (Flanged Back Nut)","size":"1\"","stock":0,"cost":0.0,"price":2.0},{"pid":"P10","code":"044","desc":"Flanged Back nut","size":"1 1/4\"","stock":0,"cost":2.31,"price":4.0},{"pid":"P11","code":"074","desc":"Brass plug","size":"1/2\"","stock":0,"cost":1.36,"price":2.0},{"pid":"P12","code":"074","desc":"Brass plug","size":"3/4\"","stock":0,"cost":2.79,"price":8.0},{"pid":"P13","code":"074","desc":"Brass plug","size":"1\"","stock":0,"cost":2.42,"price":10.0},{"pid":"P14","code":"310","desc":"Straight Coupler","size":"1/2\"","stock":0,"cost":1.66,"price":4.0},{"pid":"P15","code":"310","desc":"Straight Coupler","size":"3/4\"","stock":0,"cost":2.78,"price":8.0},{"pid":"P16","code":"310","desc":"Straight Coupler","size":"1\"","stock":0,"cost":4.37,"price":10.0},{"pid":"P17","code":"310","desc":"Straight Coupler","size":"1.1/4\"","stock":0,"cost":14.04,"price":15.0},{"pid":"P18","code":"310","desc":"Straight Coupler","size":"1.1/2\"","stock":0,"cost":21.69,"price":25.0},{"pid":"P19","code":"310","desc":"Straight Coupler","size":"3/4\"x1/2\"","stock":0,"cost":2.78,"price":8.0},{"pid":"P20","code":"310","desc":"Straight Coupler","size":"1\"x1/2\"","stock":0,"cost":5.37,"price":8.0},{"pid":"P21","code":"310","desc":"Straight Coupler","size":"1\"x3/4\"","stock":0,"cost":4.57,"price":8.0},{"pid":"P22","code":"311","desc":"Ml St Coupler","size":"1/2\"","stock":0,"cost":2.74,"price":4.0},{"pid":"P23","code":"311","desc":"Ml St Coupler","size":"3/4\"","stock":0,"cost":4.71,"price":8.0},{"pid":"P24","code":"311","desc":"Ml St Coupler","size":"1\"","stock":0,"cost":3.03,"price":10.0},{"pid":"P25","code":"311","desc":"Ml St Coupler","size":"1.1/4\"","stock":0,"cost":15.04,"price":20.0},{"pid":"P26","code":"311","desc":"Ml St Coupler","size":"1.1/2\"","stock":0,"cost":24.31,"price":30.0},{"pid":"P27","code":"311","desc":"Ml St Coupler","size":"1\"x3/4\"","stock":0,"cost":2.75,"price":9.0},{"pid":"P28","code":"311","desc":"Ml St Coupler","size":"3/4\"x1\"","stock":0,"cost":8.68,"price":10.0},{"pid":"P29","code":"311","desc":"Ml St Coupler","size":"3/4\"x1/2\"","stock":0,"cost":2.81,"price":8.0},{"pid":"P30","code":"311","desc":"Ml St Coupler","size":"1/2\"x3/4\"","stock":0,"cost":5.06,"price":8.0},{"pid":"P31","code":"312","desc":"FL St Coupler","size":"1/2\"","stock":0,"cost":2.74,"price":8.0},{"pid":"P32","code":"312","desc":"FL St Coupler","size":"3/4\"","stock":0,"cost":4.71,"price":8.0},{"pid":"P33","code":"312","desc":"FL St Coupler","size":"1\"","stock":0,"cost":10.87,"price":12.0},{"pid":"P34","code":"312","desc":"FL St Coupler","size":"1.1/4\"","stock":0,"cost":14.83,"price":15.0},{"pid":"P35","code":"312","desc":"FL St Coupler","size":"1.1/2\"","stock":0,"cost":22.38,"price":25.0},{"pid":"P36","code":"312","desc":"FL St Coupler","size":"3/4\"x1/.2\"","stock":0,"cost":2.86,"price":8.0},{"pid":"P37","code":"312","desc":"FL St Coupler","size":"1/2\"x3/4","stock":0,"cost":2.75,"price":8.0},{"pid":"P38","code":"312","desc":"FL St Coupler","size":"1\"x3/4\"","stock":0,"cost":2.75,"price":12.0},{"pid":"P39","code":"312","desc":"FL St Coupler","size":"3/4\"x1\"","stock":0,"cost":5.92,"price":12.0},{"pid":"P40","code":"314","desc":"Compression Swivel St","size":"1/2\"","stock":0,"cost":6.23,"price":12.0},{"pid":"P41","code":"314","desc":"Compression Swivel St","size":"3/4\"","stock":0,"cost":5.41,"price":12.0},{"pid":"P42","code":"315","desc":"Elbow C x C","size":"1\" X 1\"","stock":0,"cost":5.83,"price":8.0},{"pid":"P43","code":"315","desc":"Elbows","size":"1/2\"","stock":0,"cost":1.74,"price":4.0},{"pid":"P44","code":"315","desc":"Elbows","size":"3/4\"","stock":0,"cost":3.2,"price":8.0},{"pid":"P45","code":"315","desc":"Elbows","size":"1\"","stock":0,"cost":4.89,"price":10.0},{"pid":"P46","code":"315","desc":"Elbows","size":"1.1/4\"","stock":0,"cost":15.23,"price":20.0},{"pid":"P47","code":"315","desc":"Elbows","size":"1.1/2\"","stock":0,"cost":25.1,"price":30.0},{"pid":"P48","code":"315","desc":"22MM X 3/4 315","size":"22mm x 3/4","stock":0,"cost":4.75,"price":8.0},{"pid":"P49","code":"315","desc":"Brass Elbow","size":"22mm x 3/4","stock":0,"cost":4.95,"price":8.0},{"pid":"P50","code":"316","desc":"Male Elbow","size":"1/2\"","stock":0,"cost":1.97,"price":5.0},{"pid":"P51","code":"316","desc":"Male Elbow","size":"3/4\"","stock":0,"cost":3.92,"price":8.0},{"pid":"P52","code":"316","desc":"Male Elbow","size":"1\"","stock":0,"cost":5.06,"price":10.0},{"pid":"P53","code":"316","desc":"Male Elbow","size":"1.1/4\"","stock":0,"cost":27.26,"price":40.0},{"pid":"P54","code":"316","desc":"Male Elbow","size":"1.1/2\"","stock":0,"cost":35.95,"price":40.0},{"pid":"P55","code":"316","desc":"Male Elbow","size":"3/4\"x1/2\"","stock":0,"cost":0.0,"price":9.0},{"pid":"P56","code":"316","desc":"Male Elbow","size":"1/2\"x3/4\"","stock":0,"cost":0.0,"price":9.0},{"pid":"P57","code":"316","desc":"Male Elbow","size":"1\"x3/4\"","stock":0,"cost":5.01,"price":9.0},{"pid":"P58","code":"316","desc":"Male Elbow","size":"3/4\"x1\"","stock":0,"cost":0.0,"price":9.0},{"pid":"P59","code":"317","desc":"Female Elbow","size":"1/2\"","stock":0,"cost":1.86,"price":6.0},{"pid":"P60","code":"317","desc":"Female Elbow","size":"3/4\"","stock":0,"cost":3.38,"price":8.0},{"pid":"P61","code":"317","desc":"Female Elbow","size":"1\"","stock":0,"cost":6.76,"price":10.0},{"pid":"P62","code":"317","desc":"Female Elbow","size":"1.1/4\"","stock":0,"cost":27.26,"price":30.0},{"pid":"P63","code":"317","desc":"Female Elbow","size":"1.1/2\"","stock":0,"cost":35.95,"price":40.0},{"pid":"P64","code":"317","desc":"Female Elbow","size":"1/2\"x3/4\"","stock":0,"cost":4.96,"price":8.0},{"pid":"P65","code":"317","desc":"Female Elbow","size":"3/4\"x1/2\"","stock":0,"cost":7.75,"price":8.0},{"pid":"P66","code":"317","desc":"Female Elbow","size":"1\"x3/4\"","stock":0,"cost":4.12,"price":8.0},{"pid":"P67","code":"317","desc":"Female Elbow","size":"3/4\"x1\"","stock":0,"cost":5.31,"price":8.0},{"pid":"P68","code":"318","desc":"Equal Tee","size":"1/2\"","stock":0,"cost":2.59,"price":5.0},{"pid":"P69","code":"318","desc":"Equal Tee","size":"3/4\"","stock":0,"cost":4.33,"price":8.0},{"pid":"P70","code":"318","desc":"Equal Tee","size":"1\"","stock":0,"cost":7.6,"price":10.0},{"pid":"P71","code":"318","desc":"Equal Tee","size":"1.1/4\"","stock":0,"cost":32.14,"price":40.0},{"pid":"P72","code":"318","desc":"Equal Tee","size":"1.1/2\"","stock":0,"cost":45.81,"price":50.0},{"pid":"P73","code":"318","desc":"Reducing Tee","size":"1/2\"x1/2\"x3/4\"","stock":0,"cost":4.86,"price":8.0},{"pid":"P74","code":"318","desc":"Reducing Tee","size":"3/4\"x1/2\"x1/2\"","stock":0,"cost":3.79,"price":8.0},{"pid":"P75","code":"318","desc":"Reducing Tee","size":"3/4\"x1/2\"x3/4\"","stock":0,"cost":5.95,"price":10.0},{"pid":"P76","code":"318","desc":"Reducing Tee","size":"3/4\"x3/4\"x1/2\"","stock":0,"cost":5.95,"price":10.0},{"pid":"P77","code":"318","desc":"Reducing Tee","size":"3/4\"x3/4\"x1\"","stock":0,"cost":11.07,"price":12.0},{"pid":"P78","code":"318","desc":"Reducing Tee","size":"1\"x3/4\"x3/4\"","stock":0,"cost":10.34,"price":12.0},{"pid":"P79","code":"318","desc":"Reducing Tee","size":"1\"x1\"x1/2\"","stock":0,"cost":5.79,"price":12.0},{"pid":"P80","code":"318","desc":"Reducing Tee","size":"1\"x1/2\"x1/2\"","stock":0,"cost":9.55,"price":12.0},{"pid":"P81","code":"318","desc":"Reducing Tee","size":"1\"x1/2\"x1\"","stock":0,"cost":6.62,"price":12.0},{"pid":"P82","code":"318","desc":"Reducing Tee","size":"1\"x1\"x3/4\"","stock":0,"cost":6.68,"price":12.0},{"pid":"P83","code":"318","desc":"Reducing Tee","size":"1\"x3/4\"x1\"","stock":0,"cost":7.52,"price":12.0},{"pid":"P84","code":"318","desc":"Reducing Tee","size":"1\"x3/4\"x1/2\"","stock":0,"cost":10.86,"price":12.0},{"pid":"P85","code":"318","desc":"Reducing Tee","size":"1\"x1/2\"x3/4\"","stock":0,"cost":10.86,"price":12.0},{"pid":"P86","code":"321","desc":"Wall plate elbow (tap brackets)","size":"1/2\" x 1/2\"","stock":0,"cost":4.24,"price":8.0},{"pid":"P87","code":"321","desc":"Wall plate elbow (tap brackets)","size":"1/2\"x3/4\"","stock":0,"cost":10.34,"price":20.0},{"pid":"P88","code":"327","desc":"Swivel Elbow-bent tap connect","size":"1/2\"","stock":0,"cost":2.76,"price":6.0},{"pid":"P89","code":"327","desc":"Swivel Elbow-bent tap connect","size":"3/4\"","stock":0,"cost":0.0,"price":10.0},{"pid":"P90","code":"327","desc":"Swivel Elbow-straight tap connect","size":"1/2\"","stock":0,"cost":0.0,"price":10.0},{"pid":"P91","code":"327","desc":"Swivel Elbow-straight tap connect","size":"3/4\"","stock":0,"cost":0.0,"price":10.0},{"pid":"P92","code":"332","desc":"Stop cock","size":"1/2\"","stock":0,"cost":6.21,"price":10.0},{"pid":"P93","code":"332","desc":"Stop cock","size":"3/4\"","stock":0,"cost":9.93,"price":12.0},{"pid":"P94","code":"332","desc":"Stop cock","size":"1\"","stock":0,"cost":0.0,"price":15.0},{"pid":"P95","code":"350","desc":"Tank Connector","size":"1/2\"","stock":0,"cost":2.55,"price":8.0},{"pid":"P96","code":"350","desc":"Tank Connector","size":"3/4\"","stock":0,"cost":3.86,"price":8.0},{"pid":"P97","code":"350","desc":"Tank Connector","size":"1\"","stock":0,"cost":7.33,"price":8.0},{"pid":"P98","code":"351","desc":"Stop End (Compression Blanks)","size":"1/2\"","stock":0,"cost":1.14,"price":4.0},{"pid":"P99","code":"351","desc":"Stop End (Compression Blanks)","size":"3/4\"","stock":0,"cost":3.92,"price":4.0},{"pid":"P100","code":"351","desc":"Stop End (Compression Blanks)","size":"1\"","stock":0,"cost":3.96,"price":4.0},{"pid":"P101","code":"367","desc":"Gate Valve","size":"1/2\"","stock":0,"cost":10.77,"price":12.0},{"pid":"P102","code":"367","desc":"Gate Valve","size":"3/4\"","stock":0,"cost":13.46,"price":15.0},{"pid":"P103","code":"367","desc":"Gate Valve","size":"1\"","stock":0,"cost":9.04,"price":12.0},{"pid":"P104","code":"372","desc":"Blank Cap","size":"1/2\"","stock":0,"cost":1.63,"price":4.0},{"pid":"P105","code":"372","desc":"Blank Cap","size":"3/4\"","stock":0,"cost":1.4,"price":6.0},{"pid":"P106","code":"372","desc":"Blank Cap","size":"1\"","stock":0,"cost":2.66,"price":10.0},{"pid":"P107","code":"610","desc":"Mid brass straight coupler compression fitting","size":"8mm 10mm","stock":0,"cost":2.26,"price":4.0},{"pid":"P108","code":"610","desc":"Mid brass straight coupler compression fitting","size":"10mm 10mm","stock":0,"cost":1.5,"price":3.0},{"pid":"P109","code":"610","desc":"Mid brass straight coupler compression fitting","size":"1/2x10mm","stock":0,"cost":1.96,"price":4.0},{"pid":"P110","code":"611","desc":"Mid brass Straight coupler compression fitting","size":"10mm 3/8","stock":0,"cost":2.41,"price":3.0},{"pid":"P111","code":"611","desc":"Mid brass Straight coupler compression fitting Male","size":"8x10mm","stock":0,"cost":3.0,"price":5.0},{"pid":"P112","code":"615","desc":"Mid brass elbow comperssion fitting","size":"10mm","stock":0,"cost":0,"price":3.0},{"pid":"P113","code":"616","desc":"Mid Brass elbow compression fitting Male","size":"10mm 3/8","stock":0,"cost":2.77,"price":4.0},{"pid":"P114","code":"617","desc":"Mid brass elbow comperssion fitting","size":"1/2 x 10mm","stock":0,"cost":2.17,"price":4.0},{"pid":"P115","code":"617","desc":"Mid brass elbow comperssion fitting","size":"3/8x10mm","stock":0,"cost":5.0,"price":8.0},{"pid":"P116","code":"715","desc":"F Thermostatic mixing valve ESBE","size":"3/4\"","stock":0,"cost":97.18,"price":120.0},{"pid":"P117","code":"715","desc":"F Thermostatic mixing valve ESBE","size":"1/2\"","stock":0,"cost":49.75,"price":60.0},{"pid":"P118","code":"715","desc":"F Thermostatic mixing valve ESBE","size":"1\"","stock":0,"cost":103.9,"price":120.0},{"pid":"P119","code":"378A","desc":"Nut","size":"1/2\"","stock":0,"cost":0.63,"price":2.0},{"pid":"P120","code":"378A","desc":"Nut","size":"3/4\"","stock":0,"cost":1.01,"price":2.0},{"pid":"P121","code":"378A","desc":"Nut","size":"1\"","stock":0,"cost":1.75,"price":2.0},{"pid":"P122","code":"378B","desc":"Olives (rings)","size":"1/2\"","stock":0,"cost":0.11,"price":0.5},{"pid":"P123","code":"378B","desc":"Olives (rings)","size":"3/4\"","stock":0,"cost":0.31,"price":0.5},{"pid":"P124","code":"378B","desc":"Olives (rings)","size":"1\"","stock":0,"cost":0.42,"price":0.5},{"pid":"P125","code":"ABS","desc":"Pipe Marley (price per m)","size":"1 1/4 4mt","stock":0,"cost":7.45,"price":15.0},{"pid":"P126","code":"ABS","desc":"Pipe Marley (price per m)","size":"1 1/2 4mt","stock":0,"cost":9.02,"price":10.0},{"pid":"P127","code":"ABS","desc":"Pipe Marley (price per m)","size":"2 4mt","stock":0,"cost":16.01,"price":18.0},{"pid":"P128","code":"ABS","desc":"Reducer","size":"1 1/2x1 1/4\"","stock":0,"cost":0.83,"price":8.0},{"pid":"P129","code":"ABS","desc":"Reducer","size":"2x11/2\"","stock":0,"cost":2.87,"price":4.0},{"pid":"P130","code":"ABS","desc":"45\" Elbow","size":"1 1/4\"","stock":0,"cost":0.57,"price":2.0},{"pid":"P131","code":"ABS","desc":"45\" Elbow","size":"1 1/2\"","stock":0,"cost":0.57,"price":3.0},{"pid":"P132","code":"ABS","desc":"90' Elbow","size":"1 1/2","stock":0,"cost":0.57,"price":4.0},{"pid":"P133","code":"ABS","desc":"90' Elbow","size":"11/4","stock":0,"cost":0.57,"price":3.0},{"pid":"P134","code":"ABS","desc":"90\" Elbow","size":"2\"","stock":0,"cost":1.21,"price":2.0},{"pid":"P135","code":"ABS","desc":"90\" Elbow access plug","size":"2\"","stock":0,"cost":4.2,"price":6.0},{"pid":"P136","code":"ABS","desc":"Tee","size":"2\"","stock":0,"cost":0.55,"price":2.0},{"pid":"P137","code":"ABS","desc":"St Coupling","size":"2\"","stock":0,"cost":4.8,"price":6.0},{"pid":"P138","code":"ABS","desc":"135' Elbow","size":"11/2\"","stock":0,"cost":2.24,"price":5.0},{"pid":"P139","code":"ABS","desc":"135' Bend","size":"11/4\"","stock":0,"cost":2.24,"price":5.0},{"pid":"P140","code":"ABS","desc":"Straight coupling ABS","size":"11/4\"","stock":0,"cost":3.25,"price":5.0},{"pid":"P141","code":"ABS","desc":"Straight Coupling ABS","size":"1 1/2\"","stock":0,"cost":3.25,"price":2.0},{"pid":"P142","code":"ABS","desc":"Tee ABS","size":"1.1/2\"","stock":0,"cost":1.56,"price":3.0},{"pid":"P143","code":"ABS","desc":"Tee ABS","size":"1 1/4\"","stock":0,"cost":4.43,"price":4.0},{"pid":"P144","code":"ABS","desc":"Access Plug","size":"1 1/4\"","stock":0,"cost":4.2,"price":6.0},{"pid":"P145","code":"ABS","desc":"Access Plug","size":"1 1/2\"","stock":0,"cost":1.69,"price":4.0},{"pid":"P146","code":"ABS","desc":"Reducer","size":"1 1/4 x 22mm","stock":0,"cost":0,"price":3.0},{"pid":"P147","code":"ABS","desc":"Standard P Trap","size":"1 1/2","stock":0,"cost":5.28,"price":8.0},{"pid":"P148","code":"ABS","desc":"Reducing Inserts Grey","size":"4\" x 2\"","stock":0,"cost":4.32,"price":8.0},{"pid":"P149","code":"ABS","desc":"Reducing Inserts Grey","size":"1 1/2 x 1 1/4","stock":0,"cost":1.96,"price":4.0},{"pid":"P150","code":"ADAP","desc":"Shower Adaptor kits","size":"","stock":0,"cost":16.26,"price":20.0},{"pid":"P151","code":"ALARM","desc":"EI3018 Mains Carbon Monoxide Alarm","size":"","stock":0,"cost":59.48,"price":70.0},{"pid":"P152","code":"AODEN","desc":"Anode 3/4\"","size":"3/4","stock":0,"cost":47.41,"price":60.0},{"pid":"P153","code":"AUTOAV","desc":"Auto air vent 1/2","size":"1/2","stock":0,"cost":0.0,"price":25.0},{"pid":"P154","code":"AUTOFV","desc":"1/2\" auto fill valve c/w gauge std","size":"","stock":0,"cost":35.0,"price":45.0},{"pid":"P155","code":"AUTOVAL","desc":"Auto bypass valve","size":"3/4","stock":0,"cost":21.35,"price":40.0},{"pid":"P156","code":"AV","desc":"Appliance Valve","size":"","stock":0,"cost":2.35,"price":5.0},{"pid":"P157","code":"BACKPLATE","desc":"Backplate for pipe","size":"","stock":0,"cost":1.47,"price":3.0},{"pid":"P158","code":"BALLV","desc":"Isolating ballvalve CxC","size":"1/2","stock":0,"cost":2.17,"price":4.0},{"pid":"P159","code":"BASIN","desc":"Basin fixing kit","size":"","stock":0,"cost":16.9,"price":20.0},{"pid":"P160","code":"BN","desc":"Burner nozzle","size":"","stock":0,"cost":9.93,"price":20.0},{"pid":"P161","code":"BOSS","desc":"Strap on Boss ABS","size":"4\"","stock":0,"cost":3.79,"price":5.0},{"pid":"P162","code":"BRACKETS","desc":"Shower Brackets","size":"1/2","stock":0,"cost":21.99,"price":28.0},{"pid":"P163","code":"BTRAP","desc":"Adjustable bottle Trap","size":"1 1/4\"","stock":0,"cost":13.21,"price":18.0},{"pid":"P164","code":"CAB","desc":"Cable Ties (each)","size":"100","stock":0,"cost":0.1,"price":0.5},{"pid":"P165","code":"compression","desc":"Lever Valve","size":"3/4","stock":0,"cost":6.56,"price":9.0},{"pid":"P166","code":"compression","desc":"Lever Valve","size":"1","stock":0,"cost":11.85,"price":15.0},{"pid":"P167","code":"compression","desc":"Lever Valve","size":"1/2","stock":0,"cost":4.83,"price":8.0},{"pid":"P168","code":"compression","desc":"Non Return valve Female to Female","size":"3/4","stock":0,"cost":15.08,"price":20.0},{"pid":"P169","code":"compression","desc":"Female safety valve","size":"1/2\"","stock":0,"cost":6.64,"price":10.0},{"pid":"P170","code":"compression","desc":"Automatic Air Vent","size":"1/2\"","stock":0,"cost":25.68,"price":30.0},{"pid":"P171","code":"compression","desc":"Manual Air Vent","size":"3/8","stock":0,"cost":1.96,"price":3.0},{"pid":"P172","code":"compression","desc":"Non return valve comp","size":"1/2\"","stock":0,"cost":6.67,"price":8.0},{"pid":"P173","code":"compression","desc":"Non return valve comp","size":"3/4\"","stock":0,"cost":11.85,"price":12.0},{"pid":"P174","code":"compression","desc":"Non return valve comp","size":"1\"","stock":0,"cost":4.83,"price":8.0},{"pid":"P175","code":"CON","desc":"Condensing pipe for Boiler","size":"3m","stock":0,"cost":27.95,"price":35.0},{"pid":"P176","code":"CP","desc":"Copper Pipe (price per m)","size":"1/2\"x5.5m len","stock":0,"cost":3.92,"price":7.0},{"pid":"P177","code":"CP","desc":"Copper Pipe (price per m)","size":"3/4\"x5.5m len","stock":0,"cost":7.27,"price":10.0},{"pid":"P178","code":"CP","desc":"Copper Pipe (price per m)","size":"1\"x5.5m len","stock":0,"cost":9.16,"price":13.0},{"pid":"P179","code":"CP","desc":"Copper Pipe (price per m)","size":"22mm","stock":0,"cost":10.78,"price":14.0},{"pid":"P180","code":"CRIMP","desc":"PFP Straight Coupler 16mm (crimp fittings)","size":"16mm","stock":0,"cost":1.44,"price":3.0},{"pid":"P181","code":"CRIMP","desc":"PFP Equal Tee (crimp fittings)","size":"16mm","stock":0,"cost":2.4,"price":5.0},{"pid":"P182","code":"CRIMP","desc":"PFP Elbow (crimp fittings)","size":"16mm","stock":0,"cost":1.79,"price":3.0},{"pid":"P183","code":"CRIMP","desc":"PFP Straight Coupler 32mm (crimp fittings)","size":"32mm","stock":0,"cost":3.89,"price":5.0},{"pid":"P184","code":"CRIMP","desc":"PFP Straight Coupler 20mm (crimp fittings)","size":"20mm","stock":0,"cost":1.67,"price":5.0},{"pid":"P185","code":"CRIMP","desc":"PFP Reducing straight 20x16mm (crimp fittings)","size":"20x16mm","stock":0,"cost":1.46,"price":3.0},{"pid":"P186","code":"CRIMP","desc":"PFP Straight Coupler 26mm (crimp fittings)","size":"26mm","stock":0,"cost":2.57,"price":5.0},{"pid":"P187","code":"CRIMP","desc":"PFP Equal Tee (crimp fittings)","size":"20mm","stock":0,"cost":2.91,"price":5.0},{"pid":"P188","code":"CRIMP","desc":"PFP Elbow (crimp fittings)","size":"20mm","stock":0,"cost":2.46,"price":5.0},{"pid":"P189","code":"CRIMP","desc":"PFP Elbow (crimp fittings)","size":"26mm","stock":0,"cost":3.8,"price":5.0},{"pid":"P190","code":"CRIMP","desc":"PFP Elbow (crimp fittings)","size":"32mm","stock":0,"cost":5.9,"price":7.0},{"pid":"P191","code":"CRIMP","desc":"PFP Equal Tee (crimp fittings)","size":"26mm","stock":0,"cost":4.74,"price":7.0},{"pid":"P192","code":"CRIMP","desc":"PFP Equal Tee (crimp fittings)","size":"32mm","stock":0,"cost":8.51,"price":10.0},{"pid":"P193","code":"CRIMP","desc":"Crimp Adaptors","size":"","stock":0,"cost":2.85,"price":4.0},{"pid":"P194","code":"CT","desc":"Condesate trap","size":"","stock":0,"cost":16.29,"price":20.0},{"pid":"P195","code":"CYLINDER","desc":"Stainless Steel Cylinder Indirect","size":"30 x 18","stock":0,"cost":258.18,"price":320.0},{"pid":"P196","code":"CYLINDER","desc":"Caleffi 22mm Unvented Inlet Control Valve","size":"","stock":0,"cost":92.44,"price":120.0},{"pid":"P197","code":"CYLINDER","desc":"Cylinder Valve (Caleffi Multiblock cold water control)","size":"","stock":0,"cost":65.0,"price":80.0},{"pid":"P198","code":"DELCHALMF","desc":"delchalm adj filler valve side entry","size":"","stock":0,"cost":11.99,"price":15.0},{"pid":"P199","code":"DELCHEMADJ FI","desc":"delchem adj filling valve bottom entry","size":"","stock":0,"cost":8.3,"price":12.0},{"pid":"P200","code":"DW","desc":"Diaphragm washer","size":"","stock":0,"cost":0.74,"price":1.0},{"pid":"P201","code":"EPH","desc":"EPH Motorized filling valve","size":"1\"","stock":0,"cost":68.18,"price":90.0},{"pid":"P202","code":"EPH","desc":"EPH Motorized filling valve","size":"3/4\"","stock":0,"cost":73.95,"price":90.0},{"pid":"P203","code":"TANK","desc":"Brass Tank Connector","size":"1\"","stock":0,"cost":7.32,"price":10.0},{"pid":"P204","code":"BALLC","desc":"Brass Ballcock","size":"1/2\"","stock":0,"cost":10.95,"price":15.0},{"pid":"P205","code":"EPH","desc":"EPH Motorized Valve Actuator","size":"","stock":0,"cost":46.89,"price":60.0},{"pid":"P206","code":"EV","desc":"Vessels Expansion Red","size":"24 L","stock":0,"cost":37.66,"price":50.0},{"pid":"P207","code":"EV","desc":"Vessels Expansion Red","size":"18 L","stock":0,"cost":32.96,"price":45.0},{"pid":"P208","code":"EV","desc":"Vessels Expansion Red","size":"12 L","stock":0,"cost":31.56,"price":40.0},{"pid":"P209","code":"EV","desc":"Vessels Expansion Red","size":"8 L","stock":0,"cost":25.02,"price":35.0},{"pid":"P210","code":"EV","desc":"Vessels Expansion fresh water White","size":"18 L","stock":0,"cost":68.52,"price":70.0},{"pid":"P211","code":"EV","desc":"Vessel Expansion Silver","size":"2 L","stock":0,"cost":128.05,"price":140.0},{"pid":"P212","code":"EV","desc":"Vessels Expansion fresh water White","size":"12 L","stock":0,"cost":44.07,"price":55.0},{"pid":"P213","code":"EV","desc":"Vessels Expansion fresh water White","size":"8 L","stock":0,"cost":39.2,"price":50.0},{"pid":"P214","code":"EV","desc":"Vessels Expansion circular","size":"12 L","stock":0,"cost":65.0,"price":75.0},{"pid":"P215","code":"EV","desc":"Vessels Expansion circular","size":"8 L","stock":0,"cost":72.73,"price":85.0},{"pid":"P216","code":"EV","desc":"Vessels Expansion fresh water White","size":"2 L","stock":0,"cost":27.76,"price":40.0},{"pid":"P217","code":"EV","desc":"Vessels Expansion Blue Booster cold","size":"24 L","stock":0,"cost":57.33,"price":70.0},{"pid":"P218","code":"FH","desc":"Hank Flax Hemp 100g","size":"","stock":0,"cost":14.02,"price":16.0},{"pid":"P219","code":"FILLV","desc":"Side inlet fill valve","size":"","stock":0,"cost":9.95,"price":15.0},{"pid":"P220","code":"FIREBIRD","desc":"Nozzle","size":"","stock":0,"cost":0,"price":30.0},{"pid":"P221","code":"FIREBIRD","desc":"Door Gasket","size":"120","stock":0,"cost":27.7,"price":40.0},{"pid":"P222","code":"FIREBIRD","desc":"Blast Tube","size":"","stock":0,"cost":0,"price":160.0},{"pid":"P223","code":"FIREBIRD","desc":"Burner hose (Oil Hose)","size":"900","stock":0,"cost":13.69,"price":20.0},{"pid":"P224","code":"FIREBIRD","desc":"Condensate trap flex hose","size":"","stock":0,"cost":5.61,"price":20.0},{"pid":"P225","code":"FLEX","desc":"Flexi Hose","size":"1/2","stock":0,"cost":0,"price":10.0},{"pid":"P226","code":"FLEX","desc":"Flexi Hose with mini valve","size":"1/2","stock":0,"cost":0.0,"price":10.0},{"pid":"P227","code":"FLOAT","desc":"Ball float","size":"4 1/2\"","stock":0,"cost":2.08,"price":5.0},{"pid":"P228","code":"FLUIDMASTER","desc":"Side Entry filling valve (blue and white)","size":"","stock":0,"cost":30.0,"price":20.0},{"pid":"P229","code":"FLUIDMASTER","desc":"fluidmaster dual flush valve","size":"1.5\" & 2\"","stock":0,"cost":22.4,"price":30.0},{"pid":"P230","code":"FLUIDMASTER","desc":"Siphon","size":"7.5\"","stock":0,"cost":7.81,"price":12.0},{"pid":"P231","code":"FLUIDMASTER","desc":"Fluidmaster bottom entry filling valve","size":"","stock":0,"cost":31.87,"price":40.0},{"pid":"P232","code":"FV","desc":"Teddington KBB fire valve 1.5m","size":"","stock":0,"cost":38.33,"price":45.0},{"pid":"P233","code":"FV","desc":"Teddington KBB fire valve 2m","size":"","stock":0,"cost":38.25,"price":45.0},{"pid":"P234","code":"FV","desc":"Teddington KBB fire valve 3m","size":"","stock":0,"cost":41.93,"price":50.0},{"pid":"P235","code":"FV","desc":"Teddington KBB fire valve 6m","size":"","stock":0,"cost":47.76,"price":50.0},{"pid":"P236","code":"FV","desc":"Teddington KBB fire valve 9m","size":"","stock":0,"cost":53.6,"price":60.0},{"pid":"P237","code":"GAL","desc":"M6 Galvanized Washers","size":"","stock":0,"cost":0.09,"price":0.1},{"pid":"P238","code":"GALV","desc":"SGB 12mm Galviband","size":"","stock":0,"cost":15.95,"price":20.0},{"pid":"P239","code":"GALV","desc":"Galvanised Union","size":"3/4","stock":0,"cost":0,"price":8.0},{"pid":"P240","code":"GALV","desc":"Galvanised Coupler","size":"3/4","stock":0,"cost":0,"price":8.0},{"pid":"P241","code":"GALV","desc":"Galvanised nipple","size":"","stock":0,"cost":0,"price":8.0},{"pid":"P242","code":"GASP","desc":"32mm yellow gas pipe (per metre)","size":"","stock":0,"cost":2.07,"price":5.0},{"pid":"P243","code":"GASREG","desc":"gas regulator (red) propane","size":"","stock":0,"cost":10.56,"price":20.0},{"pid":"P244","code":"GAS","desc":"Orange Gas kit","size":"","stock":0,"cost":81.15,"price":115.0},{"pid":"P245","code":"Glue","desc":"Griffon T88L Glue 250ml","size":"250ml","stock":0,"cost":5.58,"price":10.0},{"pid":"P246","code":"GT","desc":"Gas Tape","size":"","stock":0,"cost":1.46,"price":5.0},{"pid":"P247","code":"HW","desc":"Hawk White Jointing Compound 400g- glue","size":"400g","stock":0,"cost":10.33,"price":15.0},{"pid":"P248","code":"HYDP","desc":"Hyd. Pipe NG - 150 Mt Coil","size":"1/2\"","stock":0,"cost":1.26,"price":2.5},{"pid":"P249","code":"HYDP","desc":"Hyd. Pipe NG - 150 Mt Coil","size":"3/4\"","stock":0,"cost":1.66,"price":2.5},{"pid":"P250","code":"HYDP","desc":"Hyd. Pipe NG - 150 Mt Coil","size":"1\"","stock":0,"cost":2.48,"price":3.0},{"pid":"P251","code":"IMM","desc":"Immersion","size":"11","stock":0,"cost":31.63,"price":40.0},{"pid":"P252","code":"IMM","desc":"Immersion","size":"14","stock":0,"cost":56.67,"price":60.0},{"pid":"P253","code":"IMM","desc":"Immersion","size":"24","stock":0,"cost":30.49,"price":40.0},{"pid":"P254","code":"IMM","desc":"Immersion","size":"27","stock":0,"cost":35.08,"price":50.0},{"pid":"P255","code":"IMM","desc":"Immersion","size":"36","stock":0,"cost":38.29,"price":50.0},{"pid":"P256","code":"INHIB","desc":"Adey MC1 Central Heating Inhibitor (500ml)","size":"500ml","stock":0,"cost":18.04,"price":25.0},{"pid":"P257","code":"LAG","desc":"Armaflex lagging","size":"15mm","stock":0,"cost":3.32,"price":5.0},{"pid":"P258","code":"LAG","desc":"Armaflex lagging","size":"22mm","stock":0,"cost":4.13,"price":5.0},{"pid":"P259","code":"LAG","desc":"Armaflex lagging","size":"28mm","stock":0,"cost":5.16,"price":10.0},{"pid":"P260","code":"LAG","desc":"Pipe Lagging","size":"1/2","stock":0,"cost":1.25,"price":3.0},{"pid":"P261","code":"LAG","desc":"Pipe Lagging","size":"3/4","stock":0,"cost":1.55,"price":3.0},{"pid":"P262","code":"LAG","desc":"Pipe Lagging","size":"1","stock":0,"cost":3.45,"price":5.0},{"pid":"P263","code":"LAG","desc":"Pipe Lagging","size":"1 1/2","stock":0,"cost":6.25,"price":8.0},{"pid":"P264","code":"LAG","desc":"Pipe Lagging","size":"1 1/4","stock":0,"cost":6.25,"price":8.0},{"pid":"P265","code":"MAN","desc":"3 way manifold","size":"3/4x1/2","stock":0,"cost":7.77,"price":10.0},{"pid":"P266","code":"MAN","desc":"4 way manifold","size":"3/4x1/2","stock":0,"cost":9.39,"price":25.0},{"pid":"P267","code":"MAN","desc":"2 way manifold","size":"3/4x1/2","stock":0,"cost":6.18,"price":25.0},{"pid":"P268","code":"MAN","desc":"3 port manifold","size":"3/4*16mm","stock":0,"cost":36.67,"price":50.0},{"pid":"P269","code":"MAN","desc":"4 port manifold","size":"3/4*16mm","stock":0,"cost":48.91,"price":60.0},{"pid":"P270","code":"MC","desc":"Magna Cleaner","size":"1\"","stock":0,"cost":0,"price":130.0},{"pid":"P271","code":"MIRA","desc":"Mira Elite SE Shower","size":"","stock":0,"cost":280.0,"price":340.0},{"pid":"P272","code":"MIRAC","desc":"Miracle Seal","size":"250ml","stock":0,"cost":10.0,"price":20.0},{"pid":"P273","code":"MTCOCK","desc":"Midbrass ½\" Type A Drain Off MT Cock","size":"1/2\"","stock":0,"cost":2.57,"price":4.0},{"pid":"P274","code":"NAIL","desc":"Nail in clip, trade tub 200","size":"16mm","stock":0,"cost":7.64,"price":10.0},{"pid":"P275","code":"NAIL","desc":"Nail in clip, trade tub 150","size":"28mm","stock":0,"cost":7.84,"price":10.0},{"pid":"P276","code":"NAIL","desc":"uniclip nail white, bag of 100","size":"22mm","stock":0,"cost":9.78,"price":15.0},{"pid":"P277","code":"NRV","desc":"NRV spring compression","size":"1/2\"","stock":0,"cost":3.43,"price":6.0},{"pid":"P278","code":"NRV","desc":"NRV spring compression","size":"3/4\"","stock":0,"cost":4.79,"price":6.0},{"pid":"P279","code":"NRV","desc":"NRV spring compression","size":"1\" 1/4","stock":0,"cost":20.63,"price":25.0},{"pid":"P280","code":"NRV","desc":"NRV spring compression","size":"1\" 1/2","stock":0,"cost":30.31,"price":3.0},{"pid":"P281","code":"NRV","desc":"NRV spring compression","size":"1\"","stock":0,"cost":12.87,"price":15.0},{"pid":"P282","code":"NVR","desc":"NRV spring compression","size":"2\"","stock":0,"cost":42.69,"price":50.0},{"pid":"P283","code":"OIL LINE","desc":"PVc coated copper coil 25 50m (price per m)","size":"10mm","stock":0,"cost":21.66,"price":2.0},{"pid":"P284","code":"OILFIL","desc":"oil filter (metal bowl)","size":"3/8\"","stock":0,"cost":8.58,"price":15.0},{"pid":"P285","code":"OS","desc":"Oil Set","size":"","stock":0,"cost":0,"price":20.0},{"pid":"P286","code":"PEX","desc":"Inserts","size":"1/2","stock":0,"cost":0.39,"price":0.5},{"pid":"P287","code":"PEX","desc":"Inserts","size":"3/4","stock":0,"cost":0.45,"price":0.75},{"pid":"P288","code":"PEX","desc":"Inserts","size":"1","stock":0,"cost":0.72,"price":1.0},{"pid":"P289","code":"PEX","desc":"Inserts","size":"","stock":0,"cost":0,"price":1.0},{"pid":"P290","code":"pex duct","desc":"Qualpex Barrier (price per m)","size":"100mx1/2\"","stock":0,"cost":0.73,"price":5.0},{"pid":"P291","code":"pex duct","desc":"Qualpex Barrier (price per m)","size":"50mx3/4\"","stock":0,"cost":0.73,"price":5.0},{"pid":"P292","code":"pex duct","desc":"Qualpex Barrier (price per m)","size":"50mx1\"","stock":0,"cost":1.15,"price":5.0},{"pid":"P293","code":"PG","desc":"Pressure Gauge","size":"3/8\"","stock":0,"cost":4.96,"price":15.0},{"pid":"P294","code":"Philmac","desc":"Straight","size":"1/2\"","stock":0,"cost":4.85,"price":6.0},{"pid":"P295","code":"Philmac","desc":"Female straight","size":"1/2\"","stock":0,"cost":5.01,"price":8.0},{"pid":"P296","code":"Philmac","desc":"Elbow","size":"1/2\"","stock":0,"cost":5.69,"price":8.0},{"pid":"P297","code":"Philmac","desc":"Female elbow","size":"1/2\"","stock":0,"cost":4.73,"price":8.0},{"pid":"P298","code":"Philmac","desc":"Tee","size":"1/2\"","stock":0,"cost":7.46,"price":8.0},{"pid":"P299","code":"Philmac","desc":"Female C tee","size":"1/2\"","stock":0,"cost":8.62,"price":10.0},{"pid":"P300","code":"Philmac","desc":"nipple","size":"1/2\"","stock":0,"cost":2.22,"price":4.0},{"pid":"P301","code":"Philmac","desc":"Straight","size":"3/4\"","stock":0,"cost":5.52,"price":6.0},{"pid":"P302","code":"Philmac","desc":"Male straight","size":"1/2","stock":0,"cost":3.75,"price":6.0},{"pid":"P303","code":"Philmac","desc":"Male straight","size":"3/4\"","stock":0,"cost":4.68,"price":6.0},{"pid":"P304","code":"Philmac","desc":"Female straight","size":"3/4\"","stock":0,"cost":5.26,"price":6.0},{"pid":"P305","code":"Philmac","desc":"Elbow","size":"3/4\"","stock":0,"cost":8.31,"price":10.0},{"pid":"P306","code":"Philmac","desc":"Female elbow","size":"3/4\"","stock":0,"cost":6.31,"price":10.0},{"pid":"P307","code":"Philmac","desc":"Tee","size":"3/4\"","stock":0,"cost":10.96,"price":12.0},{"pid":"P308","code":"Philmac","desc":"Female C tee","size":"3/4\"","stock":0,"cost":11.86,"price":12.0},{"pid":"P309","code":"Philmac","desc":"nipple","size":"3/4\"","stock":0,"cost":2.42,"price":4.0},{"pid":"P310","code":"Philmac","desc":"Straight","size":"1\"","stock":0,"cost":11.25,"price":12.0},{"pid":"P311","code":"Philmac","desc":"Male straight","size":"1\"","stock":0,"cost":7.0,"price":10.0},{"pid":"P312","code":"Philmac","desc":"Female straight","size":"1\"","stock":0,"cost":6.68,"price":10.0},{"pid":"P313","code":"Philmac","desc":"Elbow","size":"1\"","stock":0,"cost":12.28,"price":15.0},{"pid":"P314","code":"Philmac","desc":"Female elbow","size":"1\"","stock":0,"cost":10.43,"price":15.0},{"pid":"P315","code":"Philmac","desc":"Tee","size":"1\"","stock":0,"cost":15.84,"price":18.0},{"pid":"P316","code":"Philmac","desc":"Female C tee","size":"1\"","stock":0,"cost":11.86,"price":18.0},{"pid":"P317","code":"Philmac","desc":"nipple","size":"1\"","stock":0,"cost":2.06,"price":4.0},{"pid":"P318","code":"Philmac","desc":"Straight","size":"1 1/4\"","stock":0,"cost":19.24,"price":24.0},{"pid":"P319","code":"Philmac","desc":"Male straight","size":"1 1/4\"","stock":0,"cost":13.74,"price":16.0},{"pid":"P320","code":"Philmac","desc":"Female straight","size":"1 1/4\"","stock":0,"cost":15.74,"price":16.0},{"pid":"P321","code":"Philmac","desc":"Elbow","size":"1 1/4\"","stock":0,"cost":26.38,"price":30.0},{"pid":"P322","code":"Philmac","desc":"Female elbow","size":"1 1/4\"","stock":0,"cost":21.55,"price":30.0},{"pid":"P323","code":"Philmac","desc":"Tee","size":"1 1/4\"","stock":0,"cost":28.62,"price":30.0},{"pid":"P324","code":"Philmac","desc":"Female C tee","size":"1 1/4\"","stock":0,"cost":21.73,"price":30.0},{"pid":"P325","code":"Philmac","desc":"nipple","size":"1 1/4\"","stock":0,"cost":2.42,"price":4.0},{"pid":"P326","code":"Philmac","desc":"Straight","size":"1 1/2\"","stock":0,"cost":24.12,"price":28.0},{"pid":"P327","code":"Philmac","desc":"Male straight","size":"1 1/2\"","stock":0,"cost":15.94,"price":20.0},{"pid":"P328","code":"Philmac","desc":"Female straight","size":"1 1/2\"","stock":0,"cost":18.39,"price":20.0},{"pid":"P329","code":"Philmac","desc":"Elbow","size":"1 1/2\"","stock":0,"cost":33.56,"price":40.0},{"pid":"P330","code":"Philmac","desc":"Female elbow","size":"1 1/2\"","stock":0,"cost":22.21,"price":28.0},{"pid":"P331","code":"Philmac","desc":"Tee","size":"1 1/2\"","stock":0,"cost":38.15,"price":40.0},{"pid":"P332","code":"Philmac","desc":"Female C tee","size":"1 1/2\"","stock":0,"cost":52.0,"price":60.0},{"pid":"P333","code":"Philmac","desc":"nipple","size":"1 1/2\"","stock":0,"cost":4.0,"price":8.0},{"pid":"P334","code":"Philmac","desc":"Straight","size":"2\"","stock":0,"cost":37.31,"price":40.0},{"pid":"P335","code":"Philmac","desc":"Male straight","size":"2\"","stock":0,"cost":21.74,"price":24.0},{"pid":"P336","code":"Philmac","desc":"Female straight","size":"2\"","stock":0,"cost":25.02,"price":30.0},{"pid":"P337","code":"Philmac","desc":"Female elbow","size":"2\"","stock":0,"cost":29.57,"price":30.0},{"pid":"P338","code":"Philmac","desc":"Tee","size":"2\"","stock":0,"cost":55.6,"price":60.0},{"pid":"P339","code":"Philmac","desc":"Female C tee","size":"2\"","stock":0,"cost":44.0,"price":50.0},{"pid":"P340","code":"PIPE","desc":"Multilayer 16mm (Crimp pipe)","size":"100m x 16mm","stock":0,"cost":0.72,"price":2.0},{"pid":"P341","code":"PIPE","desc":"Multilayer 20mm (Crimp pipe)","size":"50m x 20mm","stock":0,"cost":1.11,"price":2.0},{"pid":"P342","code":"PIPE","desc":"Multilayer 32mm (Crimp pipe)","size":"25m x 32mm","stock":0,"cost":3.18,"price":4.0},{"pid":"P343","code":"PIPE","desc":"Multilayer 26mm (Crimp pipe)","size":"50m x 26mm","stock":0,"cost":1.98,"price":3.0},{"pid":"P344","code":"PIPE","desc":"Multilayer 26mm (Crimp pipe)","size":"4m x 26mm","stock":0,"cost":2.13,"price":3.0},{"pid":"P345","code":"PIPE","desc":"Multilayer 20mm (Crimp pipe)","size":"4m x 20mm","stock":0,"cost":1.17,"price":2.0},{"pid":"P346","code":"PLUG","desc":"Brown Plugs 100","size":"7mm","stock":0,"cost":2.35,"price":5.0},{"pid":"P347","code":"PLUG","desc":"Red Plugs 100","size":"6mm","stock":0,"cost":2.41,"price":5.0},{"pid":"P348","code":"Polyplumb","desc":"Pipe (price per m)","size":"15mm 100m coil","stock":0,"cost":1.18,"price":2.0},{"pid":"P349","code":"Polyplumb","desc":"Barrier coil (price per m)","size":"15mm x 100m","stock":0,"cost":1.18,"price":2.0},{"pid":"P350","code":"Polyplumb","desc":"Pipe (price per m)","size":"22mm 50m coil","stock":0,"cost":1.18,"price":2.0},{"pid":"P351","code":"Polyplumb","desc":"Barrier coil (price per m)","size":"22mm x 50m","stock":0,"cost":1.18,"price":4.0},{"pid":"P352","code":"Polyplumb","desc":"Elbows","size":"15mm","stock":0,"cost":1.98,"price":4.0},{"pid":"P353","code":"Polyplumb","desc":"Elbows","size":"22mm","stock":0,"cost":2.59,"price":4.0},{"pid":"P354","code":"Polyplumb","desc":"Elbows","size":"28mm","stock":0,"cost":5.06,"price":6.0},{"pid":"P355","code":"Polyplumb","desc":"Spigot Elbow","size":"15mm","stock":0,"cost":2.54,"price":4.0},{"pid":"P356","code":"Polyplumb","desc":"Spigot Elbow","size":"22mm","stock":0,"cost":3.38,"price":4.0},{"pid":"P357","code":"Polyplumb","desc":"Wall plate elbow","size":"15mmx1/2\"","stock":0,"cost":6.24,"price":8.0},{"pid":"P358","code":"Polyplumb","desc":"Wall plate elbow","size":"22mmx1/2\"","stock":0,"cost":7.06,"price":8.0},{"pid":"P359","code":"Polyplumb","desc":"Connector","size":"15mm","stock":0,"cost":1.48,"price":2.0},{"pid":"P360","code":"Polyplumb","desc":"Connector","size":"22mm","stock":0,"cost":2.02,"price":4.0},{"pid":"P361","code":"Polyplumb","desc":"Tank Connector","size":"15x1/2\"","stock":0,"cost":1.95,"price":4.0},{"pid":"P362","code":"Polyplumb","desc":"Tank Connector","size":"22x3/4\"","stock":0,"cost":2.74,"price":4.0},{"pid":"P363","code":"Polyplumb","desc":"copper Adaptor","size":"22x 3/4\"","stock":0,"cost":1.26,"price":4.0},{"pid":"P364","code":"Polyplumb","desc":"MBSP Adaptor","size":"15x1/2\"","stock":0,"cost":3.73,"price":5.0},{"pid":"P365","code":"Polyplumb","desc":"MBSP Adaptor","size":"22x3/4\"","stock":0,"cost":6.06,"price":8.0},{"pid":"P366","code":"Polyplumb","desc":"MBSP Adaptor","size":"28x1\"","stock":0,"cost":7.38,"price":8.0},{"pid":"P367","code":"Polyplumb","desc":"FBSP Adaptor","size":"15x1/2\"","stock":0,"cost":3.92,"price":4.0},{"pid":"P368","code":"Polyplumb","desc":"FBSP Adaptor","size":"22x3/4\"","stock":0,"cost":5.44,"price":10.0},{"pid":"P369","code":"Polyplumb","desc":"FBSP Adaptor","size":"28x1\"","stock":0,"cost":7.38,"price":8.0},{"pid":"P370","code":"Polyplumb","desc":"Socket blank end","size":"15mm","stock":0,"cost":1.18,"price":4.0},{"pid":"P371","code":"Polyplumb","desc":"Socket blank end","size":"22mm","stock":0,"cost":1.68,"price":4.0},{"pid":"P372","code":"Polyplumb","desc":"Socket blank end","size":"28mm","stock":0,"cost":2.8,"price":4.0},{"pid":"P373","code":"Polyplumb","desc":"Spigot blank end","size":"15mm","stock":0,"cost":1.08,"price":4.0},{"pid":"P374","code":"Polyplumb","desc":"Spigot blank end","size":"22mm","stock":0,"cost":1.34,"price":4.0},{"pid":"P375","code":"Polyplumb","desc":"Spigot blank end","size":"28mm","stock":0,"cost":2.08,"price":4.0},{"pid":"P376","code":"Polyplumb","desc":"Straight Tap Connector","size":"15x1/2\"","stock":0,"cost":2.96,"price":4.0},{"pid":"P377","code":"Polyplumb","desc":"Straight Tap Connector","size":"15x3/4\"","stock":0,"cost":3.28,"price":5.0},{"pid":"P378","code":"Polyplumb","desc":"Straight Tap Connector","size":"22x3/4\"","stock":0,"cost":3.39,"price":5.0},{"pid":"P379","code":"Polyplumb","desc":"Bent Tap Connector","size":"15x1/2\"","stock":0,"cost":2.83,"price":4.0},{"pid":"P380","code":"Polyplumb","desc":"Bent Tap Connector","size":"22x3/4\"","stock":0,"cost":6.25,"price":8.0},{"pid":"P381","code":"Polyplumb","desc":"Manifold 2 port","size":"15mm x 3/4\"","stock":0,"cost":12.43,"price":16.0},{"pid":"P382","code":"Polyplumb","desc":"Manifold 3 port","size":"15mm x 3/4\"","stock":0,"cost":17.87,"price":25.0},{"pid":"P383","code":"Polyplumb","desc":"St Coupler","size":"15mm","stock":0,"cost":1.48,"price":4.0},{"pid":"P384","code":"Polyplumb","desc":"St Coupler","size":"22mm","stock":0,"cost":2.02,"price":4.0},{"pid":"P385","code":"Polyplumb","desc":"St Coupler","size":"28mm","stock":0,"cost":5.48,"price":8.0},{"pid":"P386","code":"Polyplumb","desc":"Lever Valve","size":"15mm","stock":0,"cost":10.81,"price":7.0},{"pid":"P387","code":"Polyplumb","desc":"Lever Valve","size":"22mm","stock":0,"cost":14.09,"price":9.0},{"pid":"P388","code":"Polyplumb","desc":"Lever Valve","size":"28mm","stock":0,"cost":16.59,"price":12.0},{"pid":"P389","code":"Polyplumb","desc":"Tee","size":"22mm","stock":0,"cost":3.36,"price":5.0},{"pid":"P390","code":"Polyplumb","desc":"Tee","size":"22x22x15","stock":0,"cost":3.49,"price":5.0},{"pid":"P391","code":"Polyplumb","desc":"Tee","size":"22x15x22","stock":0,"cost":3.38,"price":5.0},{"pid":"P392","code":"Polyplumb","desc":"Tee","size":"22x15x15","stock":0,"cost":3.35,"price":5.0},{"pid":"P393","code":"Polyplumb","desc":"Tee","size":"15x15x22","stock":0,"cost":3.35,"price":5.0},{"pid":"P394","code":"Polyplumb","desc":"Tee","size":"28x28x22","stock":0,"cost":9.19,"price":12.0},{"pid":"P395","code":"Polyplumb","desc":"Tee","size":"28x22x28","stock":0,"cost":9.19,"price":12.0},{"pid":"P396","code":"Polyplumb","desc":"Tee","size":"28x22x22","stock":0,"cost":8.44,"price":12.0},{"pid":"P397","code":"Polyplumb","desc":"Equal Tee","size":"15mm","stock":0,"cost":2.57,"price":4.0},{"pid":"P398","code":"Polyplumb","desc":"Equal Tee","size":"22mm","stock":0,"cost":3.36,"price":5.0},{"pid":"P399","code":"Polyplumb","desc":"Equal Tee","size":"28mm","stock":0,"cost":9.19,"price":10.0},{"pid":"P400","code":"Polyplumb","desc":"Reducer","size":"22x15","stock":0,"cost":1.82,"price":4.0},{"pid":"P401","code":"Polyplumb","desc":"Reducer","size":"28x22","stock":0,"cost":3.82,"price":4.0},{"pid":"P402","code":"Polyplumb","desc":"inserts","size":"15mm","stock":0,"cost":0.5,"price":1.0},{"pid":"P403","code":"Polyplumb","desc":"inserts","size":"22mm","stock":0,"cost":0.8,"price":2.0},{"pid":"P404","code":"Polyplumb","desc":"Blank cap","size":"1/2\"","stock":0,"cost":1.42,"price":2.5},{"pid":"P405","code":"Polyplumb","desc":"Tee","size":"20 x 16 x 20","stock":0,"cost":0,"price":26.0},{"pid":"P406","code":"Polyplumb","desc":"Tee","size":"20 x 20 x 16","stock":0,"cost":0,"price":26.0},{"pid":"P407","code":"Polyplumb","desc":"Tee","size":"20 x 16 x 16","stock":0,"cost":0,"price":26.0},{"pid":"P408","code":"Polyplumb","desc":"St Coupler","size":"20mm","stock":0,"cost":0,"price":5.0},{"pid":"P409","code":"Polyplumb","desc":"Shower bracket","size":"1/2 x 16mm","stock":0,"cost":0,"price":4.0},{"pid":"P410","code":"Polyplumb","desc":"Pex Thread Adaptor","size":"1/2 x 16mm","stock":0,"cost":0,"price":1.0},{"pid":"P411","code":"Polyplumb","desc":"Coupler compression","size":"1/2 x 16mm","stock":0,"cost":0,"price":2.5},{"pid":"P412","code":"Polyplumb","desc":"Conversion kit","size":"15mm x 1/2\"","stock":0,"cost":1.71,"price":3.0},{"pid":"P413","code":"Polyplumb","desc":"Conversion kit","size":"3/4\" x 22mm","stock":0,"cost":1.26,"price":2.0},{"pid":"P414","code":"Polyplumb","desc":"90","size":"16mm","stock":0,"cost":0,"price":4.0},{"pid":"P415","code":"PRESSCLOCK","desc":"Pressure clock","size":"","stock":0,"cost":0,"price":20.0},{"pid":"P416","code":"PTFE","desc":"Excel PTFE Tape","size":"","stock":0,"cost":0.28,"price":2.0},{"pid":"P417","code":"PUMP","desc":"Circulating pump","size":"55/130","stock":0,"cost":72.9,"price":90.0},{"pid":"P418","code":"PUMPV","desc":"Female pump Valve","size":"1\"","stock":0,"cost":17.99,"price":25.0},{"pid":"P419","code":"PVR","desc":"prv 3/4\"","size":"3/4","stock":0,"cost":28.0,"price":40.0},{"pid":"P420","code":"PVR","desc":"prv 1/2\"","size":"1/2","stock":0,"cost":28.0,"price":35.0},{"pid":"P421","code":"PVR","desc":"prv 1\"","size":"1\"","stock":0,"cost":53.8,"price":60.0},{"pid":"P422","code":"Rad Valve","desc":"Myson TRV's","size":"1/2\"","stock":0,"cost":18.62,"price":24.0},{"pid":"P423","code":"SCREW","desc":"Pozi Screws 1600 box","size":"5 X 50","stock":0,"cost":34.5,"price":40.0},{"pid":"P424","code":"SCREW","desc":"Pozi Screws 200 box","size":"5x50mm","stock":0,"cost":3.81,"price":5.0},{"pid":"P425","code":"SCREW","desc":"Pozi Screws Box 1200","size":"40mm","stock":0,"cost":23.4,"price":30.0},{"pid":"P426","code":"SFLUID","desc":"Solar Fluid/ Anti freeze","size":"20l","stock":0,"cost":91.0,"price":120.0},{"pid":"P427","code":"SIL","desc":"Silicone Heat resistant","size":"","stock":0,"cost":15.27,"price":20.0},{"pid":"P428","code":"SIL","desc":"Silicone Clear Multi purpose","size":"270ml","stock":0,"cost":3.33,"price":5.0},{"pid":"P429","code":"SIL","desc":"Silicone White","size":"","stock":0,"cost":4.91,"price":10.0},{"pid":"P430","code":"Soil & Waste","desc":"P Trap with spiggot","size":"1 1/2\"","stock":0,"cost":0,"price":20.0},{"pid":"P431","code":"Soil & Waste","desc":"Adjustable P- Trap","size":"1.25","stock":0,"cost":0,"price":15.0},{"pid":"P432","code":"Soil & Waste","desc":"Grey Waste Reducer","size":"4\" x 2\"","stock":0,"cost":17.25,"price":25.0},{"pid":"P433","code":"Soil & Waste","desc":"Grey Waste Reducer","size":"2\" x 1 1/2\"","stock":0,"cost":16.45,"price":10.0},{"pid":"P434","code":"Soil & Waste","desc":"Blank for cistern","size":"4\"","stock":0,"cost":0,"price":5.0},{"pid":"P435","code":"Soil & Waste","desc":"Bent multi","size":"4\"","stock":0,"cost":6.71,"price":8.0},{"pid":"P436","code":"Soil & Waste","desc":"Straight multi","size":"4\"","stock":0,"cost":9.76,"price":12.0},{"pid":"P437","code":"Soil & Waste","desc":"Straight pan connector","size":"4\"","stock":0,"cost":9.76,"price":15.0},{"pid":"P438","code":"Soil & Waste","desc":"Bent pan connector","size":"4\"","stock":0,"cost":9.76,"price":15.0},{"pid":"P439","code":"Soil & Waste","desc":"Pneumatic beta valve assembly","size":"","stock":0,"cost":68.06,"price":80.0},{"pid":"P440","code":"Soil & Waste","desc":"Multiwick Bents","size":"90' mk21","stock":0,"cost":0.0,"price":120.0},{"pid":"P441","code":"Soil & Waste","desc":"Multiwick Straight","size":"mk1","stock":0,"cost":3.49,"price":30.0},{"pid":"P442","code":"Soil & Waste","desc":"Multiwick P - Trap 1 1/2\" 40mm","size":"1 1/2\"","stock":0,"cost":5.48,"price":8.0},{"pid":"P443","code":"Soil & Waste","desc":"4\" pipe","size":"6m","stock":0,"cost":22.46,"price":25.0},{"pid":"P444","code":"Soil & Waste","desc":"4\" bend","size":"90' s/s","stock":0,"cost":5.44,"price":10.0},{"pid":"P445","code":"Soil & Waste","desc":"4\" bend","size":"90' d/s","stock":0,"cost":5.92,"price":10.0},{"pid":"P446","code":"Soil & Waste","desc":"4\" bend","size":"90' t/s","stock":0,"cost":13.2,"price":15.0},{"pid":"P447","code":"Soil & Waste","desc":"4\" bend","size":"45' s/s","stock":0,"cost":4.86,"price":10.0},{"pid":"P448","code":"Soil & Waste","desc":"4\" bend","size":"45' d/s","stock":0,"cost":5.22,"price":10.0},{"pid":"P449","code":"Soil & Waste","desc":"4\" bend","size":"30' s/s","stock":0,"cost":5.08,"price":10.0},{"pid":"P450","code":"Soil & Waste","desc":"4\" bend","size":"30' d/s","stock":0,"cost":5.63,"price":10.0},{"pid":"P451","code":"Soil & Waste","desc":"4\" bend","size":"15' d/s","stock":0,"cost":4.15,"price":10.0},{"pid":"P452","code":"Soil & Waste","desc":"4\" bend","size":"15' s/s","stock":0,"cost":4.86,"price":10.0},{"pid":"P453","code":"Soil & Waste","desc":"4\" Tee","size":"d/s","stock":0,"cost":9.71,"price":10.0},{"pid":"P454","code":"Soil & Waste","desc":"4\" Tee","size":"t/s","stock":0,"cost":14.56,"price":15.0},{"pid":"P455","code":"Soil & Waste","desc":"4\" Extended Multiwick","size":"4\"","stock":0,"cost":6.76,"price":8.0},{"pid":"P456","code":"Soil & Waste","desc":"4\" Coupler (double)","size":"4\"","stock":0,"cost":4.76,"price":10.0},{"pid":"P457","code":"Soil & Waste","desc":"4\" repair Collar","size":"4\"","stock":0,"cost":3.24,"price":10.0},{"pid":"P458","code":"Soil & Waste","desc":"4\" Clip","size":"4\"","stock":0,"cost":4.47,"price":10.0},{"pid":"P459","code":"Soil & Waste","desc":"4\" cowl grey","size":"4\"","stock":0,"cost":1.86,"price":10.0},{"pid":"P460","code":"Soil & Waste","desc":"4\" Vent Cowl","size":"4\"","stock":0,"cost":8.29,"price":10.0},{"pid":"P461","code":"Soil & Waste","desc":"4\" Adjust Gully Trap","size":"4\"","stock":0,"cost":27.21,"price":35.0},{"pid":"P462","code":"Soil & Waste","desc":"4\" blank Combicap","size":"4\"","stock":0,"cost":4.78,"price":10.0},{"pid":"P463","code":"Soil & Waste","desc":"4\" Y","size":"t/s","stock":0,"cost":9.36,"price":10.0},{"pid":"P464","code":"Soil & Waste","desc":"4\" Pipe Brakets","size":"90'","stock":0,"cost":0.0,"price":10.0},{"pid":"P465","code":"Soil & Waste","desc":"4\" 90' branch t/socket","size":"90'","stock":0,"cost":12.55,"price":10.0},{"pid":"P466","code":"Soil & Waste","desc":"4\" 90' branc d/socket","size":"90'","stock":0,"cost":9.71,"price":10.0},{"pid":"P467","code":"Soil & Waste","desc":"Pipe","size":"4\" 6mt","stock":0,"cost":30.78,"price":40.0},{"pid":"P468","code":"Soil & Waste","desc":"Pipe","size":"1 1/4 4mt","stock":0,"cost":7.45,"price":10.0},{"pid":"P469","code":"Soil & Waste","desc":"Pipe","size":"1 1/2 4mt","stock":0,"cost":9.02,"price":10.0},{"pid":"P470","code":"Soil & Waste","desc":"Bend","size":"1 1/2 2x90'","stock":0,"cost":2.24,"price":6.0},{"pid":"P471","code":"Soil & Waste","desc":"Bend","size":"1 1/2x45'","stock":0,"cost":0.86,"price":6.0},{"pid":"P472","code":"Soil & Waste","desc":"Connector","size":"1 1/2","stock":0,"cost":9.76,"price":10.0},{"pid":"P473","code":"Soil & Waste","desc":"Tees","size":"1 1/2x90'","stock":0,"cost":1.56,"price":15.0},{"pid":"P474","code":"Soil & Waste","desc":"Tees","size":"1 1/4x90'","stock":0,"cost":1.56,"price":15.0},{"pid":"P475","code":"Soil & Waste","desc":"Y","size":"ds","stock":0,"cost":3.65,"price":5.0},{"pid":"P476","code":"Soil & Waste","desc":"Waste Coupler","size":"11/4\"","stock":0,"cost":0.86,"price":4.0},{"pid":"P477","code":"Soil & Waste","desc":"Waste Coupler","size":"11/2","stock":0,"cost":1.03,"price":4.0},{"pid":"P478","code":"Soil & Waste","desc":"Waste Coupler","size":"2\"","stock":0,"cost":1.82,"price":4.0},{"pid":"P479","code":"Soil & Waste","desc":"Waste Elbow","size":"45' 11/4\"","stock":0,"cost":0.86,"price":4.0},{"pid":"P480","code":"Soil & Waste","desc":"Waste Elbow","size":"45' 11/2\"","stock":0,"cost":0.86,"price":4.0},{"pid":"P481","code":"Soil & Waste","desc":"Waste Elbow","size":"45' 2\"","stock":0,"cost":2.31,"price":4.0},{"pid":"P482","code":"Soil & Waste","desc":"Waste Elbow Paling","size":"90' 11/4\"","stock":0,"cost":0.57,"price":4.0},{"pid":"P483","code":"Soil & Waste","desc":"Waste Elbow Paling","size":"90'11/2","stock":0,"cost":0.57,"price":4.0},{"pid":"P484","code":"Soil & Waste","desc":"Waste Elbow Paling","size":"90' 2\"","stock":0,"cost":1.21,"price":4.0},{"pid":"P485","code":"Soil & Waste","desc":"P Traps","size":"32 mm","stock":0,"cost":9.76,"price":10.0},{"pid":"P486","code":"Soil & Waste","desc":"S Traps","size":"32 mm","stock":0,"cost":6.5,"price":8.0},{"pid":"P487","code":"Soil & Waste","desc":"P Trap","size":"1.1/4\" (32 mm)","stock":0,"cost":9.76,"price":10.0},{"pid":"P488","code":"Soil & Waste","desc":"Bath Trap","size":"1 1/2","stock":0,"cost":22.76,"price":30.0},{"pid":"P489","code":"Soil & Waste","desc":"Waste Pipe Clip","size":"32mm","stock":0,"cost":0.53,"price":2.0},{"pid":"P490","code":"Soil & Waste","desc":"Waste Pipe Clip","size":"40mm","stock":0,"cost":0.53,"price":2.0},{"pid":"P491","code":"Soil & Waste","desc":"Waste Pipe Clip","size":"50mm","stock":0,"cost":1.82,"price":2.0},{"pid":"P492","code":"Soil & Waste","desc":"Waste Screw Access Plug","size":"11/4\"","stock":0,"cost":4.2,"price":6.0},{"pid":"P493","code":"Soil & Waste","desc":"Waste Screw Access Plug","size":"11/2\"","stock":0,"cost":1.69,"price":2.0},{"pid":"P494","code":"Soil & Waste","desc":"Waste Screw Access Plug","size":"2\"","stock":0,"cost":4.2,"price":6.0},{"pid":"P495","code":"Soil & Waste","desc":"Waste Reducer","size":"11/2\"x11/4","stock":0,"cost":0.83,"price":2.0},{"pid":"P496","code":"Soil & Waste","desc":"Waste Reducer","size":"2\"x11/4\"","stock":0,"cost":2.87,"price":4.0},{"pid":"P497","code":"Soil & Waste","desc":"Waste Reducer","size":"2x11/2\"","stock":0,"cost":2.87,"price":4.0},{"pid":"P498","code":"Soil & Waste","desc":"Waste Reducer","size":"4\"x2\"","stock":0,"cost":10.91,"price":15.0},{"pid":"P499","code":"Soil & Waste","desc":"Waste Sweep Tee","size":"2\"","stock":0,"cost":2.4,"price":4.0},{"pid":"P500","code":"Soil & Waste","desc":"PVC Insert grey","size":"50mmx43mm","stock":0,"cost":5.98,"price":8.0},{"pid":"P501","code":"Soil & Waste","desc":"Coupler","size":"ds","stock":0,"cost":4.95,"price":8.0},{"pid":"P502","code":"Soil & Waste","desc":"seat & cover soft close","size":"1","stock":0,"cost":42.93,"price":50.0},{"pid":"P503","code":"Soil & Waste","desc":"Filling valve for toilet fluid master","size":"","stock":0,"cost":0,"price":60.0},{"pid":"P504","code":"Soil & Waste","desc":"Close Coupling Kits","size":"","stock":0,"cost":13.99,"price":18.0},{"pid":"P505","code":"SPACCLIP","desc":"Spacing clip","size":"1\"","stock":0,"cost":0,"price":0.5},{"pid":"P506","code":"SPACCLIP","desc":"Spacing clip","size":"3/4","stock":0,"cost":0,"price":0.5},{"pid":"P507","code":"SPACCLIP","desc":"Spacing clip","size":"1/2","stock":0,"cost":0.0,"price":0.5},{"pid":"P508","code":"ST","desc":"Shower Trap","size":"combined","stock":0,"cost":10.41,"price":20.0},{"pid":"P509","code":"TAP","desc":"Tap Inserts with heads","size":"","stock":0,"cost":25.99,"price":35.0},{"pid":"P510","code":"TAP","desc":"Tap Inserts with heads 1/4 turn","size":"","stock":0,"cost":14.25,"price":18.0},{"pid":"P511","code":"TAP","desc":"Brass Outside tap","size":"1/2","stock":0,"cost":0,"price":10.0},{"pid":"P512","code":"TAP","desc":"1/2 Flexible tap connector 300mm","size":"1/2","stock":0,"cost":2.8,"price":4.0},{"pid":"P513","code":"TAPE","desc":"Denzo Tape","size":"","stock":0,"cost":15.0,"price":20.0},{"pid":"P514","code":"UNI","desc":"Uni White Pipe sealant","size":"1 tub","stock":0,"cost":4.02,"price":8.0},{"pid":"P515","code":"USWH","desc":"under sink heater","size":"10 litre","stock":0,"cost":118.4,"price":150.0},{"pid":"P516","code":"VALVE","desc":"Auto fill valve C/W gauge H/duty","size":"1/2\"","stock":0,"cost":37.56,"price":40.0},{"pid":"P517","code":"VALVE","desc":"½\" C/P Heavy Isolating Valve CXC","size":"1/2","stock":0,"cost":3.94,"price":5.0},{"pid":"P518","code":"VALVE","desc":"Gate type Pump Valve","size":"3/4","stock":0,"cost":6.89,"price":10.0},{"pid":"P519","code":"VALVE","desc":"Gate type Pump Valve","size":"1","stock":0,"cost":9.67,"price":15.0},{"pid":"P520","code":"VALVE","desc":"Female Lever Valve","size":"1/2","stock":0,"cost":4.0,"price":8.0},{"pid":"P521","code":"VALVE","desc":"Female Lever Valve","size":"3/4","stock":0,"cost":6.0,"price":10.0},{"pid":"P522","code":"VALVE","desc":"Female Lever Valve","size":"1","stock":0,"cost":11.69,"price":15.0},{"pid":"P523","code":"VALVE","desc":"Gas Lever Valve","size":"1/2","stock":0,"cost":6.48,"price":8.0},{"pid":"P524","code":"VALVE","desc":"Gas Lever Valve","size":"3/4","stock":0,"cost":9.11,"price":12.0},{"pid":"P525","code":"VALVE","desc":"Gas Lever Valve Compression","size":"","stock":0,"cost":7.47,"price":10.0},{"pid":"P526","code":"VALVE","desc":"Gas Lever Valve Female","size":"","stock":0,"cost":6.48,"price":8.0},{"pid":"P527","code":"VALVE","desc":"Mini Valve Isolating valve Straight","size":"","stock":0,"cost":5.1,"price":8.0},{"pid":"P528","code":"VALVE","desc":"Mini Valve Isolating valve Elbow","size":"","stock":0,"cost":6.46,"price":10.0},{"pid":"P529","code":"VF","desc":"Fire Valve","size":"10mm","stock":0,"cost":0.0,"price":10.0},{"pid":"P530","code":"VF","desc":"automatic filling valve","size":"","stock":0,"cost":0.0,"price":45.0},{"pid":"P531","code":"VFR","desc":"Remote firevalve 2 m","size":"","stock":0,"cost":38.25,"price":45.0},{"pid":"P532","code":"VFR","desc":"Remote firevalve 1.5 m","size":"","stock":0,"cost":38.33,"price":50.0},{"pid":"P533","code":"VFR","desc":"Remote firevalve 3.0 m","size":"","stock":0,"cost":41.93,"price":40.0},{"pid":"P534","code":"VWM","desc":"Washing Machine valve pair","size":"1/2\"","stock":0,"cost":2.7,"price":5.0},{"pid":"P535","code":"WASH","desc":"Washing machine Hose 1.5m","size":"1.5m","stock":0,"cost":2.78,"price":4.0},{"pid":"P536","code":"WASTE","desc":"Basin waste Bottle trap","size":"1/2","stock":0,"cost":3.62,"price":6.0},{"pid":"P537","code":"WASTE","desc":"Basin waste adjustable","size":"1/2","stock":0,"cost":13.25,"price":18.0},{"pid":"P538","code":"","desc":"","size":"","stock":0,"cost":0,"price":0}];
+
+const seedUsers = () => ([
+  { id:'S01', code:'declan',  name:'Declan Murphy',  email:'declan@glenviewheating.ie',  role:'Technician', trade:'Plumber',          rgi:'RGI 21874', entitlement:21, active:true,  pin:'1234' },
+  { id:'S02', code:'aoife',   name:'Aoife Barry',    email:'aoife@glenviewheating.ie',   role:'Technician', trade:'Heating engineer', rgi:'RGI 30188', entitlement:21, active:true,  pin:'1234' },
+  { id:'S03', code:'tomasz',  name:'Tomasz Nowak',   email:'tomasz@glenviewheating.ie',  role:'Technician', trade:'Apprentice',       rgi:'',          entitlement:20, active:true,  pin:'1234' },
+  { id:'S09', code:'sinead',  name:'Sinead Collins', email:'sinead@glenviewheating.ie',  role:'Office',     trade:'Contracts manager',rgi:'',          entitlement:22, active:true,  pin:'1234' },
+  { id:'S10', code:'admin',   name:'Office Admin',   email:'office@glenviewheating.ie',  role:'Admin',      trade:'Administrator',    rgi:'',          entitlement:22, active:true,  pin:'1234' }
+]);
+
+const seedJobs = () => ([
+  { id:'GH-2026-014', client:'Bantry Bay Hotel Ltd', site:'Bantry Bay Hotel, plantroom', address:'Bantry, Co. Cork', contact:'M. Hurley 087 000 0000', type:'Commercial heating', status:'Open',     opened: iso(addDays(new Date(),-21)), notes:'Primary pipework replacement to boiler house.' },
+  { id:'GH-2026-021', client:'K. Mouse, Goleen Developments', site:'Goleen Developments, unit 4', address:'Goleen, Co. Cork', contact:'', type:'New build plumbing', status:'Open', opened: iso(addDays(new Date(),-9)), notes:'First fix.' },
+  { id:'GH-2026-023', client:'P. Sheehan', site:'Private dwelling, Durrus', address:'Durrus, Co. Cork', contact:'086 000 0000', type:'Boiler service', status:'Complete', opened: iso(addDays(new Date(),-3)), notes:'' }
+]);
+
+const LEAVE_TYPES = ['Worked','Annual leave','Sick leave','Public holiday','Unpaid leave','Day off'];
+const DAY_TINT = { 'Worked':'bg-white','Annual leave':'bg-goldsoft','Sick leave':'bg-[#FBE9E7]',
+  'Public holiday':'bg-[#E8F1EC]','Unpaid leave':'bg-[#EFEFF4]','Day off':'bg-paper' };
+
+const seedSheets = () => {
+  const mon = weekStart(addDays(new Date(),-7));
+  const days = [0,1,2,3,4,5,6].map(i => {
+    const d = iso(addDays(mon,i)), w = addDays(mon,i).getDay();
+    if(w===0||w===6) return { date:d, type:'Day off', entries:[], notes:'', certUrl:'', certReceived:false };
+    if(i===3) return { date:d, type:'Annual leave', entries:[], notes:'Family day', certUrl:'', certReceived:false };
+    return { date:d, type:'Worked', notes:'', certUrl:'', certReceived:false, entries:[
+      { id:uid('E'), jobId:'GH-2026-014', site:'Bantry Bay Hotel, plantroom', task:'Primary pipework', start:'08:00', finish:'12:30', brk:0, notes:'' },
+      { id:uid('E'), jobId:'GH-2026-021', site:'Goleen Developments, unit 4', task:'First fix', start:'13:15', finish:'17:00', brk:0, notes:'' }
+    ]};
+  });
+  return [{ id:'TS-D1', staffId:'S01', name:'Declan Murphy', weekStart: iso(mon), days, status:'Approved', approver:'Sinead Collins', submittedAt: iso(addDays(mon,6)) }];
+};
+
+const seedLeave = () => ([
+  { id:'LV-D1', staffId:'S02', name:'Aoife Barry', type:'Annual leave', start: iso(addDays(new Date(),16)), end: iso(addDays(new Date(),20)), days:5, reason:'Booked holiday', certUrl:'', status:'Pending', approver:'', comment:'', raisedAt: iso(new Date()) },
+  { id:'LV-D2', staffId:'S03', name:'Tomasz Nowak', type:'Sick leave', start: iso(addDays(new Date(),-4)), end: iso(addDays(new Date(),-3)), days:2, reason:'Chest infection', certUrl:'', certReceived:false, status:'Pending', approver:'', comment:'', raisedAt: iso(addDays(new Date(),-4)) },
+  { id:'LV-D3', staffId:'S01', name:'Declan Murphy', type:'Annual leave', start: iso(addDays(new Date(),-12)), end: iso(addDays(new Date(),-12)), days:1, reason:'', certUrl:'', status:'Approved', approver:'Sinead Collins', comment:'Grand', raisedAt: iso(addDays(new Date(),-20)) }
+]);
+
+const TEST_PRESETS = {
+  'Gas installation':      { medium:'Air',   standard:'I.S. 813 tightness test',     pressure:'25', hold:5,  unit:'mbar', tol:0 },
+  'Heating, sealed system':{ medium:'Water', standard:'Manufacturer / BS EN 12828',  pressure:'3',  hold:30, unit:'bar',  tol:0.1 },
+  'Underfloor heating':    { medium:'Water', standard:'Manufacturer, pre screed',    pressure:'6',  hold:60, unit:'bar',  tol:0.2 },
+  'Mains cold water':      { medium:'Water', standard:'EN 806-4 method',             pressure:'10', hold:30, unit:'bar',  tol:0.2 },
+  'Soil and waste':        { medium:'Air',   standard:'EN 12056 air test',           pressure:'38', hold:3,  unit:'mm WG',tol:0 },
+  'Solar thermal':         { medium:'Glycol',standard:'Manufacturer',                pressure:'4',  hold:30, unit:'bar',  tol:0.1 }
+};
+const seedTests = () => ([{ id:'PT-D1', jobId:'GH-2026-014', site:'Bantry Bay Hotel, plantroom', client:'Bantry Bay Hotel Ltd',
+  system:'Heating, sealed system', medium:'Water', standard:'Manufacturer / BS EN 12828', unit:'bar', testPressure:'3', holdMins:30,
+  startPressure:'3.0', endPressure:'2.98', ambient:'14', engineer:'Declan Murphy', regNo:'RGI 21874', witness:'M. Hurley, site foreman',
+  date: iso(addDays(new Date(),-6)), result:'Pass', notes:'New primary pipework to boiler house. No weeping at any joint after the hold.', photos:[], signature:'' }]);
+
+const seedJobSheets = () => ([{ id:'JS-D1', jobId:'GH-2026-021', staffId:'S01', name:'Declan Murphy', date: iso(addDays(new Date(),-2)),
+  lines:[], total:0, notes:'', status:'Submitted' }]);
+
+/* ============================== UI PARTS ============================== */
+/* Logo sits straight on the navy, no backing panel. If the file ever moves,
+   the wordmark takes over instead of a broken image icon. */
+function Logo({ h='h-14 sm:h-16', className='' }){
+  const [bad, setBad] = useState(false);
+  const src = CONFIG.LOGO_DATA || CONFIG.LOGO;
+  if(bad || !src) return (
+    <span className={'font-display font-semibold tracking-[.14em] text-white text-lg '+className}>GLENVIEW HEATING</span>
+  );
+  return <img src={src} alt="Glenview Heating" onError={() => setBad(true)} className={h+' w-auto block '+className} />;
+}
+
+const Btn = ({children,onClick,kind='gold',className='',type='button',disabled}) => {
+  const kinds = {
+    gold:'bg-gold text-white hover:bg-golddeep', ink:'bg-ink text-white hover:bg-[#161B34]',
+    ghost:'bg-white text-ink border border-line hover:border-gold', quiet:'bg-transparent text-inksoft hover:text-ink',
+    danger:'bg-white text-fail border border-[#F0D5D3] hover:bg-[#FBE9E7]'
+  };
+  return <button type={type} onClick={onClick} disabled={disabled}
+    className={'pill font-display font-semibold text-[.95rem] px-6 py-3 inline-flex items-center justify-center gap-2 transition disabled:opacity-40 '+kinds[kind]+' '+className}>{children}</button>;
+};
+const Field = ({label,children,hint}) => (
+  <label className="block"><span className="lbl">{label}</span>{children}{hint && <span className="block mt-1 text-xs text-mute">{hint}</span>}</label>
+);
+const Section = ({title,kicker,children,right}) => (
+  <section className="mb-8">
+    <div className="flex items-end justify-between gap-4 mb-4">
+      <div className="rule">
+        {kicker && <div className="text-[.68rem] font-semibold tracking-[.14em] uppercase text-gold mb-1">{kicker}</div>}
+        <h2 className="text-2xl sm:text-[1.65rem] font-semibold text-ink leading-tight">{title}</h2>
+      </div>
+      {right}
+    </div>
+    {children}
+  </section>
+);
+const Badge = ({status}) => {
+  const map = { 'Approved':'bg-[#E8F1EC] text-pass','Pass':'bg-[#E8F1EC] text-pass','Complete':'bg-[#E8F1EC] text-pass',
+    'Pending':'bg-goldsoft text-golddeep','Submitted':'bg-goldsoft text-golddeep','Open':'bg-goldsoft text-golddeep',
+    'Draft':'bg-paper text-mute','Declined':'bg-[#FBE9E7] text-fail','Fail':'bg-[#FBE9E7] text-fail','Invoiced':'bg-ink text-white' };
+  return <span className={'pill px-3 py-1 text-xs font-semibold '+(map[status]||'bg-paper text-mute')}>{status}</span>;
+};
+const Stat = ({label,value,sub,warn,text,onClick}) => (
+  <div onClick={onClick} className={'card p-4 '+(onClick?'cursor-pointer hover:border-gold':'')}>
+    <div className="lbl mb-1">{label}</div>
+    <div className={'font-display font-semibold text-ink leading-none '+(text?'text-lg':'text-3xl')}>{value}</div>
+    <div className={'text-xs mt-1.5 '+(warn?'text-fail font-semibold':'text-mute')}>{sub}</div>
+  </div>
+);
+const Empty = ({line}) => (
+  <div className="card p-10 text-center"><div className="w-10 h-[3px] bg-gold mx-auto mb-4 rounded-full"></div><p className="text-mute text-sm">{line}</p></div>
+);
+function Toast({msg,onDone}){
+  useEffect(() => { if(!msg) return; const t = setTimeout(onDone, 3400); return () => clearTimeout(t); }, [msg]);
+  if(!msg) return null;
+  return <div className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 px-5 py-3 pill bg-ink text-white text-sm shadow-xl max-w-[90vw] text-center">{msg}</div>;
+}
+function Modal({open,onClose,title,children,wide}){
+  if(!open) return null;
+  return (
+    <div className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-6" onClick={onClose}>
+      <div className={'bg-white w-full '+(wide?'sm:max-w-3xl':'sm:max-w-lg')+' rounded-t-[26px] sm:rounded-[26px] max-h-[92vh] overflow-y-auto'} onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white/95 backdrop-blur px-6 pt-6 pb-4 flex items-start justify-between gap-4 border-b border-line">
+          <h3 className="text-xl font-semibold text-ink">{title}</h3>
+          <button onClick={onClose} className="text-mute hover:text-ink text-2xl leading-none px-2">&times;</button>
+        </div>
+        <div className="px-6 py-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+function SignaturePad({value,onChange}){
+  const ref = useRef(null), drawing = useRef(false);
+  useEffect(() => {
+    const c = ref.current; if(!c) return;
+    const dpr = window.devicePixelRatio||1, r = c.getBoundingClientRect();
+    c.width = r.width*dpr; c.height = r.height*dpr;
+    const ctx = c.getContext('2d'); ctx.scale(dpr,dpr); ctx.lineWidth = 2; ctx.lineCap='round'; ctx.strokeStyle='#1F2544';
+    if(value){ const i = new Image(); i.onload = () => ctx.drawImage(i,0,0,r.width,r.height); i.src = value; }
+  }, []);
+  const pos = e => { const r = ref.current.getBoundingClientRect(); const p = e.touches?e.touches[0]:e; return {x:p.clientX-r.left, y:p.clientY-r.top}; };
+  const down = e => { e.preventDefault(); drawing.current = true; const c = ref.current.getContext('2d'); const p = pos(e); c.beginPath(); c.moveTo(p.x,p.y); };
+  const move = e => { if(!drawing.current) return; e.preventDefault(); const c = ref.current.getContext('2d'); const p = pos(e); c.lineTo(p.x,p.y); c.stroke(); };
+  const up = () => { if(!drawing.current) return; drawing.current = false; onChange(ref.current.toDataURL('image/png')); };
+  return (<div>
+    <canvas ref={ref} className="sigpad" onMouseDown={down} onMouseMove={move} onMouseUp={up} onMouseLeave={up}
+      onTouchStart={down} onTouchMove={move} onTouchEnd={up} />
+    <button type="button" onClick={() => { const c = ref.current; c.getContext('2d').clearRect(0,0,c.width,c.height); onChange(''); }}
+      className="mt-2 text-xs font-semibold text-mute hover:text-ink">Clear signature</button>
+  </div>);
+}
+function Gauge({start,end,max,unit}){
+  const s = parseFloat(start), e = parseFloat(end), m = parseFloat(max)||1;
+  const top = Math.max(m*1.35, (isFinite(s)?s:0)*1.2, 0.1);
+  const ang = v => -210 + (Math.min(Math.max(v,0),top)/top)*240;
+  const R = 78, cx = 100, cy = 96;
+  const pt = (a,r) => [cx+r*Math.cos(a*Math.PI/180), cy+r*Math.sin(a*Math.PI/180)];
+  const arc = (a1,a2,r) => { const p1 = pt(a1,r), p2 = pt(a2,r); return 'M '+p1[0]+' '+p1[1]+' A '+r+' '+r+' 0 '+(Math.abs(a2-a1)>180?1:0)+' 1 '+p2[0]+' '+p2[1]; };
+  const drop = (isFinite(s)&&isFinite(e)) ? s-e : 0;
+  const n = pt(ang(isFinite(e)?e:0), R-16), t1 = pt(ang(isFinite(s)?s:0), R), t2 = pt(ang(isFinite(s)?s:0), R-11);
+  return (
+    <svg viewBox="0 0 200 132" className="w-full max-w-[230px] mx-auto">
+      <path d={arc(-210,30,R)} fill="none" stroke="#E6E1D8" strokeWidth="11" strokeLinecap="round" />
+      <path d={arc(-210,ang(isFinite(e)?e:0),R)} fill="none" stroke="#C9A063" strokeWidth="11" strokeLinecap="round" />
+      <line x1={t1[0]} y1={t1[1]} x2={t2[0]} y2={t2[1]} stroke="#1F2544" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1={cx} y1={cy} x2={n[0]} y2={n[1]} stroke="#1F2544" strokeWidth="3" strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r="5" fill="#1F2544" />
+      <text x="100" y="122" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1F2544" fontFamily="Poppins">{(isFinite(e)?e:0)+' '+unit}</text>
+      <text x="100" y="66" textAnchor="middle" fontSize="9.5" fill="#7A8099" fontFamily="Inter">{drop>0?('drop '+drop.toFixed(2)):'holding'}</text>
+    </svg>
+  );
+}
+
+/* ============================== LOGIN ============================== */
+function Login({users, onIn, toast}){
+  const [ident, setIdent] = useState(() => store.get('gh_last_ident',''));
+  const [pin, setPin] = useState('');
+  const [remember, setRemember] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const lock = store.get('gh_lock', null);
+  const [lockedUntil, setLockedUntil] = useState(lock && lock.until > Date.now() ? lock.until : 0);
+
+  useEffect(() => {
+    if(!lockedUntil) return;
+    const t = setInterval(() => { if(Date.now() >= lockedUntil){ setLockedUntil(0); store.del('gh_lock'); } }, 1000);
+    return () => clearInterval(t);
+  }, [lockedUntil]);
+
+  const fail = () => {
+    const rec = store.get('gh_attempts', { n:0 });
+    rec.n = (rec.n||0)+1;
+    store.set('gh_attempts', rec);
+    const left = CONFIG.MAX_ATTEMPTS - rec.n;
+    if(left <= 0){
+      const until = Date.now() + CONFIG.LOCKOUT_MINS*60000;
+      store.set('gh_lock', { until }); store.set('gh_attempts', { n:0 }); setLockedUntil(until);
+      toast('Too many attempts. Locked for '+CONFIG.LOCKOUT_MINS+' minutes.');
+    } else {
+      toast('That did not match. '+left+' '+(left===1?'try':'tries')+' left before the app locks.');
+    }
+  };
+
+  const go = async () => {
+    if(lockedUntil) return;
+    setBusy(true);
+    const key = String(ident).trim().toLowerCase();
+    const u = users.find(x => x.active && (x.code.toLowerCase()===key || x.email.toLowerCase()===key || x.id.toLowerCase()===key));
+    const hash = await hashPin(pin);
+    let ok = false, user = null, token = '';
+    if(CONFIG.API_URL){
+      const r = await api('login', { ident:key, pinHash:hash, remember });
+      ok = !!(r && r.ok); user = r && r.user; token = (r && r.token) || '';
+      if(!ok && r && r.error) toast(r.error);
+    } else {
+      ok = !!u && (await hashPin(u.pin)) === hash;
+      user = u; token = ok ? uid('TK') : '';
+    }
+    setBusy(false);
+    if(!ok){ if(!CONFIG.API_URL) fail(); setPin(''); return; }
+    store.set('gh_attempts', { n:0 });
+    store.set('gh_last_ident', ident);
+    if(remember){ store.set('gh_token', token); store.set('gh_device', { userId:user.id, until: Date.now()+CONFIG.DEVICE_DAYS*86400000 }); }
+    onIn(user);
+  };
+
+  const mins = lockedUntil ? Math.ceil((lockedUntil-Date.now())/60000) : 0;
+
+  return (
+    <div className="min-h-screen bg-ink flex items-center justify-center p-5">
+      <div className="w-full max-w-sm">
+        <div className="flex justify-center mb-8"><Logo h="h-24" /></div>
+        <div className="card p-7">
+          <div className="rule mb-5">
+            <div className="text-[.68rem] font-semibold tracking-[.14em] uppercase text-gold">Staff portal</div>
+            <h1 className="text-2xl font-semibold text-ink mt-1">Sign in</h1>
+          </div>
+          {lockedUntil ? (
+            <div className="text-center py-6">
+              <p className="text-fail font-semibold">Locked for {mins} more {mins===1?'minute':'minutes'}.</p>
+              <p className="text-sm text-mute mt-2">Ring the office on {CONFIG.PHONE} if you are stuck.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Field label="Staff name or email">
+                <input className="fld" autoComplete="username" value={ident} onChange={e => setIdent(e.target.value)} placeholder="declan" />
+              </Field>
+              <Field label="PIN">
+                <input className="fld tracking-[.5em] text-center text-lg" type="password" inputMode="numeric" maxLength="6"
+                  autoComplete="current-password" value={pin}
+                  onChange={e => setPin(e.target.value.replace(/\D/g,''))}
+                  onKeyDown={e => { if(e.key==='Enter') go(); }} placeholder="0000" />
+              </Field>
+              <label className="flex items-center gap-3 text-sm text-inksoft">
+                <input type="checkbox" className="w-5 h-5 accent-[#C9A063]" checked={remember} onChange={e => setRemember(e.target.checked)} />
+                Keep me signed in on this phone
+              </label>
+              <Btn className="w-full" onClick={go} disabled={busy || !ident || pin.length < 4}>{busy ? 'Checking' : 'Sign in'}</Btn>
+              {!CONFIG.API_URL && <p className="text-xs text-mute text-center pt-1">Demo: declan, aoife, tomasz, sinead or admin. PIN 1234.</p>}
+            </div>
+          )}
+        </div>
+        <p className="text-center text-white/40 text-xs mt-6">Built by Protech Dynamic Solutions Ltd.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== DASHBOARD ============================== */
+function Dashboard({me, isOffice, users, sheets, leave, jobs, jobSheets, tests, go}){
+  const thisMon = iso(weekStart(new Date()));
+  const pendingSheets = sheets.filter(s => s.status==='Submitted');
+  const pendingLeave = leave.filter(l => l.status==='Pending');
+  const certsOut = leave.filter(l => l.type==='Sick leave' && !l.certUrl && l.status!=='Declined').length
+    + sheets.reduce((a,s) => a + s.days.filter(d => d.type==='Sick leave' && !d.certReceived).length, 0);
+  const weekHours = sheets.filter(s => s.weekStart===thisMon)
+    .reduce((a,s) => a + s.days.reduce((b,d) => b + (d.entries||[]).reduce((c,e) => c+hoursWorked(e.start,e.finish,e.brk), 0), 0), 0);
+  const offNow = leave.filter(l => l.status==='Approved' && l.end >= iso(new Date()) && l.start <= iso(addDays(new Date(),7)));
+  const materials = jobSheets.reduce((a,s) => a + (s.total||0), 0);
+
+  if(!isOffice){
+    const my = sheets.find(s => s.staffId===me.id && s.weekStart===thisMon);
+    const myHours = my ? my.days.reduce((a,d) => a + (d.entries||[]).reduce((b,e) => b+hoursWorked(e.start,e.finish,e.brk),0), 0) : 0;
+    const myLeave = leave.filter(l => l.staffId===me.id && l.type==='Annual leave' && l.status==='Approved').reduce((a,l) => a+l.days, 0);
+    return (
+      <Section kicker="This week" title="Where you stand">
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <Stat label="Hours logged" value={myHours.toFixed(1)} sub={'of '+CONFIG.STANDARD_WEEK+' h'} onClick={() => go('time')} />
+          <Stat label="Leave left" value={(me.entitlement||CONFIG.ANNUAL_ENTITLEMENT)-myLeave} sub="days" onClick={() => go('leave')} />
+          <Stat label="Open jobs" value={jobs.filter(j => j.status==='Open').length} sub="on the board" onClick={() => go('jobs')} />
+          <Stat label="Week status" value={my ? my.status : 'Draft'} sub={my && my.approver ? 'by '+my.approver : 'not sent yet'} text />
+        </div>
+        <div className="card p-5">
+          <div className="lbl">Open jobs</div>
+          <div className="space-y-2 mt-2">
+            {jobs.filter(j => j.status==='Open').map(j => (
+              <button key={j.id} onClick={() => go('jobs')} className="w-full text-left flex justify-between gap-3 py-2 border-b border-line last:border-0">
+                <span><span className="font-display font-semibold text-ink">{j.id}</span><span className="block text-sm text-mute">{j.site}</span></span>
+                <Badge status={j.status} />
+              </button>
+            ))}
+          </div>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <div>
+      <Section kicker="Office" title="Dashboard">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Stat label="Timesheets to approve" value={pendingSheets.length} sub={pendingSheets.length? 'waiting on you':'all clear'} onClick={() => go('time')} />
+          <Stat label="Leave to approve" value={pendingLeave.length} sub={pendingLeave.length? 'waiting on you':'all clear'} onClick={() => go('leave')} />
+          <Stat label="Certs outstanding" value={certsOut} sub={certsOut? 'chase before payroll':'certs in order'} warn={certsOut>0} />
+          <Stat label="Hours this week" value={weekHours.toFixed(1)} sub={'across '+users.filter(u => u.active && u.role==='Technician').length+' techs'} />
+        </div>
+      </Section>
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-8">
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="lbl mb-0">Off in the next week</div>
+            <button onClick={() => go('leave')} className="text-xs font-semibold text-gold">Open leave</button>
+          </div>
+          {offNow.length===0 ? <p className="text-sm text-mute">Everyone is in.</p> :
+            <ul className="text-sm space-y-2">
+              {offNow.map(l => <li key={l.id} className="flex justify-between border-b border-line pb-2 last:border-0">
+                <span className="font-semibold">{l.name}</span>
+                <span className="text-mute">{fmt(l.start)} to {fmt(l.end)}</span></li>)}
+            </ul>}
+        </div>
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="lbl mb-0">Materials booked out</div>
+            <button onClick={() => go('jobs')} className="text-xs font-semibold text-gold">Open jobs</button>
+          </div>
+          <div className="font-display text-3xl font-semibold text-ink">{eur(materials)}</div>
+          <p className="text-xs text-mute mt-1">{jobSheets.length} job {jobSheets.length===1?'sheet':'sheets'} logged</p>
+        </div>
+      </div>
+
+      <Section kicker="Live" title="Jobs on the board" right={<Btn kind="ghost" onClick={() => go('jobs')}>Manage jobs</Btn>}>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {jobs.map(j => (
+            <div key={j.id} className="card p-5">
+              <div className="flex justify-between items-start gap-2 mb-1">
+                <span className="font-display font-semibold text-ink">{j.id}</span><Badge status={j.status} />
+              </div>
+              <div className="text-sm text-inksoft">{j.site}</div>
+              <div className="text-xs text-mute mt-2">{j.client}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+/* ============================== TIMESHEETS ============================== */
+function Timesheets({me, isOffice, sheets, setSheets, jobs, toast}){
+  const [mode, setMode] = useState(() => store.get('gh_tsmode','job'));
+  const [monday, setMonday] = useState(() => iso(weekStart(new Date())));
+  const [dayFocus, setDayFocus] = useState(() => iso(new Date()));
+  const [editing, setEditing] = useState(null);   // { dayIndex, entry, isNew }
+  const [review, setReview] = useState(null);
+  useEffect(() => store.set('gh_tsmode', mode), [mode]);
+
+  const blankDays = m => Array.from({length:7}, (_,i) => {
+    const d = addDays(parse(m),i), w = d.getDay();
+    return { date: iso(d), type: (w===0||w===6)?'Day off':'Worked', entries:[], notes:'', certUrl:'', certReceived:false };
+  });
+
+  const findSheet = m => sheets.find(s => s.staffId===me.id && s.weekStart===m);
+  const [draft, setDraft] = useState(() => {
+    const f = findSheet(iso(weekStart(new Date())));
+    return f ? JSON.parse(JSON.stringify(f)) : { id:uid('TS'), staffId:me.id, name:me.name, weekStart:iso(weekStart(new Date())), days:blankDays(iso(weekStart(new Date()))), status:'Draft', approver:'', comment:'' };
+  });
+
+  useEffect(() => {
+    const f = findSheet(monday);
+    setDraft(f ? JSON.parse(JSON.stringify(f)) : { id:uid('TS'), staffId:me.id, name:me.name, weekStart:monday, days:blankDays(monday), status:'Draft', approver:'', comment:'' });
+  }, [monday, me.id, sheets]);
+
+  useEffect(() => {  // keep the focused day inside the shown week
+    const m = iso(weekStart(parse(dayFocus)));
+    if(m !== monday) setMonday(m);
+  }, [dayFocus]);
+
+  const locked = draft.status==='Approved' || draft.status==='Submitted';
+  const setDay = (i, patch) => setDraft(d => { const days = d.days.slice(); days[i] = {...days[i], ...patch}; return {...d, days}; });
+  const dayIndex = date => draft.days.findIndex(d => d.date===date);
+  const dayHours = d => (d.entries||[]).reduce((a,e) => a+hoursWorked(e.start,e.finish,e.brk), 0);
+
+  const totals = useMemo(() => {
+    let worked = 0, al = 0, sick = 0, ph = 0, unpaid = 0, cert = 0;
+    draft.days.forEach(d => {
+      worked += dayHours(d);
+      if(d.type==='Annual leave') al++;
+      if(d.type==='Public holiday') ph++;
+      if(d.type==='Unpaid leave') unpaid++;
+      if(d.type==='Sick leave'){ sick++; if(!d.certReceived) cert++; }
+    });
+    worked = Math.round(worked*10)/10;
+    return { worked, al, sick, ph, unpaid, cert, ot: Math.max(0, Math.round((worked-CONFIG.STANDARD_WEEK)*10)/10) };
+  }, [draft]);
+
+  /* new entry starts where the last one finished */
+  const openEntry = (date, entry) => {
+    let i = dayIndex(date);
+    if(i < 0){ toast('That day is outside the week you are looking at.'); return; }
+    if(entry) return setEditing({ i, entry: {...entry}, isNew:false });
+    const list = draft.days[i].entries || [];
+    const last = list[list.length-1];
+    setEditing({ i, isNew:true, entry:{ id:uid('E'), jobId:'', site:'', task:'', start: last ? last.finish : '08:00', finish:'', brk:0, notes:'' } });
+  };
+  const saveEntry = () => {
+    const { i, entry, isNew } = editing;
+    if(!entry.jobId && !entry.site) return toast('Pick a job or type where you were.');
+    if(!entry.start || !entry.finish) return toast('Both a start and a finish time are needed.');
+    setDraft(d => {
+      const days = d.days.slice();
+      const list = (days[i].entries||[]).slice();
+      const at = list.findIndex(x => x.id===entry.id);
+      if(at >= 0) list[at] = entry; else list.push(entry);
+      list.sort((a,b) => (a.start||'').localeCompare(b.start||''));
+      days[i] = {...days[i], entries:list, type: days[i].type==='Day off' && list.length ? 'Worked' : days[i].type };
+      return {...d, days};
+    });
+    setEditing(null);
+    toast(isNew ? 'Job logged.' : 'Entry updated.');
+  };
+  const dropEntry = (i, id) => setDraft(d => { const days = d.days.slice(); days[i] = {...days[i], entries: days[i].entries.filter(e => e.id!==id)}; return {...d, days}; });
+
+  const attachCert = async (i, file) => {
+    if(!file) return;
+    try {
+      const data = file.type.startsWith('image/') ? await shrinkImage(file,1600,0.7) : await readAsDataUrl(file);
+      let url = data;
+      const r = await api('upload', { folder:'Sick certs', name: me.name+' '+draft.days[i].date+'.jpg', data });
+      if(r && r.url) url = r.url;
+      setDay(i, { certUrl:url, certReceived:true });
+      toast('Cert attached.');
+    } catch(err){ toast(err.message); }
+  };
+
+  const save = async status => {
+    if(status==='Submitted'){
+      const bad = draft.days.some(d => (d.entries||[]).some(e => !e.jobId && !e.site));
+      if(bad) return toast('Every entry needs a job before the week goes in.');
+    }
+    const rec = {...draft, status, submittedAt: iso(new Date())};
+    setSheets(list => { const i = list.findIndex(s => s.id===rec.id); const out = list.slice(); if(i>=0) out[i]=rec; else out.push(rec); return out; });
+    await api('saveTimesheet', rec);
+    toast(status==='Submitted' ? 'Week sent to the office.' : 'Saved.');
+  };
+  const decide = async (sheet, status) => {
+    const rec = {...sheet, status, approver: me.name, decidedAt: iso(new Date())};
+    setSheets(list => list.map(s => s.id===rec.id ? rec : s));
+    await api('saveTimesheet', rec);
+    setReview(null);
+    toast(status==='Approved' ? sheet.name+"'s week approved." : 'Sent back to '+sheet.name+'.');
+  };
+
+  const jobLabel = e => { const j = jobs.find(x => x.id===e.jobId); return j ? j.id+', '+j.site : (e.site||'No job'); };
+
+  const DayCard = ({d, i, open}) => (
+    <div className={'card p-4 sm:p-5 '+(DAY_TINT[d.type]||'bg-white')}>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-[5.5rem]">
+          <div className="font-display font-semibold text-ink leading-none">{DAYS[parse(d.date).getDay()].slice(0,3)}</div>
+          <div className="text-xs text-mute mt-1">{fmt(d.date).slice(0,5)}</div>
+        </div>
+        <select className="fld flex-1 min-w-[9rem]" value={d.type} disabled={locked} onChange={e => setDay(i,{type:e.target.value})}>
+          {LEAVE_TYPES.map(t => <option key={t}>{t}</option>)}
+        </select>
+        <div className="font-display font-semibold text-ink text-lg tabular-nums w-16 text-right">
+          {dayHours(d).toFixed(1)}<span className="text-xs text-mute ml-1">h</span>
+        </div>
+      </div>
+
+      {open && d.type==='Worked' && (
+        <div className="mt-4 space-y-2">
+          {(d.entries||[]).map(e => (
+            <div key={e.id} className="flex items-center gap-3 bg-paper rounded-2xl px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm text-ink truncate">{jobLabel(e)}</div>
+                <div className="text-xs text-mute">{e.start} to {e.finish}{e.brk>0 ? ', break '+e.brk+' min':''}{e.task ? ' \u00B7 '+e.task : ''}</div>
+              </div>
+              <div className="font-display font-semibold text-sm tabular-nums">{hoursWorked(e.start,e.finish,e.brk).toFixed(1)}h</div>
+              {!locked && <>
+                <button onClick={() => openEntry(d.date, e)} className="text-xs font-semibold text-gold">Edit</button>
+                <button onClick={() => dropEntry(i, e.id)} className="text-xs text-mute hover:text-fail">&times;</button>
+              </>}
+            </div>
+          ))}
+          {!locked && (
+            <button onClick={() => openEntry(d.date)} className="w-full py-3 rounded-2xl border-2 border-dashed border-line text-sm font-semibold text-mute hover:border-gold hover:text-ink">
+              + Add job {(d.entries||[]).length ? 'from '+d.entries[d.entries.length-1].finish : ''}
+            </button>
+          )}
+        </div>
+      )}
+
+      {open && d.type==='Sick leave' && (
+        <div className="mt-4">
+          <Field label="Doctor's cert" hint={'Needed from sick day '+CONFIG.CERT_REQUIRED_FROM_DAY+' onwards.'}>
+            {d.certUrl
+              ? <div className="flex items-center gap-3">
+                  <span className="pill px-3 py-1 text-xs font-semibold bg-[#E8F1EC] text-pass">Cert on file</span>
+                  <a href={d.certUrl} target="_blank" rel="noopener" className="text-xs font-semibold text-gold underline">View</a>
+                  {!locked && <button className="text-xs text-mute hover:text-fail" onClick={() => setDay(i,{certUrl:'',certReceived:false})}>Remove</button>}
+                </div>
+              : <label className="inline-flex items-center gap-2 pill bg-white border border-line px-4 py-2.5 text-sm font-semibold cursor-pointer hover:border-gold">
+                  Attach cert
+                  <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" disabled={locked} onChange={e => attachCert(i, e.target.files[0])} />
+                </label>}
+          </Field>
+        </div>
+      )}
+    </div>
+  );
+
+  const focusIdx = dayIndex(dayFocus);
+  const queue = sheets.filter(s => s.status==='Submitted');
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[['job','After each job'],['day','Fill a day'],['week','Fill the week']].map(m => (
+          <button key={m[0]} onClick={() => setMode(m[0])}
+            className={'pill px-5 py-2.5 text-sm font-display font-semibold border transition '+(mode===m[0]?'bg-ink text-white border-ink':'bg-white text-inksoft border-line hover:border-gold')}>{m[1]}</button>
+        ))}
+      </div>
+
+      {mode==='job' && (
+        <Section kicker={fmtLong(dayFocus)} title="Log a job"
+          right={<input type="date" className="fld !w-auto" value={dayFocus} onChange={e => setDayFocus(e.target.value)} />}>
+          {focusIdx >= 0 ? <DayCard d={draft.days[focusIdx]} i={focusIdx} open={true} /> : <Empty line="Pick a date to log against." />}
+          <p className="text-xs text-mute mt-3">Each new job starts where the last one finished, so a full day is a few taps.</p>
+        </Section>
+      )}
+
+      {mode==='day' && (
+        <Section kicker="One day at a time" title={fmtLong(dayFocus)}
+          right={<div className="flex gap-2">
+            <button onClick={() => setDayFocus(iso(addDays(parse(dayFocus),-1)))} className="w-11 h-11 pill bg-white border border-line hover:border-gold">&#8592;</button>
+            <button onClick={() => setDayFocus(iso(addDays(parse(dayFocus),1)))} className="w-11 h-11 pill bg-white border border-line hover:border-gold">&#8594;</button>
+          </div>}>
+          {focusIdx >= 0 && <DayCard d={draft.days[focusIdx]} i={focusIdx} open={true} />}
+        </Section>
+      )}
+
+      {mode==='week' && (
+        <Section kicker="Week ending" title={fmt(iso(addDays(parse(monday),6)))}
+          right={<div className="flex gap-2">
+            <button onClick={() => setMonday(iso(addDays(parse(monday),-7)))} className="w-11 h-11 pill bg-white border border-line hover:border-gold">&#8592;</button>
+            <button onClick={() => setMonday(iso(addDays(parse(monday),7)))} className="w-11 h-11 pill bg-white border border-line hover:border-gold">&#8594;</button>
+          </div>}>
+          <div className="space-y-3">{draft.days.map((d,i) => <DayCard key={d.date} d={d} i={i} open={true} />)}</div>
+        </Section>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <Stat label="Hours this week" value={totals.worked} sub={totals.ot>0 ? totals.ot+' h overtime' : 'within '+CONFIG.STANDARD_WEEK+' h'} />
+        <Stat label="Annual leave" value={totals.al} sub="days" />
+        <Stat label="Sick leave" value={totals.sick} sub={totals.cert ? totals.cert+' cert outstanding' : 'certs in order'} warn={totals.cert>0} />
+        <Stat label="Week status" value={draft.status} sub={draft.approver ? 'by '+draft.approver : 'not sent yet'} text />
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-10">
+        {!locked && <Btn kind="ghost" onClick={() => save('Draft')}>Save</Btn>}
+        {!locked && <Btn onClick={() => save('Submitted')}>Send week for approval &#8594;</Btn>}
+        {draft.status==='Submitted' && !isOffice && <Btn kind="ghost" onClick={() => save('Draft')}>Pull back and edit</Btn>}
+        {draft.status==='Approved' && <span className="text-sm text-mute self-center">Approved by {draft.approver}. Locked for payroll.</span>}
+      </div>
+
+      {isOffice && (
+        <Section kicker="Office" title="Timesheets waiting on you">
+          {queue.length===0 ? <Empty line="Nothing to approve. Submitted weeks land here." /> :
+            <div className="space-y-3">
+              {queue.map(s => {
+                const h = s.days.reduce((a,d) => a + (d.entries||[]).reduce((b,e) => b+hoursWorked(e.start,e.finish,e.brk),0), 0);
+                const al = s.days.filter(d => d.type==='Annual leave').length;
+                const sl = s.days.filter(d => d.type==='Sick leave').length;
+                const nc = s.days.filter(d => d.type==='Sick leave' && !d.certReceived).length;
+                return (
+                  <button key={s.id} onClick={() => setReview(s)} className="card w-full text-left p-5 hover:border-gold">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="font-display font-semibold text-ink">{s.name}</div>
+                        <div className="text-sm text-mute">Week ending {fmt(iso(addDays(parse(s.weekStart),6)))}</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="font-display font-semibold">{h.toFixed(1)} h</span>
+                        {al>0 && <span className="pill px-3 py-1 bg-goldsoft text-golddeep text-xs font-semibold">{al} AL</span>}
+                        {sl>0 && <span className="pill px-3 py-1 bg-[#FBE9E7] text-fail text-xs font-semibold">{sl} sick</span>}
+                        {nc>0 && <span className="pill px-3 py-1 bg-fail text-white text-xs font-semibold">{nc} cert missing</span>}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>}
+        </Section>
+      )}
+
+      <Modal open={!!editing} onClose={() => setEditing(null)} title={editing && editing.isNew ? 'Log a job' : 'Edit entry'}>
+        {editing && (
+          <div className="space-y-4">
+            <Field label="Job">
+              <select className="fld" value={editing.entry.jobId}
+                onChange={e => { const j = jobs.find(x => x.id===e.target.value);
+                  setEditing({...editing, entry:{...editing.entry, jobId:e.target.value, site: j ? j.site : editing.entry.site}}); }}>
+                <option value="">Not on the job list</option>
+                {jobs.filter(j => j.status!=='Invoiced').map(j => <option key={j.id} value={j.id}>{j.id+' \u00B7 '+j.site}</option>)}
+              </select>
+            </Field>
+            {!editing.entry.jobId &&
+              <Field label="Where were you"><input className="fld" value={editing.entry.site} onChange={e => setEditing({...editing, entry:{...editing.entry, site:e.target.value}})} placeholder="Address or yard" /></Field>}
+            <Field label="What you did"><input className="fld" value={editing.entry.task} onChange={e => setEditing({...editing, entry:{...editing.entry, task:e.target.value}})} placeholder="Second fix, service call, collection" /></Field>
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Start"><input type="time" className="fld" value={editing.entry.start} onChange={e => setEditing({...editing, entry:{...editing.entry, start:e.target.value}})} /></Field>
+              <Field label="Finish"><input type="time" className="fld" value={editing.entry.finish} onChange={e => setEditing({...editing, entry:{...editing.entry, finish:e.target.value}})} /></Field>
+              <Field label="Break, min"><input type="number" min="0" step="15" className="fld" value={editing.entry.brk} onChange={e => setEditing({...editing, entry:{...editing.entry, brk:e.target.value}})} /></Field>
+            </div>
+            <div className="pill bg-paper px-4 py-3 text-sm">
+              <strong className="font-display">{hoursWorked(editing.entry.start, editing.entry.finish, editing.entry.brk).toFixed(1)} hours</strong>
+              <span className="text-mute"> on this entry</span>
+            </div>
+            <Field label="Notes"><textarea className="fld" rows="2" value={editing.entry.notes} onChange={e => setEditing({...editing, entry:{...editing.entry, notes:e.target.value}})} placeholder="Parts needed, return visit, anything the office should know" /></Field>
+            <div className="flex gap-3"><Btn onClick={saveEntry}>Save entry</Btn><Btn kind="quiet" onClick={() => setEditing(null)}>Cancel</Btn></div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!review} onClose={() => setReview(null)} wide title={review ? review.name+', week ending '+fmt(iso(addDays(parse(review.weekStart),6))) : ''}>
+        {review && (
+          <div>
+            <div className="space-y-3">
+              {review.days.filter(d => d.type!=='Day off' || (d.entries||[]).length).map(d => (
+                <div key={d.date} className={'rounded-2xl p-4 '+(DAY_TINT[d.type]||'bg-white')}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-display font-semibold">{fmtLong(d.date)}</span>
+                    <span className="text-sm">{d.type}
+                      {d.type==='Sick leave' && (d.certReceived
+                        ? <span className="ml-2 text-xs text-pass font-semibold">cert on file</span>
+                        : <span className="ml-2 text-xs text-fail font-semibold">no cert</span>)}
+                    </span>
+                  </div>
+                  {(d.entries||[]).map(e => (
+                    <div key={e.id} className="flex justify-between text-sm text-inksoft mt-2 border-t border-line pt-2">
+                      <span>{jobLabel(e)} <span className="text-mute">{e.start} to {e.finish}</span></span>
+                      <span className="tabular-nums">{hoursWorked(e.start,e.finish,e.brk).toFixed(1)}h</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Btn onClick={() => decide(review,'Approved')}>Approve</Btn>
+              <Btn kind="danger" onClick={() => decide(review,'Draft')}>Send back</Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+/* ============================== LEAVE ============================== */
+function LeaveModule({me, isOffice, leave, setLeave, toast}){
+  const [open, setOpen] = useState(false);
+  const [decide, setDecide] = useState(null);
+  const [comment, setComment] = useState('');
+  const [form, setForm] = useState({ type:'Annual leave', start:iso(new Date()), end:iso(new Date()), halfDay:false, reason:'', certUrl:'' });
+
+  const mine = leave.filter(l => l.staffId===me.id).sort((a,b) => b.start.localeCompare(a.start));
+  const ent = me.entitlement || CONFIG.ANNUAL_ENTITLEMENT;
+  const taken = mine.filter(l => l.type==='Annual leave' && l.status==='Approved').reduce((a,l) => a+l.days,0);
+  const pend = mine.filter(l => l.type==='Annual leave' && l.status==='Pending').reduce((a,l) => a+l.days,0);
+  const sick = mine.filter(l => l.type==='Sick leave' && l.status!=='Declined').reduce((a,l) => a+l.days,0);
+  const remaining = ent - taken - pend;
+  const days = form.halfDay ? 0.5 : workingDaysBetween(form.start, form.end);
+  const clashes = useMemo(() => !decide ? [] : leave.filter(l => l.id!==decide.id && l.status==='Approved' && l.staffId!==decide.staffId && !(l.end<decide.start || l.start>decide.end)), [decide, leave]);
+
+  const attachCert = async file => {
+    if(!file) return;
+    try {
+      const data = file.type.startsWith('image/') ? await shrinkImage(file,1600,0.7) : await readAsDataUrl(file);
+      let url = data;
+      const r = await api('upload', { folder:'Sick certs', name: me.name+' cert '+form.start+'.jpg', data });
+      if(r && r.url) url = r.url;
+      setForm(f => ({...f, certUrl:url})); toast('Cert attached.');
+    } catch(err){ toast(err.message); }
+  };
+  const submit = async () => {
+    if(form.end < form.start) return toast('The end date is before the start date.');
+    if(days <= 0) return toast('Those dates land on a weekend. Pick working days.');
+    if(form.type==='Annual leave' && days > remaining) return toast('That is '+days+' days and only '+remaining+' remain.');
+    const rec = { id:uid('LV'), staffId:me.id, name:me.name, type:form.type, start:form.start, end:form.end, days,
+      reason:form.reason, certUrl:form.certUrl, certReceived:!!form.certUrl, status:'Pending', approver:'', comment:'', raisedAt:iso(new Date()) };
+    setLeave(l => [rec, ...l]);
+    await api('saveLeave', rec);
+    setOpen(false);
+    setForm({ type:'Annual leave', start:iso(new Date()), end:iso(new Date()), halfDay:false, reason:'', certUrl:'' });
+    toast('Request sent to the office.');
+  };
+  const settle = async status => {
+    const rec = {...decide, status, approver:me.name, comment, decidedAt:iso(new Date())};
+    setLeave(list => list.map(l => l.id===rec.id ? rec : l));
+    await api('decideLeave', rec);
+    setDecide(null); setComment('');
+    toast(status==='Approved' ? 'Approved.' : 'Declined with a note.');
+  };
+  const queue = leave.filter(l => l.status==='Pending');
+
+  return (
+    <div>
+      <Section kicker="Leave year" title="Your balance" right={<Btn onClick={() => setOpen(true)}>Request leave &#8594;</Btn>}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Stat label="Entitlement" value={ent} sub="days" />
+          <Stat label="Taken" value={taken} sub="approved" />
+          <Stat label="Pending" value={pend} sub="with the office" />
+          <Stat label="Remaining" value={remaining} sub={'sick days used '+sick+' of '+CONFIG.PAID_SICK_DAYS} warn={remaining<0} />
+        </div>
+      </Section>
+
+      <Section kicker="History" title="Your requests">
+        {mine.length===0 ? <Empty line="No requests yet." /> :
+          <div className="space-y-3">{mine.map(l => (
+            <div key={l.id} className="card p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="font-display font-semibold text-ink">{l.type}</div>
+                  <div className="text-sm text-mute mt-0.5">{fmt(l.start)}{l.start!==l.end?' to '+fmt(l.end):''} &middot; {l.days} {l.days===1?'day':'days'}</div>
+                  {l.reason && <div className="text-sm text-inksoft mt-2">{l.reason}</div>}
+                  {l.comment && <div className="text-sm text-mute mt-2 italic">Office: {l.comment}</div>}
+                  {l.type==='Sick leave' && (l.certUrl
+                    ? <a href={l.certUrl} target="_blank" rel="noopener" className="inline-block mt-2 text-xs font-semibold text-gold underline">Cert attached</a>
+                    : <div className="mt-2 text-xs font-semibold text-fail">Cert outstanding</div>)}
+                </div>
+                <Badge status={l.status} />
+              </div>
+            </div>))}
+          </div>}
+      </Section>
+
+      {isOffice && (
+        <Section kicker="Office" title="Requests waiting on you">
+          {queue.length===0 ? <Empty line="Nothing pending." /> :
+            <div className="space-y-3">{queue.map(l => (
+              <button key={l.id} onClick={() => { setDecide(l); setComment(''); }} className="card w-full text-left p-5 hover:border-gold">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="font-display font-semibold text-ink">{l.name}</div>
+                    <div className="text-sm text-mute">{l.type} &middot; {fmt(l.start)}{l.start!==l.end?' to '+fmt(l.end):''} &middot; {l.days}d</div>
+                  </div>
+                  {l.type==='Sick leave' && !l.certUrl
+                    ? <span className="pill px-3 py-1 bg-fail text-white text-xs font-semibold">No cert</span>
+                    : <Badge status="Pending" />}
+                </div>
+              </button>))}
+            </div>}
+        </Section>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Request leave">
+        <div className="space-y-4">
+          <Field label="Type">
+            <select className="fld" value={form.type} onChange={e => setForm({...form, type:e.target.value})}>
+              {['Annual leave','Sick leave','Unpaid leave','Parental leave','Force majeure'].map(t => <option key={t}>{t}</option>)}
+            </select>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="From"><input type="date" className="fld" value={form.start} onChange={e => setForm({...form, start:e.target.value, end: e.target.value>form.end ? e.target.value : form.end})} /></Field>
+            <Field label="To"><input type="date" className="fld" value={form.end} onChange={e => setForm({...form, end:e.target.value})} /></Field>
+          </div>
+          <label className="flex items-center gap-3 text-sm text-inksoft">
+            <input type="checkbox" className="w-5 h-5 accent-[#C9A063]" checked={form.halfDay} onChange={e => setForm({...form, halfDay:e.target.checked, end: e.target.checked ? form.start : form.end})} />
+            Half day only
+          </label>
+          <div className="pill bg-paper px-4 py-3 text-sm text-inksoft">
+            <strong className="font-display">{days}</strong> working {days===1?'day':'days'}
+            {form.type==='Annual leave' && <span className="text-mute"> &middot; {remaining-days} would remain</span>}
+          </div>
+          {form.type==='Sick leave' && (
+            <Field label="Doctor's cert" hint="Attach it now or the office will chase it.">
+              {form.certUrl ? <span className="pill px-3 py-1 text-xs font-semibold bg-[#E8F1EC] text-pass">Cert attached</span>
+                : <label className="inline-flex items-center gap-2 pill bg-white border border-line px-4 py-2.5 text-sm font-semibold cursor-pointer hover:border-gold">
+                    Attach cert<input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" onChange={e => attachCert(e.target.files[0])} /></label>}
+            </Field>
+          )}
+          <Field label="Reason, optional"><textarea className="fld" rows="3" value={form.reason} onChange={e => setForm({...form, reason:e.target.value})} /></Field>
+          <div className="flex gap-3 pt-2"><Btn onClick={submit}>Send request</Btn><Btn kind="quiet" onClick={() => setOpen(false)}>Cancel</Btn></div>
+        </div>
+      </Modal>
+
+      <Modal open={!!decide} onClose={() => setDecide(null)} title={decide ? decide.name+', '+decide.type : ''}>
+        {decide && (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-paper p-4">
+              <div className="text-sm text-inksoft">{fmt(decide.start)}{decide.start!==decide.end?' to '+fmt(decide.end):''} &middot; {decide.days} {decide.days===1?'day':'days'}</div>
+              {decide.reason && <div className="text-sm text-mute mt-2">{decide.reason}</div>}
+              {decide.type==='Sick leave' && (decide.certUrl
+                ? <a href={decide.certUrl} target="_blank" rel="noopener" className="inline-block mt-2 text-xs font-semibold text-gold underline">View cert</a>
+                : <div className="mt-2 text-xs font-semibold text-fail">No cert on file. Chase before payroll.</div>)}
+            </div>
+            <div>
+              <span className="lbl">Cover check</span>
+              {clashes.length===0 ? <p className="text-sm text-pass">Nobody else is off across those dates.</p>
+                : <ul className="text-sm text-fail space-y-1">{clashes.map(c => <li key={c.id}>{c.name} is off {fmt(c.start)} to {fmt(c.end)}</li>)}</ul>}
+            </div>
+            <Field label="Note back to them, optional"><input className="fld" value={comment} onChange={e => setComment(e.target.value)} /></Field>
+            <div className="flex gap-3 pt-1"><Btn onClick={() => settle('Approved')}>Approve</Btn><Btn kind="danger" onClick={() => settle('Declined')}>Decline</Btn></div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+/* ============================== JOBS AND JOB SHEETS ============================== */
+function Jobs({me, isOffice, jobs, setJobs, jobSheets, setJobSheets, products, setProducts, toast}){
+  const [tab, setTab] = useState('board');
+  const [jobForm, setJobForm] = useState(null);
+  const [sheet, setSheet] = useState(null);       // job sheet being filled
+  const [picker, setPicker] = useState(false);
+  const [q, setQ] = useState('');
+
+  const nextJobId = () => {
+    const yr = new Date().getFullYear();
+    const nums = jobs.map(j => Number(String(j.id).split('-')[2]||0)).filter(n => !isNaN(n));
+    return CONFIG.JOB_PREFIX+'-'+yr+'-'+pad(Math.max(0,...nums)+1);
+  };
+
+  const saveJob = async () => {
+    if(!jobForm.client || !jobForm.site) return toast('A client and a site are needed on every job.');
+    const rec = {...jobForm};
+    setJobs(list => { const i = list.findIndex(j => j.id===rec.id); const out = list.slice(); if(i>=0) out[i]=rec; else out.unshift(rec); return out; });
+    await api('saveJob', rec);
+    setJobForm(null); toast('Job '+rec.id+' saved.');
+  };
+
+  const newSheet = job => setSheet({ id:uid('JS'), jobId:job.id, staffId:me.id, name:me.name, date:iso(new Date()), lines:[], notes:'', status:'Draft' });
+  const addLine = p => {
+    setSheet(s => ({...s, lines:[...s.lines, { key:uid('L'), pid:p.pid, code:p.code, desc:p.desc, size:p.size, qtyOut:1, qtyBack:0, price:p.price }]}));
+    setPicker(false); setQ('');
+  };
+  const setLine = (key, patch) => setSheet(s => ({...s, lines: s.lines.map(l => l.key===key ? {...l, ...patch} : l)}));
+  const lineTotal = l => ((Number(l.qtyOut)||0) - (Number(l.qtyBack)||0)) * (Number(l.price)||0);
+  const sheetTotal = sheet ? sheet.lines.reduce((a,l) => a+lineTotal(l), 0) : 0;
+
+  const saveSheet = async status => {
+    if(!sheet.lines.length) return toast('Add at least one item before saving.');
+    const rec = {...sheet, status, total: Math.round(sheetTotal*100)/100 };
+    setJobSheets(list => { const i = list.findIndex(s => s.id===rec.id); const out = list.slice(); if(i>=0) out[i]=rec; else out.unshift(rec); return out; });
+    if(status==='Submitted'){
+      setProducts(list => list.map(p => {
+        const used = rec.lines.filter(l => l.pid===p.pid).reduce((a,l) => a+((Number(l.qtyOut)||0)-(Number(l.qtyBack)||0)), 0);
+        return used ? {...p, stock: (Number(p.stock)||0) - used} : p;
+      }));
+    }
+    await api('saveJobSheet', rec);
+    setSheet(null);
+    toast(status==='Submitted' ? 'Job sheet booked out. Stock adjusted.' : 'Draft saved.');
+  };
+
+  const results = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if(!t) return products.slice(0,40);
+    return products.filter(p =>
+      String(p.desc).toLowerCase().includes(t) || String(p.code).toLowerCase().includes(t) ||
+      String(p.size).toLowerCase().includes(t) || String(p.pid).toLowerCase()===t).slice(0,60);
+  }, [q, products]);
+
+  const jobById = id => jobs.find(j => j.id===id);
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[['board','Job board'],['sheets','Job sheets']].map(t => (
+          <button key={t[0]} onClick={() => setTab(t[0])}
+            className={'pill px-5 py-2.5 text-sm font-display font-semibold border transition '+(tab===t[0]?'bg-ink text-white border-ink':'bg-white text-inksoft border-line hover:border-gold')}>{t[1]}</button>
+        ))}
+      </div>
+
+      {tab==='board' && (
+        <Section kicker="Register" title="Jobs"
+          right={isOffice ? <Btn onClick={() => setJobForm({ id:nextJobId(), client:'', site:'', address:'', contact:'', type:'', status:'Open', opened:iso(new Date()), notes:'' })}>New job &#8594;</Btn> : null}>
+          <div className="space-y-3">
+            {jobs.map(j => {
+              const mats = jobSheets.filter(s => s.jobId===j.id).reduce((a,s) => a+(s.total||0), 0);
+              return (
+                <div key={j.id} className="card p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-3">
+                        <span className="font-display font-semibold text-ink">{j.id}</span><Badge status={j.status} />
+                      </div>
+                      <div className="text-sm text-inksoft mt-1">{j.site}</div>
+                      <div className="text-xs text-mute mt-1">{j.client}{j.address ? ' \u00B7 '+j.address : ''}</div>
+                      {mats>0 && <div className="text-xs text-golddeep font-semibold mt-2">Materials {eur(mats)}</div>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Btn kind="ghost" className="!px-4 !py-2 !text-sm" onClick={() => newSheet(j)}>Job sheet</Btn>
+                      {isOffice && <Btn kind="quiet" className="!px-3 !py-2 !text-sm" onClick={() => setJobForm({...j})}>Edit</Btn>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      {tab==='sheets' && (
+        <Section kicker="Materials" title="Job sheets">
+          {jobSheets.length===0 ? <Empty line="No job sheets yet. Open a job and tap Job sheet." /> :
+            <div className="space-y-3">
+              {jobSheets.map(s => (
+                <button key={s.id} onClick={() => setSheet({...s})} className="card w-full text-left p-5 hover:border-gold">
+                  <div className="flex flex-wrap justify-between items-start gap-3">
+                    <div>
+                      <div className="font-display font-semibold text-ink">{s.jobId}</div>
+                      <div className="text-sm text-mute">{(jobById(s.jobId)||{}).site} &middot; {s.name} &middot; {fmt(s.date)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-display font-semibold text-ink">{eur(s.total)}</div>
+                      <div className="mt-1"><Badge status={s.status} /></div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>}
+        </Section>
+      )}
+
+      <Modal open={!!jobForm} onClose={() => setJobForm(null)} title={jobForm && jobs.some(j => j.id===jobForm.id) ? 'Edit '+jobForm.id : 'New job'}>
+        {jobForm && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Job number"><input className="fld" value={jobForm.id} onChange={e => setJobForm({...jobForm, id:e.target.value})} /></Field>
+              <Field label="Status">
+                <select className="fld" value={jobForm.status} onChange={e => setJobForm({...jobForm, status:e.target.value})}>
+                  {['Open','Complete','Invoiced'].map(s => <option key={s}>{s}</option>)}
+                </select>
+              </Field>
+            </div>
+            <Field label="Client"><input className="fld" value={jobForm.client} onChange={e => setJobForm({...jobForm, client:e.target.value})} /></Field>
+            <Field label="Site"><input className="fld" value={jobForm.site} onChange={e => setJobForm({...jobForm, site:e.target.value})} /></Field>
+            <Field label="Address"><input className="fld" value={jobForm.address} onChange={e => setJobForm({...jobForm, address:e.target.value})} /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Contact"><input className="fld" value={jobForm.contact} onChange={e => setJobForm({...jobForm, contact:e.target.value})} /></Field>
+              <Field label="Work type"><input className="fld" value={jobForm.type} onChange={e => setJobForm({...jobForm, type:e.target.value})} placeholder="Boiler service" /></Field>
+            </div>
+            <Field label="Notes"><textarea className="fld" rows="3" value={jobForm.notes} onChange={e => setJobForm({...jobForm, notes:e.target.value})} /></Field>
+            <div className="flex gap-3"><Btn onClick={saveJob}>Save job</Btn><Btn kind="quiet" onClick={() => setJobForm(null)}>Cancel</Btn></div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!sheet} onClose={() => setSheet(null)} wide title={sheet ? 'Job sheet, '+sheet.jobId : ''}>
+        {sheet && (
+          <div className="space-y-5">
+            <div className="grid sm:grid-cols-3 gap-3">
+              <Field label="Job">
+                <select className="fld" value={sheet.jobId} onChange={e => setSheet({...sheet, jobId:e.target.value})}>
+                  {jobs.map(j => <option key={j.id} value={j.id}>{j.id}</option>)}
+                </select>
+              </Field>
+              <Field label="Employee"><input className="fld" value={sheet.name} readOnly /></Field>
+              <Field label="Date"><input type="date" className="fld" value={sheet.date} onChange={e => setSheet({...sheet, date:e.target.value})} /></Field>
+            </div>
+
+            <div className="space-y-2">
+              {sheet.lines.map(l => (
+                <div key={l.key} className="rounded-2xl bg-paper p-4">
+                  <div className="flex justify-between items-start gap-3 mb-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm text-ink">{l.desc}</div>
+                      <div className="text-xs text-mute">{l.code} &middot; {l.size} &middot; {eur(l.price)} each</div>
+                    </div>
+                    <button onClick={() => setSheet(s => ({...s, lines: s.lines.filter(x => x.key!==l.key)}))} className="text-mute hover:text-fail">&times;</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 items-end">
+                    <Field label="Taken"><input type="number" min="0" className="fld" value={l.qtyOut} onChange={e => setLine(l.key,{qtyOut:e.target.value})} /></Field>
+                    <Field label="Returned"><input type="number" min="0" className="fld" value={l.qtyBack} onChange={e => setLine(l.key,{qtyBack:e.target.value})} /></Field>
+                    <div className="text-right pb-2 font-display font-semibold text-ink">{eur(lineTotal(l))}</div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setPicker(true)} className="w-full py-3 rounded-2xl border-2 border-dashed border-line text-sm font-semibold text-mute hover:border-gold hover:text-ink">+ Add material</button>
+            </div>
+
+            <div className="flex justify-between items-center pill bg-ink text-white px-5 py-4">
+              <span className="font-display font-semibold">Sheet total</span>
+              <span className="font-display text-xl font-semibold">{eur(sheetTotal)}</span>
+            </div>
+
+            <Field label="Notes"><textarea className="fld" rows="2" value={sheet.notes} onChange={e => setSheet({...sheet, notes:e.target.value})} /></Field>
+            <div className="flex flex-wrap gap-3">
+              <Btn onClick={() => saveSheet('Submitted')}>Book out and send</Btn>
+              <Btn kind="ghost" onClick={() => saveSheet('Draft')}>Save draft</Btn>
+              <Btn kind="quiet" onClick={() => setSheet(null)}>Cancel</Btn>
+            </div>
+            <p className="text-xs text-mute">Booking out drops the quantity in stock by taken minus returned, the same sum as the spreadsheet.</p>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={picker} onClose={() => setPicker(false)} wide title="Pick a material">
+        <input className="fld mb-4" autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search description, code or size" />
+        <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+          {results.map(p => (
+            <button key={p.pid} onClick={() => addLine(p)} className="w-full text-left rounded-2xl border border-line p-3 hover:border-gold flex justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-semibold text-sm text-ink truncate">{p.desc}</div>
+                <div className="text-xs text-mute">{p.code} &middot; {p.size} &middot; {Number(p.stock)||0} in stock</div>
+              </div>
+              <div className="font-display font-semibold text-sm whitespace-nowrap">{eur(p.price)}</div>
+            </button>
+          ))}
+          {results.length===0 && <p className="text-sm text-mute text-center py-6">Nothing matched. Try the code, like 315.</p>}
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+/* ============================== PRESSURE TESTS ============================== */
+function PressureTests({me, jobs, tests, setTests, toast}){
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(null);
+  const [remaining, setRemaining] = useState(null);
+  const tick = useRef(null);
+  const empty = () => ({ id:uid('PT'), jobId:'', site:'', client:'', system:'Heating, sealed system', medium:'Water',
+    standard:TEST_PRESETS['Heating, sealed system'].standard, unit:'bar', testPressure:'3', holdMins:30,
+    startPressure:'', endPressure:'', ambient:'', engineer:me.name, regNo:me.rgi||'', witness:'', date:iso(new Date()),
+    notes:'', photos:[], signature:'' });
+  const [f, setF] = useState(empty);
+  useEffect(() => () => clearInterval(tick.current), []);
+
+  const set = p => setF(x => ({...x, ...p}));
+  const preset = sys => { const p = TEST_PRESETS[sys]; set({ system:sys, medium:p.medium, standard:p.standard, testPressure:p.pressure, holdMins:p.hold, unit:p.unit }); };
+  const tol = TEST_PRESETS[f.system] ? TEST_PRESETS[f.system].tol : 0;
+  const result = useMemo(() => {
+    const s = parseFloat(f.startPressure), e = parseFloat(f.endPressure);
+    if(!isFinite(s)||!isFinite(e)) return '';
+    return (s-e) <= tol+1e-9 ? 'Pass' : 'Fail';
+  }, [f.startPressure, f.endPressure, tol]);
+
+  const startHold = () => {
+    if(!f.startPressure) return toast('Log the pressure at the start of the hold first.');
+    clearInterval(tick.current);
+    let left = (Number(f.holdMins)||0)*60; setRemaining(left);
+    tick.current = setInterval(() => { left--; setRemaining(left);
+      if(left<=0){ clearInterval(tick.current); toast('Hold finished. Read the gauge and log the end pressure.'); } }, 1000);
+  };
+  const addPhotos = async files => {
+    for(const file of Array.from(files||[]).slice(0,8)){
+      try {
+        const data = await shrinkImage(file,1400,0.72);
+        let url = data;
+        const r = await api('upload', { folder:'Pressure tests', name:(f.jobId||'test')+'.jpg', data });
+        if(r && r.url) url = r.url;
+        setF(x => ({...x, photos:[...x.photos, { url, dataUrl:data, caption:'' }]}));
+      } catch(err){ toast(err.message); }
+    }
+  };
+  const save = async () => {
+    if(!f.jobId && !f.site) return toast('Pick the job this test belongs to.');
+    if(!f.startPressure || !f.endPressure) return toast('Log both the start and end pressure.');
+    if(!f.signature) return toast('Sign the report before saving it.');
+    const rec = {...f, result};
+    setTests(list => [rec, ...list]);
+    await api('savePressureTest', rec);
+    setOpen(false); setF(empty()); setRemaining(null);
+    toast('Test saved as '+result+'.');
+  };
+
+  return (
+    <div>
+      <Section kicker="Site records" title="Pressure tests" right={<Btn onClick={() => { setF(empty()); setOpen(true); }}>New test &#8594;</Btn>}>
+        {tests.length===0 ? <Empty line="No tests logged yet." /> :
+          <div className="grid sm:grid-cols-2 gap-3">
+            {tests.map(t => (
+              <button key={t.id} onClick={() => setView(t)} className="card p-5 text-left hover:border-gold">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="font-display font-semibold text-ink">{t.jobId||'No job'}</div><Badge status={t.result} />
+                </div>
+                <div className="text-sm text-inksoft">{t.site}</div>
+                <div className="text-xs text-mute mt-2">{t.system} &middot; {t.testPressure} {t.unit} for {t.holdMins} min &middot; {fmt(t.date)}</div>
+              </button>
+            ))}
+          </div>}
+      </Section>
+
+      <Modal open={open} onClose={() => setOpen(false)} wide title="Pressure test record">
+        <div className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Job">
+              <select className="fld" value={f.jobId} onChange={e => { const j = jobs.find(x => x.id===e.target.value); set({ jobId:e.target.value, site: j?j.site:f.site, client: j?j.client:f.client }); }}>
+                <option value="">Not on the job list</option>
+                {jobs.map(j => <option key={j.id} value={j.id}>{j.id+' \u00B7 '+j.site}</option>)}
+              </select>
+            </Field>
+            <Field label="Date"><input type="date" className="fld" value={f.date} onChange={e => set({date:e.target.value})} /></Field>
+            <Field label="Site"><input className="fld" value={f.site} onChange={e => set({site:e.target.value})} /></Field>
+            <Field label="Client"><input className="fld" value={f.client} onChange={e => set({client:e.target.value})} /></Field>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <Field label="System"><select className="fld" value={f.system} onChange={e => preset(e.target.value)}>{Object.keys(TEST_PRESETS).map(k => <option key={k}>{k}</option>)}</select></Field>
+            <Field label="Medium"><select className="fld" value={f.medium} onChange={e => set({medium:e.target.value})}>{['Water','Air','Nitrogen','Glycol'].map(m => <option key={m}>{m}</option>)}</select></Field>
+            <Field label="Reference"><input className="fld" value={f.standard} onChange={e => set({standard:e.target.value})} /></Field>
+          </div>
+
+          <div className="rounded-3xl bg-paper p-5">
+            <div className="grid sm:grid-cols-2 gap-5 items-center">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={'Test pressure, '+f.unit}><input className="fld" inputMode="decimal" value={f.testPressure} onChange={e => set({testPressure:e.target.value})} /></Field>
+                <Field label="Hold, minutes"><input className="fld" inputMode="numeric" value={f.holdMins} onChange={e => set({holdMins:e.target.value})} /></Field>
+                <Field label="At start"><input className="fld" inputMode="decimal" value={f.startPressure} onChange={e => set({startPressure:e.target.value})} /></Field>
+                <Field label="At end"><input className="fld" inputMode="decimal" value={f.endPressure} onChange={e => set({endPressure:e.target.value})} /></Field>
+                <Field label="Ambient, C"><input className="fld" inputMode="decimal" value={f.ambient} onChange={e => set({ambient:e.target.value})} /></Field>
+                <div className="flex items-end">
+                  <Btn kind="ghost" className="w-full !px-3" onClick={startHold}>
+                    {remaining===null ? 'Start hold' : remaining>0 ? pad(Math.floor(remaining/60))+':'+pad(remaining%60) : 'Hold done'}
+                  </Btn>
+                </div>
+              </div>
+              <div className="text-center">
+                <Gauge start={f.startPressure} end={f.endPressure} max={f.testPressure} unit={f.unit} />
+                {result && <div className={'inline-block mt-1 pill px-6 py-2 font-display font-semibold '+(result==='Pass'?'bg-[#E8F1EC] text-pass':'bg-[#FBE9E7] text-fail')}>{result}</div>}
+                <div className="text-xs text-mute mt-2">Allowable drop {tol} {f.unit}</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <span className="lbl">Photos</span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {f.photos.map((p,i) => (
+                <div key={i} className="card overflow-hidden">
+                  <img src={p.dataUrl||p.url} alt="" className="w-full h-32 object-cover" />
+                  <div className="p-2">
+                    <input className="fld !py-1.5 !text-xs" value={p.caption} placeholder="Caption"
+                      onChange={e => setF(x => { const ph = x.photos.slice(); ph[i] = {...ph[i], caption:e.target.value}; return {...x, photos:ph}; })} />
+                    <button onClick={() => setF(x => ({...x, photos:x.photos.filter((_,j) => j!==i)}))} className="mt-1 text-[11px] text-mute hover:text-fail">Remove</button>
+                  </div>
+                </div>
+              ))}
+              <label className="card border-2 border-dashed border-line h-[7.5rem] flex flex-col items-center justify-center cursor-pointer hover:border-gold text-mute text-sm">
+                <span className="text-2xl leading-none mb-1 text-gold">+</span>Add photo
+                <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={e => addPhotos(e.target.files)} />
+              </label>
+            </div>
+          </div>
+
+          <Field label="Observations"><textarea className="fld" rows="3" value={f.notes} onChange={e => set({notes:e.target.value})} /></Field>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Engineer"><input className="fld" value={f.engineer} onChange={e => set({engineer:e.target.value})} /></Field>
+            <Field label="Registration no."><input className="fld" value={f.regNo} onChange={e => set({regNo:e.target.value})} /></Field>
+            <div className="sm:col-span-2"><Field label="Witnessed by"><input className="fld" value={f.witness} onChange={e => set({witness:e.target.value})} /></Field></div>
+          </div>
+          <Field label="Engineer signature"><SignaturePad value={f.signature} onChange={s => set({signature:s})} /></Field>
+          <div className="flex flex-wrap gap-3">
+            <Btn onClick={save}>Save test</Btn>
+            <Btn kind="ghost" onClick={() => makePdf({...f, result}, toast)}>Preview PDF</Btn>
+            <Btn kind="quiet" onClick={() => setOpen(false)}>Cancel</Btn>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!view} onClose={() => setView(null)} wide title={view ? 'Test, '+(view.jobId||view.site) : ''}>
+        {view && (
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4 items-center">
+              <dl className="text-sm space-y-2">
+                {[['Site',view.site],['Client',view.client],['System',view.system],['Medium',view.medium],
+                  ['Reference',view.standard],['Test pressure',view.testPressure+' '+view.unit+' held '+view.holdMins+' min'],
+                  ['Start to end',view.startPressure+' to '+view.endPressure+' '+view.unit],
+                  ['Engineer',view.engineer+(view.regNo?', '+view.regNo:'')],['Date',fmt(view.date)]].map(r => (
+                  <div key={r[0]} className="flex gap-3 border-b border-line pb-1.5">
+                    <dt className="w-32 shrink-0 text-mute text-xs uppercase tracking-wider pt-0.5">{r[0]}</dt>
+                    <dd className="text-ink">{r[1]||'Not recorded'}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="text-center">
+                <Gauge start={view.startPressure} end={view.endPressure} max={view.testPressure} unit={view.unit} />
+                <div className={'inline-block pill px-6 py-2 font-display font-semibold '+(view.result==='Pass'?'bg-[#E8F1EC] text-pass':'bg-[#FBE9E7] text-fail')}>{view.result}</div>
+              </div>
+            </div>
+            {view.notes && <p className="text-sm text-inksoft">{view.notes}</p>}
+            <Btn onClick={() => makePdf(view, toast)}>Download PDF report</Btn>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+/* ============================== ADMIN ============================== */
+function Admin({me, users, setUsers, products, setProducts, jobs, toast}){
+  const [tab, setTab] = useState('people');
+  const [form, setForm] = useState(null);
+  const [pForm, setPForm] = useState(null);
+  const [q, setQ] = useState('');
+  const [lowOnly, setLowOnly] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [csv, setCsv] = useState('');
+
+  const savePerson = async () => {
+    if(!form.name || !form.code) return toast('A name and a short sign in name are needed.');
+    if(users.some(u => u.code.toLowerCase()===form.code.toLowerCase() && u.id!==form.id)) return toast('That sign in name is already taken.');
+    const rec = {...form};
+    const payload = {...rec};
+    if(rec.pin){ payload.pinHash = await hashPin(rec.pin); delete payload.pin; }
+    setUsers(list => { const i = list.findIndex(u => u.id===rec.id); const out = list.slice(); if(i>=0) out[i]=rec; else out.push(rec); return out; });
+    await api('saveUser', payload);
+    setForm(null); toast(rec.name+' saved.');
+  };
+  const setActive = async (u, active) => {
+    setUsers(list => list.map(x => x.id===u.id ? {...x, active} : x));
+    await api('saveUser', {...u, active});
+    toast(active ? u.name+' can sign in again.' : u.name+' deactivated and signed out everywhere.');
+  };
+  const revoke = async u => { await api('revokeDevices', { id:u.id }); toast(u.name+' will have to sign in again on every device.'); };
+
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    let list = products;
+    if(t) list = list.filter(p => String(p.desc).toLowerCase().includes(t) || String(p.code).toLowerCase().includes(t) || String(p.size).toLowerCase().includes(t));
+    if(lowOnly) list = list.filter(p => (Number(p.stock)||0) <= 2);
+    return list.slice(0, 120);
+  }, [q, products, lowOnly]);
+
+  const saveProduct = async () => {
+    const rec = {...pForm, stock:Number(pForm.stock)||0, cost:Number(pForm.cost)||0, price:Number(pForm.price)||0};
+    setProducts(list => { const i = list.findIndex(p => p.pid===rec.pid); const out = list.slice(); if(i>=0) out[i]=rec; else out.push(rec); return out; });
+    await api('saveProduct', rec);
+    setPForm(null); toast('Product saved.');
+  };
+  const runImport = async () => {
+    const rows = csv.trim().split(/\r?\n/).map(r => r.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g,'').trim()));
+    if(rows.length < 2) return toast('Paste the header row and at least one product.');
+    const out = rows.slice(1).filter(r => r[0]).map(r => ({ pid:r[0], code:r[1]||'', desc:r[2]||'', size:r[3]||'', stock:Number(r[4])||0, cost:Number(r[5])||0, price:Number(r[6])||0 }));
+    setProducts(out);
+    await api('replaceProducts', { products: out });
+    setImporting(false); setCsv('');
+    toast(out.length+' products loaded.');
+  };
+
+  const stockValue = products.reduce((a,p) => a + (Number(p.stock)||0)*(Number(p.cost)||0), 0);
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[['people','People'],['products','Products'],['settings','Settings']].map(t => (
+          <button key={t[0]} onClick={() => setTab(t[0])}
+            className={'pill px-5 py-2.5 text-sm font-display font-semibold border transition '+(tab===t[0]?'bg-ink text-white border-ink':'bg-white text-inksoft border-line hover:border-gold')}>{t[1]}</button>
+        ))}
+      </div>
+
+      {tab==='people' && (
+        <Section kicker="Access" title="Who can sign in"
+          right={<Btn onClick={() => setForm({ id:uid('S'), code:'', name:'', email:'', role:'Technician', trade:'', rgi:'', entitlement:CONFIG.ANNUAL_ENTITLEMENT, active:true, pin:'' })}>Add person &#8594;</Btn>}>
+          <div className="space-y-3">
+            {users.map(u => (
+              <div key={u.id} className={'card p-5 '+(u.active?'':'opacity-60')}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-display font-semibold text-ink">{u.name}</span>
+                      <span className="pill px-3 py-1 text-xs font-semibold bg-paper text-inksoft">{u.role}</span>
+                      {!u.active && <span className="pill px-3 py-1 text-xs font-semibold bg-[#FBE9E7] text-fail">Inactive</span>}
+                    </div>
+                    <div className="text-sm text-mute mt-1">signs in as <strong className="text-inksoft">{u.code}</strong> &middot; {u.trade}{u.rgi ? ' \u00B7 '+u.rgi : ''}</div>
+                    <div className="text-xs text-mute mt-1">{u.email} &middot; {u.entitlement} leave days</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Btn kind="ghost" className="!px-4 !py-2 !text-sm" onClick={() => setForm({...u, pin:''})}>Edit</Btn>
+                    <Btn kind="quiet" className="!px-3 !py-2 !text-sm" onClick={() => revoke(u)}>Sign out devices</Btn>
+                    {u.id!==me.id && <Btn kind={u.active?'danger':'ghost'} className="!px-4 !py-2 !text-sm" onClick={() => setActive(u, !u.active)}>{u.active?'Deactivate':'Reactivate'}</Btn>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-mute mt-3">Deactivating keeps the person's history for payroll and stops them signing in. Deleting them outright would orphan their timesheets.</p>
+        </Section>
+      )}
+
+      {tab==='products' && (
+        <Section kicker="Stock" title="Product list"
+          right={<div className="flex gap-2">
+            <Btn kind="ghost" className="!px-4 !py-2.5 !text-sm" onClick={() => setImporting(true)}>Import</Btn>
+            <Btn className="!px-4 !py-2.5 !text-sm" onClick={() => setPForm({ pid:'P'+(products.length+1), code:'', desc:'', size:'', stock:0, cost:0, price:0 })}>Add</Btn>
+          </div>}>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Stat label="Products" value={products.length} sub="on the list" />
+            <Stat label="Stock value" value={eur(stockValue)} sub="at supplier price" text />
+            <Stat label="At or below 2" value={products.filter(p => (Number(p.stock)||0)<=2).length} sub="need ordering" warn />
+          </div>
+          <div className="flex flex-wrap gap-3 mb-4">
+            <input className="fld flex-1 min-w-[12rem]" value={q} onChange={e => setQ(e.target.value)} placeholder="Search description, code or size" />
+            <button onClick={() => setLowOnly(!lowOnly)} className={'pill px-5 py-2.5 text-sm font-semibold border '+(lowOnly?'bg-ink text-white border-ink':'bg-white border-line')}>Low stock</button>
+          </div>
+          <div className="space-y-2">
+            {filtered.map(p => (
+              <button key={p.pid} onClick={() => setPForm({...p})} className="w-full text-left card p-4 hover:border-gold flex justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm text-ink truncate">{p.desc}</div>
+                  <div className="text-xs text-mute">{p.pid} &middot; code {p.code} &middot; {p.size}</div>
+                </div>
+                <div className="text-right whitespace-nowrap">
+                  <div className="font-display font-semibold text-sm">{eur(p.price)}</div>
+                  <div className={'text-xs '+((Number(p.stock)||0)<=2?'text-fail font-semibold':'text-mute')}>{Number(p.stock)||0} in stock</div>
+                </div>
+              </button>
+            ))}
+          </div>
+          {products.length > filtered.length && <p className="text-xs text-mute mt-3">Showing {filtered.length} of {products.length}. Narrow it with the search.</p>}
+        </Section>
+      )}
+
+      {tab==='settings' && (
+        <Section kicker="Configuration" title="How the portal behaves">
+          <div className="card p-6 space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Standard week, hours"><input className="fld" defaultValue={CONFIG.STANDARD_WEEK} onChange={e => CONFIG.STANDARD_WEEK = Number(e.target.value)||39} /></Field>
+              <Field label="Default leave entitlement"><input className="fld" defaultValue={CONFIG.ANNUAL_ENTITLEMENT} onChange={e => CONFIG.ANNUAL_ENTITLEMENT = Number(e.target.value)||21} /></Field>
+              <Field label="Paid sick days"><input className="fld" defaultValue={CONFIG.PAID_SICK_DAYS} onChange={e => CONFIG.PAID_SICK_DAYS = Number(e.target.value)||5} /></Field>
+              <Field label="Keep devices signed in, days"><input className="fld" defaultValue={CONFIG.DEVICE_DAYS} onChange={e => CONFIG.DEVICE_DAYS = Number(e.target.value)||30} /></Field>
+            </div>
+            <p className="text-xs text-mute">These are session only in the demo. In the live build they save to a Settings tab in the Sheet.</p>
+          </div>
+          <div className="card p-6 mt-4">
+            <div className="lbl">Backend</div>
+            <p className="text-sm text-inksoft mt-2">{CONFIG.API_URL ? 'Connected to Google Sheets.' : 'Demo mode. Data stays on this device.'}</p>
+            <p className="text-sm text-mute mt-2">App key {appKey() ? 'derived from the deployment URL, ending '+appKey().slice(-4) : 'not set, add API_URL first'}.</p>
+          </div>
+        </Section>
+      )}
+
+      <Modal open={!!form} onClose={() => setForm(null)} title={form && users.some(u => u.id===form.id) ? 'Edit '+form.name : 'Add a person'}>
+        {form && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Name"><input className="fld" value={form.name} onChange={e => setForm({...form, name:e.target.value})} /></Field>
+              <Field label="Signs in as" hint="Short and lowercase"><input className="fld" value={form.code} onChange={e => setForm({...form, code:e.target.value.replace(/\s/g,'').toLowerCase()})} /></Field>
+            </div>
+            <Field label="Email"><input className="fld" type="email" value={form.email} onChange={e => setForm({...form, email:e.target.value})} /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Role">
+                <select className="fld" value={form.role} onChange={e => setForm({...form, role:e.target.value})}>
+                  {['Technician','Office','Admin'].map(r => <option key={r}>{r}</option>)}
+                </select>
+              </Field>
+              <Field label="Leave days"><input type="number" className="fld" value={form.entitlement} onChange={e => setForm({...form, entitlement:Number(e.target.value)||0})} /></Field>
+              <Field label="Trade"><input className="fld" value={form.trade} onChange={e => setForm({...form, trade:e.target.value})} /></Field>
+              <Field label="RGI number"><input className="fld" value={form.rgi} onChange={e => setForm({...form, rgi:e.target.value})} /></Field>
+            </div>
+            <Field label="PIN" hint={users.some(u => u.id===form.id) ? 'Leave blank to keep the current PIN.' : 'Four to six digits. They can change it later.'}>
+              <input className="fld tracking-[.4em]" inputMode="numeric" maxLength="6" value={form.pin} onChange={e => setForm({...form, pin:e.target.value.replace(/\D/g,'')})} />
+            </Field>
+            <p className="text-xs text-mute">Office and Admin can approve timesheets and leave. Admin also manages people and products.</p>
+            <div className="flex gap-3"><Btn onClick={savePerson}>Save</Btn><Btn kind="quiet" onClick={() => setForm(null)}>Cancel</Btn></div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!pForm} onClose={() => setPForm(null)} title={pForm ? 'Product '+pForm.pid : ''}>
+        {pForm && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Product ID"><input className="fld" value={pForm.pid} onChange={e => setPForm({...pForm, pid:e.target.value})} /></Field>
+              <Field label="Code"><input className="fld" value={pForm.code} onChange={e => setPForm({...pForm, code:e.target.value})} /></Field>
+            </div>
+            <Field label="Description"><input className="fld" value={pForm.desc} onChange={e => setPForm({...pForm, desc:e.target.value})} /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Size"><input className="fld" value={pForm.size} onChange={e => setPForm({...pForm, size:e.target.value})} /></Field>
+              <Field label="Quantity in stock"><input type="number" className="fld" value={pForm.stock} onChange={e => setPForm({...pForm, stock:e.target.value})} /></Field>
+              <Field label="Supplier price"><input type="number" step="0.01" className="fld" value={pForm.cost} onChange={e => setPForm({...pForm, cost:e.target.value})} /></Field>
+              <Field label="Our price"><input type="number" step="0.01" className="fld" value={pForm.price} onChange={e => setPForm({...pForm, price:e.target.value})} /></Field>
+            </div>
+            <div className="flex gap-3"><Btn onClick={saveProduct}>Save product</Btn><Btn kind="quiet" onClick={() => setPForm(null)}>Cancel</Btn></div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={importing} onClose={() => setImporting(false)} wide title="Import the product list">
+        <div className="space-y-4">
+          <p className="text-sm text-inksoft">Copy the whole ProductData sheet, header row included, and paste it here. Columns in this order: Product ID, Code, Description, Size, Quantity in stock, Supplier price, Our price.</p>
+          <textarea className="fld font-mono text-xs" rows="10" value={csv} onChange={e => setCsv(e.target.value)} placeholder="Product ID	Code	Description	Size	Quantity in stock	Supplier price	Our price" />
+          <div className="flex gap-3"><Btn onClick={runImport}>Replace the list</Btn><Btn kind="quiet" onClick={() => setImporting(false)}>Cancel</Btn></div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+/* ============================== PDF ============================== */
+let LOGO_CACHE = null;
+async function getLogo(){
+  if(CONFIG.LOGO_DATA) return CONFIG.LOGO_DATA;   // no fetch, so no CORS to fight
+  if(LOGO_CACHE !== null) return LOGO_CACHE;
+  try {
+    const r = await fetch(CONFIG.LOGO, { mode:'cors' });
+    const b = await r.blob();
+    LOGO_CACHE = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+  } catch(e){ LOGO_CACHE = ''; }
+  return LOGO_CACHE;
+}
+async function makePdf(t, toast){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const W = 210, M = 16, navy = [31,37,68], gold = [201,160,99], grey = [122,128,153];
+  doc.setFillColor(...navy); doc.rect(0,0,W,34,'F');
+  const logo = await getLogo();
+  if(logo){
+    try { doc.addImage(logo,'PNG',M,7,44,20); }
+    catch(e){ doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text('GLENVIEW HEATING', M, 19); }
+  }
+  else { doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text('GLENVIEW HEATING', M, 19); }
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(CONFIG.PHONE+'   '+CONFIG.WEB, W-M, 15, { align:'right' });
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('PRESSURE TEST CERTIFICATE', W-M, 24, { align:'right' });
+
+  let y = 46;
+  doc.setDrawColor(...gold); doc.setLineWidth(1.1); doc.line(M, y-8, M+16, y-8);
+  const col = (W-M*2-8)/2;
+  const pair = (l,v,x,yy,w) => {
+    doc.setFontSize(7.5); doc.setTextColor(...grey); doc.setFont('helvetica','bold'); doc.text(String(l).toUpperCase(), x, yy);
+    doc.setFontSize(10); doc.setTextColor(...navy); doc.setFont('helvetica','normal');
+    doc.text(doc.splitTextToSize(String(v||'-'), w), x, yy+5);
+  };
+  pair('Job number', t.jobId, M, y, col); pair('Date of test', fmt(t.date), M+col+8, y, col); y += 15;
+  pair('Site', t.site, M, y, col); pair('Client', t.client, M+col+8, y, col); y += 15;
+  pair('System tested', t.system, M, y, col); pair('Test medium', t.medium, M+col+8, y, col); y += 15;
+  pair('Reference standard', t.standard, M, y, W-M*2); y += 16;
+
+  doc.setFillColor(246,244,240); doc.roundedRect(M, y, W-M*2, 30, 4, 4, 'F');
+  const cells = [['Test pressure',t.testPressure+' '+t.unit],['Hold period',t.holdMins+' min'],
+    ['At start',t.startPressure+' '+t.unit],['At end',t.endPressure+' '+t.unit],['Ambient',(t.ambient||'-')+' C']];
+  const cw = (W-M*2)/cells.length;
+  cells.forEach((c,i) => {
+    doc.setFontSize(7); doc.setTextColor(...grey); doc.setFont('helvetica','bold'); doc.text(c[0].toUpperCase(), M+cw*i+5, y+9);
+    doc.setFontSize(12); doc.setTextColor(...navy); doc.text(String(c[1]), M+cw*i+5, y+19);
+  });
+  y += 38;
+  const pass = t.result==='Pass';
+  doc.setFillColor(...(pass?[232,241,236]:[251,233,231])); doc.roundedRect(M, y, 46, 14, 7, 7, 'F');
+  doc.setTextColor(...(pass?[46,125,91]:[178,58,52])); doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('RESULT: '+(t.result||'-').toUpperCase(), M+8, y+9.5);
+  y += 22;
+  if(t.notes){
+    doc.setFontSize(7.5); doc.setTextColor(...grey); doc.setFont('helvetica','bold'); doc.text('OBSERVATIONS', M, y); y += 5;
+    doc.setFontSize(9.5); doc.setTextColor(...navy); doc.setFont('helvetica','normal');
+    const lines = doc.splitTextToSize(t.notes, W-M*2); doc.text(lines, M, y); y += lines.length*4.6+8;
+  }
+  doc.setFontSize(7.5); doc.setTextColor(...grey); doc.setFont('helvetica','bold');
+  doc.text('TESTED BY', M, y); doc.text('WITNESSED BY', M+col+8, y);
+  if(t.signature){ try { doc.addImage(t.signature,'PNG',M,y+2,44,16); } catch(e){} }
+  doc.setDrawColor(220,215,205); doc.setLineWidth(0.3);
+  doc.line(M, y+20, M+col-6, y+20); doc.line(M+col+8, y+20, W-M, y+20);
+  doc.setFontSize(9.5); doc.setTextColor(...navy); doc.setFont('helvetica','normal');
+  doc.text(String(t.engineer||'')+(t.regNo?'   '+t.regNo:''), M, y+25);
+  doc.text(String(t.witness||'-'), M+col+8, y+25);
+
+  const photos = (t.photos||[]).filter(p => p.dataUrl || String(p.url||'').startsWith('data:'));
+  if(photos.length){
+    doc.addPage(); doc.setFillColor(...navy); doc.rect(0,0,W,18,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.text('SITE PHOTOGRAPHS  \u00B7  '+(t.jobId||''), M, 12);
+    let px = M, py = 28; const pw = (W-M*2-6)/2, ph = 58;
+    photos.slice(0,8).forEach((p,i) => {
+      try { doc.addImage(p.dataUrl||p.url,'JPEG',px,py,pw,ph); } catch(e){}
+      doc.setFontSize(8); doc.setTextColor(...grey); doc.setFont('helvetica','normal');
+      doc.text(doc.splitTextToSize(p.caption||('Photo '+(i+1)), pw), px, py+ph+4.5);
+      if(i%2===0) px = M+pw+6; else { px = M; py += ph+14; }
+      if(py > 250 && i < photos.length-1){ doc.addPage(); py = 20; px = M; }
+    });
+  }
+  const pages = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...grey); doc.setFont('helvetica','normal');
+    doc.text(CONFIG.COMPANY+'  \u00B7  '+CONFIG.PHONE+'  \u00B7  '+CONFIG.WEB, M, 289);
+    doc.text('Page '+i+' of '+pages, W-M, 289, { align:'right' });
+  }
+  doc.save('Pressure test '+(t.jobId||'report')+'.pdf');
+  if(toast) toast('PDF generated.');
+}
+
+/* ============================== SHELL ============================== */
+function App(){
+  const [users, setUsers] = useState(() => store.get('gh_users', seedUsers()));
+  const [me, setMe] = useState(null);
+  const [booted, setBooted] = useState(false);
+  const [tab, setTab] = useState('home');
+  const [sheets, setSheets] = useState(() => store.get('gh_sheets', seedSheets()));
+  const [leave, setLeave] = useState(() => store.get('gh_leave', seedLeave()));
+  const [jobs, setJobs] = useState(() => store.get('gh_jobs', seedJobs()));
+  const [jobSheets, setJobSheets] = useState(() => store.get('gh_jobsheets', seedJobSheets()));
+  const [tests, setTests] = useState(() => store.get('gh_tests', seedTests()));
+  const [products, setProducts] = useState(() => store.get('gh_products', PRODUCTS_SEED));
+  const [msg, setMsg] = useState('');
+  const toast = useCallback(m => setMsg(m), []);
+
+  /* remembered device: sign straight back in */
+  useEffect(() => {
+    (async () => {
+      const dev = store.get('gh_device', null);
+      if(dev && dev.until > Date.now()){
+        if(CONFIG.API_URL){
+          const r = await api('session', {});
+          if(r && r.ok && r.user) setMe(r.user);
+        } else {
+          const u = users.find(x => x.id===dev.userId && x.active);
+          if(u) setMe(u);
+        }
+      }
+      setBooted(true);
+    })();
+  }, []);
+
+  useEffect(() => store.set('gh_users', users), [users]);
+  useEffect(() => store.set('gh_sheets', sheets), [sheets]);
+  useEffect(() => store.set('gh_leave', leave), [leave]);
+  useEffect(() => store.set('gh_jobs', jobs), [jobs]);
+  useEffect(() => store.set('gh_jobsheets', jobSheets), [jobSheets]);
+  useEffect(() => store.set('gh_tests', tests), [tests]);
+  useEffect(() => store.set('gh_products', products), [products]);
+
+  const signOut = () => { store.del('gh_device'); store.del('gh_token'); setMe(null); setTab('home'); };
+
+  if(!booted) return <div className="min-h-screen bg-ink" />;
+  if(!me) return (<><Login users={users} toast={toast} onIn={u => { setMe(u); setTab('home'); }} /><Toast msg={msg} onDone={() => setMsg('')} /></>);
+
+  const isOffice = me.role==='Office' || me.role==='Admin';
+  const isAdmin = me.role==='Admin';
+  const tabs = [
+    { id:'home', label: isOffice ? 'Dashboard' : 'Today' },
+    { id:'time', label:'Timesheets' },
+    { id:'leave', label:'Leave' },
+    { id:'jobs', label:'Jobs' },
+    { id:'test', label:'Tests' }
+  ].concat(isAdmin ? [{ id:'admin', label:'Admin' }] : []);
+  const pending = leave.filter(l => l.status==='Pending').length + sheets.filter(s => s.status==='Submitted').length;
+
+  return (
+    <div className="min-h-screen pb-28 sm:pb-12">
+      <header className="bg-ink text-white">
+        <div className="max-w-5xl mx-auto px-5 pt-5 pb-6">
+          <div className="flex items-center justify-between gap-4">
+            <Logo />
+            <div className="flex items-center gap-3">
+              {isOffice && pending>0 && <span className="pill bg-gold text-white text-xs font-semibold px-3 py-1.5">{pending} to action</span>}
+              <button onClick={signOut} className="pill bg-white/10 border border-white/20 text-white text-sm px-4 py-2 hover:bg-white/20">Sign out</button>
+            </div>
+          </div>
+          <div className="mt-6">
+            <div className="text-[.68rem] font-semibold tracking-[.16em] uppercase text-gold">Staff portal</div>
+            <h1 className="font-display text-[1.7rem] sm:text-4xl font-semibold mt-1 leading-tight">
+              {isOffice ? 'Approvals and records' : 'Good day, '+me.name.split(' ')[0]}
+            </h1>
+            <p className="text-white/60 text-sm mt-1.5">{me.trade}{me.rgi ? ' \u00B7 '+me.rgi : ''}</p>
+          </div>
+        </div>
+        <nav className="hidden sm:block max-w-5xl mx-auto px-5">
+          <div className="flex gap-1">
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={'px-5 py-3 rounded-t-2xl font-display font-semibold text-sm transition '+(tab===t.id?'bg-paper text-ink':'text-white/65 hover:text-white')}>{t.label}</button>
+            ))}
+          </div>
+        </nav>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-5 pt-8">
+        {tab==='home'  && <Dashboard me={me} isOffice={isOffice} users={users} sheets={sheets} leave={leave} jobs={jobs} jobSheets={jobSheets} tests={tests} go={setTab} />}
+        {tab==='time'  && <Timesheets me={me} isOffice={isOffice} sheets={sheets} setSheets={setSheets} jobs={jobs} toast={toast} />}
+        {tab==='leave' && <LeaveModule me={me} isOffice={isOffice} leave={leave} setLeave={setLeave} toast={toast} />}
+        {tab==='jobs'  && <Jobs me={me} isOffice={isOffice} jobs={jobs} setJobs={setJobs} jobSheets={jobSheets} setJobSheets={setJobSheets} products={products} setProducts={setProducts} toast={toast} />}
+        {tab==='test'  && <PressureTests me={me} jobs={jobs} tests={tests} setTests={setTests} toast={toast} />}
+        {tab==='admin' && isAdmin && <Admin me={me} users={users} setUsers={setUsers} products={products} setProducts={setProducts} jobs={jobs} toast={toast} />}
+
+        <footer className="mt-14 pt-6 border-t border-line text-center text-xs text-mute">
+          <div className="font-display font-semibold text-ink text-sm">{CONFIG.COMPANY}</div>
+          <div className="mt-1">{CONFIG.PHONE} &middot; {CONFIG.WEB}</div>
+          <div className="mt-3">Built by Protech Dynamic Solutions Ltd. &copy; 2026 Protech Dynamic Solutions Ltd.</div>
+          {!CONFIG.API_URL && <div className="mt-2 text-gold font-semibold">Demo mode. Data stays on this device until the Sheets backend is connected.</div>}
+        </footer>
+      </main>
+
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-line z-30">
+        <div className="flex">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={'flex-1 py-4 text-[.7rem] font-display font-semibold '+(tab===t.id?'text-ink border-t-[3px] border-gold -mt-[1px]':'text-mute')}>{t.label}</button>
+          ))}
+        </div>
+      </nav>
+
+      <Toast msg={msg} onDone={() => setMsg('')} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
