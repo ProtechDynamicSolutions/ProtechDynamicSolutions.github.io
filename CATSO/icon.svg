@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#16211F"/>
+<rect x="56" y="56" width="400" height="400" fill="none" stroke="#B8770F" stroke-width="10"/>
+<text x="256" y="248" font-family="Impact,'Barlow Condensed',sans-serif" font-size="150" fill="#F2EFE9" text-anchor="middle">CAT</text>
+<text x="256" y="376" font-family="Impact,'Barlow Condensed',sans-serif" font-size="150" fill="#F2EFE9" text-anchor="middle">SO</text>
+</svg>

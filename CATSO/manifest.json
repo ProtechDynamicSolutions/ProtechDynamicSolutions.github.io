@@ -1,0 +1,1200 @@
+{
+ "voice": "en-IE-EmilyNeural",
+ "engine": "edge",
+ "generated": "2026-08-16 20:33",
+ "groups": [
+  {
+   "id": "anchor",
+   "name": "Six anchors, the stories everything hangs off",
+   "items": [
+    {
+     "q": "audio/anchor-0-q.mp3",
+     "lines": [
+      "audio/anchor-0-0.mp3",
+      "audio/anchor-0-1.mp3",
+      "audio/anchor-0-2.mp3",
+      "audio/anchor-0-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/anchor-1-q.mp3",
+     "lines": [
+      "audio/anchor-1-0.mp3",
+      "audio/anchor-1-1.mp3",
+      "audio/anchor-1-2.mp3",
+      "audio/anchor-1-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/anchor-2-q.mp3",
+     "lines": [
+      "audio/anchor-2-0.mp3",
+      "audio/anchor-2-1.mp3",
+      "audio/anchor-2-2.mp3",
+      "audio/anchor-2-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/anchor-3-q.mp3",
+     "lines": [
+      "audio/anchor-3-0.mp3",
+      "audio/anchor-3-1.mp3",
+      "audio/anchor-3-2.mp3",
+      "audio/anchor-3-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/anchor-4-q.mp3",
+     "lines": [
+      "audio/anchor-4-0.mp3",
+      "audio/anchor-4-1.mp3",
+      "audio/anchor-4-2.mp3",
+      "audio/anchor-4-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/anchor-5-q.mp3",
+     "lines": [
+      "audio/anchor-5-0.mp3",
+      "audio/anchor-5-1.mp3",
+      "audio/anchor-5-2.mp3",
+      "audio/anchor-5-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "open",
+   "name": "Opening and closing",
+   "items": [
+    {
+     "q": "audio/open-0-q.mp3",
+     "lines": [
+      "audio/open-0-0.mp3",
+      "audio/open-0-1.mp3",
+      "audio/open-0-2.mp3",
+      "audio/open-0-3.mp3",
+      "audio/open-0-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/open-1-q.mp3",
+     "lines": [
+      "audio/open-1-0.mp3",
+      "audio/open-1-1.mp3",
+      "audio/open-1-2.mp3",
+      "audio/open-1-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plan",
+   "name": "Planning and managing resources",
+   "items": [
+    {
+     "q": "audio/plan-0-q.mp3",
+     "lines": [
+      "audio/plan-0-0.mp3",
+      "audio/plan-0-1.mp3",
+      "audio/plan-0-2.mp3",
+      "audio/plan-0-3.mp3",
+      "audio/plan-0-4.mp3",
+      "audio/plan-0-5.mp3",
+      "audio/plan-0-6.mp3",
+      "audio/plan-0-7.mp3"
+     ]
+    },
+    {
+     "q": "audio/plan-1-q.mp3",
+     "lines": [
+      "audio/plan-1-0.mp3",
+      "audio/plan-1-1.mp3",
+      "audio/plan-1-2.mp3",
+      "audio/plan-1-3.mp3",
+      "audio/plan-1-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/plan-2-q.mp3",
+     "lines": [
+      "audio/plan-2-0.mp3",
+      "audio/plan-2-1.mp3",
+      "audio/plan-2-2.mp3",
+      "audio/plan-2-3.mp3",
+      "audio/plan-2-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/plan-3-q.mp3",
+     "lines": [
+      "audio/plan-3-0.mp3",
+      "audio/plan-3-1.mp3",
+      "audio/plan-3-2.mp3",
+      "audio/plan-3-3.mp3",
+      "audio/plan-3-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/plan-4-q.mp3",
+     "lines": [
+      "audio/plan-4-0.mp3",
+      "audio/plan-4-1.mp3",
+      "audio/plan-4-2.mp3",
+      "audio/plan-4-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/plan-5-q.mp3",
+     "lines": [
+      "audio/plan-5-0.mp3",
+      "audio/plan-5-1.mp3",
+      "audio/plan-5-2.mp3",
+      "audio/plan-5-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rel",
+   "name": "Building and maintaining relationships",
+   "items": [
+    {
+     "q": "audio/rel-0-q.mp3",
+     "lines": [
+      "audio/rel-0-0.mp3",
+      "audio/rel-0-1.mp3",
+      "audio/rel-0-2.mp3",
+      "audio/rel-0-3.mp3",
+      "audio/rel-0-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-1-q.mp3",
+     "lines": [
+      "audio/rel-1-0.mp3",
+      "audio/rel-1-1.mp3",
+      "audio/rel-1-2.mp3",
+      "audio/rel-1-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-2-q.mp3",
+     "lines": [
+      "audio/rel-2-0.mp3",
+      "audio/rel-2-1.mp3",
+      "audio/rel-2-2.mp3",
+      "audio/rel-2-3.mp3",
+      "audio/rel-2-4.mp3",
+      "audio/rel-2-5.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-3-q.mp3",
+     "lines": [
+      "audio/rel-3-0.mp3",
+      "audio/rel-3-1.mp3",
+      "audio/rel-3-2.mp3",
+      "audio/rel-3-3.mp3",
+      "audio/rel-3-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-4-q.mp3",
+     "lines": [
+      "audio/rel-4-0.mp3",
+      "audio/rel-4-1.mp3",
+      "audio/rel-4-2.mp3",
+      "audio/rel-4-3.mp3",
+      "audio/rel-4-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-5-q.mp3",
+     "lines": [
+      "audio/rel-5-0.mp3",
+      "audio/rel-5-1.mp3",
+      "audio/rel-5-2.mp3",
+      "audio/rel-5-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-6-q.mp3",
+     "lines": [
+      "audio/rel-6-0.mp3",
+      "audio/rel-6-1.mp3",
+      "audio/rel-6-2.mp3",
+      "audio/rel-6-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/rel-7-q.mp3",
+     "lines": [
+      "audio/rel-7-0.mp3",
+      "audio/rel-7-1.mp3",
+      "audio/rel-7-2.mp3",
+      "audio/rel-7-3.mp3",
+      "audio/rel-7-4.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "solve",
+   "name": "Evaluating information, problem solving and decision making",
+   "items": [
+    {
+     "q": "audio/solve-0-q.mp3",
+     "lines": [
+      "audio/solve-0-0.mp3",
+      "audio/solve-0-1.mp3",
+      "audio/solve-0-2.mp3",
+      "audio/solve-0-3.mp3",
+      "audio/solve-0-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/solve-1-q.mp3",
+     "lines": [
+      "audio/solve-1-0.mp3",
+      "audio/solve-1-1.mp3",
+      "audio/solve-1-2.mp3",
+      "audio/solve-1-3.mp3",
+      "audio/solve-1-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/solve-2-q.mp3",
+     "lines": [
+      "audio/solve-2-0.mp3",
+      "audio/solve-2-1.mp3",
+      "audio/solve-2-2.mp3",
+      "audio/solve-2-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/solve-3-q.mp3",
+     "lines": [
+      "audio/solve-3-0.mp3",
+      "audio/solve-3-1.mp3",
+      "audio/solve-3-2.mp3",
+      "audio/solve-3-3.mp3",
+      "audio/solve-3-4.mp3",
+      "audio/solve-3-5.mp3"
+     ]
+    },
+    {
+     "q": "audio/solve-4-q.mp3",
+     "lines": [
+      "audio/solve-4-0.mp3",
+      "audio/solve-4-1.mp3",
+      "audio/solve-4-2.mp3",
+      "audio/solve-4-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "know",
+   "name": "Knowledge and experience",
+   "items": [
+    {
+     "q": "audio/know-0-q.mp3",
+     "lines": [
+      "audio/know-0-0.mp3",
+      "audio/know-0-1.mp3",
+      "audio/know-0-2.mp3",
+      "audio/know-0-3.mp3",
+      "audio/know-0-4.mp3",
+      "audio/know-0-5.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-1-q.mp3",
+     "lines": [
+      "audio/know-1-0.mp3",
+      "audio/know-1-1.mp3",
+      "audio/know-1-2.mp3",
+      "audio/know-1-3.mp3",
+      "audio/know-1-4.mp3",
+      "audio/know-1-5.mp3",
+      "audio/know-1-6.mp3",
+      "audio/know-1-7.mp3",
+      "audio/know-1-8.mp3",
+      "audio/know-1-9.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-2-q.mp3",
+     "lines": [
+      "audio/know-2-0.mp3",
+      "audio/know-2-1.mp3",
+      "audio/know-2-2.mp3",
+      "audio/know-2-3.mp3",
+      "audio/know-2-4.mp3",
+      "audio/know-2-5.mp3",
+      "audio/know-2-6.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-3-q.mp3",
+     "lines": [
+      "audio/know-3-0.mp3",
+      "audio/know-3-1.mp3",
+      "audio/know-3-2.mp3",
+      "audio/know-3-3.mp3",
+      "audio/know-3-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-4-q.mp3",
+     "lines": [
+      "audio/know-4-0.mp3",
+      "audio/know-4-1.mp3",
+      "audio/know-4-2.mp3",
+      "audio/know-4-3.mp3",
+      "audio/know-4-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-5-q.mp3",
+     "lines": [
+      "audio/know-5-0.mp3",
+      "audio/know-5-1.mp3",
+      "audio/know-5-2.mp3",
+      "audio/know-5-3.mp3",
+      "audio/know-5-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-6-q.mp3",
+     "lines": [
+      "audio/know-6-0.mp3",
+      "audio/know-6-1.mp3",
+      "audio/know-6-2.mp3",
+      "audio/know-6-3.mp3",
+      "audio/know-6-4.mp3",
+      "audio/know-6-5.mp3"
+     ]
+    },
+    {
+     "q": "audio/know-7-q.mp3",
+     "lines": [
+      "audio/know-7-0.mp3",
+      "audio/know-7-1.mp3",
+      "audio/know-7-2.mp3",
+      "audio/know-7-3.mp3",
+      "audio/know-7-4.mp3",
+      "audio/know-7-5.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "qual",
+   "name": "Commitment to providing a quality service",
+   "items": [
+    {
+     "q": "audio/qual-0-q.mp3",
+     "lines": [
+      "audio/qual-0-0.mp3",
+      "audio/qual-0-1.mp3",
+      "audio/qual-0-2.mp3",
+      "audio/qual-0-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/qual-1-q.mp3",
+     "lines": [
+      "audio/qual-1-0.mp3",
+      "audio/qual-1-1.mp3",
+      "audio/qual-1-2.mp3",
+      "audio/qual-1-3.mp3",
+      "audio/qual-1-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/qual-2-q.mp3",
+     "lines": [
+      "audio/qual-2-0.mp3",
+      "audio/qual-2-1.mp3",
+      "audio/qual-2-2.mp3",
+      "audio/qual-2-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/qual-3-q.mp3",
+     "lines": [
+      "audio/qual-3-0.mp3",
+      "audio/qual-3-1.mp3",
+      "audio/qual-3-2.mp3",
+      "audio/qual-3-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/qual-4-q.mp3",
+     "lines": [
+      "audio/qual-4-0.mp3",
+      "audio/qual-4-1.mp3",
+      "audio/qual-4-2.mp3",
+      "audio/qual-4-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "comm",
+   "name": "Communication and interpersonal skills",
+   "items": [
+    {
+     "q": "audio/comm-0-q.mp3",
+     "lines": [
+      "audio/comm-0-0.mp3",
+      "audio/comm-0-1.mp3",
+      "audio/comm-0-2.mp3",
+      "audio/comm-0-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/comm-1-q.mp3",
+     "lines": [
+      "audio/comm-1-0.mp3",
+      "audio/comm-1-1.mp3",
+      "audio/comm-1-2.mp3",
+      "audio/comm-1-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/comm-2-q.mp3",
+     "lines": [
+      "audio/comm-2-0.mp3",
+      "audio/comm-2-1.mp3",
+      "audio/comm-2-2.mp3",
+      "audio/comm-2-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "deliv",
+   "name": "Design team deliverables and energy",
+   "items": [
+    {
+     "q": "audio/deliv-0-q.mp3",
+     "lines": [
+      "audio/deliv-0-0.mp3",
+      "audio/deliv-0-1.mp3",
+      "audio/deliv-0-2.mp3",
+      "audio/deliv-0-3.mp3",
+      "audio/deliv-0-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-1-q.mp3",
+     "lines": [
+      "audio/deliv-1-0.mp3",
+      "audio/deliv-1-1.mp3",
+      "audio/deliv-1-2.mp3",
+      "audio/deliv-1-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-2-q.mp3",
+     "lines": [
+      "audio/deliv-2-0.mp3",
+      "audio/deliv-2-1.mp3",
+      "audio/deliv-2-2.mp3",
+      "audio/deliv-2-3.mp3",
+      "audio/deliv-2-4.mp3",
+      "audio/deliv-2-5.mp3",
+      "audio/deliv-2-6.mp3",
+      "audio/deliv-2-7.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-3-q.mp3",
+     "lines": [
+      "audio/deliv-3-0.mp3",
+      "audio/deliv-3-1.mp3",
+      "audio/deliv-3-2.mp3",
+      "audio/deliv-3-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-4-q.mp3",
+     "lines": [
+      "audio/deliv-4-0.mp3",
+      "audio/deliv-4-1.mp3",
+      "audio/deliv-4-2.mp3",
+      "audio/deliv-4-3.mp3",
+      "audio/deliv-4-4.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-5-q.mp3",
+     "lines": [
+      "audio/deliv-5-0.mp3",
+      "audio/deliv-5-1.mp3",
+      "audio/deliv-5-2.mp3",
+      "audio/deliv-5-3.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-6-q.mp3",
+     "lines": [
+      "audio/deliv-6-0.mp3",
+      "audio/deliv-6-1.mp3",
+      "audio/deliv-6-2.mp3"
+     ]
+    },
+    {
+     "q": "audio/deliv-7-q.mp3",
+     "lines": [
+      "audio/deliv-7-0.mp3",
+      "audio/deliv-7-1.mp3",
+      "audio/deliv-7-2.mp3",
+      "audio/deliv-7-3.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "terms",
+   "name": "Terms you must be able to say",
+   "items": [
+    {
+     "q": "audio/terms-0-q.mp3",
+     "lines": [
+      "audio/terms-0-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-1-q.mp3",
+     "lines": [
+      "audio/terms-1-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-2-q.mp3",
+     "lines": [
+      "audio/terms-2-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-3-q.mp3",
+     "lines": [
+      "audio/terms-3-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-4-q.mp3",
+     "lines": [
+      "audio/terms-4-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-5-q.mp3",
+     "lines": [
+      "audio/terms-5-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-6-q.mp3",
+     "lines": [
+      "audio/terms-6-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-7-q.mp3",
+     "lines": [
+      "audio/terms-7-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-8-q.mp3",
+     "lines": [
+      "audio/terms-8-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-9-q.mp3",
+     "lines": [
+      "audio/terms-9-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-10-q.mp3",
+     "lines": [
+      "audio/terms-10-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-11-q.mp3",
+     "lines": [
+      "audio/terms-11-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-12-q.mp3",
+     "lines": [
+      "audio/terms-12-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-13-q.mp3",
+     "lines": [
+      "audio/terms-13-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-14-q.mp3",
+     "lines": [
+      "audio/terms-14-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-15-q.mp3",
+     "lines": [
+      "audio/terms-15-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-16-q.mp3",
+     "lines": [
+      "audio/terms-16-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-17-q.mp3",
+     "lines": [
+      "audio/terms-17-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-18-q.mp3",
+     "lines": [
+      "audio/terms-18-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-19-q.mp3",
+     "lines": [
+      "audio/terms-19-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-20-q.mp3",
+     "lines": [
+      "audio/terms-20-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-21-q.mp3",
+     "lines": [
+      "audio/terms-21-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-22-q.mp3",
+     "lines": [
+      "audio/terms-22-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-23-q.mp3",
+     "lines": [
+      "audio/terms-23-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-24-q.mp3",
+     "lines": [
+      "audio/terms-24-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-25-q.mp3",
+     "lines": [
+      "audio/terms-25-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-26-q.mp3",
+     "lines": [
+      "audio/terms-26-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-27-q.mp3",
+     "lines": [
+      "audio/terms-27-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-28-q.mp3",
+     "lines": [
+      "audio/terms-28-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-29-q.mp3",
+     "lines": [
+      "audio/terms-29-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-30-q.mp3",
+     "lines": [
+      "audio/terms-30-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-31-q.mp3",
+     "lines": [
+      "audio/terms-31-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-32-q.mp3",
+     "lines": [
+      "audio/terms-32-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-33-q.mp3",
+     "lines": [
+      "audio/terms-33-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-34-q.mp3",
+     "lines": [
+      "audio/terms-34-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-35-q.mp3",
+     "lines": [
+      "audio/terms-35-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-36-q.mp3",
+     "lines": [
+      "audio/terms-36-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-37-q.mp3",
+     "lines": [
+      "audio/terms-37-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-38-q.mp3",
+     "lines": [
+      "audio/terms-38-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-39-q.mp3",
+     "lines": [
+      "audio/terms-39-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-40-q.mp3",
+     "lines": [
+      "audio/terms-40-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-41-q.mp3",
+     "lines": [
+      "audio/terms-41-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-42-q.mp3",
+     "lines": [
+      "audio/terms-42-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-43-q.mp3",
+     "lines": [
+      "audio/terms-43-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-44-q.mp3",
+     "lines": [
+      "audio/terms-44-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-45-q.mp3",
+     "lines": [
+      "audio/terms-45-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-46-q.mp3",
+     "lines": [
+      "audio/terms-46-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-47-q.mp3",
+     "lines": [
+      "audio/terms-47-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-48-q.mp3",
+     "lines": [
+      "audio/terms-48-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-49-q.mp3",
+     "lines": [
+      "audio/terms-49-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-50-q.mp3",
+     "lines": [
+      "audio/terms-50-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-51-q.mp3",
+     "lines": [
+      "audio/terms-51-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-52-q.mp3",
+     "lines": [
+      "audio/terms-52-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-53-q.mp3",
+     "lines": [
+      "audio/terms-53-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-54-q.mp3",
+     "lines": [
+      "audio/terms-54-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-55-q.mp3",
+     "lines": [
+      "audio/terms-55-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-56-q.mp3",
+     "lines": [
+      "audio/terms-56-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-57-q.mp3",
+     "lines": [
+      "audio/terms-57-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-58-q.mp3",
+     "lines": [
+      "audio/terms-58-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-59-q.mp3",
+     "lines": [
+      "audio/terms-59-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-60-q.mp3",
+     "lines": [
+      "audio/terms-60-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-61-q.mp3",
+     "lines": [
+      "audio/terms-61-0.mp3",
+      "audio/terms-61-1.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-62-q.mp3",
+     "lines": [
+      "audio/terms-62-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-63-q.mp3",
+     "lines": [
+      "audio/terms-63-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-64-q.mp3",
+     "lines": [
+      "audio/terms-64-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-65-q.mp3",
+     "lines": [
+      "audio/terms-65-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-66-q.mp3",
+     "lines": [
+      "audio/terms-66-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-67-q.mp3",
+     "lines": [
+      "audio/terms-67-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-68-q.mp3",
+     "lines": [
+      "audio/terms-68-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-69-q.mp3",
+     "lines": [
+      "audio/terms-69-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-70-q.mp3",
+     "lines": [
+      "audio/terms-70-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-71-q.mp3",
+     "lines": [
+      "audio/terms-71-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-72-q.mp3",
+     "lines": [
+      "audio/terms-72-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-73-q.mp3",
+     "lines": [
+      "audio/terms-73-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-74-q.mp3",
+     "lines": [
+      "audio/terms-74-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-75-q.mp3",
+     "lines": [
+      "audio/terms-75-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-76-q.mp3",
+     "lines": [
+      "audio/terms-76-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-77-q.mp3",
+     "lines": [
+      "audio/terms-77-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-78-q.mp3",
+     "lines": [
+      "audio/terms-78-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-79-q.mp3",
+     "lines": [
+      "audio/terms-79-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-80-q.mp3",
+     "lines": [
+      "audio/terms-80-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-81-q.mp3",
+     "lines": [
+      "audio/terms-81-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-82-q.mp3",
+     "lines": [
+      "audio/terms-82-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-83-q.mp3",
+     "lines": [
+      "audio/terms-83-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-84-q.mp3",
+     "lines": [
+      "audio/terms-84-0.mp3"
+     ]
+    },
+    {
+     "q": "audio/terms-85-q.mp3",
+     "lines": [
+      "audio/terms-85-0.mp3"
+     ]
+    }
+   ]
+  }
+ ],
+ "numbers": [
+  {
+   "q": "audio/num-0-q.mp3",
+   "lines": [
+    "audio/num-0-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-1-q.mp3",
+   "lines": [
+    "audio/num-1-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-2-q.mp3",
+   "lines": [
+    "audio/num-2-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-3-q.mp3",
+   "lines": [
+    "audio/num-3-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-4-q.mp3",
+   "lines": [
+    "audio/num-4-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-5-q.mp3",
+   "lines": [
+    "audio/num-5-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-6-q.mp3",
+   "lines": [
+    "audio/num-6-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-7-q.mp3",
+   "lines": [
+    "audio/num-7-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-8-q.mp3",
+   "lines": [
+    "audio/num-8-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-9-q.mp3",
+   "lines": [
+    "audio/num-9-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-10-q.mp3",
+   "lines": [
+    "audio/num-10-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-11-q.mp3",
+   "lines": [
+    "audio/num-11-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-12-q.mp3",
+   "lines": [
+    "audio/num-12-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-13-q.mp3",
+   "lines": [
+    "audio/num-13-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-14-q.mp3",
+   "lines": [
+    "audio/num-14-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-15-q.mp3",
+   "lines": [
+    "audio/num-15-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-16-q.mp3",
+   "lines": [
+    "audio/num-16-0.mp3"
+   ]
+  },
+  {
+   "q": "audio/num-17-q.mp3",
+   "lines": [
+    "audio/num-17-0.mp3"
+   ]
+  }
+ ],
+ "silence": {
+  "short": "audio/sil-short.mp3",
+  "gap": "audio/sil-gap.mp3"
+ },
+ "count": 506
+}
