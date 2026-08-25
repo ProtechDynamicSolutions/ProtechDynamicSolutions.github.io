@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#013663">
+<title>IFES Records Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="assets/app.webmanifest">
+<script src="assets/logos.js"></script>
+<style>
+:root{
+  --c1:#013663; --c2:#0087c8; --c3:#02588e;
+  --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --paper:#ffffff; --bg:#f6f7f9;
+  --ok:#059669; --bad:#dc2626; --warn:#d97706;
+}
+.brandgrad{ background:linear-gradient(100deg, var(--c1) 0%, var(--c3) 34%, var(--c2) 62%, var(--c3) 82%, var(--c1) 100%); }
+*{ box-sizing:border-box; }
+body{ font-family:'Inter', ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:#334155; -webkit-font-smoothing:antialiased; margin:0; }
+.serif{ font-family:'Playfair Display', serif; }
+.card{ background:var(--paper); border:1px solid var(--line); border-radius:16px; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px -18px rgba(15,23,42,.35); }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:11px; padding:10px 16px; font-weight:600; font-size:14px; cursor:pointer; border:0; transition:filter .15s, transform .05s; min-height:42px; }
+.btn:active{ transform:scale(.99); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+.btn-a{ background:var(--c2); color:#fff; box-shadow:0 4px 14px rgba(0,135,200,.32); } .btn-a:hover{ filter:brightness(1.07); }
+.btn-p{ background:var(--c1); color:#fff; } .btn-p:hover{ filter:brightness(1.4); }
+.btn-o{ background:#fff; color:var(--c1); border:1.5px solid var(--line); } .btn-o:hover{ border-color:var(--c2); color:var(--c2); }
+.field{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; background:#fff; font-size:14px; min-height:42px; color:#334155; }
+.field:focus{ outline:2px solid var(--c2); outline-offset:1px; border-color:var(--c2); }
+.chip{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+.chip-ok{ background:rgba(5,150,105,.12); color:#047857; }
+.chip-bad{ background:rgba(220,38,38,.12); color:#b91c1c; }
+.chip-warn{ background:rgba(217,119,6,.14); color:#92400e; }
+.chip-n{ background:#f1f5f9; color:#475569; }
+.pill{ padding:7px 13px; border-radius:999px; font-size:13px; font-weight:600; border:1.5px solid var(--line); background:#fff; color:#64748b; cursor:pointer; white-space:nowrap; }
+.pill.on{ background:var(--c1); border-color:var(--c1); color:#fff; }
+.kpi-accent{ position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; }
+table.data{ width:100%; border-collapse:collapse; font-size:13.5px; }
+table.data th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; font-weight:700; padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; user-select:none; }
+table.data th:hover{ color:var(--c2); }
+table.data td{ padding:11px 12px; border-bottom:1px solid #f1f5f9; }
+table.data tbody tr{ cursor:pointer; }
+table.data tbody tr:hover{ background:#fbfaf8; }
+.scrollx{ overflow-x:auto; }
+.fadein{ animation:fi .2s ease-out; } @keyframes fi{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+.leaflet-container{ border-radius:12px; font-family:'Inter', sans-serif; }
+.leaflet-popup-content{ margin:10px 12px; }
+@media print{ .noprint{ display:none !important; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="boot" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f6f7f9;font-family:system-ui;color:#64748b;font-size:14px;z-index:9999">Loading dashboard…</div>
+
+<!-- IFES_CONFIG_START -->
+<script id="app-config">
+window.APP_CONFIG = {
+  companyName: "I.F.E.S. Electrical Services Ltd.",
+  clientName: "",
+  tagline: "Inspection and test record programme",
+  primaryColor: "#013663",
+  accentColor: "#0087c8",
+  thirdColor: "#02588e",
+  textColor: "#ffffff",
+  logoDataUri: "",      /* filled from assets/logos.js */
+  logoMarkUri: "",      /* filled from assets/logos.js */
+  logoLightUri: "",     /* filled from assets/logos.js */
+  logoUrl: "",
+  logoBox: false,
+  website: "https://ifes.ie/",
+  phone: "021-4876595",
+  email: "info@ifes.ie",
+  address: "Wood Road, Classis Cross, Lisheens, Cork",
+  regNumber: "",
+  /* Two ways to point the app at the backend.
+
+     apiUrl      the whole /exec URL. Simple, and the address is then in the
+                 published file for anyone who views source to read.
+
+     apiUrlHead  the URL with its last 10 characters removed (before /exec).
+                 Each device is asked once for those 10 characters and stores
+                 them, so the published file never contains a working address.
+                 Set ONE of the two, not both. */
+  apiUrl: "",
+  apiUrlHead: "https://script.google.com/macros/s/AKfycbwDkDHoBJ7CYZDId7JjOfYMDNKYKCMD0M-ittBvuh6K8BcZFUEr3E34vj",
+  viewKey: "",
+  companyCode: "ifes"
+};
+/* Artwork comes from assets/logos.js when it is beside this file. A build
+   with the folder missing still runs — it falls back to the drawn mark. */
+(function(){ var L = window.IFES_LOGOS || {};
+  window.APP_CONFIG.logoDataUri = window.APP_CONFIG.logoDataUri || L.blue || "";
+  window.APP_CONFIG.logoLightUri = window.APP_CONFIG.logoLightUri || L.white || "";
+  window.APP_CONFIG.logoMarkUri = window.APP_CONFIG.logoMarkUri || L.mark || "";
+})();
+
+</script>
+<!-- IFES_CONFIG_END -->
+
+<script>
+window.__err = function(msg){
+  var b = document.getElementById('boot'); if(!b) return;
+  b.style.display = 'flex';
+  b.innerHTML = '<div style="max-width:520px;padding:24px;text-align:left"><div style="font-weight:700;color:#b91c1c;font-size:16px;margin-bottom:8px">The dashboard could not start</div><pre style="white-space:pre-wrap;font-size:12px;color:#334155;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px">' + String(msg) + '</pre></div>';
+};
+window.addEventListener('error', function(e){ window.__err((e.message||'Error') + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')); });
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+const BRAND = window.APP_CONFIG || {};
+const C1 = BRAND.primaryColor || '#013663';
+const C2 = BRAND.accentColor || '#0087c8';
+const C3 = BRAND.thirdColor  || '#02588e';
+
+/* ================= HELPERS ================= */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const nowISO = () => new Date().toISOString();
+const todayInput = () => new Date().toISOString().slice(0,10);
+const fmtDate = (iso) => { if(!iso) return ''; const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-IE',{day:'2-digit',month:'short',year:'numeric'}); };
+const monthKey = (iso) => (iso || '').slice(0,7);
+const monthLabel = (k) => { const [y,m] = k.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m,10)-1] + ' ' + y.slice(2); };
+const downloadBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000); };
+const hexToRgb = (h) => { h=(h||'#0f172a').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
+const luminance = (h) => { const [r,g,b]=hexToRgb(h); return (0.299*r+0.587*g+0.114*b)/255; };
+const textOn = (h) => luminance(h) > 0.6 ? '#0f172a' : '#ffffff';
+const argb = (h) => 'FF' + (h||'#0f172a').replace('#','').toUpperCase();
+const safeName = (s) => String(s || 'record').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,50) || 'record';
+/* Map popups are built as HTML strings, and site names come from whatever was
+   typed on site, so they get escaped before going anywhere near innerHTML. */
+const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ESC_MAP[c]);
+const pct = (n, d) => d ? Math.round(n / d * 100) : 0;
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+function fitBox(natW, natH, maxW, maxH){ if(!natW || !natH) return {w:maxW,h:maxH}; const r = Math.min(maxW/natW, maxH/natH); return { w:natW*r, h:natH*r }; }
+function addInterval(dateStr, value, unit){
+  const n = parseFloat(value);
+  if(!dateStr || !n || isNaN(n)) return '';
+  const d = new Date(dateStr); if(isNaN(d)) return '';
+  if(unit === 'months') d.setMonth(d.getMonth() + Math.round(n)); else d.setFullYear(d.getFullYear() + Math.round(n));
+  return d.toISOString().slice(0,10);
+}
+
+/* ================= REFERENCE DATA ================= */
+const PIR_Q = [
+  { g:'Outlets & accessories', items:[
+    [1,'Have all electrical outlets / accessories been inspected?', false],
+    [2,'Are all outlets / accessories undamaged?', false],
+    [3,'Are all live parts covered?', false],
+  ]},
+  { g:'Earthing / bonding', items:[
+    [4,'If TNCS, is main protective conductor connected?', true],
+    [5,'If present, is it the correct size?', true],
+    [6,'Earth Electrode Inspection Chamber?', false],
+    [7,'If yes, is earth electrode visible?', false],
+    [8,'If yes, is protective tape used?', false],
+    [9,'If visible, is the earthing conductor the correct size?', false],
+    [10,'Is all main equipotential bonding correct?', true],
+    [11,'All supplementary bonding correct and connections verified?', true],
+    [12,'Protective earthing sleeved where appropriate?', true],
+    [13,'Polarity and earthing of all switches / outlets correct?', false],
+    [14,'All metallic switches / outlets earthed?', false],
+  ]},
+  { g:'Distribution board(s)', items:[
+    [15,'Labelled correctly?', false],
+    [16,'Located correctly?', false],
+    [18,'Are all devices correctly rated for S/C and O/L?', false],
+    [19,'Circuit sequence correct for P, N, +E?', false],
+  ]},
+  { g:'General', items:[
+    [21,'Correct cable colours used at the time of installation?', false],
+    [22,'Are cables in good condition?', false],
+    [23,'Cables correctly selected?', false],
+    [24,'Correct routing of cables in attic area?', true],
+    [25,'Cables correctly installed where visible?', false],
+    [26,'All excessive heating effects from luminaires avoided?', false],
+    [27,'Correctly selected accessories and switches?', false],
+    [28,'Are they in a good condition?', false],
+    [29,'Are they correctly located?', false],
+    [30,'Are they suitable for their environment?', false],
+  ]},
+];
+const PIR_CODES = { '1':'Requires urgent attention', '2':'Requires improvements', '3':'Requires some attention', '4':'Does not comply with current National Rules' };
+const CODE_COLOR = { '1':'#dc2626', '2':'#d97706', '3':'#64748b', '4':C2 };
+const Q_TEXT = (() => { const m = {}; PIR_Q.forEach(g => g.items.forEach(i => { m[i[0]] = i[1]; })); return m; })();
+const pirQFlat = () => PIR_Q.reduce((a,g)=> a.concat(g.items.map(i=>i[0])), []);
+
+/* Signed off = every check answered, a condition recorded, and a signature. */
+/* The field app writes two kinds of record into the same sheet. Both are read
+   here through one audit with one shape, so the tables, the filters and the
+   charts do not each need to know which is which. */
+const KINDS = {
+  periodic: { label:'Periodic inspection', short:'Periodic', prefix:'PR' },
+  test:     { label:'Test record',         short:'Test record', prefix:'TR' }
+};
+const kindOf = (job) => (job && job.kind === 'test') ? 'test' : 'periodic';
+const circuitFailed = (c) => (c.pre||{}).pass === 'Fail' || (c.post||{}).pass === 'Fail';
+
+function isSignedOff(job){
+  const a = audit(job);
+  if(kindOf(job) === 'test') return a.total > 0 && a.answered === a.total && !!((job.sig || {}).sig);
+  return a.unanswered.length === 0 && !!(job.pir || {}).condition && !!((job.sig || {}).sig);
+}
+
+function audit(job){
+  return kindOf(job) === 'test' ? testAudit(job) : pirAudit(job);
+}
+
+function testAudit(job){
+  const cs = ((job.test || {}).circuits) || [];
+  const done = cs.filter(c => (c.pre||{}).pass && (c.post||{}).pass);
+  const failed = cs.filter(circuitFailed);
+  return {
+    unanswered: cs.filter(c => !((c.pre||{}).pass && (c.post||{}).pass)).map(c => c.number),
+    nos: failed.map(c => c.number),
+    obs: failed.map(c => ({ id:c.id, ref:c.number, code:'1',
+      comment: (c.designation || 'Circuit ' + c.number) + ' failed: ' + [(c.pre||{}).comments, (c.post||{}).comments].filter(Boolean).join('; ') })),
+    urgent: failed,
+    answered: done.length, total: cs.length,
+    circuits: cs, failed,
+    condition: failed.length ? 'Unsatisfactory' : (cs.length && done.length === cs.length ? 'Satisfactory' : ''),
+    nextDue: ''
+  };
+}
+
+function pirAudit(job){
+  const p = job.pir || {};
+  const q = p.q || {};
+  const nums = pirQFlat();
+  const unanswered = nums.filter(n => !q['q'+n]);
+  const nos = nums.filter(n => q['q'+n] === 'No');
+  const obs = (p.obs || []).filter(o => (o.comment||'').trim());
+  const urgent = obs.filter(o => o.code === '1');
+  return { unanswered, nos, obs, urgent, answered: nums.length - unanswered.length, total: nums.length,
+    circuits: [], failed: [],
+    condition: urgent.length ? 'Unsatisfactory' : (p.condition || ''),
+    nextDue: addInterval(job.date, p.intervalValue, p.intervalUnit) };
+}
+
+const settings = {
+  companyName: BRAND.companyName || 'I.F.E.S. Electrical Services Ltd.',
+  clientName: BRAND.clientName || '',
+  regNo: BRAND.regNumber || '', phone: BRAND.phone || '', email: BRAND.email || '',
+  website: BRAND.website || '', address: BRAND.address || '',
+  logo: BRAND.logoDataUri || BRAND.logoUrl || '',
+  logoLight: BRAND.logoLightUri || '',
+  logoMark: BRAND.logoMarkUri || '',
+  logoBox: BRAND.logoBox !== false, disclaimer: true,
+  c1: C1, c2: C2, c3: C3
+};
+
+/* ================= API (read only) ================= */
+/* Same reasoning as the inspection app: an Apps Script web app has to be
+   published as "Anyone", so a key written into this file would be readable by
+   anyone who opens the page. The view code is typed once and kept in the
+   browser instead. It is read only — it cannot change or delete a thing. */
+const store = {
+  get(k, fb){ try{ const v = localStorage.getItem('ifesd_' + k); return v ? JSON.parse(v) : fb; }catch(e){ return fb; } },
+  set(k, v){ try{ localStorage.setItem('ifesd_' + k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* The address the app talks to. With apiUrlHead set, the tail is typed once per
+   device and kept there — so a copy of this file, on its own, does not say where
+   the backend is. Worth being clear about what that is and is not: it hides the
+   address, which stops casual poking; it is one shared secret for everyone, so
+   it is not per-person security and it is not what controls who can sign in.
+   The Techs tab and the server checks do that. */
+const CONN = {
+  head: BRAND.apiUrlHead || '',
+  get tail(){ return store.get('connTail', '') || ''; },
+  set tail(v){ store.set('connTail', v || ''); },
+  get needed(){ return !!this.head && !BRAND.apiUrl && !this.tail; },
+  url(tail){
+    if(BRAND.apiUrl) return BRAND.apiUrl;
+    const t = (tail === undefined ? this.tail : tail).trim();
+    return (this.head && t) ? this.head + t + '/exec' : '';
+  }
+};
+
+const API = {
+  url: CONN.url(),
+  /* Either a named person with the viewer role, or the long read-only code. */
+  user: '', pin: '', token: '', key: '', who: '',
+  company: (BRAND.companyCode || 'default').toLowerCase(),
+  get configured(){ return !!(this.url || CONN.head); },
+  get on(){ return !!(this.url && (this.key || (this.user && (this.token || this.pin)))); },
+  save(creds, who, token){
+    this.key = creds.key || ''; this.user = creds.user || '';
+    this.token = token || ''; this.pin = token ? '' : (creds.pin || '');
+    this.who = who || '';
+    store.set('viewKey', this.key); store.set('viewUser', this.user);
+    store.set('viewToken', this.token); store.set('viewPin', this.pin); store.set('viewWho', this.who);
+  },
+  forget(){
+    this.key = ''; this.user = ''; this.pin = ''; this.token = ''; this.who = '';
+    ['viewKey','viewUser','viewPin','viewToken','viewWho'].forEach(k => store.set(k, ''));
+  },
+  async raw(action, payload, creds){
+    const c = creds || { key: this.key, user: this.user, pin: this.pin, token: this.token };
+    const c2 = creds || {};
+    const res = await fetch(this.url, {
+      method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      /* scope 'all' is a request, not a grant — the server checks the role
+         before it agrees, and refuses a plain electrician's login here. */
+      body: JSON.stringify({ key: c.key || '', user: c.user || '',
+                             pin: c.token ? '' : (c.pin || ''), token: c.token || '', scope:'all',
+                             trap: c2.trap || '', dwell: c2.dwell,
+                             company:this.company, action, payload: payload || {} })
+    });
+    if(!res.ok) throw new Error('Server returned ' + res.status);
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'Request failed');
+    return json;
+  },
+  async call(action, payload){ return (await this.raw(action, payload)).data; }
+};
+API.key = store.get('viewKey', '') || (BRAND.viewKey || '');
+API.user = store.get('viewUser', '') || '';
+API.pin = store.get('viewPin', '') || '';
+API.token = store.get('viewToken', '') || '';
+API.who = store.get('viewWho', '') || '';
+
+function analyse(jobs){
+  const total = jobs.length;
+  let sat = 0, unsat = 0, obsAll = [], urgent = 0;
+  const byMonth = {}, byCat = {}, byInspector = {}, byCode = {'1':0,'2':0,'3':0,'4':0}, qFail = {}, sites = {};
+  /* Test-record counters kept apart from the periodic ones: a failed circuit
+     and a code-1 observation are both bad news, but they are not the same
+     measurement and averaging them together would say nothing. */
+  const byKind = { periodic:0, test:0 };
+  let circuitsTotal = 0, circuitsTested = 0, circuitsFailed = 0;
+  const failByDesign = {};
+  jobs.forEach(j => {
+    const a = audit(j), p = j.pir || {};
+    const kind = kindOf(j);
+    byKind[kind]++;
+    if(kind === 'test'){
+      circuitsTotal += a.total;
+      circuitsTested += a.answered;
+      circuitsFailed += a.failed.length;
+      a.failed.forEach(c => {
+        const d = c.designation || 'Unnamed circuit';
+        failByDesign[d] = (failByDesign[d] || 0) + 1;
+      });
+    }
+    if(a.condition === 'Satisfactory') sat++;
+    else if(a.condition === 'Unsatisfactory') unsat++;
+    urgent += a.urgent.length;
+    /* Codes 1-4 are a periodic-report idea. A test record's "observations" are
+       its failed circuits, so they are counted, but not into the code chart. */
+    a.obs.forEach(o => { obsAll.push({ job:j, obs:o }); if(kind === 'periodic') byCode[o.code] = (byCode[o.code]||0) + 1; });
+    const mk = monthKey(j.date);
+    if(mk){
+      if(!byMonth[mk]) byMonth[mk] = { total:0, sat:0, unsat:0 };
+      byMonth[mk].total++;
+      if(a.condition === 'Satisfactory') byMonth[mk].sat++; else if(a.condition === 'Unsatisfactory') byMonth[mk].unsat++;
+    }
+    const cat = p.category || 'Unspecified';
+    byCat[cat] = (byCat[cat]||0) + 1;
+    const insp = j.inspector || (j.sig||{}).name || 'Unassigned';
+    if(!byInspector[insp]) byInspector[insp] = { n:0, obs:0 };
+    byInspector[insp].n++; byInspector[insp].obs += a.obs.length;
+    if(kind === 'periodic') a.nos.forEach(n => { qFail[n] = (qFail[n]||0) + 1; });
+    const key = j.customerName || 'Unnamed site';
+    if(!sites[key]) sites[key] = { count:0, lat:null, lng:null };
+    sites[key].count++;
+    const la = parseFloat(j.lat), ln = parseFloat(j.lng);
+    if(!isNaN(la) && !isNaN(ln)){ sites[key].lat = la; sites[key].lng = ln; }
+    /* Site-level facts always come from the most recent visit. */
+    if(!sites[key].date || (j.date||'') > (sites[key].date||'')){
+      Object.assign(sites[key], { date:j.date, nextDue:a.nextDue, condition:a.condition, urgent:a.urgent.length, address:j.address, job:j });
+    }
+  });
+
+  /* Last 12 months, including quiet ones, so the trend line does not lie.
+     Built from year/month directly: toISOString() would shift a month backwards
+     during summer time and produce a duplicated bucket. */
+  const months = [];
+  const now = new Date();
+  for(let i = 11; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    months.push(Object.assign({ key:k, label: monthLabel(k) }, byMonth[k] || { total:0, sat:0, unsat:0 }));
+  }
+
+  const today = todayInput();
+  const due = Object.keys(sites).map(k => Object.assign({ site:k }, sites[k]))
+    .filter(s => s.nextDue)
+    .map(s => Object.assign({}, s, { days: daysBetween(today, s.nextDue) }))
+    .sort((a,b) => a.days - b.days);
+
+  const topQ = Object.keys(qFail).map(n => ({ n: Number(n), count: qFail[n], text: Q_TEXT[n] || ('Question ' + n) }))
+    .sort((a,b) => b.count - a.count).slice(0, 8);
+
+  const mapPoints = Object.keys(sites)
+    .filter(k => sites[k].lat !== null && sites[k].lng !== null)
+    .map(k => Object.assign({ site:k }, sites[k]));
+
+  const topFail = Object.keys(failByDesign).map(k => ({ label:k, value:failByDesign[k] }))
+    .sort((a,b) => b.value - a.value).slice(0, 8);
+
+  return {
+    total, sat, unsat, urgent,
+    byKind, circuitsTotal, circuitsTested, circuitsFailed, topFail,
+    obsTotal: obsAll.length, obsAll,
+    satRate: pct(sat, sat + unsat),
+    months, byCat, byInspector, byCode, topQ,
+    mapPoints, mapMissing: Object.keys(sites).length - mapPoints.length,
+    sites: Object.keys(sites).length,
+    due, overdue: due.filter(d => d.days < 0), due90: due.filter(d => d.days >= 0 && d.days <= 90),
+    avgObs: total ? (obsAll.length / total).toFixed(1) : '0.0'
+  };
+}
+
+/* ================= SVG CHARTS ================= */
+function ColumnChart({data, height=170}){
+  const max = Math.max(1, ...data.map(d => d.total));
+  const bw = 100 / Math.max(data.length, 1);
+  return (<div>
+    <svg viewBox={'0 0 100 ' + height} preserveAspectRatio="none" style={{width:'100%', height: height, display:'block'}}>
+      {[0.25,0.5,0.75,1].map(g => (
+        <line key={g} x1="0" x2="100" y1={height - g*(height-24)} y2={height - g*(height-24)} stroke="#eef1f5" strokeWidth="1" vectorEffect="non-scaling-stroke"/>
+      ))}
+      {data.map((d, i) => {
+        const h = (d.total / max) * (height - 28);
+        const hUn = d.total ? (d.unsat / d.total) * h : 0;
+        const x = i*bw + bw*0.22, w = bw*0.56;
+        return (<g key={d.key}>
+          <rect x={x} y={height - 20 - h} width={w} height={Math.max(h - hUn, 0)} fill={C2} rx="0.6"/>
+          <rect x={x} y={height - 20 - hUn} width={w} height={hUn} fill="#dc2626" rx="0.6"/>
+        </g>);
+      })}
+    </svg>
+    <div className="flex text-[10px] text-slate-400 font-semibold -mt-4">
+      {data.map(d => <div key={d.key} className="text-center" style={{width: bw + '%'}}>{d.label.split(' ')[0]}</div>)}
+    </div>
+    <div className="flex gap-4 mt-3 text-xs text-slate-500">
+      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm inline-block" style={{background:C2}}/>Satisfactory</span>
+      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm inline-block bg-red-600"/>Unsatisfactory</span>
+    </div>
+  </div>);
+}
+
+function Donut({slices, centerTop, centerSub, size=170}){
+  const total = slices.reduce((s,x) => s + x.value, 0) || 1;
+  const R = 42, C = 2*Math.PI*R;
+  let acc = 0;
+  return (<div className="flex items-center gap-5 flex-wrap">
+    <svg viewBox="0 0 110 110" style={{width:size, height:size, flexShrink:0}}>
+      <circle cx="55" cy="55" r={R} fill="none" stroke="#f1f5f9" strokeWidth="15"/>
+      {slices.map((s, i) => {
+        const len = (s.value/total) * C;
+        const el = <circle key={i} cx="55" cy="55" r={R} fill="none" stroke={s.color} strokeWidth="15"
+          strokeDasharray={len + ' ' + (C - len)} strokeDashoffset={-acc}
+          transform="rotate(-90 55 55)" strokeLinecap="butt"/>;
+        acc += len;
+        return el;
+      })}
+      <text x="55" y="53" textAnchor="middle" fontSize="19" fontWeight="800" fill="#0f172a">{centerTop}</text>
+      <text x="55" y="66" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#94a3b8" letterSpacing="0.5">{centerSub}</text>
+    </svg>
+    <div className="space-y-2 min-w-0 flex-1">
+      {slices.map((s,i) => (
+        <div key={i} className="flex items-center gap-2 text-sm">
+          <i className="w-3 h-3 rounded-sm inline-block shrink-0" style={{background:s.color}}/>
+          <span className="text-slate-600 truncate flex-1">{s.label}</span>
+          <span className="font-bold text-slate-800">{s.value}</span>
+          <span className="text-slate-400 text-xs w-10 text-right">{pct(s.value, total)}%</span>
+        </div>
+      ))}
+    </div>
+  </div>);
+}
+
+/* ---- Site map ----
+   A real map: OpenStreetMap tiles through Leaflet, with each site plotted from
+   the coordinates the electrician captured at the board. The dashboard already
+   loads React and ExcelJS from a CDN, so a tile layer costs nothing extra
+   architecturally. If Leaflet or the tiles cannot be reached, the markers still
+   draw on a plain background and the panel says so. */
+function SiteMap({points, onPick}){
+  const elRef = useRef(null);
+  const mapRef = useRef(null);
+  const layerRef = useRef(null);
+  const pickRef = useRef(onPick);
+  pickRef.current = onPick;
+  const [tilesFailed, setTilesFailed] = useState(false);
+
+  const colorOf = (p) => p.urgent > 0 ? '#dc2626'
+    : p.condition === 'Unsatisfactory' ? '#f97316'
+    : p.condition === 'Satisfactory' ? '#059669' : '#94a3b8';
+
+  useEffect(() => {
+    if(!window.L || !elRef.current || mapRef.current) return;
+    const map = window.L.map(elRef.current, { scrollWheelZoom:false, attributionControl:true });
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).on('tileerror', () => setTilesFailed(true)).addTo(map);
+    map.setView([53.35, -7.9], 7);
+    mapRef.current = map;
+    /* Leaflet measures the container on creation; inside a freshly laid-out
+       card that measurement can be stale. */
+    setTimeout(() => map.invalidateSize(), 60);
+    return () => { map.remove(); mapRef.current = null; };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if(!map) return;
+    if(layerRef.current) layerRef.current.remove();
+    const group = window.L.layerGroup().addTo(map);
+    layerRef.current = group;
+    if(!points.length) return;
+
+    const maxCount = Math.max(...points.map(p => p.count));
+    points.forEach(p => {
+      const r = 7 + Math.sqrt(p.count / maxCount) * 9;
+      const m = window.L.circleMarker([p.lat, p.lng], {
+        radius: r, color: '#fff', weight: 2, fillColor: colorOf(p), fillOpacity: 0.9
+      }).addTo(group);
+      m.bindTooltip(p.site, { direction:'top', offset:[0,-6] });
+      m.bindPopup(
+        '<div style="font:600 13px Inter,sans-serif;color:#0f172a">' + esc(p.site) + '</div>' +
+        '<div style="font:400 11.5px Inter,sans-serif;color:#64748b;margin-top:2px">' + esc(p.address || '') + '</div>' +
+        '<div style="font:400 11.5px Inter,sans-serif;color:#334155;margin-top:6px">' +
+          p.count + ' inspection' + (p.count===1?'':'s') + ' · last ' + fmtDate(p.date) + '</div>' +
+        '<div style="font:700 11.5px Inter,sans-serif;margin-top:4px;color:' + colorOf(p) + '">' +
+          esc(p.condition || 'Not rated') + (p.urgent ? ' · ' + p.urgent + ' urgent' : '') + '</div>' +
+        '<div style="font:600 11.5px Inter,sans-serif;margin-top:8px;color:#1b3bc7;cursor:pointer" data-open="1">Open record →</div>'
+      );
+      m.on('popupopen', (e) => {
+        const link = e.popup.getElement().querySelector('[data-open]');
+        if(link) link.onclick = () => pickRef.current && pickRef.current(p.job);
+      });
+    });
+
+    /* Re-measure before fitting. This effect can run before the card has
+       finished laying out, and fitting against a stale container size leaves the
+       pins clustered in a corner. */
+    map.invalidateSize();
+    const bounds = window.L.latLngBounds(points.map(p => [p.lat, p.lng]));
+    map.fitBounds(bounds, { padding:[40,40], maxZoom: points.length === 1 ? 14 : 13 });
+  }, [points]);
+
+  if(!window.L){
+    return <p className="text-sm text-slate-400">The map library could not be loaded. Check the connection and refresh.</p>;
+  }
+  if(!points.length){
+    return <p className="text-sm text-slate-400">No coordinates recorded yet. Tap "Use my location" at the board and the site will appear here.</p>;
+  }
+
+  return (<div>
+    <div ref={elRef} style={{ height:'440px', width:'100%', borderRadius:'12px', zIndex:0 }}
+      className="border border-slate-200"/>
+    {tilesFailed && (
+      <p className="text-xs text-amber-700 mt-2">
+        Map tiles could not be reached, so the background is blank. The pins are still in the right places.
+      </p>
+    )}
+    <div className="flex gap-4 mt-3 text-xs text-slate-500 flex-wrap">
+      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-full inline-block" style={{background:'#059669'}}/>Satisfactory</span>
+      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-full inline-block" style={{background:'#f97316'}}/>Unsatisfactory</span>
+      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-full inline-block" style={{background:'#dc2626'}}/>Urgent finding</span>
+      <span className="text-slate-400">Pin size = inspections at that site. Click a pin for the record.</span>
+    </div>
+  </div>);
+}
+
+function BarList({rows, color, unit}){
+  const max = Math.max(1, ...rows.map(r => r.value));
+  if(!rows.length) return <p className="text-sm text-slate-400">Nothing recorded.</p>;
+  return (<div className="space-y-2.5">
+    {rows.map((r,i) => (
+      <div key={i}>
+        <div className="flex justify-between items-baseline gap-3 mb-1">
+          <span className="text-[13px] text-slate-600 truncate flex-1">{r.label}</span>
+          <span className="text-[13px] font-bold text-slate-800 shrink-0">{r.value}{unit || ''}</span>
+        </div>
+        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: (r.value/max*100) + '%', background: r.color || color || C2 }}/>
+        </div>
+      </div>
+    ))}
+  </div>);
+}
+
+/* House mark: clipboard with a tick, matching the on-site app. */
+/* White knockout straight onto the gradient — no plate, so no border. */
+function BrandLogo({settings, h = 52}){
+  const src = (settings || {}).logoLight || (settings || {}).logo;
+  if(!src) return <Mark size={Math.round(h * 0.8)}/>;
+  return <img src={src} alt="" className="shrink-0" style={{ height:h, width:'auto', display:'block' }}/>;
+}
+
+function Mark({size=44}){
+  return (<svg width={size} height={size} viewBox="0 0 32 32" fill="none" className="shrink-0">
+    <rect x="1" y="1" width="30" height="30" rx="8" fill="rgba(255,255,255,.16)"/>
+    <rect x="9" y="6.5" width="14" height="19" rx="2.6" stroke="#fff" strokeWidth="1.9"/>
+    <path d="M13 6.5V5.2A1.2 1.2 0 0 1 14.2 4h3.6A1.2 1.2 0 0 1 19 5.2v1.3" stroke="#fff" strokeWidth="1.9" strokeLinecap="round"/>
+    <path d="M12.4 16.4l2.6 2.7 5-5.4" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>);
+}
+
+/* Typed once per browser, verified before it is stored. Read only. */
+function UnlockView({onDone}){
+  const [name, setName] = useState('');
+  const [pin, setPin] = useState('');
+  const [trap, setTrap] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const opened = useRef(Date.now());
+  /* Two steps. Connecting the browser is a one-off; signing in is not. */
+  const [conn, setConn] = useState('');
+  const [step, setStep] = useState(CONN.needed ? 'conn' : 'pin');
+
+  const connect = async () => {
+    const t = conn.trim();
+    if(t.length < 6) return setErr('Enter the last 10 characters of the link the office gave you.');
+    const url = CONN.url(t);
+    if(!url) return setErr('This build has no connection link set.');
+    setBusy(true); setErr('');
+    try{
+      API.url = url;
+      /* An empty sign-in. Being told the credentials are wrong proves the
+         address is real, which is all this step needs to establish. */
+      await API.raw('ping', {}, { user:'', pin:'' });
+      CONN.tail = t;
+    }catch(e){
+      if(/returned \d/.test(e.message) || /Failed to fetch/i.test(e.message)){
+        API.url = CONN.url();
+        setBusy(false);
+        return setErr('That code did not reach the office. Check the last 10 characters and try again.');
+      }
+      CONN.tail = t;   /* the script answered, so the address is right */
+    }
+    setBusy(false); setErr('');
+    opened.current = Date.now();
+    setStep('pin');
+  };
+
+  const go = async () => {
+    if(!name.trim()) return setErr('Enter your email address or the name the office has for you.');
+    if(!/^\d{4,}$/.test(pin.trim())) return setErr('Enter the PIN the office gave you.');
+    const creds = { user: name.trim(), pin: pin.trim(), trap, dwell: Date.now() - opened.current };
+    setBusy(true); setErr('');
+    try{
+      /* Checked against the server before it is stored. The reply also carries
+         the person's display name, so the dashboard can say who is looking. */
+      const res = await API.raw('ping', {}, creds);
+      API.save(creds, res.who || '', res.token || '');
+      onDone();
+    }catch(e){
+      setErr(e.message);
+      setBusy(false);
+    }
+  };
+  return (<div className="min-h-screen flex items-center justify-center p-6 brandgrad">
+    <div className="card p-7 w-full max-w-sm">
+      <div className="flex items-center gap-3 mb-5">
+        {settings.logo
+          ? <img src={settings.logo} alt="" style={{ height:60, width:'auto' }}/>
+          : <div className="rounded-xl brandgrad p-1"><Mark size={34}/></div>}
+        <div className="min-w-0">
+          <h1 className="serif text-lg font-bold text-slate-800 leading-tight truncate">{settings.clientName || settings.companyName}</h1>
+          <p className="text-xs text-slate-400">Inspection dashboard</p>
+        </div>
+      </div>
+      {step === 'conn' ? (<>
+        <p className="text-sm text-slate-500 mb-4">
+          First, connect this browser. Enter the <b>last 10 characters</b> of the link the office gave you — once,
+          and never again here.
+        </p>
+        <input className="field" placeholder="10 characters" value={conn}
+          onChange={e=>setConn(e.target.value.trim())} onKeyDown={e=>{ if(e.key === 'Enter') connect(); }}/>
+        {err && <p className="text-xs text-red-600 font-semibold mt-2">{err}</p>}
+        <button className="btn btn-a w-full mt-4" disabled={busy} onClick={connect}>{busy ? 'Connecting…' : 'Connect'}</button>
+        <p className="text-xs text-slate-400 mt-3">Your email and PIN come next.</p>
+      </>) : (<>
+        <p className="text-sm text-slate-500 mb-4">
+          Sign in with your email address and PIN. The dashboard is read only — it shows and exports records, and
+          cannot change or delete anything.
+        </p>
+        {/* Not for you. A field no human sees, so anything that fills it in
+            was reading the HTML rather than looking at the page. The server is
+            what acts on it — a check only the browser does is a check an
+            attacker simply does not run. */}
+        <input type="text" name="company_website" value={trap} onChange={e=>setTrap(e.target.value)}
+          tabIndex={-1} autoComplete="off" aria-hidden="true"
+          style={{ position:'absolute', left:'-9999px', width:1, height:1, opacity:0 }}/>
+        <div className="space-y-3">
+          <input className="field" placeholder="you@ifes.ie" value={name} onChange={e=>setName(e.target.value)}
+            onKeyDown={e=>{ if(e.key === 'Enter') go(); }}/>
+          {/* No length stated, so a longer PIN on an account that needs one is
+              not something anybody else notices. */}
+          <input className="field" type="password" inputMode="numeric" placeholder="PIN"
+            value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,'').slice(0,16))}
+            onKeyDown={e=>{ if(e.key === 'Enter') go(); }}/>
+        </div>
+        {err && <p className="text-xs text-red-600 font-semibold mt-2">{err}</p>}
+        <button className="btn btn-a w-full mt-4" disabled={busy} onClick={go}>{busy ? 'Checking…' : 'Open dashboard'}</button>
+        {CONN.head && !BRAND.apiUrl && (
+          <button className="text-xs font-bold w-full mt-3" style={{color:C3}}
+            onClick={()=>{ CONN.tail = ''; API.url = CONN.url(); setErr(''); setConn(''); setStep('conn'); }}>
+            Connected to the wrong link? Start again
+          </button>
+        )}
+        <p className="text-xs text-slate-400 mt-3">
+          Stored in this browser only, so it is never part of a shared link. The office adds and removes people in
+          the Techs tab of the sheet.
+        </p>
+      </>)}
+    </div>
+  </div>);
+}
+
+function Kpi({label, value, sub, accent, tone}){
+  const toneColor = tone === 'bad' ? '#dc2626' : tone === 'ok' ? '#059669' : tone === 'warn' ? '#d97706' : '#0f172a';
+  return (<div className="card p-4 relative overflow-hidden">
+    <div className="kpi-accent" style={{background: accent || C2}}/>
+    <div className="pl-2.5">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="text-3xl font-black mt-1 leading-none" style={{color: toneColor}}>{value}</div>
+      {sub && <div className="text-xs text-slate-400 mt-1.5">{sub}</div>}
+    </div>
+  </div>);
+}
+
+/* ================= PDF FURNITURE ================= */
+/* A gradient band drawn as thin slices, so paper matches the on-screen header.
+   jsPDF has no gradient fill of its own. */
+function lerp(a, b, t){ return a + (b - a) * t; }
+function gradBand(doc, x, y, w, h, stops){
+  /* A slim per-page rule does not need as many slices as a full cover band. */
+  const N = h > 18 ? 96 : 44;
+  for(let i = 0; i < N; i++){
+    const t = i / (N - 1);
+    let a = stops[0], b = stops[stops.length - 1];
+    for(let s = 0; s < stops.length - 1; s++){
+      if(t >= stops[s].p && t <= stops[s+1].p){ a = stops[s]; b = stops[s+1]; break; }
+    }
+    const span = (b.p - a.p) || 1;
+    const lt = Math.min(Math.max((t - a.p) / span, 0), 1);
+    doc.setFillColor(
+      Math.round(lerp(a.c[0], b.c[0], lt)),
+      Math.round(lerp(a.c[1], b.c[1], lt)),
+      Math.round(lerp(a.c[2], b.c[2], lt))
+    );
+    doc.rect(x + (w * i / N), y, w / N + 0.4, h, 'F');
+  }
+}
+function brandStops(st){
+  const c1 = hexToRgb(st.c1), c2 = hexToRgb(st.c2), c3 = hexToRgb(st.c3);
+  return [{p:0, c:c1}, {p:0.38, c:c3}, {p:0.68, c:c2}, {p:1, c:c1}];
+}
+
+/* DRAFT on anything not signed off. */
+function stampWatermarks(doc, opts){
+  /* One diagonal only. DRAFT wins when both apply: two overlapping stamps made
+     the page unreadable, and DRAFT is the more urgent fact on the page. */
+  const draft = !!(opts && opts.draft);
+  const marks = [];
+  if(draft) marks.push({ text:'DRAFT', rgb:[100,116,139], op:0.12 });
+  if(!marks.length) return;
+  const total = doc.internal.getNumberOfPages();
+  for(let i = 1; i <= total; i++){
+    doc.setPage(i);
+    marks.forEach((m, mi) => {
+      let restore = false;
+      try{ doc.saveGraphicsState(); doc.setGState(new doc.GState({ opacity:m.op })); restore = true; }catch(e){}
+      doc.setTextColor(restore ? m.rgb[0] : 226, restore ? m.rgb[1] : 232, restore ? m.rgb[2] : 240);
+      doc.setFont('helvetica','bold'); doc.setFontSize(52);
+      for(let row = 0; row < 4; row++) doc.text(m.text, doc.internal.pageSize.getWidth()/2, 62 + row*62 + mi*22, { align:'center', angle:32 });
+      if(restore){ try{ doc.restoreGraphicsState(); }catch(e){} }
+    });
+    if(draft){
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.setTextColor(100,116,139);
+      doc.text('INCLUDES DRAFT RECORDS', doc.internal.pageSize.getWidth()/2, doc.internal.pageSize.getHeight() - 5, { align:'center' });
+    }
+    doc.setTextColor(15,23,42);
+  }
+}
+
+/* ================= PDF: full periodic report ================= */
+/* Renders one inspection into an existing document, so a single PDF can hold
+   the whole programme. */
+function renderPir(doc, job, st){
+  const W = 210, M = 12, BOT = 268;
+  const p = job.pir || {};
+  const a = audit(job);
+  const rgb1 = hexToRgb(st.c1), rgb2 = hexToRgb(st.c2);
+  const onC1 = textOn(st.c1) === '#ffffff' ? [255,255,255] : [15,23,42];
+  const OHM = 'ohms', MOHM = 'Mohms';
+
+  /* Full banner on the report's first page, a slim rule after that. */
+  let firstPage = true;
+  const head = () => {
+    const stops = brandStops(st);
+    if(firstPage){
+      firstPage = false;
+      gradBand(doc, 0, 0, W, 22, stops);
+      let tx = M;
+      const bannerLogo = st.logoLight || st.logo;
+      if(bannerLogo){
+        try{
+          const pr = doc.getImageProperties(bannerLogo);
+          const fit = fitBox(pr.width, pr.height, 15, 16);
+          const ly = (22 - fit.h)/2;
+          if(!st.logoLight && st.logoBox !== false){
+            doc.setFillColor(255,255,255);
+            doc.roundedRect(M - 2, ly - 2, fit.w + 4, fit.h + 4, 2, 2, 'F');
+          }
+          doc.addImage(bannerLogo, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', M, ly, fit.w, fit.h, undefined, 'FAST');
+          tx = M + fit.w + 7;
+        }catch(e){}
+      }
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11.5);
+      doc.text('PERIODIC INSPECTION REPORT', tx, 10.6);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
+      doc.text([st.companyName, st.regNo && ('Reg ' + st.regNo)].filter(Boolean).join('   ·   '), tx, 15.4);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
+      doc.text(job.prNo || '', W - M, 10.6, { align:'right' });
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
+      doc.text(fmtDate(job.date), W - M, 15.4, { align:'right' });
+      doc.setTextColor(15,23,42);
+      return 29;
+    }
+    gradBand(doc, 0, 0, W, 4, stops);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.4); doc.setTextColor(120,133,150);
+    doc.text((st.companyName || '').toUpperCase() + '   ·   PERIODIC INSPECTION REPORT', M, 9);
+    doc.text([job.prNo, fmtDate(job.date)].filter(Boolean).join('   ·   '), W - M, 9, { align:'right' });
+    doc.setDrawColor(232,238,244); doc.setLineWidth(0.2); doc.line(M, 11.5, W - M, 11.5);
+    doc.setTextColor(15,23,42);
+    return 18;
+  };
+
+  doc.addPage();
+  let y = head();
+
+  /* At-a-glance strip, same as the on-site app produces. */
+  const badge = a.condition === 'Unsatisfactory' ? [220,38,38] : a.condition === 'Satisfactory' ? [5,150,105] : [148,163,184];
+  doc.setFillColor(248,250,252); doc.roundedRect(M, y - 3, W - M*2, 17, 2, 2, 'F');
+  doc.setFillColor(badge[0],badge[1],badge[2]); doc.rect(M, y - 3, 1.6, 17, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(15,23,42);
+  doc.text(doc.splitTextToSize(job.customerName || 'Site', 104)[0], M + 5, y + 3);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,116,139);
+  doc.text(doc.splitTextToSize(job.address || '', 104)[0], M + 5, y + 8);
+  [
+    ['CONDITION', a.condition || 'Not recorded', badge],
+    ['OBSERVATIONS', String(a.obs.length) + (a.urgent.length ? ' (' + a.urgent.length + ' urgent)' : ''), a.urgent.length ? [220,38,38] : [15,23,42]],
+    ['NEXT DUE', fmtDate(a.nextDue) || '—', [15,23,42]]
+  ].forEach((f, i) => {
+    const fx = M + 116 + i*24;
+    doc.setFont('helvetica','bold'); doc.setFontSize(5.2); doc.setTextColor(148,163,184);
+    doc.text(f[0], fx, y + 1);
+    doc.setFontSize(6.8); doc.setTextColor(f[2][0], f[2][1], f[2][2]);
+    doc.text(doc.splitTextToSize(String(f[1]), 23), fx, y + 5.5);
+  });
+  doc.setTextColor(15,23,42);
+  y += 21;
+  const room = (need) => { if(y + need > BOT){ doc.addPage(); y = head(); } };
+  const tick = (x, yy, on) => {
+    doc.setDrawColor(120,133,150); doc.setLineWidth(0.25);
+    doc.rect(x, yy - 2.7, 3.4, 3.4);
+    if(on){ doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...rgb1); doc.text('X', x+0.7, yy+0.1); doc.setTextColor(15,23,42); doc.setFont('helvetica','normal'); }
+  };
+  const opts = (x, yy, list, val) => {
+    let cx = x;
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(15,23,42);
+    list.forEach(o => { doc.text(o, cx, yy); const w = doc.getTextWidth(o); tick(cx + w + 1.5, yy, val === o); cx += w + 9; });
+  };
+  const line = (label, val, x, yy, w) => {
+    doc.setFontSize(7.2); doc.setFont('helvetica','normal'); doc.setTextColor(100,116,139);
+    doc.text(label, x, yy);
+    const lw = doc.getTextWidth(label);
+    doc.setDrawColor(210,218,228); doc.setLineWidth(0.2); doc.line(x + lw + 2, yy + 0.9, x + w, yy + 0.9);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','bold'); doc.setFontSize(7.6);
+    doc.text(String(val || ''), x + lw + 3.5, yy);
+    doc.setFont('helvetica','normal');
+  };
+  const sect = (t) => {
+    room(12);
+    doc.setFillColor(240,244,248); doc.rect(M, y-4.2, W - M*2, 6.4, 'F');
+    doc.setFillColor(...rgb2); doc.rect(M, y-4.2, 1.6, 6.4, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...rgb1);
+    doc.text(t.toUpperCase(), M + 4, y);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','normal');
+    y += 8;
+  };
+  const COL2 = 108, HALF = 90;
+
+  sect('Registered contractor');
+  line('Name', st.companyName, M, y, 96); line('Reg No.', st.regNo, COL2, y, COL2+HALF); y += 7;
+  line('Address', st.address, M, y, 96); line('Phone', st.phone, COL2, y, COL2+HALF); y += 9;
+
+  sect('Installation details');
+  line('Occupant / trading as', p.occupant || job.customerName, M, y, 96);
+  line('Approx age', p.approxAge, COL2, y, COL2+HALF); y += 7;
+  line('Address', job.address, M, y, 96);
+  doc.setFontSize(7.2); doc.setTextColor(100,116,139);
+  doc.text('Occupant in attendance?', COL2, y);
+  doc.setTextColor(15,23,42);
+  opts(COL2 + 40, y, ['Yes','No'], p.occupantAttended); y += 9;
+
+  sect('Category and reason');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('Installation category', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 42, y, ['Domestic','Commercial','Industrial','Other'], p.category); y += 6.5;
+  doc.setFont('helvetica','bold'); doc.text('Reason for inspection', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 42, y, ['Insurance Inspection','Safety Audit','Other'], p.reason); y += 6.5;
+  if(p.reasonOther){ line('If other, specify', p.reasonOther, M, y, W - M); y += 7; }
+  y += 2;
+
+  sect('Extent of installation covered by this report');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('Entire installation?', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 40, y, ['Yes','No'], p.entireInstall); y += 5.5;
+  doc.setFontSize(6.5); doc.setTextColor(120,133,150);
+  doc.text('Cables concealed within trunking, conduit, the fabric of the building or underground have not been inspected unless stated otherwise.', M, y);
+  doc.setTextColor(15,23,42); y += 5;
+  if(p.entireInstall === 'No'){
+    doc.setFontSize(7.2);
+    const ls = doc.splitTextToSize('This report refers to: ' + (p.partialDetail || ''), W - M*2);
+    room(ls.length*4 + 4); doc.text(ls, M, y); y += ls.length*4 + 2;
+  }
+  y += 3;
+
+  sect('Supply characteristics');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('Type of system earthing', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 46, y, ['TNCS','TT','TNS','IT'], p.earthing); y += 6.5;
+  doc.setFont('helvetica','bold'); doc.text('Installation voltage', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 46, y, ['Single Phase','Three Phase'], p.phase); y += 6.5;
+  const volts = [['L1',p.v1],['L2',p.v2],['L3',p.v3],['L1-L2',p.v12],['L2-L3',p.v23],['L3-L1',p.v31]].filter(v => v[1]);
+  if(volts.length){ let vx = M; volts.forEach(v => { line(v[0], v[1] + ' V', vx, y, vx + 26); vx += 31; }); y += 7; }
+  line('Max prospective S/C current (A)', p.pscc, M, y, 96);
+  line('Nominal rating (A)', p.nominalRating, COL2, y, COL2+HALF); y += 7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('Main isolation / overcurrent device', M, y);
+  doc.setFont('helvetica','normal'); opts(M + 62, y, ['None','Switch Fuse','MCB','MCCB'], p.mainIsolation); y += 7;
+  line('If main RCD: rated current In (A)', p.mainRcdIn, M, y, 96);
+  line('Tripping current (mA)', p.mainRcdIdn, COL2, y, COL2+HALF); y += 4;
+
+  /* Flows on from the supply section: a forced break here left half of the
+     first page empty. */
+  y += 6;
+  sect('Inspection checks');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.2); doc.setTextColor(185,28,28);
+  doc.text('Any question answered "No" must be referred to in the observations section. All questions must be answered.', M, y);
+  doc.setTextColor(15,23,42); y += 6;
+
+  const q = p.q || {};
+  const ANSX = W - M - 40;
+  const drawQ = (n, label, na) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.6);
+    const lines = doc.splitTextToSize(n + '.   ' + label, ANSX - M - 6);
+    const h = Math.max(lines.length*3.9, 5) + 2.4;
+    room(h + 2);
+    const val = q['q'+n] || '';
+    if(val === 'No'){
+      doc.setFillColor(254,242,242); doc.rect(M-1.5, y-3.4, W - M*2 + 3, h, 'F');
+      doc.setDrawColor(220,38,38); doc.setLineWidth(0.7); doc.line(M-1.5, y-3.4, M-1.5, y-3.4+h);
+    }
+    doc.setTextColor(15,23,42); doc.text(lines, M + 2, y);
+    let bx = ANSX;
+    ['Yes','No'].concat(na ? ['N/A'] : []).forEach(o => {
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(90,103,120);
+      doc.text(o, bx, y); tick(bx + doc.getTextWidth(o) + 1.2, y, val === o); bx += doc.getTextWidth(o) + 7.5;
+    });
+    doc.setTextColor(15,23,42);
+    doc.setDrawColor(232,238,244); doc.setLineWidth(0.15); doc.line(M, y-3.4+h, W - M, y-3.4+h);
+    y += h;
+  };
+
+  PIR_Q.forEach(g => {
+    room(12);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.8); doc.setTextColor(...rgb1);
+    doc.text(g.g.toUpperCase(), M, y);
+    doc.setTextColor(15,23,42); y += 5;
+    if(g.g === 'Distribution board(s)'){
+      g.items.filter(it => it[0] < 17).forEach(it => drawQ(it[0], it[1], it[2]));
+      room(12);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.6);
+      doc.text('17.   Sub circuit isolation and overcurrent device type', M + 2, y);
+      opts(ANSX, y, ['Fuse','Mcb'], p.q17type);
+      doc.setDrawColor(232,238,244); doc.setLineWidth(0.15); doc.line(M, y + 2.2, W - M, y + 2.2);
+      y += 7.4;
+      g.items.filter(it => it[0] > 17).forEach(it => drawQ(it[0], it[1], it[2]));
+      room(26);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.6); doc.text('20.   RCDs', M + 2, y); y += 1.5;
+      doc.autoTable({
+        startY: y, margin:{ left: M + 2, right: M },
+        head: [['Circuit description','Tripping current (mA)','Longest tripping time (ms)']],
+        body: (p.rcds||[]).length ? p.rcds.map(r => [r.desc||'', r.trip||'', r.time||'']) : [['','',''],['','','']],
+        theme:'grid', styles:{ fontSize:7, cellPadding:1.6, lineColor:[210,218,228], minCellHeight:6 },
+        headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7, fontStyle:'bold' },
+        columnStyles:{ 1:{ cellWidth:32, halign:'center' }, 2:{ cellWidth:40, halign:'center' } },
+        didParseCell: function(d){
+          if(d.section === 'body' && d.column.index === 2){
+            const t = parseFloat(d.cell.raw);
+            if(!isNaN(t) && t > 300){ d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold'; }
+          }
+        }
+      });
+      y = doc.lastAutoTable.finalY + 7;
+    } else { g.items.forEach(it => drawQ(it[0], it[1], it[2])); y += 3; }
+  });
+
+  y += 4;
+  sect('Summary test data');
+  line('Min insulation resistance (' + MOHM + ')', p.minIR, M, y, 96);
+  line('Max resistance of protective conductor (' + OHM + ')', p.maxRp, COL2, y, COL2+HALF); y += 7;
+  line('Max fault loop impedance (' + OHM + ')', p.maxZs, M, y, 96);
+  line('Associated device type / size', [p.zsDeviceType, p.zsDeviceSize].filter(Boolean).join(' '), COL2, y, COL2+HALF); y += 9;
+
+  sect('Quality of workmanship');
+  opts(M, y, ['Very Good','Satisfactory','Poor'], p.workmanship); y += 9;
+
+  sect('Test instrument serial numbers');
+  line('Continuity tester', p.instContinuity, M, y, 96);
+  line('Insulation resistance tester', p.instIR, COL2, y, COL2+HALF); y += 7;
+  line('Loop impedance tester', p.instLoop, M, y, 96);
+  line('RCD tester', p.instRcd, COL2, y, COL2+HALF); y += 9;
+
+  sect('Observations and recommendations');
+  opts(M, y, ['No remedial work is required','The following observations are made'], p.noRemedial); y += 6;
+  doc.autoTable({
+    startY: y, margin:{ left:M, right:M },
+    head: [['Ref No.','Comments','Recommendation']],
+    body: a.obs.length ? a.obs.map((o,i) => [o.ref || String(i+1), o.comment, '(' + o.code + ')  ' + (PIR_CODES[o.code]||'')])
+                       : [['','',''],['','',''],['','','']],
+    theme:'grid', styles:{ fontSize:7.2, cellPadding:1.8, lineColor:[210,218,228], minCellHeight:7 },
+    headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7.2, fontStyle:'bold' },
+    columnStyles:{ 0:{ cellWidth:16, halign:'center' }, 2:{ cellWidth:52 } },
+    didParseCell: function(d){
+      if(d.section === 'body' && d.column.index === 2 && String(d.cell.raw).indexOf('(1)') === 0){
+        d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  doc.setFontSize(6.6); doc.setTextColor(100,116,139);
+  doc.text('Each observation is given one of the following numbers to indicate the action recommended:', M, y); y += 3.3;
+  doc.text('(1) Requires urgent attention     (2) Requires improvements     (3) Requires some attention     (4) Does not comply with current National Rules for Electrical Installations.', M, y); y += 3.3;
+  doc.text('Using (4) does not necessarily imply that the electrical installation inspected is unsafe.', M, y); y += 6;
+  doc.setTextColor(15,23,42);
+
+  if(a.urgent.length){
+    room(11);
+    doc.setFillColor(220,38,38); doc.rect(M, y-4, W - M*2, 7.5, 'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7.4);
+    doc.text('URGENT ATTENTION REQUIRED. The person responsible for the installation must be notified without delay.', M + 3, y + 0.8);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','normal'); y += 11;
+  }
+
+  doc.setFontSize(7.4);
+  const rec = doc.splitTextToSize('On the basis that all observations requiring urgent attention have been completed without delay, we recommend that this installation is further inspected and tested after an interval of not more than ' +
+    (p.intervalValue || '____') + ' ' + (p.intervalUnit || 'years') + '.', W - M*2);
+  room(rec.length*4 + 6); doc.text(rec, M, y); y += rec.length*4 + 5;
+
+  sect('Overall condition of the installation');
+  opts(M, y, ['Satisfactory','Unsatisfactory'], a.condition); y += 12;
+
+  sect('Declaration');
+  doc.setFontSize(6.8); doc.setTextColor(100,116,139);
+  const dec = doc.splitTextToSize('I/We are responsible for the inspection and testing of the electrical installation described in this report, and confirm to the best of my/our knowledge that the tests and observations recorded represent an accurate assessment, within the limits specified, of the condition of the electrical installation.', W - M*2);
+  doc.text(dec, M, y); y += dec.length*3.2 + 6;
+  doc.setTextColor(15,23,42);
+
+  const sg = job.sig || {};
+  room(26);
+  if(sg.sig){ try{ doc.addImage(sg.sig, 'PNG', M + 2, y - 1, 44, 15); }catch(e){} }
+  const sy = y + 16;
+  doc.setDrawColor(150,163,180); doc.setLineWidth(0.25);
+  doc.line(M, sy, M + 62, sy); doc.line(M + 70, sy, M + 124, sy); doc.line(M + 132, sy, W - M, sy);
+  doc.setFontSize(7.4); doc.setFont('helvetica','bold'); doc.setTextColor(15,23,42);
+  doc.text((sg.name || '').toUpperCase(), M + 2, sy - 2);
+  doc.text(p.certifierNo || '', M + 72, sy - 2);
+  doc.text(fmtDate(sg.date || job.date), M + 134, sy - 2);
+  doc.setFontSize(6.6); doc.setFont('helvetica','normal'); doc.setTextColor(120,133,150);
+  doc.text('Inspected and tested by (signed)', M, sy + 3.6);
+  doc.text('Certifier No.', M + 70, sy + 3.6);
+  doc.text('Date', M + 132, sy + 3.6);
+}
+
+/* A bundle can hold portrait periodic reports and landscape test records in the
+   same file, so the footer measures the page it is actually standing on rather
+   than assuming A4 portrait. */
+/* Test records render landscape, matching what the field app produces, so the
+   copy the client downloads and the copy the electrician handed over are the
+   same document. */
+function renderTest(doc, job, st){
+  const W = 297, M = 12, BOT = 182;
+  const t = job.test || {};
+  const p = job.pir || {};
+  const a = audit(job);
+  const cs = t.circuits || [];
+  const rgb1 = hexToRgb(st.c1), rgb2 = hexToRgb(st.c2);
+  const onC1 = textOn(st.c1) === '#ffffff' ? [255,255,255] : [15,23,42];
+
+  let firstPage = true;
+  const head = () => {
+    const stops = brandStops(st);
+    if(firstPage){
+      firstPage = false;
+      gradBand(doc, 0, 0, W, 22, stops);
+      let tx = M;
+      const bannerLogo = st.logoLight || st.logo;
+      if(bannerLogo){
+        try{
+          const pr = doc.getImageProperties(bannerLogo);
+          const fit = fitBox(pr.width, pr.height, 15, 16);
+          const ly = (22 - fit.h)/2;
+          if(!st.logoLight && st.logoBox !== false){
+            doc.setFillColor(255,255,255);
+            doc.roundedRect(M - 2, ly - 2, fit.w + 4, fit.h + 4, 2, 2, 'F');
+          }
+          doc.addImage(bannerLogo, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', M, ly, fit.w, fit.h, undefined, 'FAST');
+          tx = M + fit.w + 7;
+        }catch(e){}
+      }
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11.5);
+      doc.text('ELECTRICAL INSTALLATION TEST RECORD', tx, 10.6);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
+      doc.text([st.companyName, st.regNo && ('Reg ' + st.regNo)].filter(Boolean).join('   ·   '), tx, 15.4);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
+      doc.text(job.prNo || '', W - M, 10.6, { align:'right' });
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
+      doc.text(fmtDate(job.date), W - M, 15.4, { align:'right' });
+      doc.setTextColor(15,23,42);
+      return 29;
+    }
+    gradBand(doc, 0, 0, W, 4, stops);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.4); doc.setTextColor(120,133,150);
+    doc.text((st.companyName || '').toUpperCase() + '   ·   ELECTRICAL INSTALLATION TEST RECORD', M, 9);
+    doc.text([job.prNo, fmtDate(job.date)].filter(Boolean).join('   ·   '), W - M, 9, { align:'right' });
+    doc.setDrawColor(232,238,244); doc.setLineWidth(0.2); doc.line(M, 11.5, W - M, 11.5);
+    doc.setTextColor(15,23,42);
+    return 18;
+  };
+
+  doc.addPage([W, 210], 'landscape');
+  let y = head();
+  const room = (need) => { if(y + need > BOT){ doc.addPage([W, 210], 'landscape'); y = head(); } };
+
+  const badge = a.condition === 'Unsatisfactory' ? [220,38,38] : a.condition === 'Satisfactory' ? [5,150,105] : [148,163,184];
+  doc.setFillColor(248,250,252); doc.roundedRect(M, y - 3, W - M*2, 17, 2, 2, 'F');
+  doc.setFillColor(badge[0],badge[1],badge[2]); doc.rect(M, y - 3, 1.6, 17, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(15,23,42);
+  doc.text(doc.splitTextToSize(job.customerName || 'Site', 140)[0], M + 5, y + 3);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,116,139);
+  doc.text(doc.splitTextToSize([job.address, t.dbRef && ('Board ' + t.dbRef)].filter(Boolean).join('   ·   '), 140)[0], M + 5, y + 8);
+  [
+    ['RESULT', a.condition === 'Unsatisfactory' ? 'Fail' : a.condition === 'Satisfactory' ? 'Pass' : 'Incomplete', badge],
+    ['CIRCUITS', String(cs.length), [15,23,42]],
+    ['FULLY TESTED', a.answered + ' of ' + cs.length, [15,23,42]],
+    ['FAILED', String(a.failed.length), a.failed.length ? [220,38,38] : [15,23,42]]
+  ].forEach((f, i) => {
+    const fx = M + 158 + i*30;
+    doc.setFont('helvetica','bold'); doc.setFontSize(5.2); doc.setTextColor(148,163,184);
+    doc.text(f[0], fx, y + 1);
+    doc.setFontSize(6.8); doc.setTextColor(f[2][0], f[2][1], f[2][2]);
+    doc.text(doc.splitTextToSize(String(f[1]), 29), fx, y + 5.5);
+  });
+  doc.setTextColor(15,23,42);
+  y += 21;
+
+  const sect = (title) => {
+    room(12);
+    doc.setFillColor(240,244,248); doc.rect(M, y - 4.2, W - M*2, 6.4, 'F');
+    doc.setFillColor(rgb2[0],rgb2[1],rgb2[2]); doc.rect(M, y - 4.2, 1.6, 6.4, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]);
+    doc.text(title.toUpperCase(), M + 4, y);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','normal');
+    y += 8;
+  };
+  const line = (label, val, x, yy, w) => {
+    doc.setFontSize(7.2); doc.setFont('helvetica','normal'); doc.setTextColor(100,116,139);
+    doc.text(label, x, yy);
+    const lw = doc.getTextWidth(label);
+    doc.setDrawColor(210,218,228); doc.setLineWidth(0.2);
+    doc.line(x + lw + 2, yy + 0.9, x + w, yy + 0.9);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','bold'); doc.setFontSize(7.6);
+    doc.text(String(val || ''), x + lw + 3.5, yy);
+    doc.setFont('helvetica','normal');
+  };
+  const CW = (W - M*2 - 12) / 3;
+  const CX = [M, M + CW + 6, M + (CW + 6)*2];
+  const row3 = (a1, a2, a3) => { [a1,a2,a3].forEach((f,i) => { if(f) line(f[0], f[1], CX[i], y, CX[i] + CW); }); y += 7; };
+  const grid = (head, body, opts) => {
+    room(20);
+    doc.autoTable(Object.assign({
+      startY: y, margin:{ left:M, right:M }, head:[head], body: body, theme:'grid',
+      styles:{ fontSize:6.6, cellPadding:1.4, lineColor:[214,222,232], overflow:'linebreak', valign:'middle' },
+      headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:6.4, fontStyle:'bold', halign:'center' }
+    }, opts || {}));
+    y = doc.lastAutoTable.finalY + 7;
+  };
+
+  sect('Installation');
+  row3(['Customer', job.customerName], ['Category', p.category], ['Type of work', t.installType]);
+  row3(['Address', job.address], ['Board ref', t.dbRef], ['MPRN', t.mprn]);
+  row3(['Tested by', job.inspector || (job.sig||{}).name], ['Cert No.', t.certNo], ['Max demand (A)', t.maxDemand]);
+  y += 2;
+
+  sect('Supply, earthing and bonding');
+  row3(['System earthing', p.earthing], ['Installation voltage', p.phase], ['Max prospective S/C current (A)', p.pscc]);
+  const b = t.bonding || {};
+  row3(['Bonding - gas', b.gas], ['Bonding - water', b.water], ['Supplementary bonding', b.supp]);
+  row3(['Electrode earthing conductor', b.electrode], ['Main isolation device', p.mainIsolation],
+       ['Max Rp+Re / Re (ohms)', [t.maxRpRe, t.maxRe].filter(Boolean).join(' / ')]);
+  y += 2;
+
+  sect('Circuit schedule');
+  grid(['No','Circuit designation','Cable type','mm2','Points','Device','Type','Rating (A)','Notes'],
+    cs.map(c => [c.number, c.designation, c.cableType, c.cableSize, c.points, c.device, c.deviceType, c.amps, c.notes]),
+    { columnStyles:{ 0:{ cellWidth:10, halign:'center' }, 1:{ cellWidth:58 }, 2:{ cellWidth:30 }, 3:{ cellWidth:14, halign:'center' },
+                     4:{ cellWidth:14, halign:'center' }, 5:{ cellWidth:24 }, 6:{ cellWidth:14, halign:'center' }, 7:{ cellWidth:18, halign:'center' } } });
+
+  sect('Pre-connection testing (dead)');
+  grid(['No','Designation','Rp+Re','Re','L-L','N-N','E-E','Ph&N-E','Ph-N','Ph-Ph','Err','Pol','Result','Comments'],
+    cs.map(c => [c.number, c.designation, c.pre.rpre, c.pre.re, c.pre.ll, c.pre.nn, c.pre.ee,
+                 c.pre.irPNE, c.pre.irPN, c.pre.ir3ph, c.pre.erroneous ? 'X' : '', c.pre.polarity ? 'X' : '', c.pre.pass, c.pre.comments]),
+    { headStyles:{ fillColor: hexToRgb(st.c2), textColor:[255,255,255], fontSize:6.2, fontStyle:'bold', halign:'center' },
+      columnStyles:{ 0:{ cellWidth:9, halign:'center' }, 1:{ cellWidth:40 }, 2:{ cellWidth:15, halign:'center' }, 3:{ cellWidth:13, halign:'center' },
+                     4:{ cellWidth:13, halign:'center' }, 5:{ cellWidth:13, halign:'center' }, 6:{ cellWidth:13, halign:'center' },
+                     7:{ cellWidth:16, halign:'center' }, 8:{ cellWidth:14, halign:'center' }, 9:{ cellWidth:14, halign:'center' },
+                     10:{ cellWidth:9, halign:'center' }, 11:{ cellWidth:9, halign:'center' }, 12:{ cellWidth:16, halign:'center' } },
+      didParseCell: function(d){
+        if(d.section === 'body' && d.column.index === 12 && String(d.cell.raw) === 'Fail'){ d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold'; }
+      } });
+
+  sect('Post-connection testing (live)');
+  grid(['No','Designation','Max Zs','Zs','PFC kA','1/2 IdN','1 IdN','5 IdN','Btn','Pol','Func','Result','Comments'],
+    cs.map(c => [c.number, c.designation, c.post.maxZs, c.post.zs, c.post.pfc, c.post.rcdHalf, c.post.rcd1, c.post.rcd5,
+                 c.post.testBtn ? 'X' : '', c.post.polarity ? 'X' : '', c.post.functional ? 'X' : '', c.post.pass, c.post.comments]),
+    { columnStyles:{ 0:{ cellWidth:9, halign:'center' }, 1:{ cellWidth:40 }, 2:{ cellWidth:16, halign:'center' }, 3:{ cellWidth:15, halign:'center' },
+                     4:{ cellWidth:15, halign:'center' }, 5:{ cellWidth:14, halign:'center' }, 6:{ cellWidth:13, halign:'center' },
+                     7:{ cellWidth:13, halign:'center' }, 8:{ cellWidth:9, halign:'center' }, 9:{ cellWidth:9, halign:'center' },
+                     10:{ cellWidth:10, halign:'center' }, 11:{ cellWidth:16, halign:'center' } },
+      didParseCell: function(d){
+        if(d.section === 'body' && d.column.index === 11 && String(d.cell.raw) === 'Fail'){ d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold'; }
+      } });
+
+  if(a.failed.length){
+    room(11);
+    doc.setFillColor(220,38,38); doc.rect(M, y-4, W - M*2, 7.5, 'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7.4);
+    doc.text('CIRCUIT' + (a.failed.length === 1 ? '' : 'S') + ' ' + a.failed.map(c => c.number).join(', ') +
+             ' FAILED. The person responsible for the installation must be notified before it is put into service.', M + 3, y + 0.8);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','normal'); y += 11;
+  }
+
+  const notes = [['General', (t.notes||{}).general], ['Observations', (t.notes||{}).observations],
+                 ['Recommendations', (t.notes||{}).recommendations], ['Work remaining', (t.notes||{}).completion]].filter(n => n[1]);
+  if(notes.length){
+    sect('Notes');
+    grid(['','Note'], notes, { showHead:false, columnStyles:{ 0:{ cellWidth:40, fontStyle:'bold', fillColor:[241,245,249] } },
+      styles:{ fontSize:7, cellPadding:1.8, lineColor:[214,222,232] } });
+  }
+
+  sect('Declaration');
+  const sg = job.sig || {};
+  room(26);
+  if(sg.sig){ try{ doc.addImage(sg.sig, 'PNG', M + 2, y - 1, 44, 15); }catch(e){} }
+  const sy = y + 16;
+  doc.setDrawColor(150,163,180); doc.setLineWidth(0.25);
+  doc.line(M, sy, M + 90, sy);
+  doc.setFontSize(7.4); doc.setFont('helvetica','bold'); doc.setTextColor(15,23,42);
+  doc.text(String(sg.name || job.inspector || '').toUpperCase(), M + 2, sy - 2);
+  doc.setFontSize(6.6); doc.setFont('helvetica','normal'); doc.setTextColor(120,133,150);
+  doc.text('Inspected and tested by (signed)' + (p.certifierNo ? '   ·   Certifier No. ' + p.certifierNo : ''), M, sy + 3.6);
+  doc.text(fmtDate(sg.date || job.date), M + 90, sy + 3.6, { align:'right' });
+  doc.setTextColor(15,23,42);
+  y = sy + 10;
+}
+
+/* One renderer per kind, chosen in one place. */
+function renderRecord(doc, job, st){
+  return kindOf(job) === 'test' ? renderTest(doc, job, st) : renderPir(doc, job, st);
+}
+
+/* The teardrop badge, bottom-left of every report page. It could never work in
+   the header — it is a tall portrait badge and a header slot is short and wide,
+   so it came out 24px across with its wordmark unreadable. Down here the page is
+   white, so it needs no plate, and there is room to draw it at a size where it
+   actually reads. Returns the width used, so the footer text starts clear of
+   it. */
+function footerMark(doc, st, x, baseY, h){
+  const mark = st.logoMark;
+  if(!mark) return 0;
+  try{
+    const pr = doc.getImageProperties(mark);
+    const w = pr.width / pr.height * h;
+    doc.addImage(mark, 'PNG', x, baseY, w, h, undefined, 'FAST');
+    return w;
+  }catch(e){ return 0; }
+}
+
+/* A bundle can hold portrait periodic reports and landscape test records in the
+   same file, so the footer measures the page it is actually standing on rather
+   than assuming A4 portrait. */
+function pageFurniture(doc, st){
+  const M = 12;
+  const total = doc.internal.getNumberOfPages();
+  for(let i=1; i<=total; i++){
+    doc.setPage(i);
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.25);
+    doc.line(M, H - 18, W - M, H - 18);
+    const mw = footerMark(doc, st, M, H - 16.5, 12);
+    const fx = M + (mw ? mw + 3.5 : 0);
+    doc.setFontSize(6.4); doc.setFont('helvetica','normal'); doc.setTextColor(140,152,168);
+    if(st.disclaimer !== false){
+      doc.text('Issued for record purposes. The official Safe Electric documentation must still be completed and submitted.', fx, H - 12);
+    }
+    doc.setFontSize(6.2);
+    doc.text([st.address, st.phone, st.email].filter(Boolean).join('   ·   '), fx, H - 7.5);
+    doc.setTextColor(100,116,139); doc.setFont('helvetica','bold'); doc.setFontSize(6.8);
+    doc.text('Page ' + i + ' of ' + total, W - M, H - 12, { align:'right' });
+  }
+}
+
+/* ================= PDF: dashboard report ================= */
+function drawColumns(doc, x, y, w, h, data, colA, colB){
+  const max = Math.max(1, ...data.map(d => d.total));
+  const bw = w / Math.max(data.length, 1);
+  doc.setDrawColor(232,238,244); doc.setLineWidth(0.2);
+  [0, 0.5, 1].forEach(g => doc.line(x, y + h - g*h, x + w, y + h - g*h));
+  data.forEach((d, i) => {
+    const bh = (d.total / max) * h;
+    const unH = d.total ? (d.unsat / d.total) * bh : 0;
+    const bx = x + i*bw + bw*0.22, bwid = bw*0.56;
+    doc.setFillColor(...colA); doc.rect(bx, y + h - bh, bwid, Math.max(bh - unH, 0), 'F');
+    if(unH > 0){ doc.setFillColor(...colB); doc.rect(bx, y + h - unH, bwid, unH, 'F'); }
+    doc.setFontSize(5.4); doc.setTextColor(150,160,175);
+    doc.text(d.label.split(' ')[0], bx + bwid/2, y + h + 3.4, { align:'center' });
+    if(d.total){ doc.setFontSize(5.6); doc.setTextColor(90,103,120); doc.text(String(d.total), bx + bwid/2, y + h - bh - 1.4, { align:'center' }); }
+  });
+  doc.setTextColor(15,23,42);
+}
+
+function drawHBars(doc, x, y, w, rows, rowH){
+  const max = Math.max(1, ...rows.map(r => r.value));
+  rows.forEach((r, i) => {
+    const ry = y + i*rowH;
+    doc.setFontSize(6.6); doc.setTextColor(70,85,105); doc.setFont('helvetica','normal');
+    const label = doc.splitTextToSize(r.label, w - 14)[0];
+    doc.text(label, x, ry);
+    doc.setFillColor(241,245,249); doc.roundedRect(x, ry + 1.2, w - 12, 2.4, 1.2, 1.2, 'F');
+    const c = hexToRgb(r.color || '#cd7f32');
+    doc.setFillColor(...c);
+    doc.roundedRect(x, ry + 1.2, Math.max((r.value/max) * (w - 12), 1.2), 2.4, 1.2, 1.2, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.6); doc.setTextColor(15,23,42);
+    doc.text(String(r.value), x + w - 10, ry + 3.4);
+  });
+  doc.setFont('helvetica','normal');
+}
+
+function buildDashboardPdf(jobs, st, filterNote){
+  const doc = new jspdf.jsPDF({ unit:'mm', format:'a4', compress:true });
+  const W = 210, M = 14;
+  const a = analyse(jobs);
+  const rgb1 = hexToRgb(st.c1), rgb2 = hexToRgb(st.c2);
+  const onC1 = textOn(st.c1) === '#ffffff' ? [255,255,255] : [15,23,42];
+
+  /* ---- cover ---- */
+  gradBand(doc, 0, 0, W, 74, brandStops(st));
+  if(st.logo){
+    try{
+      const pr = doc.getImageProperties(st.logoLight || st.logo);
+      const fit = fitBox(pr.width, pr.height, 30, 32);
+      if(!st.logoLight && st.logoBox !== false){ doc.setFillColor(255,255,255); doc.roundedRect(M-2.5, 9.5, fit.w+5, fit.h+5, 2.5, 2.5, 'F'); }
+      doc.addImage(st.logoLight || st.logo, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', M, 12, fit.w, fit.h, undefined, 'FAST');
+    }catch(e){}
+  }
+  doc.setTextColor(...onC1); doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.text('Periodic Inspection Programme', M, 48);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text([st.clientName, st.companyName].filter(Boolean).join('   |   '), M, 56);
+  doc.setFontSize(8);
+  doc.text('Generated ' + new Date().toLocaleDateString('en-IE') + (filterNote ? '   |   ' + filterNote : ''), M, 63);
+  doc.setTextColor(15,23,42);
+
+  let y = 90;
+  const H = (t) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...rgb2);
+    doc.text(t.toUpperCase(), M, y);
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.4); doc.line(M, y + 2, W - M, y + 2);
+    doc.setTextColor(15,23,42); y += 9;
+  };
+
+  /* ---- KPI tiles ---- */
+  H('At a glance');
+  const tiles = [
+    ['Inspections', String(a.total)],
+    ['Sites covered', String(a.sites)],
+    ['Satisfactory', a.satRate + '%'],
+    ['Urgent (C1)', String(a.urgent)],
+    ['Observations', String(a.obsTotal)],
+    ['Overdue', String(a.overdue.length)]
+  ];
+  const tw = (W - M*2 - 5*3) / 6;
+  tiles.forEach((t, i) => {
+    const x = M + i*(tw + 3);
+    doc.setFillColor(248,250,252); doc.roundedRect(x, y, tw, 20, 2, 2, 'F');
+    doc.setFillColor(...rgb2); doc.rect(x, y + 3, 1.1, 14, 'F');
+    doc.setFontSize(5.6); doc.setTextColor(140,152,168); doc.setFont('helvetica','bold');
+    doc.text(t[0].toUpperCase(), x + 3.4, y + 7);
+    doc.setFontSize(13); doc.setTextColor(15,23,42);
+    doc.text(t[1], x + 3.4, y + 15.5);
+  });
+  y += 29;
+
+  /* ---- trend ---- */
+  H('Inspections by month');
+  drawColumns(doc, M, y, W - M*2, 34, a.months, rgb2, [220,38,38]);
+  y += 44;
+  doc.setFontSize(6.4); doc.setTextColor(120,133,150);
+  doc.setFillColor(...rgb2); doc.rect(M, y - 2.4, 2.4, 2.4, 'F');
+  doc.text('Satisfactory', M + 4, y);
+  doc.setFillColor(220,38,38); doc.rect(M + 26, y - 2.4, 2.4, 2.4, 'F');
+  doc.text('Unsatisfactory', M + 30, y);
+  doc.setTextColor(15,23,42); y += 9;
+
+  /* ---- two columns of bars ---- */
+  const half = (W - M*2 - 8) / 2;
+  const yStart = y;
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(15,23,42);
+  doc.text('Observations by code', M, y);
+  drawHBars(doc, M, y + 6, half, ['1','2','3','4'].map(c => ({
+    label: '(' + c + ') ' + PIR_CODES[c], value: a.byCode[c] || 0, color: CODE_COLOR[c]
+  })), 8);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Installation category', M + half + 8, yStart);
+  drawHBars(doc, M + half + 8, yStart + 6, half,
+    Object.keys(a.byCat).map(k => ({ label:k, value:a.byCat[k], color: st.c2 })), 8);
+  y = yStart + 6 + Math.max(4, Object.keys(a.byCat).length) * 8 + 6;
+
+  /* ---- most failed checks ---- */
+  if(a.topQ.length){
+    H('Checks most often answered "No"');
+    drawHBars(doc, M, y, W - M*2, a.topQ.map(q => ({ label: 'Q' + q.n + '  ' + q.text, value: q.count, color:'#dc2626' })), 8);
+    y += a.topQ.length * 8 + 6;
+  }
+
+  /* ---- tables ---- */
+  doc.addPage(); y = 20;
+  H('Every inspection');
+  doc.autoTable({
+    startY: y, margin:{ left:M, right:M },
+    head: [['Date','Site','Category','Inspector','Condition','Obs','C1','Next due']],
+    body: jobs.map(j => {
+      const au = audit(j);
+      return [fmtDate(j.date), j.customerName || '', (j.pir||{}).category || '',
+              j.inspector || (j.sig||{}).name || '', au.condition || '—',
+              String(au.obs.length), String(au.urgent.length), fmtDate(au.nextDue)];
+    }),
+    theme:'striped', styles:{ fontSize:7, cellPadding:1.8, lineColor:[226,232,240] },
+    headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7, fontStyle:'bold' },
+    alternateRowStyles:{ fillColor:[250,251,252] },
+    columnStyles:{ 5:{ halign:'center', cellWidth:10 }, 6:{ halign:'center', cellWidth:10 } },
+    didParseCell: function(d){
+      if(d.section !== 'body') return;
+      if(d.column.index === 4 && d.cell.raw === 'Unsatisfactory'){ d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold'; }
+      if(d.column.index === 6 && Number(d.cell.raw) > 0){ d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold'; }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  if(a.obsAll.length){
+    if(y > 220){ doc.addPage(); y = 20; }
+    H('All observations');
+    doc.autoTable({
+      startY: y, margin:{ left:M, right:M },
+      head: [['Date','Site','Ref','Observation','Code']],
+      body: a.obsAll.map(o => [fmtDate(o.job.date), o.job.customerName || '', o.obs.ref || '', o.obs.comment, '(' + o.obs.code + ') ' + PIR_CODES[o.obs.code]]),
+      theme:'striped', styles:{ fontSize:7, cellPadding:1.8, lineColor:[226,232,240] },
+      headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7, fontStyle:'bold' },
+      alternateRowStyles:{ fillColor:[250,251,252] },
+      columnStyles:{ 0:{ cellWidth:20 }, 2:{ cellWidth:10, halign:'center' }, 4:{ cellWidth:44 } },
+      didParseCell: function(d){
+        if(d.section === 'body' && d.column.index === 4 && String(d.cell.raw).indexOf('(1)') === 0){
+          d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold';
+        }
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  const dueRows = a.overdue.concat(a.due90);
+  if(dueRows.length){
+    if(y > 220){ doc.addPage(); y = 20; }
+    H('Re-inspection due');
+    doc.autoTable({
+      startY: y, margin:{ left:M, right:M },
+      head: [['Site','Address','Last inspected','Due','Status']],
+      body: dueRows.map(d => [d.site, d.address || '', fmtDate(d.date), fmtDate(d.nextDue),
+        d.days < 0 ? Math.abs(d.days) + ' days overdue' : 'due in ' + d.days + ' days']),
+      theme:'striped', styles:{ fontSize:7, cellPadding:1.8, lineColor:[226,232,240] },
+      headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7, fontStyle:'bold' },
+      alternateRowStyles:{ fillColor:[250,251,252] },
+      didParseCell: function(d){
+        if(d.section === 'body' && d.column.index === 4 && String(d.cell.raw).indexOf('overdue') > -1){
+          d.cell.styles.textColor = [185,28,28]; d.cell.styles.fontStyle = 'bold';
+        }
+      }
+    });
+  }
+
+  pageFurniture(doc, st);
+  stampWatermarks(doc, { draft: jobs.some(j => !isSignedOff(j)) });
+  doc.save('ifes-dashboard-' + todayInput() + '.pdf');
+}
+
+function buildAllReportsPdf(jobs, st){
+  const doc = new jspdf.jsPDF({ unit:'mm', format:'a4', compress:true });
+  const W = 210, M = 14;
+  const rgb1 = hexToRgb(st.c1), rgb2 = hexToRgb(st.c2);
+  const onC1 = textOn(st.c1) === '#ffffff' ? [255,255,255] : [15,23,42];
+
+  /* contents page */
+  gradBand(doc, 0, 0, W, 60, brandStops(st));
+  if(st.logo){
+    try{
+      const pr = doc.getImageProperties(st.logoLight || st.logo);
+      const fit = fitBox(pr.width, pr.height, 26, 28);
+      if(!st.logoLight && st.logoBox !== false){ doc.setFillColor(255,255,255); doc.roundedRect(M-2.5, 7.5, fit.w+5, fit.h+5, 2.5, 2.5, 'F'); }
+      doc.addImage(st.logoLight || st.logo, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', M, 10, fit.w, fit.h, undefined, 'FAST');
+    }catch(e){}
+  }
+  doc.setTextColor(...onC1); doc.setFont('helvetica','bold'); doc.setFontSize(19);
+  doc.text('Inspection and Test Records', M, 44);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(jobs.length + ' record' + (jobs.length===1?'':'s') + '   |   generated ' + new Date().toLocaleDateString('en-IE'), M, 52);
+  doc.setTextColor(15,23,42);
+
+  doc.autoTable({
+    startY: 74, margin:{ left:M, right:M },
+    head: [['#','Date','Type','Site','Record No','Result']],
+    body: jobs.map((j, i) => {
+      const au = audit(j), k = kindOf(j);
+      const result = au.condition ? (k === 'test' ? (au.condition === 'Unsatisfactory' ? 'Fail' : 'Pass') : au.condition) : '—';
+      return [String(i+1), fmtDate(j.date), KINDS[k].short, j.customerName || '', j.prNo || '', result];
+    }),
+    theme:'striped', styles:{ fontSize:7.5, cellPadding:1.9, lineColor:[226,232,240] },
+    headStyles:{ fillColor: rgb1, textColor: onC1, fontSize:7.5, fontStyle:'bold' },
+    alternateRowStyles:{ fillColor:[250,251,252] },
+    columnStyles:{ 0:{ cellWidth:10, halign:'center' } }
+  });
+
+  jobs.forEach(j => renderRecord(doc, j, st));
+  pageFurniture(doc, st);
+  stampWatermarks(doc, { draft: jobs.some(j => !isSignedOff(j)) });
+  doc.save('ifes-all-records-' + todayInput() + '.pdf');
+}
+
+function buildOneRecordPdf(job, st){
+  const isTest = kindOf(job) === 'test';
+  const doc = new jspdf.jsPDF({ unit:'mm', format:'a4', orientation: isTest ? 'landscape' : 'portrait', compress:true });
+  renderRecord(doc, job, st);
+  doc.deletePage(1);   /* the renderer opens its own first page */
+  pageFurniture(doc, st);
+  const draft = !isSignedOff(job);
+  stampWatermarks(doc, { draft });
+  doc.save((draft ? 'DRAFT-' : '') + (isTest ? 'TEST-' : 'PIR-') + safeName(job.customerName) + '-' + (job.date || todayInput()) + '.pdf');
+}
+
+/* ================= EXCEL ================= */
+async function buildWorkbook(jobs, st){
+  const wb = new ExcelJS.Workbook();
+  wb.creator = st.companyName || 'IFES Electrical Services Ltd.';
+  const a = analyse(jobs);
+  const head1 = argb(st.c1), head2 = argb(st.c2);
+
+  const banner = (ws, title, cols) => {
+    ws.mergeCells(1, 1, 1, cols);
+    const c = ws.getCell(1,1);
+    c.value = title + '   |   ' + (st.companyName || '');
+    c.font = { bold:true, size:12, color:{ argb:'FFFFFFFF' } };
+    c.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: head2 } };
+    c.alignment = { vertical:'middle', horizontal:'left', indent:1 };
+    ws.getRow(1).height = 24;
+  };
+  const styleHeader = (ws, row, cols) => {
+    const r = ws.getRow(row);
+    r.font = { bold:true, color:{ argb:'FFFFFFFF' }, size:10 };
+    r.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: head1 } };
+    r.height = 20; r.alignment = { vertical:'middle' };
+    ws.autoFilter = { from:{ row:row, column:1 }, to:{ row:row, column:cols } };
+    ws.views = [{ state:'frozen', ySplit: row }];
+  };
+
+  /* --- Summary --- */
+  const wsum = wb.addWorksheet('Summary');
+  banner(wsum, 'Programme summary', 4);
+  wsum.addRow([]);
+  const sumRows = [
+    ['Records', a.total],
+    ['Periodic inspections', a.byKind.periodic], ['Test records', a.byKind.test],
+    ['Sites covered', a.sites],
+    ['Satisfactory', a.sat], ['Unsatisfactory', a.unsat],
+    ['Satisfactory rate', a.satRate + '%'],
+    ['Total observations', a.obsTotal], ['Average per inspection', a.avgObs],
+    ['Urgent findings', a.urgent],
+    ['Circuits tested', a.circuitsTested + ' of ' + a.circuitsTotal],
+    ['Circuits failed', a.circuitsFailed],
+    ['Overdue for re-inspection', a.overdue.length],
+    ['Due within 90 days', a.due90.length],
+    ['Report generated', new Date().toLocaleString('en-IE')]
+  ];
+  wsum.addRow(['Measure','Value']);
+  styleHeader(wsum, 3, 2);
+  sumRows.forEach(r => wsum.addRow(r));
+  wsum.getColumn(1).width = 32; wsum.getColumn(2).width = 20;
+  wsum.addRow([]); wsum.addRow(['Observations by code','Count']);
+  ['1','2','3','4'].forEach(c => wsum.addRow(['(' + c + ') ' + PIR_CODES[c], a.byCode[c] || 0]));
+  wsum.addRow([]); wsum.addRow(['Checks most often answered "No"','Count']);
+  a.topQ.forEach(q => wsum.addRow(['Q' + q.n + ' ' + q.text, q.count]));
+
+  const periodics = jobs.filter(j => kindOf(j) === 'periodic');
+  const tests = jobs.filter(j => kindOf(j) === 'test');
+
+  /* --- Test records --- */
+  if(tests.length){
+    const wt = wb.addWorksheet('Test records');
+    const tcols = ['Record No','Date','Site','Address','Category','Type of work','Board ref','Tested by',
+                   'Result','Circuits','Fully tested','Failed','Cert No','MPRN','Latitude','Longitude'];
+    banner(wt, 'Electrical installation test records', tcols.length);
+    wt.addRow([]); wt.addRow(tcols);
+    styleHeader(wt, 3, tcols.length);
+    tests.forEach(j => {
+      const au = audit(j), t = j.test || {}, p = j.pir || {};
+      wt.addRow([j.prNo||'', j.date||'', j.customerName||'', j.address||'', p.category||'', t.installType||'', t.dbRef||'',
+        j.inspector || (j.sig||{}).name || '',
+        au.condition === 'Unsatisfactory' ? 'Fail' : au.condition === 'Satisfactory' ? 'Pass' : 'Incomplete',
+        au.total, au.answered, au.failed.length, t.certNo||'', t.mprn||'', j.lat||'', j.lng||'']);
+    });
+    wt.columns.forEach((c,i) => { c.width = [12,12,28,32,13,18,11,16,12,9,12,8,12,14,11,11][i] || 14; });
+    wt.eachRow((row,n) => {
+      if(n < 4) return;
+      if(String(row.getCell(9).value) === 'Fail') row.getCell(9).font = { bold:true, color:{argb:'FFB91C1C'} };
+      if(Number(row.getCell(12).value) > 0) row.getCell(12).font = { bold:true, color:{argb:'FFB91C1C'} };
+    });
+
+    /* --- Circuits --- */
+    const wc = wb.addWorksheet('Circuits');
+    const ccols = ['Record No','Date','Site','Board','Circuit','Designation','Cable','mm2','Points','Device','Type','Rating A',
+                   'Rp+Re','Re','L-L','N-N','E-E','IR Ph&N-E','IR Ph-N','IR Ph-Ph','Pre result','Pre comments',
+                   'Max Zs','Zs','PFC kA','RCD 1/2','RCD 1x','RCD 5x','Post result','Post comments'];
+    banner(wc, 'Circuit readings', ccols.length);
+    wc.addRow([]); wc.addRow(ccols);
+    styleHeader(wc, 3, ccols.length);
+    tests.forEach(j => {
+      const t = j.test || {};
+      (t.circuits || []).forEach(c => {
+        wc.addRow([j.prNo||'', j.date||'', j.customerName||'', t.dbRef||'',
+          c.number, c.designation, c.cableType, c.cableSize, c.points, c.device, c.deviceType, c.amps,
+          c.pre.rpre, c.pre.re, c.pre.ll, c.pre.nn, c.pre.ee, c.pre.irPNE, c.pre.irPN, c.pre.ir3ph, c.pre.pass, c.pre.comments,
+          c.post.maxZs, c.post.zs, c.post.pfc, c.post.rcdHalf, c.post.rcd1, c.post.rcd5, c.post.pass, c.post.comments]);
+      });
+    });
+    wc.columns.forEach((c,i) => { c.width = i < 3 ? [12,12,26][i] : (i === 5 ? 26 : (i === 21 || i === 29 ? 30 : 10)); });
+    wc.eachRow((row,n) => {
+      if(n < 4) return;
+      [21, 29].forEach(col => { if(String(row.getCell(col).value) === 'Fail') row.getCell(col).font = { bold:true, color:{argb:'FFB91C1C'} }; });
+    });
+  }
+
+  if(!periodics.length){
+    const buf0 = await wb.xlsx.writeBuffer();
+    return new Blob([buf0], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* --- Inspections --- */
+  const ws = wb.addWorksheet('Inspections');
+  const cols = ['PR No','Date','Site','Address','Category','Reason','Inspector','Condition',
+                'Observations','Urgent (C1)','Checks answered','Workmanship','Earthing','Next due','Latitude','Longitude'];
+  banner(ws, 'Periodic inspections', cols.length);
+  ws.addRow([]); ws.addRow(cols);
+  styleHeader(ws, 3, cols.length);
+  periodics.forEach(j => {
+    const au = audit(j), p = j.pir || {};
+    ws.addRow([j.prNo||'', j.date||'', j.customerName||'', j.address||'', p.category||'', p.reason||'',
+      j.inspector || (j.sig||{}).name || '', au.condition||'', au.obs.length, au.urgent.length,
+      au.answered + ' of ' + au.total, p.workmanship||'', p.earthing||'', au.nextDue,
+      j.lat || '', j.lng || '']);
+  });
+  ws.columns.forEach((c,i) => { c.width = [10,12,28,32,13,20,16,14,13,11,16,14,10,12,11,11][i] || 14; });
+  ws.eachRow((row,n) => {
+    if(n < 4) return;
+    if(String(row.getCell(8).value) === 'Unsatisfactory') row.getCell(8).font = { bold:true, color:{argb:'FFB91C1C'} };
+    if(Number(row.getCell(10).value) > 0) row.getCell(10).font = { bold:true, color:{argb:'FFB91C1C'} };
+  });
+
+  /* --- Observations --- */
+  const wo = wb.addWorksheet('Observations');
+  const ocols = ['Date','Site','Address','Ref','Observation','Code','Meaning','Raised by check'];
+  banner(wo, 'Observations and recommendations', ocols.length);
+  wo.addRow([]); wo.addRow(ocols);
+  styleHeader(wo, 3, ocols.length);
+  a.obsAll.forEach(o => wo.addRow([o.job.date||'', o.job.customerName||'', o.job.address||'',
+    o.obs.ref||'', o.obs.comment, o.obs.code, PIR_CODES[o.obs.code]||'', o.obs.qn ? 'Q' + o.obs.qn : '']));
+  wo.columns.forEach((c,i) => { c.width = [12,26,28,7,60,7,34,14][i] || 14; });
+  wo.eachRow((row,n) => { if(n > 3 && String(row.getCell(6).value) === '1') row.font = { bold:true, color:{argb:'FFB91C1C'} }; });
+
+  /* --- Re-inspection due --- */
+  const wd = wb.addWorksheet('Re-inspection due');
+  const dcols = ['Site','Address','Last inspected','Condition','Due','Days'];
+  banner(wd, 'Re-inspection schedule', dcols.length);
+  wd.addRow([]); wd.addRow(dcols);
+  styleHeader(wd, 3, dcols.length);
+  a.due.forEach(d => wd.addRow([d.site, d.address||'', d.date, d.condition||'', d.nextDue, d.days]));
+  wd.columns.forEach((c,i) => { c.width = [28,30,14,14,12,10][i] || 14; });
+  wd.eachRow((row,n) => { if(n > 3 && Number(row.getCell(6).value) < 0) row.font = { bold:true, color:{argb:'FFB91C1C'} }; });
+
+  /* --- Question results --- */
+  const wq = wb.addWorksheet('Question results');
+  const qnums = pirQFlat();
+  const qcols = ['Date','Site'].concat(qnums.map(n => 'Q' + n));
+  banner(wq, 'Answers to every question', qcols.length);
+  wq.addRow([]); wq.addRow(qcols);
+  styleHeader(wq, 3, qcols.length);
+  periodics.forEach(j => {
+    const q = (j.pir||{}).q || {};
+    wq.addRow([j.date||'', j.customerName||''].concat(qnums.map(n => q['q'+n] || '')));
+  });
+  wq.getColumn(1).width = 12; wq.getColumn(2).width = 28;
+  qnums.forEach((n,i) => { wq.getColumn(i+3).width = 6; });
+  wq.eachRow((row, rn) => {
+    if(rn < 4) return;
+    row.eachCell((cell, cn) => { if(cn > 2 && cell.value === 'No') cell.font = { bold:true, color:{argb:'FFB91C1C'} }; });
+  });
+
+  /* --- Question key --- */
+  const wk = wb.addWorksheet('Question key');
+  banner(wk, 'What each question number means', 2);
+  wk.addRow([]); wk.addRow(['Question','Text']);
+  styleHeader(wk, 3, 2);
+  qnums.forEach(n => wk.addRow(['Q' + n, Q_TEXT[n]]));
+  wk.getColumn(1).width = 10; wk.getColumn(2).width = 82;
+
+  const buf = await wb.xlsx.writeBuffer();
+  return new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+/* ================= DETAIL DRAWER ================= */
+function Detail({job, onClose}){
+  const a = audit(job);
+  const p = job.pir || {};
+  const t = job.test || {};
+  const kind = kindOf(job);
+  const isTest = kind === 'test';
+  /* Photos are stored apart from the record because they are far bigger than
+     it, so they are fetched only when somebody actually opens the record —
+     loading every photo of every job to draw a table would be absurd. */
+  const [photos, setPhotos] = useState(job.photos || []);
+  const [loadingPics, setLoadingPics] = useState(false);
+  useEffect(()=>{
+    if(!API.on || (job.photos || []).length) return;
+    let live = true;
+    setLoadingPics(true);
+    API.call('pullPhotos', { jobId: job.id })
+      .then(list => { if(live) setPhotos(list || []); })
+      .catch(()=>{})
+      .then(()=>{ if(live) setLoadingPics(false); });
+    return () => { live = false; };
+  }, [job.id]);
+  const picsFor = (obsId) => photos.filter(ph => (ph.obsId || '') === (obsId || ''));
+  const Pics = ({list}) => list.length ? (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+      {list.map(ph => (
+        <a key={ph.id} href={ph.data} target="_blank" rel="noopener noreferrer"
+          className="block rounded-lg overflow-hidden border border-slate-200">
+          <img src={ph.data} alt={ph.caption || ''} className="w-full h-24 object-cover"/>
+          {ph.caption && <div className="px-1.5 py-1 text-[11px] text-slate-500 truncate">{ph.caption}</div>}
+        </a>
+      ))}
+    </div>
+  ) : null;
+  const row = (k, v) => v ? (<div className="flex justify-between gap-4 py-1.5 border-b border-slate-100 text-sm">
+    <span className="text-slate-500">{k}</span><span className="font-semibold text-slate-800 text-right">{v}</span>
+  </div>) : null;
+  return (<div className="fixed inset-0 z-50 flex justify-end noprint" style={{background:'rgba(15,23,42,.45)'}} onClick={onClose}>
+    <div className="bg-white w-full max-w-xl h-full overflow-y-auto fadein" onClick={e=>e.stopPropagation()}>
+      <div className="sticky top-0 px-5 py-4 flex items-start justify-between gap-3" style={{background:C1, color:textOn(C1)}}>
+        <div className="min-w-0">
+          <div className="font-bold text-lg truncate">{job.customerName}</div>
+          <div className="text-xs opacity-75">{[KINDS[kind].label, job.prNo, fmtDate(job.date), job.address].filter(Boolean).join(' • ')}</div>
+        </div>
+        <button className="text-2xl leading-none px-2" onClick={onClose}>×</button>
+      </div>
+      <div className="p-5 space-y-5">
+        <div className="flex flex-wrap gap-2">
+          <span className={'chip ' + (a.condition === 'Unsatisfactory' ? 'chip-bad' : a.condition ? 'chip-ok' : 'chip-n')}>
+            {a.condition ? (isTest ? (a.condition === 'Unsatisfactory' ? 'Fail' : 'Pass') : a.condition) : 'Not recorded'}
+          </span>
+          {a.urgent.length > 0 && <span className="chip chip-bad">{a.urgent.length} {isTest ? 'failed' : 'urgent'}</span>}
+          <span className="chip chip-n">{a.answered}/{a.total} {isTest ? 'circuits tested' : 'checks'}</span>
+          {a.nextDue && <span className="chip chip-warn">Due {fmtDate(a.nextDue)}</span>}
+        </div>
+
+        <button className="btn btn-a w-full" onClick={()=>buildOneRecordPdf(job, settings)}>Download this record as PDF</button>
+
+        <div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Installation</h4>
+          {row('Category', p.category)}
+          {isTest
+            ? <>{row('Type of work', t.installType)} {row('Board ref', t.dbRef)} {row('Cert no.', t.certNo)}
+                {row('MPRN', t.mprn)} {row('Seal no.', t.sealNo)} {row('Max demand', t.maxDemand && t.maxDemand + ' A')}
+                {row('Supply characteristic', t.supplyChar)}</>
+            : <>{row('Reason', p.reason)} {row('Occupant', p.occupant)}
+                {row('Approx age', p.approxAge)} {row('Entire installation', p.entireInstall)}</>}
+          {row(isTest ? 'Tested by' : 'Inspector', job.inspector || (job.sig||{}).name)} {row('Certifier no.', p.certifierNo)}
+        </div>
+        <div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Supply</h4>
+          {row('System earthing', p.earthing)} {row('Voltage', p.phase)}
+          {row('Main isolation', p.mainIsolation)} {row('Nominal rating', p.nominalRating && p.nominalRating + ' A')}
+          {row('Prospective S/C current', p.pscc && p.pscc + ' kA')}
+        </div>
+        {isTest && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Earthing and bonding</h4>
+          {row('Main bonding — gas', (t.bonding||{}).gas)} {row('Main bonding — water', (t.bonding||{}).water)}
+          {row('Supplementary bonding', (t.bonding||{}).supp)} {row('Electrode earthing conductor', (t.bonding||{}).electrode)}
+          {row('Max Rp + Re', t.maxRpRe && t.maxRpRe + ' Ω')} {row('Max Re', t.maxRe && t.maxRe + ' Ω')}
+        </div>)}
+
+        {/* The circuit schedule with both halves of the test, worst first is
+            wrong here — a schedule is read in circuit order. */}
+        {isTest && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Circuits</h4>
+          <div className="scrollx">
+            <table className="data">
+              <thead><tr><th>No</th><th>Designation</th><th>Device</th><th>IR min</th><th>Zs</th><th>RCD 1×</th><th>Pre</th><th>Post</th></tr></thead>
+              <tbody>
+                {(t.circuits||[]).map(c => {
+                  const irs = [c.pre.irPNE, c.pre.irPN, c.pre.ir3ph].map(v => parseFloat(String(v||'').replace(/[^0-9.]/g,''))).filter(n => !isNaN(n));
+                  const minIR = irs.length ? Math.min.apply(null, irs) : null;
+                  const lim = parseFloat(c.post.maxZs);
+                  const zs = parseFloat(String(c.post.zs||'').replace(/[^0-9.]/g,''));
+                  const rcd = parseFloat(String(c.post.rcd1||'').replace(/[^0-9.]/g,''));
+                  const verdict = (v) => v === 'Fail'
+                    ? <span className="chip chip-bad">Fail</span>
+                    : v === 'Pass' ? <span className="chip chip-ok">Pass</span> : <span className="chip chip-n">—</span>;
+                  return (<tr key={c.id} style={{cursor:'default'}}>
+                    <td className="font-semibold">{c.number}</td>
+                    <td>{c.designation}<div className="text-xs text-slate-400">{[c.cableType, c.cableSize && c.cableSize + ' mm²'].filter(Boolean).join(' · ')}</div></td>
+                    <td className="whitespace-nowrap">{[c.device, c.deviceType, c.amps && c.amps + 'A'].filter(Boolean).join(' ')}</td>
+                    <td className={minIR !== null && minIR < 1 ? 'text-red-600 font-bold' : ''}>{minIR === null ? '—' : minIR}</td>
+                    <td className={!isNaN(zs) && !isNaN(lim) && zs > lim ? 'text-red-600 font-bold' : ''}>{c.post.zs || '—'}</td>
+                    <td className={!isNaN(rcd) && rcd > 300 ? 'text-red-600 font-bold' : ''}>{c.post.rcd1 || '—'}</td>
+                    <td>{verdict(c.pre.pass)}</td>
+                    <td>{verdict(c.post.pass)}</td>
+                  </tr>);
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>)}
+
+        {isTest && Object.keys(t.notes || {}).some(k => (t.notes||{})[k]) && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Notes</h4>
+          {row('General', (t.notes||{}).general)} {row('Observations', (t.notes||{}).observations)}
+          {row('Recommendations', (t.notes||{}).recommendations)} {row('Work remaining', (t.notes||{}).completion)}
+        </div>)}
+
+        {!isTest && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Summary test data</h4>
+          {row('Min insulation resistance', p.minIR && p.minIR + ' MΩ')}
+          {row('Max protective conductor', p.maxRp && p.maxRp + ' Ω')}
+          {row('Max fault loop impedance', p.maxZs && p.maxZs + ' Ω')}
+          {row('Workmanship', p.workmanship)}
+        </div>)}
+        {!isTest && (p.rcds||[]).length > 0 && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">RCDs</h4>
+          <table className="data"><thead><tr><th>Circuit</th><th>IΔn (mA)</th><th>Trip (ms)</th></tr></thead>
+            <tbody>{p.rcds.map(r => (<tr key={r.id} style={{cursor:'default'}}>
+              <td>{r.desc}</td><td>{r.trip}</td>
+              <td className={parseFloat(r.time) > 300 ? 'text-red-600 font-bold' : ''}>{r.time}</td>
+            </tr>))}</tbody></table>
+        </div>)}
+        {!isTest && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Observations</h4>
+          {a.obs.length === 0 && <p className="text-sm text-slate-400">No remedial work recorded.</p>}
+          <div className="space-y-2">
+            {a.obs.map(o => (
+              <div key={o.id} className="rounded-xl border border-slate-200 p-3">
+                <div className="flex items-start gap-2">
+                  <span className="chip shrink-0" style={{ background: CODE_COLOR[o.code] + '22', color: CODE_COLOR[o.code] }}>C{o.code}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-slate-700">{o.comment}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {PIR_CODES[o.code]}{o.qn ? '  ·  raised by check ' + o.qn : ''}
+                    </p>
+                    <Pics list={picsFor(o.id)}/>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>)}
+        {(() => {
+          const loose = photos.filter(ph => !ph.obsId || !a.obs.some(o => o.id === ph.obsId));
+          if(loadingPics) return <p className="text-sm text-slate-400">Loading photos…</p>;
+          if(!loose.length) return null;
+          return (<div>
+            <h4 className="font-bold text-slate-800 mb-2 text-sm">General photos</h4>
+            <Pics list={loose}/>
+          </div>);
+        })()}
+
+        {!isTest && a.nos.length > 0 && (<div>
+          <h4 className="font-bold text-slate-800 mb-2 text-sm">Checks answered "No"</h4>
+          <ul className="space-y-1.5">
+            {a.nos.map(n => <li key={n} className="text-sm text-slate-600 flex gap-2"><span className="font-bold text-red-600 shrink-0">Q{n}</span>{Q_TEXT[n]}</li>)}
+          </ul>
+        </div>)}
+      </div>
+    </div>
+  </div>);
+}
+
+/* ================= APP ================= */
+const RANGES = [['all','All time'],['12m','Last 12 months'],['6m','Last 6 months'],['90d','Last 90 days']];
+
+function App(){
+  const [jobs, setJobs] = useState([]);
+  const [locked, setLocked] = useState(API.configured && !API.on);
+  const [loading, setLoading] = useState(!!API.on);
+  const [error, setError] = useState('');
+  const [range, setRange] = useState('all');
+  const [kind, setKind] = useState('');
+  const [cat, setCat] = useState('');
+  const [cond, setCond] = useState('');
+  const [insp, setInsp] = useState('');
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState({ key:'date', dir:-1 });
+  const [detail, setDetail] = useState(null);
+  const [busy, setBusy] = useState('');
+
+  useEffect(()=>{
+    document.title = (settings.clientName || settings.companyName) + ' — Records Dashboard';
+  }, []);
+
+  const load = async () => {
+    if(!API.on) return;
+    setLoading(true); setError('');
+    try{
+      const data = await API.call('pull', {});
+      setJobs((data.jobs || []).filter(j => !j.deleted).sort((a,b) => (b.date||'').localeCompare(a.date||'')));
+    }catch(e){ setError(e.message); }
+    setLoading(false);
+  };
+  useEffect(()=>{ load(); }, []);
+
+  const filtered = useMemo(()=>{
+    const now = new Date();
+    const cutoff = range === 'all' ? null
+      : new Date(now.getFullYear(), now.getMonth() - (range === '12m' ? 12 : range === '6m' ? 6 : 3), now.getDate()).toISOString().slice(0,10);
+    return jobs.filter(j => {
+      if(cutoff && (j.date || '') < cutoff) return false;
+      if(kind && kindOf(j) !== kind) return false;
+      if(cat && (j.pir||{}).category !== cat) return false;
+      if(cond && audit(j).condition !== cond) return false;
+      if(insp && (j.inspector || (j.sig||{}).name || 'Unassigned') !== insp) return false;
+      if(q){
+        const hay = ((j.customerName||'') + ' ' + (j.address||'') + ' ' + (j.prNo||'') + ' ' + ((j.pir||{}).obs||[]).map(o=>o.comment).join(' ')).toLowerCase();
+        if(!hay.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [jobs, range, kind, cat, cond, insp, q]);
+
+  const a = useMemo(()=>analyse(filtered), [filtered]);
+  const allCats = useMemo(()=>Array.from(new Set(jobs.map(j => (j.pir||{}).category).filter(Boolean))).sort(), [jobs]);
+  const allInsp = useMemo(()=>Array.from(new Set(jobs.map(j => j.inspector || (j.sig||{}).name || 'Unassigned'))).sort(), [jobs]);
+
+  const sorted = useMemo(()=>{
+    const val = (j) => {
+      const au = audit(j);
+      switch(sort.key){
+        case 'kind': return kindOf(j);
+        case 'site': return (j.customerName || '').toLowerCase();
+        case 'cat': return ((j.pir||{}).category || '').toLowerCase();
+        case 'insp': return (j.inspector || (j.sig||{}).name || '').toLowerCase();
+        case 'cond': return au.condition || '';
+        case 'obs': return au.obs.length;
+        case 'urgent': return au.urgent.length;
+        case 'due': return au.nextDue || '9999';
+        default: return j.date || '';
+      }
+    };
+    return [...filtered].sort((x,y) => {
+      const vx = val(x), vy = val(y);
+      if(vx === vy) return 0;
+      return (vx > vy ? 1 : -1) * sort.dir;
+    });
+  }, [filtered, sort]);
+
+  const filterNote = [
+    RANGES.find(r => r[0] === range)[1],
+    kind && ('kind: ' + KINDS[kind].label.toLowerCase()),
+    cat && ('category: ' + cat), cond && ('condition: ' + cond), insp && ('inspector: ' + insp), q && ('search: ' + q)
+  ].filter(Boolean).join(', ');
+
+  const th = (key, label, align) => (
+    <th onClick={()=>setSort(s => ({ key, dir: s.key === key ? -s.dir : (key === 'date' ? -1 : 1) }))}
+      style={{ textAlign: align || 'left', color: sort.key === key ? C2 : undefined }}>
+      {label}{sort.key === key ? (sort.dir === 1 ? ' ▲' : ' ▼') : ''}
+    </th>
+  );
+
+  const exportPdf = () => { setBusy('pdf'); setTimeout(()=>{ try{ buildDashboardPdf(sorted, settings, filterNote); } finally { setBusy(''); } }, 30); };
+  const exportAll = () => { setBusy('all'); setTimeout(()=>{ try{ buildAllReportsPdf(sorted, settings); } finally { setBusy(''); } }, 30); };
+  const exportXl = async () => {
+    setBusy('xl');
+    try{
+      const blob = await buildWorkbook(sorted, settings);
+      downloadBlob(blob, 'ifes-records-' + todayInput() + '.xlsx');
+    } finally { setBusy(''); }
+  };
+
+  if(locked) return <UnlockView onDone={()=>{ setLocked(false); load(); }}/>;
+
+  return (<div className="min-h-screen">
+    <header className="noprint brandgrad" style={{ color:textOn(C1) }}>
+      <div className="max-w-7xl mx-auto px-5 py-5 flex items-center gap-4 flex-wrap">
+        <BrandLogo settings={settings} h={50}/>
+        <div className="min-w-0 flex-1">
+          <h1 className="serif text-2xl font-bold leading-tight truncate">{settings.clientName || settings.companyName}</h1>
+          <p className="text-xs opacity-85">
+            {BRAND.tagline || 'Inspection and test record programme'}{API.who ? '  ·  ' + API.who : ''}
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button className="btn btn-a" disabled={!!busy || !sorted.length} onClick={exportPdf}>{busy==='pdf' ? 'Building…' : 'Dashboard PDF'}</button>
+          <button className="btn btn-o" disabled={!!busy || !sorted.length} onClick={exportAll}>{busy==='all' ? 'Building…' : 'All reports PDF'}</button>
+          <button className="btn btn-o" disabled={!!busy || !sorted.length} onClick={exportXl}>{busy==='xl' ? 'Building…' : 'Excel'}</button>
+          {API.on && <button className="btn btn-o" onClick={load} disabled={loading}>{loading ? 'Loading…' : 'Refresh'}</button>}
+          {API.on && <button className="btn btn-o" title="Sign out of this browser"
+            onClick={()=>{ if(confirm('Sign out of this browser?')){ API.forget(); location.reload(); } }}>
+            {API.who ? 'Sign out' : 'Lock'}</button>}
+        </div>
+      </div>
+      <div style={{height:3, background:'rgba(255,255,255,.22)'}}/>
+    </header>
+
+
+    <main className="max-w-7xl mx-auto px-5 py-6 space-y-6">
+      {error && <div className="card p-4 text-sm text-red-700 bg-red-50 border-red-200">Could not load data: {error}</div>}
+      {!API.on && !jobs.length && (
+        <div className="card p-8 text-center">
+          <h2 className="font-bold text-slate-800 text-lg mb-2">Not connected yet</h2>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">This dashboard has no Apps Script URL set. Put the web-app URL into <code>apiUrl</code> in the config block at the top of this file, then reload and enter the read-only view code.</p>
+        </div>
+      )}
+      {loading && !jobs.length && <div className="card p-8 text-center text-slate-400 text-sm">Loading records…</div>}
+
+      {jobs.length > 0 && (<>
+        {/* ---- filters ---- */}
+        <div className="card p-4 noprint">
+          <div className="flex gap-2 flex-wrap items-center">
+            {RANGES.map(r => (
+              <button key={r[0]} className={'pill ' + (range === r[0] ? 'on' : '')} onClick={()=>setRange(r[0])}>{r[1]}</button>
+            ))}
+            <div className="w-px h-6 bg-slate-200 mx-1"/>
+            {[['','All records'],['periodic','Periodic'],['test','Test records']].map(([k,l]) => (
+              <button key={k || 'all'} className={'pill ' + (kind === k ? 'on' : '')} onClick={()=>setKind(k)}>{l}</button>
+            ))}
+            <div className="w-px h-6 bg-slate-200 mx-1"/>
+            <select className="field !w-auto !min-h-[38px] !py-1.5" value={cat} onChange={e=>setCat(e.target.value)}>
+              <option value="">All categories</option>
+              {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select className="field !w-auto !min-h-[38px] !py-1.5" value={cond} onChange={e=>setCond(e.target.value)}>
+              <option value="">Any condition</option>
+              <option value="Satisfactory">Satisfactory</option>
+              <option value="Unsatisfactory">Unsatisfactory</option>
+            </select>
+            <select className="field !w-auto !min-h-[38px] !py-1.5" value={insp} onChange={e=>setInsp(e.target.value)}>
+              <option value="">Everyone</option>
+              {allInsp.map(i => <option key={i} value={i}>{i}</option>)}
+            </select>
+            <input className="field !w-auto !min-h-[38px] !py-1.5 flex-1 min-w-[180px]" placeholder="Search site, address or observation…" value={q} onChange={e=>setQ(e.target.value)}/>
+            {(cat || cond || insp || q || kind || range !== 'all') && (
+              <button className="text-xs font-bold" style={{color:C3}} onClick={()=>{ setCat(''); setCond(''); setInsp(''); setQ(''); setKind(''); setRange('all'); }}>Clear</button>
+            )}
+          </div>
+          <p className="text-xs text-slate-400 mt-2.5">Showing {filtered.length} of {jobs.length} records. Every export uses exactly what is shown here.</p>
+        </div>
+
+        {/* ---- KPIs ---- */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Kpi label="Records" value={a.total} sub={a.byKind.periodic + ' periodic · ' + a.byKind.test + ' test'} accent={C2}/>
+          <Kpi label="Sites" value={a.sites} sub={a.mapPoints.length + ' with coordinates'} accent={C3}/>
+          <Kpi label="Satisfactory" value={a.satRate + '%'} sub={a.sat + ' of ' + (a.sat + a.unsat) + ' rated'} accent="#059669" tone={a.satRate >= 80 ? 'ok' : a.satRate >= 60 ? 'warn' : 'bad'}/>
+          <Kpi label="Unsatisfactory" value={a.unsat} sub="need remedial work" accent="#dc2626" tone={a.unsat ? 'bad' : null}/>
+          <Kpi label={a.byKind.test && !a.byKind.periodic ? 'Failed circuits' : 'Needs action'}
+            value={a.urgent} sub={a.byKind.test
+              ? a.circuitsFailed + ' failed circuit' + (a.circuitsFailed === 1 ? '' : 's') + ' · ' + (a.urgent - a.circuitsFailed) + ' C1 observation' + ((a.urgent - a.circuitsFailed) === 1 ? '' : 's')
+              : 'notify without delay'}
+            accent="#dc2626" tone={a.urgent ? 'bad' : 'ok'}/>
+          <Kpi label="Re-inspection" value={a.overdue.length} sub={a.due90.length + ' more due in 90 days'} accent="#d97706" tone={a.overdue.length ? 'warn' : 'ok'}/>
+        </div>
+
+        {/* ---- charts ---- */}
+        <div className="grid lg:grid-cols-3 gap-5">
+          <div className="card p-5 lg:col-span-2">
+            <h3 className="font-bold text-slate-800 mb-1">Records by month</h3>
+            <p className="text-xs text-slate-400 mb-4">Last 12 months, split by overall result</p>
+            <ColumnChart data={a.months}/>
+          </div>
+          <div className="card p-5">
+            <h3 className="font-bold text-slate-800 mb-1">Overall result</h3>
+            <p className="text-xs text-slate-400 mb-4">Across the filtered records</p>
+            <Donut centerTop={a.satRate + '%'} centerSub="SATISFACTORY" slices={[
+              { label:'Satisfactory', value:a.sat, color:'#059669' },
+              { label:'Unsatisfactory', value:a.unsat, color:'#dc2626' },
+              { label:'Not rated', value: Math.max(a.total - a.sat - a.unsat, 0), color:'#cbd5e1' }
+            ]}/>
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
+            <div>
+              <h3 className="font-bold text-slate-800">Site map</h3>
+              <p className="text-xs text-slate-400">
+                Plotted from coordinates captured on site
+                {a.mapMissing > 0 ? ' · ' + a.mapMissing + ' site' + (a.mapMissing===1?'':'s') + ' without coordinates yet' : ''}
+              </p>
+            </div>
+            <span className="chip chip-n">{a.mapPoints.length} located</span>
+          </div>
+          <div className="mt-4"><SiteMap points={a.mapPoints} onPick={setDetail}/></div>
+        </div>
+
+        {a.byKind.test > 0 && (
+          <div className="grid lg:grid-cols-3 gap-5">
+            <div className="card p-5">
+              <h3 className="font-bold text-slate-800 mb-1">Circuits tested</h3>
+              <p className="text-xs text-slate-400 mb-4">Across {a.byKind.test} test record{a.byKind.test === 1 ? '' : 's'}</p>
+              <Donut centerTop={a.circuitsTotal} centerSub="CIRCUITS" slices={[
+                { label:'Passed', value: Math.max(a.circuitsTested - a.circuitsFailed, 0), color:'#059669' },
+                { label:'Failed', value: a.circuitsFailed, color:'#dc2626' },
+                { label:'Not finished', value: Math.max(a.circuitsTotal - a.circuitsTested, 0), color:'#cbd5e1' }
+              ]}/>
+            </div>
+            <div className="card p-5 lg:col-span-2">
+              <h3 className="font-bold text-slate-800 mb-1">Circuits that fail most often</h3>
+              <p className="text-xs text-slate-400 mb-4">By designation, across every test record shown — where the same fault keeps coming back</p>
+              {a.topFail.length
+                ? <BarList color="#dc2626" rows={a.topFail}/>
+                : <p className="text-sm text-slate-400 py-6 text-center">No circuit has failed in the records shown.</p>}
+            </div>
+          </div>
+        )}
+
+        {a.byKind.periodic > 0 && (
+          <div className="grid lg:grid-cols-3 gap-5">
+            <div className="card p-5">
+              <h3 className="font-bold text-slate-800 mb-1">Observations by code</h3>
+              <p className="text-xs text-slate-400 mb-4">What the findings are asking for</p>
+              <BarList rows={['1','2','3','4'].map(c => ({ label:'(' + c + ') ' + PIR_CODES[c], value:a.byCode[c]||0, color:CODE_COLOR[c] }))}/>
+            </div>
+            <div className="card p-5 lg:col-span-2">
+              <h3 className="font-bold text-slate-800 mb-1">Checks most often answered "No"</h3>
+              <p className="text-xs text-slate-400 mb-4">Where the estate keeps falling down — the best place to spend money</p>
+              <BarList color="#dc2626" rows={a.topQ.map(qq => ({ label:'Q' + qq.n + ' · ' + qq.text, value:qq.count }))}/>
+            </div>
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          <div className="card p-5">
+            <h3 className="font-bold text-slate-800 mb-1">Installation category</h3>
+            <p className="text-xs text-slate-400 mb-4">Mix of sites covered</p>
+            <Donut centerTop={a.total} centerSub="RECORDS" slices={Object.keys(a.byCat).map((k,i) => ({
+              label:k, value:a.byCat[k], color:[C2, C1, C3, '#94a3b8', '#0e7490'][i % 5]
+            }))}/>
+          </div>
+          <div className="card p-5">
+            <h3 className="font-bold text-slate-800 mb-1">By inspector</h3>
+            <p className="text-xs text-slate-400 mb-4">Records completed, with findings raised</p>
+            <BarList rows={Object.keys(a.byInspector).sort((x,y)=>a.byInspector[y].n - a.byInspector[x].n)
+              .map(k => ({ label: k + '  ·  ' + a.byInspector[k].obs + ' obs', value:a.byInspector[k].n }))}/>
+          </div>
+        </div>
+
+        {/* ---- due ---- */}
+        {(a.overdue.length > 0 || a.due90.length > 0) && (
+          <div className="card p-5">
+            <h3 className="font-bold text-slate-800 mb-1">Re-inspection due</h3>
+            <p className="text-xs text-slate-400 mb-4">From periodic inspections only — a test record does not fall due again. Overdue first, then anything due in the next 90 days.</p>
+            <div className="scrollx">
+              <table className="data">
+                <thead><tr><th>Site</th><th>Address</th><th>Last inspected</th><th>Condition</th><th>Due</th><th>Status</th></tr></thead>
+                <tbody>
+                  {a.overdue.concat(a.due90).map((d,i) => (
+                    <tr key={i} onClick={()=>setDetail(d.job)}>
+                      <td className="font-semibold text-slate-800">{d.site}</td>
+                      <td className="text-slate-500">{d.address}</td>
+                      <td>{fmtDate(d.date)}</td>
+                      <td>{d.condition ? <span className={'chip ' + (d.condition === 'Unsatisfactory' ? 'chip-bad' : 'chip-ok')}>{d.condition}</span> : '—'}</td>
+                      <td>{fmtDate(d.nextDue)}</td>
+                      <td>{d.days < 0
+                        ? <span className="chip chip-bad">{Math.abs(d.days)} days overdue</span>
+                        : <span className="chip chip-warn">in {d.days} days</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ---- table ---- */}
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 className="font-bold text-slate-800">Every record</h3>
+              <p className="text-xs text-slate-400">Click any row for the full record</p>
+            </div>
+            <span className="chip chip-n">{sorted.length} shown</span>
+          </div>
+          <div className="scrollx">
+            <table className="data">
+              <thead><tr>
+                {th('date','Date')}{th('kind','Type')}{th('site','Site')}{th('cat','Category')}{th('insp','By')}
+                {th('cond','Result')}{th('obs','Findings','center')}{th('urgent','Urgent','center')}{th('due','Next due')}
+              </tr></thead>
+              <tbody>
+                {sorted.map(j => {
+                  const au = audit(j);
+                  const k = kindOf(j);
+                  const result = au.condition
+                    ? (k === 'test' ? (au.condition === 'Unsatisfactory' ? 'Fail' : 'Pass') : au.condition)
+                    : '';
+                  return (<tr key={j.id} onClick={()=>setDetail(j)}>
+                    <td className="whitespace-nowrap">{fmtDate(j.date)}</td>
+                    <td><span className="chip chip-n">{KINDS[k].short}</span></td>
+                    <td className="font-semibold text-slate-800">{j.customerName}<div className="text-xs font-normal text-slate-400">{[j.prNo, j.address].filter(Boolean).join(' · ')}</div></td>
+                    <td>{(j.pir||{}).category || '—'}</td>
+                    <td>{j.inspector || (j.sig||{}).name || '—'}</td>
+                    <td>{result ? <span className={'chip ' + (au.condition === 'Unsatisfactory' ? 'chip-bad' : 'chip-ok')}>{result}</span> : <span className="chip chip-n">Open</span>}</td>
+                    <td style={{textAlign:'center'}}>{k === 'test' ? (au.answered + '/' + au.total) : (au.obs.length || '—')}</td>
+                    <td style={{textAlign:'center'}} className={au.urgent.length ? 'text-red-600 font-bold' : 'text-slate-300'}>{au.urgent.length || '—'}</td>
+                    <td className="whitespace-nowrap">{fmtDate(au.nextDue) || '—'}</td>
+                  </tr>);
+                })}
+                {sorted.length === 0 && <tr><td colSpan="9" className="text-center text-slate-400 py-8">Nothing matches those filters.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>)}
+    </main>
+
+    {detail && <Detail job={detail} onClose={()=>setDetail(null)}/>}
+
+    <footer className="max-w-7xl mx-auto px-5 py-8 text-center text-xs text-slate-400">
+      {settings.companyName}{settings.regNo ? ' · Reg ' + settings.regNo : ''} · Records issued for programme management.
+      The official Safe Electric documentation must still be completed and submitted.
+
+    </footer>
+  </div>);
+}
+
+try{
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  var boot = document.getElementById('boot'); if(boot) boot.style.display = 'none';
+}catch(err){ window.__err(err && err.message ? err.message : err); }
+</script>
+</body>
+</html>
