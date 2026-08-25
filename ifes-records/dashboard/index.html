@@ -291,8 +291,16 @@ const CONN = {
   }
 };
 
+/* What this app needs the backend to be able to do. Raised alongside
+   BACKEND_BUILD in Code.gs whenever a new action is added. */
+const NEEDS_BUILD = 9;
+const staleBackend = (res) => Number((res && res.build) || 0) < NEEDS_BUILD;
+const STALE_MSG = 'The Apps Script backend is an older version than this app. In Apps Script: ' +
+  'Deploy \u203a Manage deployments \u203a pencil \u203a Version: New version \u203a Deploy.';
+
 const API = {
   url: CONN.url(),
+  backendStale: false,
   /* Either a named person with the viewer role, or the long read-only code. */
   user: '', pin: '', token: '', key: '', who: '',
   company: (BRAND.companyCode || 'default').toLowerCase(),
@@ -662,6 +670,7 @@ function UnlockView({onDone}){
       /* Checked against the server before it is stored. The reply also carries
          the person's display name, so the dashboard can say who is looking. */
       const res = await API.raw('ping', {}, creds);
+      API.backendStale = staleBackend(res);
       API.save(creds, res.who || '', res.token || '');
       onDone();
     }catch(e){
@@ -834,7 +843,8 @@ function renderPir(doc, job, st){
       doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
       doc.text([st.companyName, st.regNo && ('Reg ' + st.regNo)].filter(Boolean).join('   ·   '), tx, 15.4);
       doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
-      doc.text(job.prNo || '', W - M, 10.6, { align:'right' });
+      doc.text([job.prNo, (job.pir||{}).seNumber && ('SE ' + (job.pir||{}).seNumber)].filter(Boolean).join('   ·   '),
+               W - M, 10.6, { align:'right' });
       doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
       doc.text(fmtDate(job.date), W - M, 15.4, { align:'right' });
       doc.setTextColor(15,23,42);
@@ -1325,7 +1335,7 @@ function pageFurniture(doc, st){
     const fx = M + (mw ? mw + 3.5 : 0);
     doc.setFontSize(6.4); doc.setFont('helvetica','normal'); doc.setTextColor(140,152,168);
     if(st.disclaimer !== false){
-      doc.text('Issued for record purposes. The official Safe Electric documentation must still be completed and submitted.', fx, H - 12);
+      doc.text('Issued by the contractor named above as their own record. It does not replace any certificate or report that must be issued through Safe Electric.', fx, H - 12);
     }
     doc.setFontSize(6.2);
     doc.text([st.address, st.phone, st.email].filter(Boolean).join('   ·   '), fx, H - 7.5);
@@ -1688,23 +1698,23 @@ async function buildWorkbook(jobs, st){
 
   /* --- Inspections --- */
   const ws = wb.addWorksheet('Inspections');
-  const cols = ['PR No','Date','Site','Address','Category','Reason','Inspector','Condition',
+  const cols = ['PR No','Safe Electric no.','Date','Site','Address','Category','Reason','Inspector','Condition',
                 'Observations','Urgent (C1)','Checks answered','Workmanship','Earthing','Next due','Latitude','Longitude'];
   banner(ws, 'Periodic inspections', cols.length);
   ws.addRow([]); ws.addRow(cols);
   styleHeader(ws, 3, cols.length);
   periodics.forEach(j => {
     const au = audit(j), p = j.pir || {};
-    ws.addRow([j.prNo||'', j.date||'', j.customerName||'', j.address||'', p.category||'', p.reason||'',
+    ws.addRow([j.prNo||'', p.seNumber||'', j.date||'', j.customerName||'', j.address||'', p.category||'', p.reason||'',
       j.inspector || (j.sig||{}).name || '', au.condition||'', au.obs.length, au.urgent.length,
       au.answered + ' of ' + au.total, p.workmanship||'', p.earthing||'', au.nextDue,
       j.lat || '', j.lng || '']);
   });
-  ws.columns.forEach((c,i) => { c.width = [10,12,28,32,13,20,16,14,13,11,16,14,10,12,11,11][i] || 14; });
+  ws.columns.forEach((c,i) => { c.width = [10,16,12,28,32,13,20,16,14,13,11,16,14,10,12,11,11][i] || 14; });
   ws.eachRow((row,n) => {
     if(n < 4) return;
-    if(String(row.getCell(8).value) === 'Unsatisfactory') row.getCell(8).font = { bold:true, color:{argb:'FFB91C1C'} };
-    if(Number(row.getCell(10).value) > 0) row.getCell(10).font = { bold:true, color:{argb:'FFB91C1C'} };
+    if(String(row.getCell(9).value) === 'Unsatisfactory') row.getCell(9).font = { bold:true, color:{argb:'FFB91C1C'} };
+    if(Number(row.getCell(11).value) > 0) row.getCell(11).font = { bold:true, color:{argb:'FFB91C1C'} };
   });
 
   /* --- Observations --- */
@@ -1759,6 +1769,78 @@ async function buildWorkbook(jobs, st){
 }
 
 /* ================= DETAIL DRAWER ================= */
+/* Spending a PR number is an office action — a viewer can see the book, only an
+   admin can take a number out of it, and the server enforces that rather than
+   this button. */
+function AssignPr({job, onAssigned}){
+  const [book, setBook] = useState(null);
+  const [pick, setPick] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const already = ((job.pir || {}).seNumber || '').trim();
+
+  useEffect(()=>{
+    if(!API.on || already) return;
+    let live = true;
+    /* The book failing to load must not stop a number being typed in — it is
+       only there to offer suggestions. An empty list is set either way, so the
+       form is always usable. */
+    API.call('prBook', {})
+      .then(b => { if(live) setBook(b || []); })
+      .catch(e => { if(live){ setBook([]);
+        setErr(/out of date|Unknown action/i.test(e.message)
+          ? STALE_MSG + ' Until then you can still type a number, but it will not be recorded in the book.'
+          : 'Could not read the book (' + e.message + '). You can still type a number.'); } });
+    return () => { live = false; };
+  }, [job.id, already]);
+
+  if(already){
+    return (<div className="rounded-xl border border-slate-200 p-3">
+      <div className="text-xs font-semibold text-slate-500 mb-0.5">Safe Electric PR No.</div>
+      <div className="text-lg font-black" style={{color:C1}}>{already}</div>
+      <p className="text-xs text-slate-400 mt-1">Signed out of the book against this record. It prints on the report.</p>
+    </div>);
+  }
+
+  const free = (book || []).filter(b => b.status !== 'used');
+  const assign = async () => {
+    const n = (pick || '').trim();
+    if(!n) return setErr('Type the PR number from your book.');
+    if(!window.confirm('Sign PR number ' + n + ' out against ' + (job.customerName || 'this record') + '?\n\nIt is then recorded as used and cannot be undone from here.')) return;
+    setBusy(true); setErr('');
+    try{
+      const res = await API.call('prAssign', { prNo: n, jobId: job.id });
+      onAssigned(n, res && res.addedToBook);
+    }catch(e){ setErr(e.message); setBusy(false); }
+  };
+
+  return (<div className="rounded-xl border border-slate-200 p-3">
+    <div className="text-xs font-semibold text-slate-500 mb-2">Safe Electric PR No. — none yet</div>
+    {err && <p className="text-xs text-red-600 font-semibold mb-2">{err}</p>}
+    <div className="flex gap-2 items-center flex-wrap">
+      {/* Type it off the page in front of you. The list is a convenience when
+          the book has been entered in advance, not a requirement. */}
+      <input className="field !w-auto !min-h-[38px] !py-1.5" list="pr-free" placeholder="PR number from your book"
+        value={pick} onChange={e=>setPick(e.target.value)}
+        onKeyDown={e=>{ if(e.key === 'Enter') assign(); }}/>
+      <datalist id="pr-free">
+        {free.slice(0, 200).map(b => <option key={b.prNo} value={b.prNo}/>)}
+      </datalist>
+      <button className="btn btn-a !min-h-[38px] !py-1.5" disabled={busy || !pick.trim()} onClick={assign}>
+        {busy ? 'Signing out…' : 'Use this number'}
+      </button>
+    </div>
+    <p className="text-xs text-slate-400 mt-2">
+      {book === null
+        ? 'Type the number from the report you are filling in.'
+        : free.length > 0
+          ? free.length + ' number' + (free.length === 1 ? '' : 's') + ' left in the book — start typing to pick one, or type any number off the page.'
+          : 'Nothing left in the book, so type the number off the page and it will be added.'}
+      {' '}Signing one out records who took it and when.
+    </p>
+  </div>);
+}
+
 function Detail({job, onClose}){
   const a = audit(job);
   const p = job.pir || {};
@@ -1814,6 +1896,11 @@ function Detail({job, onClose}){
           {a.nextDue && <span className="chip chip-warn">Due {fmtDate(a.nextDue)}</span>}
         </div>
 
+        {!isTest && <AssignPr job={job} onAssigned={(n, added)=>{
+          window.alert('PR ' + n + ' recorded against this record.' + (added ? '\n\nIt was not in the book yet, so it has been added.' : ''));
+          window.location.reload();
+        }}/>}
+
         <button className="btn btn-a w-full" onClick={()=>buildOneRecordPdf(job, settings)}>Download this record as PDF</button>
 
         <div>
@@ -1826,6 +1913,7 @@ function Detail({job, onClose}){
             : <>{row('Reason', p.reason)} {row('Occupant', p.occupant)}
                 {row('Approx age', p.approxAge)} {row('Entire installation', p.entireInstall)}</>}
           {row(isTest ? 'Tested by' : 'Inspector', job.inspector || (job.sig||{}).name)} {row('Certifier no.', p.certifierNo)}
+          {!isTest && row('Safe Electric PR No.', p.seNumber)}
         </div>
         <div>
           <h4 className="font-bold text-slate-800 mb-2 text-sm">Supply</h4>
@@ -1936,6 +2024,65 @@ function Detail({job, onClose}){
 }
 
 /* ================= APP ================= */
+/* The book at a glance: what is left, and what each spent number went on. This
+   is the record that says the numbers you paid for are accounted for. */
+function PrBookPanel(){
+  const [book, setBook] = useState(null);
+  const [err, setErr] = useState('');
+  const [open, setOpen] = useState(false);
+  useEffect(()=>{
+    if(!API.on) return;
+    let live = true;
+    API.call('prBook', {}).then(b => { if(live) setBook(b || []); }).catch(e => { if(live) setErr(e.message); });
+    return () => { live = false; };
+  }, []);
+  if(err) return null;
+  if(!book || !book.length) return null;
+  const used = book.filter(b => b.status === 'used');
+  const free = book.length - used.length;
+  return (<div className="card p-5">
+    <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
+      <div>
+        <h3 className="font-bold text-slate-800">Safe Electric PR book</h3>
+        <p className="text-xs text-slate-400">
+          Numbers you have bought, and what each one was spent on. Sign one out from a record below.
+        </p>
+      </div>
+      <div className="flex gap-2 items-center">
+        <span className={'chip ' + (free === 0 ? 'chip-bad' : free < 5 ? 'chip-warn' : 'chip-ok')}>{free} left</span>
+        <span className="chip chip-n">{used.length} used</span>
+      </div>
+    </div>
+    {free === 0 && (
+      <p className="text-sm font-semibold text-red-700 mt-3">
+        None left. Type the numbers from your new book into the PRBook tab of the sheet.
+      </p>
+    )}
+    {used.length > 0 && (<>
+      <button className="text-xs font-bold mt-3" style={{color:C3}} onClick={()=>setOpen(!open)}>
+        {open ? 'Hide' : 'Show'} the {used.length} used number{used.length === 1 ? '' : 's'}
+      </button>
+      {open && (
+        <div className="scrollx mt-3">
+          <table className="data">
+            <thead><tr><th>PR No.</th><th>Site</th><th>Signed out by</th><th>When</th></tr></thead>
+            <tbody>
+              {used.slice().reverse().map(b => (
+                <tr key={b.prNo} style={{cursor:'default'}}>
+                  <td className="font-semibold text-slate-800">{b.prNo}</td>
+                  <td>{b.site || '—'}</td>
+                  <td>{b.usedBy || '—'}</td>
+                  <td className="whitespace-nowrap">{fmtDate(b.usedOn)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>)}
+  </div>);
+}
+
 const RANGES = [['all','All time'],['12m','Last 12 months'],['6m','Last 6 months'],['90d','Last 90 days']];
 
 function App(){
@@ -2063,6 +2210,11 @@ function App(){
 
     <main className="max-w-7xl mx-auto px-5 py-6 space-y-6">
       {error && <div className="card p-4 text-sm text-red-700 bg-red-50 border-red-200">Could not load data: {error}</div>}
+      {API.backendStale && (
+        <div className="card p-4 text-sm" style={{ background:'#fff8f1', borderColor:'#fcd9b6', color:'#7c4a17' }}>
+          <b>The backend needs redeploying.</b> {STALE_MSG}
+        </div>
+      )}
       {!API.on && !jobs.length && (
         <div className="card p-8 text-center">
           <h2 className="font-bold text-slate-800 text-lg mb-2">Not connected yet</h2>
@@ -2229,6 +2381,9 @@ function App(){
           </div>
         )}
 
+        {/* ---- the PR book ---- */}
+        <PrBookPanel/>
+
         {/* ---- table ---- */}
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
@@ -2275,7 +2430,7 @@ function App(){
 
     <footer className="max-w-7xl mx-auto px-5 py-8 text-center text-xs text-slate-400">
       {settings.companyName}{settings.regNo ? ' · Reg ' + settings.regNo : ''} · Records issued for programme management.
-      The official Safe Electric documentation must still be completed and submitted.
+      They do not replace any certificate or report that must be issued through Safe Electric.
 
     </footer>
   </div>);
