@@ -220,8 +220,16 @@ const CONN = {
   }
 };
 
+/* What this app needs the backend to be able to do. Raised alongside
+   BACKEND_BUILD in Code.gs whenever a new action is added. */
+const NEEDS_BUILD = 9;
+const staleBackend = (res) => Number((res && res.build) || 0) < NEEDS_BUILD;
+const STALE_MSG = 'The Apps Script backend is an older version than this app. In Apps Script: ' +
+  'Deploy \u203a Manage deployments \u203a pencil \u203a Version: New version \u203a Deploy.';
+
 const API = {
   url: CONN.url(),
+  backendStale: false,
   /* Two ways in. An electrician signs in with their name and a 6-digit PIN, both
      of which live in the Techs tab of the sheet and are changed there. The
      office keeps a long access code instead. */
@@ -519,7 +527,10 @@ const blankJob = (kind) => ({
     instContinuity:'', instIR:'', instLoop:'', instRcd:'',
     noRemedial:'', obs:[],
     intervalValue:'5', intervalUnit:'years',
-    condition:'', certifierNo:''
+    condition:'', certifierNo:'',
+    /* The number bought from Safe Electric for this report. Blank until one is
+       issued, which is why nothing depends on it. */
+    seNumber:''
   },
   /* Test record. The supply characteristics it shares with the periodic report
      stay in `pir` above rather than being recorded twice under two names. */
@@ -560,6 +571,8 @@ function nextRecNo(jobs, kind){
 /* Everything that does not change between visits to the same site is carried
    forward, so a repeat inspection starts most of the way filled in. The checks,
    the observations and the readings always start blank. */
+/* seNumber is deliberately absent: a Safe Electric number belongs to exactly one
+   report, and copying it to the next visit would put the same number on two. */
 const CARRY_FIELDS = ['category','reason','reasonOther','approxAge','occupant','entireInstall','partialDetail',
                       'earthing','phase','pscc','mainIsolation','nominalRating','mainRcdIn','mainRcdIdn',
                       'q17type','intervalValue','intervalUnit','certifierNo',
@@ -595,6 +608,7 @@ function jobMeta(job){
   return {
     kind: kindOf(job),
     sharedWith: job.sharedWith || [],
+    seNumber: p.seNumber || '',
     date: job.date || '',
     customerName: job.customerName || '',
     address: job.address || '',
@@ -871,7 +885,7 @@ function buildPirPdf(job, settings, save=true){
       doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
       doc.text([settings.companyName, settings.regNo && ('Reg ' + settings.regNo)].filter(Boolean).join('   ·   '), tx, 15.4);
       doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
-      doc.text(job.prNo || '', W - M, 10.6, { align:'right' });
+      doc.text([job.prNo, p.seNumber && ('SE ' + p.seNumber)].filter(Boolean).join('   ·   '), W - M, 10.6, { align:'right' });
       doc.setFont('helvetica','normal'); doc.setFontSize(7.2);
       doc.text(fmtDate(job.date), W - M, 15.4, { align:'right' });
       doc.setTextColor(15,23,42);
@@ -954,7 +968,9 @@ function buildPirPdf(job, settings, save=true){
 
   sect('Registered contractor');
   line('Name', settings.companyName, M, y, 96); line('Reg No.', settings.regNo, COL2, y, COL2+HALF); y += 7;
-  line('Address', settings.address, M, y, 96); line('Phone', settings.phone, COL2, y, COL2+HALF); y += 9;
+  line('Address', settings.address, M, y, 96); line('Phone', settings.phone, COL2, y, COL2+HALF); y += 7;
+  line('Safe Electric PR No.', p.seNumber, M, y, 96);
+  line('Certifier no.', p.certifierNo, COL2, y, COL2+HALF); y += 9;
 
   sect('Installation details');
   line('Occupant / trading as', p.occupant || job.customerName, M, y, 96);
@@ -1253,7 +1269,7 @@ function buildPirPdf(job, settings, save=true){
     const fx = M + (mw ? mw + 3.5 : 0);
     doc.setFontSize(6.4); doc.setFont('helvetica','normal'); doc.setTextColor(140,152,168);
     if(settings.disclaimer !== false){
-      doc.text('This report is issued for record purposes. The official Safe Electric Periodic Inspection Report must still be completed and submitted.', fx, 285);
+      doc.text('Issued by the contractor named above as their own record of the inspection. It does not replace any certificate or report that must be issued through Safe Electric.', fx, 285);
     }
     doc.setFontSize(6.2);
     doc.text([settings.address, settings.phone, settings.email].filter(Boolean).join('   ·   '), fx, 289.5);
@@ -1568,7 +1584,7 @@ function buildTestPdf(job, settings, save=true){
     const fx = M + (mw ? mw + 3.5 : 0);
     doc.setFontSize(6.4); doc.setFont('helvetica','normal'); doc.setTextColor(140,152,168);
     if(settings.disclaimer !== false){
-      doc.text('This record is issued for record purposes. The official Safe Electric certificate must still be completed and submitted.', fx, 198);
+      doc.text('Issued by the contractor named above as their own record of the testing. It does not replace any certificate that must be issued through Safe Electric.', fx, 198);
     }
     doc.setFontSize(6.2);
     doc.text([settings.address, settings.phone, settings.email].filter(Boolean).join('   ·   '), fx, 202.5);
@@ -1762,7 +1778,7 @@ async function buildJobsExcel(jobs, settings){
 
   /* --- Inspections --- */
   const ws = wb.addWorksheet('Inspections');
-  const cols = ['PR No','Date','Site / customer','Address','Category','Reason','Inspector',
+  const cols = ['PR No','Safe Electric no.','Date','Site / customer','Address','Category','Reason','Inspector',
                 'Condition','Observations','Urgent (C1)','Questions answered','Next due','Signed'];
   banner(ws, 'Periodic inspections', cols.length);
   ws.addRow([]);
@@ -1771,7 +1787,7 @@ async function buildJobsExcel(jobs, settings){
   periodics.forEach(j => {
     const a = audit(j), p = j.pir || {};
     ws.addRow([
-      j.prNo || '', j.date || '', j.customerName || '', j.address || '',
+      j.prNo || '', p.seNumber || '', j.date || '', j.customerName || '', j.address || '',
       p.category || '', p.reason || '', j.inspector || (j.sig||{}).name || '',
       a.condition || '', a.obs.length, a.urgent.length,
       a.answered + ' of ' + a.total,
@@ -1779,14 +1795,14 @@ async function buildJobsExcel(jobs, settings){
       (j.sig||{}).sig ? 'Yes' : 'No'
     ]);
   });
-  ws.columns.forEach((c, i) => { c.width = [10,12,26,34,14,20,18,14,13,12,18,12,9][i] || 14; });
+  ws.columns.forEach((c, i) => { c.width = [10,16,12,26,34,14,20,18,14,13,12,18,12,9][i] || 14; });
   ws.eachRow((row, n) => {
     if(n < 4) return;
-    if(String(row.getCell(8).value) === 'Unsatisfactory'){
-      row.getCell(8).font = { bold:true, color:{ argb:'FFB91C1C' } };
+    if(String(row.getCell(9).value) === 'Unsatisfactory'){
+      row.getCell(9).font = { bold:true, color:{ argb:'FFB91C1C' } };
     }
-    if(Number(row.getCell(10).value) > 0){
-      row.getCell(10).font = { bold:true, color:{ argb:'FFB91C1C' } };
+    if(Number(row.getCell(11).value) > 0){
+      row.getCell(11).font = { bold:true, color:{ argb:'FFB91C1C' } };
     }
   });
 
@@ -1916,6 +1932,9 @@ function ObsEditor({obs, index, photos, upObs, delObs, addPhotos, capPhoto, delP
    else may open it. The server is what enforces the list — this is just the
    control that sets it. */
 function ShareBox({job, up, toast}){
+  /* The office is not in this list on purpose: an admin sign-in already sees
+     every record, so ticking it would change nothing and only suggest that
+     leaving it unticked hides something. */
   const team = (API.team || []).filter(n => n && n !== API.owner);
   const shared = job.sharedWith || [];
   const mine = !job.owner || !API.owner || job.owner === API.owner;
@@ -1940,7 +1959,8 @@ function ShareBox({job, up, toast}){
     ) : (<>
       <p className="text-xs text-slate-500 mb-2.5 leading-relaxed">
         Tick anyone who needs to open this record — the second person on a pre/post job, or whoever is covering
-        for you. They can finish it and sign it; only you can delete it.
+        for you. They can finish it and sign it; only you can delete it. The office sees every record already and
+        does not need to be ticked.
       </p>
       <div className="flex flex-wrap gap-2">
         {team.map(n => (
@@ -2340,17 +2360,22 @@ function JobEditor({job, setJob, settings, customers, saveCustomers, toast, back
       {tab === 'Site' && (<>
         <div className="rounded-xl border p-3 text-xs" style={{ borderColor:'#fcd9b6', background:'#fff8f1', color:'#7c4a17' }}>
           <b>Not an official Safe Electric certificate.</b> This records the same information for your own use.
-          The official {isTest ? 'Completion Certificate' : 'Periodic Inspection Report'} must still be completed and submitted.
+          It does not replace any {isTest ? 'certificate' : 'report'} you are required to issue through Safe Electric.
         </div>
         <Section title="Record details" chip={<span className="chip" style={{ background:'var(--c1-soft)', color:'var(--c1)' }}>{K.label}</span>}>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field label={isTest ? 'Record No.' : 'PR No.'} value={job.prNo} onChange={v=>up({prNo:v})} placeholder={K.prefix + '-00001'}/>
+            <Field label={isTest ? 'Record No.' : 'Our ref'} value={job.prNo} onChange={v=>up({prNo:v})} placeholder={K.prefix + '-00001'}
+              hint={isTest ? undefined : "IFES's own running number. The Safe Electric PR No. goes in the box below."}/>
             <Field label={isTest ? 'Date of test' : 'Date of inspection'} type="date" value={job.date} onChange={v=>up({date:v})} required/>
             <Field label={isTest ? 'Tested by' : 'Inspector'} value={job.inspector} onChange={setInspector} required
               hint="Also signs the declaration on the Sign off tab."/>
             {isTest
               ? <Field label="Cert No." value={tst.certNo} onChange={v=>setT({certNo:v})}/>
               : <Field label="Installation approx age" value={p.approxAge} onChange={v=>setP({approxAge:v})} placeholder="e.g. 20 years"/>}
+            {!isTest && (
+              <Field label="Safe Electric PR No." value={p.seNumber} onChange={v=>setP({seNumber:v})}
+                hint="The PR No. printed on the official Safe Electric report you are filling in. Leave blank until you have one."/>
+            )}
           </div>
         </Section>
         <Section title="Site / customer" right={
@@ -2740,7 +2765,11 @@ function JobEditor({job, setJob, settings, customers, saveCustomers, toast, back
           )}
         </Section>)}
 
-        <ShareBox job={job} up={up} toast={toast}/>
+        {/* Test records only. A periodic inspection is one person's work from
+            the first check to the signature; a test record is routinely the
+            dead tests on one visit and the live tests on another, by two
+            different people. */}
+        {isTest && <ShareBox job={job} up={up} toast={toast}/>}
 
         <Section title="Declaration" chip={(job.sig||{}).sig ? <span className="chip chip-ok">Signed</span> : <span className="chip chip-open">Open</span>}>
           <p className="text-xs text-slate-500 mb-3 leading-relaxed">
@@ -2832,6 +2861,36 @@ function JobEditor({job, setJob, settings, customers, saveCustomers, toast, back
 }
 
 /* ================= LIST ================= */
+
+/* The same question the Submit screen answers, asked from the list: what is
+   stopping this one being finished? Kept short — the list is for scanning, and
+   the full account is on the record itself. */
+function outstanding(job){
+  const a = audit(job);
+  const p = job.pir || {};
+  const out = [];
+  if(!job.customerName || !job.customerName.trim()) out.push('site name');
+  if(!job.address || !job.address.trim()) out.push('address');
+  if(!p.category) out.push('category');
+
+  if(kindOf(job) === 'test'){
+    if(!(((job.test||{}).circuits)||[]).length) out.push('no circuits');
+    else {
+      const n = (a.gaps || []).length;
+      if(n) out.push(n + ' reading' + (n === 1 ? '' : 's'));
+    }
+    if(!(job.test||{}).installType) out.push('type of work');
+  } else {
+    if(a.unanswered.length) out.push(a.unanswered.length + ' check' + (a.unanswered.length === 1 ? '' : 's'));
+    const blank = (p.obs || []).filter(o => o.qn && !(o.comment || '').trim()).length;
+    if(blank) out.push(blank + ' write-up' + (blank === 1 ? '' : 's'));
+    if(!p.workmanship) out.push('workmanship');
+    if(!p.condition) out.push('condition');
+  }
+  if(!p.certifierNo || !p.certifierNo.trim()) out.push('certifier no.');
+  if(!(job.sig||{}).sig) out.push('signature');
+  return out;
+}
 /* Two big cards rather than a dropdown. Which record you are filling in changes
    every screen after this one, so it is worth a deliberate tap at the start
    instead of a setting somebody misses. */
@@ -2865,12 +2924,24 @@ function KindChip({kind}){
 function JobList({jobs, openJob, newJob, go, deleteJob, settings, toast}){
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('all');
+  const [state, setState] = useState('all');
   const [picking, setPicking] = useState(false);
   const byKind = filter === 'all' ? jobs : jobs.filter(j => kindOf(j) === filter);
-  const list = byKind.filter(j => !q || ((j.customerName||'') + ' ' + (j.address||'') + ' ' + (j.prNo||'') + ' ' + (j.date||'')).toLowerCase().includes(q.toLowerCase()));
+  /* "Complete" means the record itself says so — everything answered, rated and
+     signed — which is the same test the Submit button uses. Nothing here is a
+     second opinion about what finished means. */
+  const byState = state === 'all' ? byKind
+    : state === 'done' ? byKind.filter(j => audit(j).complete)
+    : byKind.filter(j => !audit(j).complete);
+  const list = byState.filter(j => !q || ((j.customerName||'') + ' ' + (j.address||'') + ' ' + (j.prNo||'') + ' ' + (j.date||'')).toLowerCase().includes(q.toLowerCase()));
   const open = jobs.filter(j => !audit(j).complete).length;
   const urgent = jobs.reduce((n,j) => n + audit(j).urgent.length, 0);
   const counts = { all: jobs.length, periodic: jobs.filter(j => kindOf(j) === 'periodic').length, test: jobs.filter(j => kindOf(j) === 'test').length };
+  const stateCounts = {
+    all: byKind.length,
+    open: byKind.filter(j => !audit(j).complete).length,
+    done: byKind.filter(j => audit(j).complete).length
+  };
 
   return (<div className="space-y-4 pb-28">
     <div className="grid grid-cols-3 gap-2">
@@ -2907,11 +2978,24 @@ function JobList({jobs, openJob, newJob, go, deleteJob, settings, toast}){
       </div>
     </div>
 
+    <div className="scrollx -mx-4 px-4">
+      <div className="flex gap-2 w-max">
+        {[['all','Any state'],['open','Not finished'],['done','Finished']].map(([k,l]) => (
+          <button key={k} className={'tabbtn ' + (state===k ? 'on' : 'off')} onClick={()=>setState(k)}>
+            {l} <span className="ml-1 opacity-60">{stateCounts[k]}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
     <input className="field" placeholder="Search by site, address, record no or date…" value={q} onChange={e=>setQ(e.target.value)}/>
 
     {list.length === 0 && (
       <div className="card p-8 text-center text-slate-400 text-sm">
-        {jobs.length === 0 ? 'Nothing recorded yet. Tap "New record" to start.' : 'Nothing matches that.'}
+        {jobs.length === 0 ? 'Nothing recorded yet. Tap "New record" to start.'
+          : state === 'open' ? 'Nothing outstanding — everything here is finished.'
+          : state === 'done' ? 'Nothing finished yet.'
+          : 'Nothing matches that.'}
       </div>
     )}
     {list.map(j => {
@@ -2936,6 +3020,17 @@ function JobList({jobs, openJob, newJob, go, deleteJob, settings, toast}){
               k === 'test' ? (a.urgent.length ? a.urgent.length + ' failed' : '') : (a.obs.length ? a.obs.length + ' obs' : '')
              ].filter(Boolean).join(' • ')}
           </div>
+          {/* Not "in progress" — the actual list of things left, so a phone
+              full of half-finished records can be triaged without opening each
+              one to find out what it wants. */}
+          {(() => {
+            const left = a.complete ? [] : outstanding(j);
+            if(!left.length) return null;
+            const shown = left.slice(0, 3).join(', ');
+            return (<div className="text-xs mt-1 font-semibold truncate" style={{ color:'#b45309' }}>
+              Needs: {shown}{left.length > 3 ? ' +' + (left.length - 3) + ' more' : ''}
+            </div>);
+          })()}
         </button>
         <div className="flex items-center gap-2 shrink-0">
           {a.urgent.length > 0
@@ -3024,6 +3119,12 @@ function SettingsView({settings, setSettings, syncNow, syncState, jobs, toast, t
     </Section>
 
     <Section title="Cloud sync" chip={API.on ? <span className="chip chip-ok">On</span> : <span className="chip chip-open">Off</span>}>
+      {API.on && API.backendStale && (
+        <div className="mb-3 rounded-xl border p-3 text-xs" style={{ borderColor:'#fcd9b6', background:'#fff8f1', color:'#7c4a17' }}>
+          <b>The backend needs redeploying.</b> {STALE_MSG} Everything still records and syncs; the newest
+          features are the ones that will not work until you do.
+        </div>
+      )}
       {API.on && (
         <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="text-[13px] font-bold text-slate-700 mb-0.5">
@@ -3173,6 +3274,7 @@ function UnlockView({onDone, settings}){
     setBusy(true); setErr('');
     try{
       const res = await API.raw('ping', {}, creds);
+      API.backendStale = staleBackend(res);
       API.save(creds, res.owner || '', res.team || [], res.token || '');
       onDone(res.owner || '');
     }catch(e){
