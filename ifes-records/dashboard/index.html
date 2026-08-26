@@ -293,7 +293,7 @@ const CONN = {
 
 /* What this app needs the backend to be able to do. Raised alongside
    BACKEND_BUILD in Code.gs whenever a new action is added. */
-const NEEDS_BUILD = 9;
+const NEEDS_BUILD = 10;
 const staleBackend = (res) => Number((res && res.build) || 0) < NEEDS_BUILD;
 const STALE_MSG = 'The Apps Script backend is an older version than this app. In Apps Script: ' +
   'Deploy \u203a Manage deployments \u203a pencil \u203a Version: New version \u203a Deploy.';
@@ -783,7 +783,9 @@ function stampWatermarks(doc, opts){
      the page unreadable, and DRAFT is the more urgent fact on the page. */
   const draft = !!(opts && opts.draft);
   const marks = [];
-  if(draft) marks.push({ text:'DRAFT', rgb:[100,116,139], op:0.12 });
+  /* A proposal is never a report, so its stamp outranks DRAFT. */
+  if(opts && opts.proposal) marks.push({ text:'PROPOSAL', rgb:[176,138,52], op:0.13 });
+  else if(draft) marks.push({ text:'DRAFT', rgb:[100,116,139], op:0.12 });
   if(!marks.length) return;
   const total = doc.internal.getNumberOfPages();
   for(let i = 1; i <= total; i++){
@@ -796,7 +798,7 @@ function stampWatermarks(doc, opts){
       for(let row = 0; row < 4; row++) doc.text(m.text, doc.internal.pageSize.getWidth()/2, 62 + row*62 + mi*22, { align:'center', angle:32 });
       if(restore){ try{ doc.restoreGraphicsState(); }catch(e){} }
     });
-    if(draft){
+    if(draft && !(opts && opts.proposal)){
       doc.setFont('helvetica','bold'); doc.setFontSize(7);
       doc.setTextColor(100,116,139);
       doc.text('INCLUDES DRAFT RECORDS', doc.internal.pageSize.getWidth()/2, doc.internal.pageSize.getHeight() - 5, { align:'center' });
@@ -1579,6 +1581,490 @@ function buildAllReportsPdf(jobs, st){
   doc.save('ifes-all-records-' + todayInput() + '.pdf');
 }
 
+
+/* ================= BOOK-LAYOUT PIR ================= */
+/* jsPDF's built-in helvetica has no Greek or symbol glyphs, so ohms and delta
+   are spelled out. This has bitten this project twice; do not "fix" it back. */
+const SE_OHM = 'ohms', SE_MOHM = 'Mohms';
+
+/* An outlined space with a label in it, standing where artwork would go. Drawn
+   rather than filled so there is never a moment where an unlicensed mark exists
+   in a generated file. */
+function markBox(doc, x, y, w, h, lines){
+  doc.saveGraphicsState ? null : null;
+  doc.setDrawColor(150, 160, 172); doc.setLineWidth(0.4);
+  try{ doc.setLineDashPattern([1.2, 1.2], 0); }catch(e){}
+  doc.rect(x, y, w, h);
+  try{ doc.setLineDashPattern([], 0); }catch(e){}
+  doc.setTextColor(140, 150, 162);
+  doc.setFont('helvetica','bold'); doc.setFontSize(w > 34 ? 6 : 4.6);
+  const step = w > 34 ? 4 : 3.2;
+  let ty = y + h/2 - ((lines.length - 1) * step)/2 + 0.8;
+  lines.forEach((l, i) => {
+    doc.setFont('helvetica', i === 0 ? 'bold' : 'normal');
+    doc.text(l, x + w/2, ty, { align:'center' });
+    ty += step;
+  });
+  doc.setTextColor(20, 24, 32);
+}
+
+/* Everything that would change if Safe Electric permit their form and mark to
+   be reproduced. Nothing else in renderSeForm needs to know about it.
+
+   To switch it over once permission is in writing (see
+   SAFE-ELECTRIC-PERMISSION-REQUEST.md):
+     - mark:     point at the supplied artwork instead of the contractor's own
+     - footNote: replace with whatever wording they require, verbatim
+   If they attach conditions - only where a PR number is assigned, must be
+   marked a copy - put them here too, where they apply to every page at once. */
+function seBrand(st, opts){
+  if(opts && opts.proposal){
+    return {
+      mark: '',
+      placeholder: ['SAFE ELECTRIC MARK', 'would appear here', 'subject to permission'],
+      footNote: 'LAYOUT PROPOSAL by ' + (st.companyName || '') + ' - submitted to Safe Electric in support of a request for ' +
+        'permission to reproduce this form. Not a report, not a certificate, and not for issue to any customer.'
+    };
+  }
+  return {
+    mark: st.logo || st.logoLight || '',
+    footNote: (st.companyName || '') + ' - own record of the inspection. The report of record is the numbered page in the ' +
+      'Safe Electric book; this is not a Safe Electric certificate and is not issued by or on behalf of Safe Electric.'
+  };
+}
+
+function renderSeForm(doc, job, st, opts){
+  const W = 297, H = 210, M = 13;
+  const brand = seBrand(st, opts);
+  const p = job.pir || {};
+  const a = audit(job);
+  const q = p.q || {};
+  const ink = () => doc.setTextColor(20, 24, 32);
+  const grey = () => doc.setTextColor(110, 120, 132);
+
+  const F = (size, bold) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); };
+  const T = (txt, x, y, opt) => doc.text(String(txt == null ? '' : txt), x, y, opt);
+
+  /* A ruled line with whatever we know written on top of it, which is how the
+     paper form is filled in. */
+  const rule = (x, y, w) => { doc.setDrawColor(60,70,82); doc.setLineWidth(0.25); doc.line(x, y + 1.2, x + w, y + 1.2); };
+  const onRule = (val, x, y, w) => {
+    rule(x, y, w);
+    if(val === '' || val == null) return;
+    F(8.6, false); ink();
+    T(doc.splitTextToSize(String(val), w - 1)[0], x + 1, y);
+  };
+  /* label, then the rule that follows it */
+  const lineField = (label, val, x, y, w, lblSize) => {
+    F(lblSize || 9, false); ink(); T(label, x, y);
+    const lw = doc.getTextWidth(label) + 1.5;
+    onRule(val, x + lw, y, Math.max(6, w - lw));
+  };
+  const box = (x, y, on) => {
+    doc.setDrawColor(40,48,58); doc.setLineWidth(0.32);
+    doc.rect(x, y - 3.1, 3.4, 3.4);
+    if(on){ doc.setLineWidth(0.7); doc.setDrawColor(12,16,22);
+      doc.line(x + 0.6, y - 1.5, x + 1.4, y - 0.5); doc.line(x + 1.4, y - 0.5, x + 2.9, y - 2.8); doc.setLineWidth(0.32); }
+  };
+  /* "Domestic [x]" - returns where the next option starts */
+  const opt = (label, x, y, on, gap) => {
+    F(9, false); ink(); T(label, x, y);
+    const bx = x + doc.getTextWidth(label) + 1.6;
+    box(bx, y, on);
+    return bx + 3.4 + (gap == null ? 7 : gap);
+  };
+  /* the form says "circle answers" for system earthing */
+  const circled = (label, x, y, on) => {
+    F(9, false); ink(); T(label, x, y);
+    const w = doc.getTextWidth(label);
+    if(on){ doc.setDrawColor(12,16,22); doc.setLineWidth(0.5);
+      doc.ellipse(x + w/2, y - 1.1, w/2 + 2.2, 3.2); }
+    return x + w;
+  };
+  const heading = (txt, x, y, size) => { F(size || 9.6, true); ink(); T(txt, x, y); };
+
+  /* Every page carries the same head and the same statement of what it is. */
+  const page = (n, subtitle) => {
+    doc.addPage('a4', 'landscape');
+    let y = 20;
+    if(brand.mark){
+      try{
+        const pr = doc.getImageProperties(brand.mark);
+        const fit = fitBox(pr.width, pr.height, 22, 13);
+        doc.addImage(brand.mark, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', M, y - 9, fit.w, fit.h, undefined, 'FAST');
+      }catch(e){}
+    } else if(brand.placeholder){
+      markBox(doc, M, y - 9, 30, 15, brand.placeholder);
+    }
+    F(13.5, true); ink();
+    T('Periodic Inspection Report for an Electrical Installation', W/2, y, { align:'center' });
+    F(10, true); ink();
+    T('PR No:', W - M - 34, y);
+    onRule(p.seNumber || '', W - M - 20, y, 20);
+    if(subtitle){ y += 6.4; F(10.6, true); T(subtitle, W/2, y, { align:'center' }); }
+    foot(n);
+    return y + 9;
+  };
+
+  /* the foot, on every page */
+  const foot = (n) => {
+    F(6.2, false); grey();
+    T(brand.footNote, M, H - 7);
+    F(9.6, true); ink();
+    T('PAGE ' + n + ' of 4', W - M - 30, H - 7.6);
+    doc.setDrawColor(40,48,58); doc.setLineWidth(0.35);
+    doc.rect(W - M - 9, H - 11.4, 9, 5.2);
+    F(9, false); T(String(n), W - M - 5.6, H - 7.6, { align:'center' });
+  };
+
+  /* ---------------- page 1: details and supply ---------------- */
+  let y = 20;
+  doc.addPage('a4', 'landscape');
+  if(opts && opts.proposal){
+    doc.setFillColor(247, 243, 232); doc.setDrawColor(206, 178, 118); doc.setLineWidth(0.4);
+    doc.roundedRect(M, 6, W - M*2, 8.6, 1.4, 1.4, 'FD');
+    doc.setTextColor(122, 92, 24); F(7.4, true);
+    T('LAYOUT PROPOSAL - not a report. Sent to Safe Electric with a request for permission to reproduce this form and display the Safe Electric mark. ' +
+      'The boxes marked below are where that mark would appear.', W/2, 11.6, { align:'center' });
+    y += 8;
+  }
+  F(9.6, false); ink();
+  lineField('Date', fmtDate(job.date), M, y, 58);
+  F(13.5, true); T('Periodic Inspection Report for an Electrical Installation', W/2, y, { align:'center' });
+  {
+    /* The gap between the contractor block and the installation block, not the
+       middle of the page - those are not the same point. */
+    const gapMid = ((M + 112) + (W/2 + 18)) / 2;
+    if(brand.mark){ try{
+      const pr = doc.getImageProperties(brand.mark);
+      const fit = fitBox(pr.width, pr.height, 32, 21);
+      doc.addImage(brand.mark, pr.fileType === 'PNG' ? 'PNG' : 'JPEG', gapMid - fit.w/2, y + 12, fit.w, fit.h, undefined, 'FAST');
+    }catch(e){} }
+    else if(brand.placeholder){ markBox(doc, gapMid - 18, y + 12, 36, 20, brand.placeholder); }
+  }
+  F(10, true); T('PR No:', W - M - 34, y);
+  onRule(p.seNumber || '', W - M - 20, y, 20);
+  foot(1);
+
+  y += 10;
+  const RX = W/2 + 18, RW = W - M - RX;
+  heading('REGISTERED CONTRACTOR DETAILS :', M, y);
+  heading('INSTALLATION DETAILS:', RX, y);
+  y += 6.2;
+  const addrL = String(st.address || '').split(/,\s*|\n/).filter(Boolean);
+  const siteL = String(job.address || '').split(/,\s*|\n/).filter(Boolean);
+  lineField('Name', st.companyName || '', M, y, 112);
+  lineField('Occupant Name/Trading as', p.occupant || job.customerName || '', RX, y, RW);
+  y += 6.6;
+  lineField('Address', addrL[0] || '', M, y, 112);
+  lineField('Address', siteL[0] || '', RX, y, RW);
+  y += 6.6;
+  onRule(addrL.slice(1, 2).join(', '), M, y, 112);
+  onRule(siteL.slice(1, 2).join(', '), RX, y, RW);
+  y += 6.6;
+  onRule(addrL.slice(2).join(', '), M, y, 112);
+  onRule(siteL.slice(2).join(', '), RX, y, RW);
+  y += 7;
+  lineField('Reg No.', st.regNo || '', M, y, 112);
+  {
+    F(9, false); ink(); T('Occupant In Attendance ?', RX, y);
+    let x = RX + doc.getTextWidth('Occupant In Attendance ?') + 3;
+    x = circled('Yes', x, y, p.occupantAttended === 'Yes') + 8;
+    circled('No', x, y, p.occupantAttended === 'No');
+  }
+  y += 7;
+  lineField('Installation Approx Age', p.approxAge || '', W/2 - 42, y, 84);
+
+  y += 9;
+  F(9.6, true); ink(); T('PLEASE CIRCLE ANSWERS OR TICK BOXES AS APPROPRIATE', W/2, y, { align:'center' });
+
+  y += 8.5;
+  F(9, false); T('Installation Category?', M, y);
+  {
+    let x = M + 62;
+    x = opt('Domestic', x, y, p.category === 'Domestic', 14);
+    x = opt('Commercial', x, y, p.category === 'Commercial', 14);
+    x = opt('Industrial', x, y, p.category === 'Industrial', 12);
+    const other = p.category && ['Domestic','Commercial','Industrial'].indexOf(p.category) === -1 ? p.category : '';
+    lineField('Other (specify)', other, x, y, W - M - x);
+  }
+  y += 7.4;
+  F(9, false); T('Reason for Inspection?', M, y);
+  {
+    let x = M + 62;
+    x = opt('Insurance Inspection', x, y, p.reason === 'Insurance Inspection', 9);
+    x = opt('Safety Audit', x, y, p.reason === 'Safety Audit', 12);
+    lineField('If Other (specify)', p.reasonOther || '', x, y, W - M - x);
+  }
+  y += 7.4;
+  F(9, false); T('Extent of Installation covered by this report?  Entire Installation*', M, y);
+  {
+    let x = M + 108;
+    box(x, y, p.entireInstall === 'Yes'); F(9, false); T('YES', x + 4.6, y);
+    x += 26;
+    box(x, y, p.entireInstall === 'No'); T('NO (see partial inspection details below)', x + 4.6, y);
+  }
+  y += 4.6;
+  F(6.6, false); grey();
+  T('* N.B. Cables concealed within trunking and conduits within the fabric of the building or underground have not been inspected unless stated otherwise.', M, y);
+
+  y += 7;
+  F(9.6, true); ink(); T('If partial inspection', M, y);
+  {
+    const labW = doc.getTextWidth('If partial inspection') + 2.5;
+    F(7.6, false); T('Specify what part the report refers to', M + labW, y);
+    const firstX = M + labW + doc.getTextWidth('Specify what part the report refers to') + 3;
+    const firstW = W - M - firstX;
+    /* Wrapped to the width it is actually drawn on: the first line is short
+       because the labels sit in front of it, the rest run the full width. */
+    const all = String(p.partialDetail || '');
+    const head = doc.splitTextToSize(all, firstW)[0] || '';
+    const rest = doc.splitTextToSize(all.slice(head.length).trim(), W - M*2);
+    onRule(head, firstX, y, firstW);
+    for(let i = 0; i < 3; i++){ y += 6.4; onRule(rest[i] || '', M, y, W - M*2); }
+  }
+
+  y += 11;
+  F(9, false); ink(); T('TYPE OF SYSTEM EARTHING :', M, y);
+  {
+    let x = M + 56;
+    ['TNCS','TT','TNS','IT'].forEach(k => { x = circled(k, x, y, (p.earthing || '').toUpperCase() === k) + 14; });
+  }
+  y += 7.6;
+  F(9, false); T('Installation voltage', M, y);
+  {
+    let x = M + 33;
+    x = opt('Single Phase', x, y, /single/i.test(p.phase || ''), 3);
+    x = opt('Three Phase', x, y, /three/i.test(p.phase || ''), 5);
+    const cells = [['L 1.', p.v1], ['L 2.', p.v2], ['L 3.', p.v3], ['L 1-L2', p.v12], ['L2-L3', p.v23], ['L 3-L1', p.v31]];
+    cells.forEach(function(c){
+      const lab = c[0], val = c[1];
+      F(8.6, false); ink(); T(lab, x, y);
+      const bx = x + doc.getTextWidth(lab) + 1.4;
+      doc.setDrawColor(40,48,58); doc.setLineWidth(0.3); doc.rect(bx, y - 4.4, 15, 6);
+      if(val){ F(8.4, false); T(String(val), bx + 7.5, y - 0.4, { align:'center' }); }
+      F(6, false); T('v', bx + 12.6, y - 0.6);
+      x = bx + 15 + 3.4;
+    });
+  }
+  y += 8.6;
+  lineField('Max prospective S/C current', p.pscc || '', M, y, 62);
+  F(9, false); T('A', M + 63, y);
+  {
+    F(9, false); T('Main Isolation** and overcurrent device type ?', M + 72, y);
+    let x = M + 145;
+    x = opt('NONE', x, y, p.mainIsolation === 'None', 6);
+    x = opt('SWITCH FUSE', x, y, p.mainIsolation === 'Switch Fuse', 6);
+    x = opt('MCB', x, y, p.mainIsolation === 'MCB', 6);
+    opt('MCCB', x, y, p.mainIsolation === 'MCCB', 0);
+  }
+  y += 7.4;
+  lineField('Nominal rating', p.nominalRating || '', M, y, 46);
+  F(9, false); T('A', M + 47, y);
+  F(7.4, false); T('** If a main RCD is used as a main isolating device the following details are required', M + 58, y);
+  lineField('Rated current In', p.mainRcdIn || '', M + 196, y, W - M - (M + 196) - 4);
+  F(9, false); T('A', W - M - 3, y);
+  y += 7.4;
+  lineField('Tripping current Idn', p.mainRcdIdn || '', M, y, 50);
+  F(9, false); T('mA', M + 51, y);
+
+  /* ---------------- page 2: questions 1-20 ---------------- */
+  y = page(2, null);
+  F(8.4, true); ink();
+  T('N.B. Any Questions answered "no" must be referred to in the comment section of this report. ALL QUESTIONS MUST BE ANSWERED', W/2, y, { align:'center' });
+  y += 5;
+  T('PLEASE TICK BOX AS APPROPRIATE', W/2, y, { align:'center' });
+  y += 8;
+
+  const CX = W/2 + 6;
+  /* One numbered question with its Yes / No / N/A boxes. Long questions wrap
+     and put their boxes on the second line, as the printed form does. */
+  const qRow = (n, x, yy, wrap) => {
+    const txt = Q_TEXT[n] || '';
+    let na = false;
+    PIR_Q.forEach(g => g.items.forEach(i => { if(i[0] === n) na = i[2]; }));
+    const ans = q[n] || '';
+    F(9, false); ink();
+    T(String(n) + '.', x, yy);
+    const tx = x + 7;
+    const avail = wrap - 7 - (na ? 48 : 36);
+    const lines = doc.splitTextToSize(txt, Math.max(30, avail));
+    T(lines[0], tx, yy);
+    let bx, by = yy;
+    if(lines.length > 1){
+      by = yy + 5;
+      T(lines.slice(1).join(' '), tx, by);
+      bx = tx + doc.getTextWidth(lines.slice(1).join(' ')) + 4;
+    } else {
+      bx = tx + doc.getTextWidth(lines[0]) + 4;
+    }
+    bx = opt('Yes', bx, by, ans === 'Yes', 4);
+    bx = opt('No', bx, by, ans === 'No', 4);
+    if(na) opt('N/A', bx, by, ans === 'N/A', 0);
+    return lines.length > 1 ? 10.6 : 6.6;
+  };
+
+  let ly = y;
+  [1,2,3].forEach(n => { ly += qRow(n, M, ly, CX - M - 6); });
+  ly += 1.5; heading('EARTHING/BONDING DETAILS', M, ly); ly += 6.4;
+  [4,5,6,7,8,9,10,11,12,13,14].forEach(n => { ly += qRow(n, M, ly, CX - M - 6); });
+
+  let ry = y;
+  heading('DISTRIBUTION BOARD/S', CX, ry); ry += 6.6;
+  [15,16].forEach(n => { ry += qRow(n, CX, ry, W - M - CX); });
+  F(9, false); ink(); T('17.', CX, ry); T('Sub circuit isolation & overcurrent device type?', CX + 7, ry);
+  ry += 6;
+  { let x = CX + 10;
+    x = opt('Fuse', x, ry, p.q17type === 'Fuse', 8);
+    opt('Mcb', x, ry, p.q17type === 'Mcb' || p.q17type === 'MCB', 0); }
+  ry += 7;
+  [18,19].forEach(n => { ry += qRow(n, CX, ry, W - M - CX); });
+  F(9, false); ink(); T('20.', CX, ry); T('RCDs', CX + 7, ry);
+  ry += 3;
+  {
+    const rows = (p.rcds || []).slice(0, 8);
+    const body = [];
+    for(let i = 0; i < 8; i++){
+      const r = rows[i];
+      body.push([ r ? (r.desc || '') : '', r && r.trip ? r.trip + ' mA' : '', r && r.time ? r.time + ' ms' : '' ]);
+    }
+    doc.autoTable({
+      startY: ry, margin:{ left: CX, right: M },
+      head: [['Circuit description','Tripping current','Longest tripping time']],
+      body: body,
+      theme:'grid', styles:{ fontSize:8, cellPadding:1.4, lineColor:[40,48,58], lineWidth:0.25, textColor:[20,24,32], halign:'center' },
+      headStyles:{ fillColor:[255,255,255], textColor:[20,24,32], fontStyle:'bold', halign:'center' },
+      columnStyles:{ 0:{ cellWidth: (W - M - CX) * 0.44, halign:'left' } }
+    });
+  }
+
+  /* ---------------- page 3: questions 21-30, test data, declaration ------- */
+  y = page(3, null);
+  ly = y;
+  heading('GENERAL', M, ly); ly += 6.6;
+  [21,22,23,24,25,26,27,28,29,30].forEach(n => { ly += qRow(n, M, ly, CX - M - 6); });
+  ly += 6;
+  heading('QUALITY OF WORKMANSHIP:', M, ly); ly += 7.4;
+  ['Very Good','Satisfactory','Poor'].forEach(k => { opt(k, M, ly, p.workmanship === k, 0); ly += 6.8; });
+
+  ry = y;
+  heading('SUMMARY TEST DATA', CX, ry); ry += 7;
+  lineField('Min Insulation Resistance', p.minIR || '', CX, ry, W - M - CX - 14);
+  F(9, false); T(SE_MOHM, W - M - 13, ry); ry += 7;
+  lineField('Max Resistance of protective conductor', p.maxRp || '', CX, ry, W - M - CX - 12);
+  F(9, false); T(SE_OHM, W - M - 11, ry); ry += 7;
+  F(9, false); ink(); T('Max fault loop impedance', CX, ry);
+  onRule(p.maxZs || '', CX + 41, ry, 22);
+  F(9, false); T(SE_OHM + ' and type and size of', CX + 65, ry); ry += 6;
+  F(9, false); T('associated protective device', CX, ry); ry += 6.6;
+  lineField('Type', p.zsDeviceType || '', CX, ry, 52);
+  lineField('Size', p.zsDeviceSize || '', CX + 56, ry, W - M - (CX + 56)); ry += 8;
+  heading('TEST INSTRUMENT SERIAL NUMBERS :', CX, ry); ry += 7;
+  lineField('Continuity Tester', p.instContinuity || '', CX, ry, W - M - CX); ry += 6.8;
+  lineField('Insulation Resistance Tester', p.instIR || '', CX, ry, W - M - CX); ry += 6.8;
+  lineField('Loop Impedance Tester', p.instLoop || '', CX, ry, W - M - CX); ry += 6.8;
+  lineField('RCD Tester', p.instRcd || '', CX, ry, W - M - CX); ry += 8;
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(9.6); ink(); T('DECLARATION', CX, ry); ry += 5.4;
+  F(8.2, false);
+  doc.splitTextToSize('I/We the undersigned are responsible for the inspection and testing of the electrical installation described on page 1. of this report. ' +
+    'I/We confirm to the best of my /our knowledge that tests and observations made on pages 1, 2, 3 and 4 represent an accurate assessment ' +
+    'within the limits specified, of the condition of the electrical installation.', W - M - CX).forEach(l => { T(l, CX, ry); ry += 4.4; });
+  ry += 4;
+  F(9, false); ink(); T('Inspected and tested by (Signed)', CX, ry);
+  {
+    const sx = CX + 52, sw = W - M - sx;
+    rule(sx, ry, sw);
+    const sig = (job.sig || {}).sig;
+    if(sig){ try{
+      const pr = doc.getImageProperties(sig);
+      const fit = fitBox(pr.width, pr.height, Math.min(sw - 2, 44), 10);
+      doc.addImage(sig, 'PNG', sx + 1, ry - fit.h + 0.6, fit.w, fit.h, undefined, 'FAST');
+    }catch(e){} }
+  }
+  ry += 7.4;
+  lineField('(BLOCK CAPITALS)', String(job.inspector || (job.sig||{}).name || '').toUpperCase(), CX, ry, W - M - CX);
+
+  /* ---------------- page 4: observations ---------------- */
+  y = page(4, 'OBSERVATIONS AND RECOMMENDATIONS');
+  F(7.4, false); grey();
+  T('(Note subject to the limitations specified on Page 1 of this report)', W/2, y - 3, { align:'center' });
+  y += 3;
+  {
+    const obs = a.obs || [];
+    let x = W/2 - 84;
+    box(x, y, obs.length === 0); F(9.4, true); ink(); T('NO REMEDIAL WORK IS REQUIRED', x + 5, y);
+    x = W/2 + 12;
+    box(x, y, obs.length > 0); T('THE FOLLOWING OBSERVATIONS ARE MADE', x + 5, y);
+    y += 4;
+
+    const body = [];
+    for(let i = 0; i < Math.max(10, obs.length); i++){
+      const o = obs[i];
+      body.push([ o ? (o.ref || String(i + 1)) : '',
+                  o ? (o.qn ? 'Q' + o.qn + '  ' + (Q_TEXT[o.qn] || '') + ' - ' + (o.comment || '') : (o.comment || '')) : '',
+                  o ? '(' + o.code + ')' : '' ]);
+    }
+    doc.autoTable({
+      startY: y, margin:{ left: M, right: M },
+      head: [['REF NO.', 'COMMENTS (USE NUMBERED CONTINUATION SHEETS IF NECESSARY)', 'Recommendations\nAs detailed below']],
+      body: body,
+      theme:'grid',
+      styles:{ fontSize:8, cellPadding:1.5, lineColor:[40,48,58], lineWidth:0.25, textColor:[20,24,32], minCellHeight:6.2, valign:'middle' },
+      headStyles:{ fillColor:[255,255,255], textColor:[20,24,32], fontStyle:'bold', halign:'center', fontSize:8 },
+      columnStyles:{ 0:{ cellWidth:22, halign:'center' }, 2:{ cellWidth:34, halign:'center' } }
+    });
+    y = doc.lastAutoTable.finalY + 5;
+  }
+  F(7.4, false); ink();
+  T('One of the following numbers, as appropriate, is allocated to each of the observations made above to indicate to the person(s) responsible for the installation the action recommended.', M + 4, y);
+  y += 4.4;
+  F(8.4, true);
+  T('(1) REQUIRES URGENT ATTENTION   (2) REQUIRES IMPROVEMENTS   (3) REQUIRES SOME ATTENTION', M + 4, y); y += 4.4;
+  T('(4) DOES NOT COMPLY WITH CURRENT NATIONAL RULES FOR ELECTRICAL INSTALLATIONS*', M + 4, y); y += 4;
+  F(6.6, false); grey();
+  T('*THIS DOES NOT NECESSARILY IMPLY THAT THE ELECTRICAL INSTALLATION INSPECTED IS UNSAFE.', M + 24, y);
+  y += 7;
+  F(8.6, false); ink();
+  T('On the basis that all observations requiring "urgent attention" have been completed without delay, I/We recommend that this electrical installation is', M, y); y += 4.6;
+  T('further inspected and tested after an interval of not more than', M, y);
+  onRule(p.intervalValue || '', M + 96, y, 16);
+  T((p.intervalUnit || 'years'), M + 114, y);
+  y += 9;
+  F(9, false); ink(); T('Signed', M, y);
+  {
+    const sx = M + 12, sw = 62;
+    rule(sx, y, sw);
+    const sig = (job.sig || {}).sig;
+    if(sig){ try{
+      const pr = doc.getImageProperties(sig);
+      const fit = fitBox(pr.width, pr.height, 44, 10);
+      doc.addImage(sig, 'PNG', sx + 1, y - fit.h + 0.6, fit.w, fit.h, undefined, 'FAST');
+    }catch(e){} }
+  }
+  lineField('Certifier No.', p.certifierNo || '', M + 82, y, 62);
+  lineField('Date', fmtDate(job.date), M + 150, y, 60);
+  y += 6.4;
+  F(8, false); T('(BLOCK CAPITALS)', M, y);
+  onRule(String(job.inspector || (job.sig||{}).name || '').toUpperCase(), M + 28, y, 46);
+}
+
+/* The book-layout copy, saved under the PR number it belongs to. */
+function buildSeFormPdf(job, st, opts){
+  const proposal = !!(opts && opts.proposal);
+  const doc = new jspdf.jsPDF({ unit:'mm', format:'a4', orientation:'landscape', compress:true });
+  renderSeForm(doc, job, st, { proposal: proposal });
+  doc.deletePage(1);
+  const draft = !isSignedOff(job);
+  stampWatermarks(doc, { draft: draft, proposal: proposal });
+  const p = job.pir || {};
+  if(proposal){
+    doc.save('LAYOUT-PROPOSAL-for-Safe-Electric-' + (job.date || todayInput()) + '.pdf');
+    return;
+  }
+  doc.save((draft ? 'DRAFT-' : '') + 'PIR-BOOK-' + (p.seNumber ? safeName(p.seNumber) + '-' : '') +
+           safeName(job.customerName) + '-' + (job.date || todayInput()) + '.pdf');
+}
+
 function buildOneRecordPdf(job, st){
   const isTest = kindOf(job) === 'test';
   const doc = new jspdf.jsPDF({ unit:'mm', format:'a4', orientation: isTest ? 'landscape' : 'portrait', compress:true });
@@ -1901,7 +2387,39 @@ function Detail({job, onClose}){
           window.location.reload();
         }}/>}
 
-        <button className="btn btn-a w-full" onClick={()=>buildOneRecordPdf(job, settings)}>Download this record as PDF</button>
+        {/* Once a number is signed out of the book the report is the one that
+            goes with that number, so the button says which report it is. Before
+            that it is an internal copy, and calling it anything else would
+            invite it being handed over as the real thing. */}
+        <button className="btn btn-a w-full" onClick={()=>buildOneRecordPdf(job, settings)}>
+          {!isTest && p.seNumber
+            ? 'Download the report for PR ' + p.seNumber
+            : isTest ? 'Download this record as PDF' : 'Download this record as PDF (no PR number yet)'}
+        </button>
+        {!isTest && (
+          <button className="btn btn-o w-full !mt-2" onClick={()=>buildSeFormPdf(job, settings)}>
+            Download in the book layout{p.seNumber ? ' (PR ' + p.seNumber + ')' : ''}
+          </button>
+        )}
+        {!isTest && (
+          <p className="text-xs text-slate-400 -mt-1">
+            The book layout is the same four pages, in the same order, with the same question numbers and tick boxes
+            as the Safe Electric report - made for copying onto the page in the book. It carries your own name and
+            registration, not Safe Electric's: the report of record is the numbered page itself.
+          </p>
+        )}
+        {!isTest && (
+          <button className="btn btn-o w-full !mt-2" onClick={()=>buildSeFormPdf(job, settings, { proposal:true })}>
+            Proposal copy to send to Safe Electric
+          </button>
+        )}
+        {!isTest && (
+          <p className="text-xs text-slate-400 -mt-1">
+            The same pages, stamped PROPOSAL, with the space their mark would occupy drawn as a labelled box rather
+            than filled in. Send it with the letter in SAFE-ELECTRIC-PERMISSION-REQUEST.md so they can see exactly
+            what is being asked for.
+          </p>
+        )}
 
         <div>
           <h4 className="font-bold text-slate-800 mb-2 text-sm">Installation</h4>
@@ -2026,10 +2544,92 @@ function Detail({job, onClose}){
 /* ================= APP ================= */
 /* The book at a glance: what is left, and what each spent number went on. This
    is the record that says the numbers you paid for are accounted for. */
+/* "PR-1000" to "PR-1010" means the eleven numbers in between. The prefix and the
+   zero padding come from whatever was typed, so 0998 → 1002 keeps its width and
+   a book with no prefix at all works the same way. */
+function expandRange(from, to){
+  const a = String(from || '').trim(), b = String(to || '').trim();
+  if(!a) return [];
+  if(!b) return [a];
+  const m1 = a.match(/^(.*?)(\d+)$/), m2 = b.match(/^(.*?)(\d+)$/);
+  if(!m1 || !m2) throw new Error('A range needs both ends to finish with a number.');
+  if(m1[1] !== m2[1]) throw new Error('Both ends of a range need the same prefix — "' + m1[1] + '" and "' + m2[1] + '" differ.');
+  const start = parseInt(m1[2], 10), end = parseInt(m2[2], 10);
+  if(end < start) throw new Error('The second number is lower than the first.');
+  if(end - start > 500) throw new Error('That is more than 500 numbers. Add them in smaller batches.');
+  const width = m1[2].length;
+  const out = [];
+  for(let n = start; n <= end; n++) out.push(m1[1] + String(n).padStart(width, '0'));
+  return out;
+}
+
+function AddNumbers({onAdded, onClose}){
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [list, setList] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  /* Typed-in numbers win if both boxes have something, because a list is the
+     more deliberate act. */
+  let preview = [];
+  let previewErr = '';
+  try{
+    preview = list.trim()
+      ? list.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean)
+      : expandRange(from, to);
+  }catch(e){ previewErr = e.message; }
+
+  const add = async () => {
+    if(previewErr) return setErr(previewErr);
+    if(!preview.length) return setErr('Nothing to add yet.');
+    setBusy(true); setErr('');
+    try{
+      const res = await API.call('prAdd', { numbers: preview });
+      onAdded(res);
+    }catch(e){ setErr(e.message); setBusy(false); }
+  };
+
+  return (<div className="rounded-xl border border-slate-200 p-3 mt-3">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-[13px] font-semibold text-slate-700">Add numbers to the book</span>
+      <button className="text-xs font-bold text-slate-400" onClick={onClose}>Cancel</button>
+    </div>
+    <p className="text-xs text-slate-500 mb-2.5">
+      A whole pad at once: type the first and last number. Or paste a few, separated by spaces, commas or new lines.
+    </p>
+    <div className="flex gap-2 items-center flex-wrap mb-2">
+      <input className="field !w-auto !min-h-[38px] !py-1.5" placeholder="First, e.g. PR-1000"
+        value={from} onChange={e=>setFrom(e.target.value)}/>
+      <span className="text-sm text-slate-400">to</span>
+      <input className="field !w-auto !min-h-[38px] !py-1.5" placeholder="Last, e.g. PR-1010"
+        value={to} onChange={e=>setTo(e.target.value)}/>
+    </div>
+    <textarea className="field text-sm" rows={2} placeholder="…or paste numbers here"
+      value={list} onChange={e=>setList(e.target.value)}/>
+    {previewErr
+      ? <p className="text-xs text-red-600 font-semibold mt-2">{previewErr}</p>
+      : preview.length > 0 && (
+          <p className="text-xs text-slate-500 mt-2">
+            {preview.length} number{preview.length === 1 ? '' : 's'}: <b>{preview[0]}</b>
+            {preview.length > 1 && <> … <b>{preview[preview.length - 1]}</b></>}
+          </p>
+        )}
+    {err && <p className="text-xs text-red-600 font-semibold mt-2">{err}</p>}
+    <button className="btn btn-a w-full mt-3 !min-h-[40px] !py-1.5" disabled={busy || !!previewErr || !preview.length} onClick={add}>
+      {busy ? 'Adding…' : 'Add ' + (preview.length || '') + ' to the book'}
+    </button>
+    <p className="text-xs text-slate-400 mt-2">
+      Numbers already in the book are left alone, so adding the same range twice changes nothing.
+    </p>
+  </div>);
+}
+
 function PrBookPanel(){
   const [book, setBook] = useState(null);
   const [err, setErr] = useState('');
   const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   useEffect(()=>{
     if(!API.on) return;
     let live = true;
@@ -2037,7 +2637,7 @@ function PrBookPanel(){
     return () => { live = false; };
   }, []);
   if(err) return null;
-  if(!book || !book.length) return null;
+  if(!book) return null;
   const used = book.filter(b => b.status === 'used');
   const free = book.length - used.length;
   return (<div className="card p-5">
@@ -2051,11 +2651,25 @@ function PrBookPanel(){
       <div className="flex gap-2 items-center">
         <span className={'chip ' + (free === 0 ? 'chip-bad' : free < 5 ? 'chip-warn' : 'chip-ok')}>{free} left</span>
         <span className="chip chip-n">{used.length} used</span>
+        <button className="btn btn-o !min-h-[38px] !py-1.5" onClick={()=>setAdding(a => !a)}>
+          {adding ? 'Close' : 'Add numbers'}
+        </button>
       </div>
     </div>
-    {free === 0 && (
+    {adding && <AddNumbers onClose={()=>setAdding(false)} onAdded={(res)=>{
+      window.alert(res.added + ' number' + (res.added === 1 ? '' : 's') + ' added to the book' +
+        (res.skipped ? ', ' + res.skipped + ' already there' : '') + '.');
+      window.location.reload();
+    }}/>}
+    {book.length === 0 && (
+      <p className="text-sm text-slate-500 mt-3">
+        The book is empty. Add the numbers from your pad with <b>Add numbers</b> — the first and last, and everything
+        between is filled in.
+      </p>
+    )}
+    {book.length > 0 && free === 0 && (
       <p className="text-sm font-semibold text-red-700 mt-3">
-        None left. Type the numbers from your new book into the PRBook tab of the sheet.
+        None left. Add the numbers from your new pad.
       </p>
     )}
     {used.length > 0 && (<>
