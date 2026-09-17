@@ -94,10 +94,23 @@
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-20 sm:h-28">
         
-        <!-- Logo (Larger size) -->
+        <!-- Logo -->
         <div class="flex-shrink-0 flex items-center h-full py-2 sm:py-4">
-          <a href="#" class="h-full flex items-center">
-            <img src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/KPI/kpi.png" alt="KPI Business Solutions" class="h-14 sm:h-20 w-auto object-contain">
+          <a href="#" class="relative flex items-center h-16 sm:h-24 w-52 sm:w-72">
+            <!-- Static Logo (Hidden initially, fades in) -->
+            <img 
+              id="staticHeaderLogo"
+              src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/KPI/kpi.png" 
+              alt="KPI Business Solutions"
+              class="absolute inset-0 w-full h-full object-contain opacity-0 transition-opacity duration-1000 ease-in-out"
+            >
+            <!-- Video Logo (Plays once, fades out) -->
+            <video 
+              id="videoHeaderLogo"
+              src="https://github.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/raw/refs/heads/main/KPI/kpi.mp4" 
+              autoplay muted playsinline
+              class="absolute inset-0 w-full h-full object-contain mix-blend-multiply transition-opacity duration-1000 ease-in-out opacity-100"
+            ></video>
           </a>
         </div>
 
@@ -161,92 +174,6 @@
       </div>
     </section>
 
-    <section class="py-12 bg-gray-50 border-t border-b border-gray-200">
-      <div class="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-widest font-serif">
-            Trusted by Industry Leaders
-          </h2>
-          <p class="mt-2 text-sm text-gray-500 max-w-2xl mx-auto">
-            At KPI Business Solutions, we have partnered with a diverse range of clients, from SMEs to multi-national corporations in a variety of different industry settings.
-          </p>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-7 items-center justify-items-center opacity-70">
-          <!-- MACOM -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/macom.com" alt="MACOM" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">MACOM</span>
-          </div>
-          <!-- GSK -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/gsk.com" alt="GSK" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">GSK</span>
-          </div>
-          <!-- Kerry Group -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/kerry.com" alt="Kerry" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Kerry Group</span>
-          </div>
-          <!-- Novartis -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/novartis.com" alt="Novartis" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Novartis</span>
-          </div>
-          <!-- Shell -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/shell.com" alt="Shell" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Shell</span>
-          </div>
-          <!-- Janssen -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/janssen.com" alt="Janssen" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Janssen</span>
-          </div>
-          <!-- AbbVie -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/abbvie.com" alt="AbbVie" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">AbbVie</span>
-          </div>
-          
-          <!-- Row 2 -->
-          <!-- Carbery -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/carbery.com" alt="Carbery" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg text-center leading-tight">Carbery<br>Group</span>
-          </div>
-          <!-- Smurfit Kappa -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/smurfitkappa.com" alt="Smurfit Kappa" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg text-center leading-tight">Smurfit<br>Kappa</span>
-          </div>
-          <!-- Sanmina -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/sanmina.com" alt="Sanmina" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Sanmina</span>
-          </div>
-          <!-- Goulding -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <span class="text-corporate-900 font-bold tracking-tight text-xl">Goulding</span>
-          </div>
-          <!-- IDC -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <span class="text-corporate-900 font-bold tracking-tight text-xl">IDC</span>
-          </div>
-          <!-- Irish Guide Dogs -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/guidedogs.ie" alt="Irish Guide Dogs" class="max-h-12 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-md text-center leading-tight">Irish Guide<br>Dogs</span>
-          </div>
-          <!-- Mercy Hospital -->
-          <div class="group flex items-center justify-center p-4 transition-all duration-300 hover:scale-105">
-            <img src="https://logo.clearbit.com/mercyfundraising.ie" alt="Mercy Hospital" class="max-h-12 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-            <span class="hidden text-corporate-900 font-bold tracking-tight text-md text-center leading-tight">Mercy Hospital<br>Fundraising</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section id="about" class="py-20 sm:py-28 bg-white">
       <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -268,6 +195,19 @@
                 We offer various levels of support in line with your requirements, dealing with everything from day to day operational issues, development and implementation of HR Strategies, Organisational Development initiatives and dealing with IR and Employment Law issues.
               </p>
             </div>
+            
+            <!-- Animated 25+ Years Badge -->
+            <div id="statsBadge" class="mt-8 flex items-center gap-6 p-6 bg-corporate-100 border-l-4 border-corporate-accent w-full sm:max-w-sm">
+              <div>
+                <span id="yearsCounter" class="text-4xl sm:text-5xl font-serif text-corporate-900 font-bold">0</span><span class="text-4xl sm:text-5xl font-serif text-corporate-accent font-bold">+</span>
+              </div>
+              <div class="text-sm font-semibold tracking-wide text-gray-600 uppercase leading-relaxed">
+                Years of Industry <br>Excellence & Experience
+              </div>
+            </div>
+
+          </div>
+          
           <!-- Office Image / Video -->
           <div class="relative">
             <div class="absolute inset-0 bg-corporate-900 translate-x-4 translate-y-4 sharp-border hidden sm:block"></div>
@@ -362,7 +302,7 @@
               <img 
                 src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/KPI/Anne.jpeg" 
                 alt="Anne Pettit" 
-                class="w-full h-full object-cover object-[70%_20%] img-grayscale"
+                class="w-full h-full object-cover object-[70%_20%] grayscale group-hover:grayscale-0 transition-all duration-700"
               >
               <div class="absolute inset-0 bg-corporate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span class="bg-white text-corporate-900 px-6 py-2 text-sm font-semibold tracking-wide uppercase">View Profile</span>
@@ -386,7 +326,7 @@
               <img 
                 src="https://raw.githubusercontent.com/ProtechDynamicSolutions/ProtechDynamicSolutions.github.io/refs/heads/main/KPI/victoria.jpg" 
                 alt="Victoria Pettit" 
-                class="w-full h-full object-cover object-center img-grayscale"
+                class="w-full h-full object-cover object-center grayscale group-hover:grayscale-0 transition-all duration-700"
               >
               <div class="absolute inset-0 bg-corporate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span class="bg-white text-corporate-900 px-6 py-2 text-sm font-semibold tracking-wide uppercase">View Profile</span>
@@ -464,6 +404,91 @@
             </form>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 bg-gray-50 border-t border-b border-gray-200">
+      <div class="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-widest font-serif">
+            Trusted by Industry Leaders
+          </h2>
+          <p class="mt-2 text-sm text-gray-500 max-w-2xl mx-auto">
+            At KPI Business Solutions, we have partnered with a diverse range of clients, from SMEs to multi-national corporations in a variety of different industry settings.
+          </p>
+        </div>
+        
+        <!-- Changed from Grid to Flex Wrap to perfectly center the final row -->
+        <div class="flex flex-wrap justify-center items-center gap-x-8 gap-y-10 sm:gap-x-12 opacity-70 max-w-5xl mx-auto">
+          <!-- MACOM -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/macom.com" alt="MACOM" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">MACOM</span>
+          </div>
+          <!-- GSK -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/gsk.com" alt="GSK" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">GSK</span>
+          </div>
+          <!-- Kerry Group -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/kerry.com" alt="Kerry" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Kerry Group</span>
+          </div>
+          <!-- Novartis -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/novartis.com" alt="Novartis" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Novartis</span>
+          </div>
+          <!-- Shell -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/shell.com" alt="Shell" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Shell</span>
+          </div>
+          <!-- Janssen -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/janssen.com" alt="Janssen" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Janssen</span>
+          </div>
+          <!-- AbbVie -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/abbvie.com" alt="AbbVie" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">AbbVie</span>
+          </div>
+          <!-- Carbery -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/carbery.com" alt="Carbery" class="max-h-10 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg text-center leading-tight">Carbery<br>Group</span>
+          </div>
+          <!-- Smurfit Kappa -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/smurfitkappa.com" alt="Smurfit Kappa" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg text-center leading-tight">Smurfit<br>Kappa</span>
+          </div>
+          <!-- Sanmina -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/sanmina.com" alt="Sanmina" class="max-h-8 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-lg">Sanmina</span>
+          </div>
+          <!-- Goulding -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <span class="text-corporate-900 font-bold tracking-tight text-xl">Goulding</span>
+          </div>
+          <!-- IDC -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <span class="text-corporate-900 font-bold tracking-tight text-xl">IDC</span>
+          </div>
+          <!-- Irish Guide Dogs -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/guidedogs.ie" alt="Irish Guide Dogs" class="max-h-12 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-md text-center leading-tight">Irish Guide<br>Dogs</span>
+          </div>
+          <!-- Mercy Hospital -->
+          <div class="group flex items-center justify-center transition-all duration-300 hover:scale-105 w-28 sm:w-32">
+            <img src="https://logo.clearbit.com/mercyfundraising.ie" alt="Mercy Hospital" class="max-h-12 w-auto grayscale group-hover:grayscale-0 transition duration-300" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span class="hidden text-corporate-900 font-bold tracking-tight text-md text-center leading-tight">Mercy Hospital<br>Fundraising</span>
+          </div>
         </div>
       </div>
     </section>
@@ -624,6 +649,29 @@
 
     // Video Scroll Play Logic (Plays only once)
     document.addEventListener("DOMContentLoaded", function() {
+      // Header Logo Transition Logic
+      const videoHeaderLogo = document.getElementById('videoHeaderLogo');
+      const staticHeaderLogo = document.getElementById('staticHeaderLogo');
+      
+      if (videoHeaderLogo && staticHeaderLogo) {
+        const swapLogos = () => {
+          videoHeaderLogo.classList.remove('opacity-100');
+          videoHeaderLogo.classList.add('opacity-0');
+          
+          staticHeaderLogo.classList.remove('opacity-0');
+          staticHeaderLogo.classList.add('opacity-100');
+        };
+
+        // Trigger swap when video finishes naturally
+        videoHeaderLogo.addEventListener('ended', swapLogos);
+        
+        // Trigger swap immediately if video fails to load
+        videoHeaderLogo.addEventListener('error', swapLogos);
+        
+        // Safety fallback: Force swap after 7 seconds in case browser blocks autoplay
+        setTimeout(swapLogos, 7000);
+      }
+
       const video = document.getElementById('aboutVideo');
       
       if (video && 'IntersectionObserver' in window) {
@@ -651,6 +699,46 @@
         });
         
         videoObserver.observe(video);
+      }
+
+      // 25+ Years Counter Animation Logic
+      const counterElement = document.getElementById('yearsCounter');
+      const statsBadge = document.getElementById('statsBadge');
+
+      if (counterElement && statsBadge && 'IntersectionObserver' in window) {
+        let counted = false;
+
+        const counterObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && !counted) {
+              counted = true; // Prevent re-triggering
+              let startTimestamp = null;
+              const duration = 2000; // 2 seconds to count up
+              const target = 25;
+
+              const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                
+                // Ease out cubic function for smoother slowdown at the end
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                counterElement.innerText = Math.floor(easeOut * target);
+
+                if (progress < 1) {
+                  window.requestAnimationFrame(step);
+                } else {
+                  counterElement.innerText = target;
+                }
+              };
+              
+              window.requestAnimationFrame(step);
+              observer.unobserve(statsBadge); // Stop observing once completed
+            }
+          });
+        }, { threshold: 0.5 });
+
+        counterObserver.observe(statsBadge);
       }
     });
   </script>
