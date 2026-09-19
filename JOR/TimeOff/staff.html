@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOR Book Time Off</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" style="visibility:hidden">
+  <header class="topbar">
+    <div class="brandmark"><img data-logo alt="JOR Ireland"><span class="bt">Book Time Off</span></div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="spacer"></div>
+    <span class="live" title="Decisions from the manager appear here as they are made"><i></i>Live</span>
+    <div class="whoami static">
+      <span class="av" id="whoav"></span>
+      <span class="wt"><b id="whoname"></b><span id="whorole"></span></span>
+    </div>
+    <button class="signout" data-act="signout">Sign out</button>
+  </header>
+  <main class="work on" id="v-home"></main>
+  <main class="work" id="v-book"></main>
+  <main class="work" id="v-mine"></main>
+  <main class="work" id="v-away"></main>
+</div>
+
+<div id="scrim"></div>
+<div class="modal" id="modal">
+  <div class="modal-h"><h3 id="modal-title"></h3><button class="x" id="modal-x">✕</button></div>
+  <div class="modal-b" id="modal-body"></div>
+  <div class="modal-f" id="modal-foot"></div>
+</div>
+<div id="toast"></div>
+
+<script src="brand.js"></script>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="core.js"></script>
+<script src="staff.js"></script>
+</body>
+</html>
