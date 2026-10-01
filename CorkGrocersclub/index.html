@@ -598,6 +598,7 @@ html[data-size="1"] .tabbar a, html[data-size="2"] .tabbar a { font-size: 12.5px
   .pub-hero { margin: 0; padding: 4rem 2rem 4.2rem; }
   .pub-hero h1 { font-size: 3.1rem; }
   .pub-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.8rem; align-items: start; }
+  .pub-body > .pub-grid.single { grid-template-columns: 1fr; max-width: 52rem; }
   .pub-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
   .page.pub .site-foot { margin-left: 0; margin-right: 0; padding-left: 2rem; padding-right: 2rem; }
 }
@@ -2124,7 +2125,7 @@ html[data-size="1"] .tabbar a, html[data-size="2"] .tabbar a { font-size: 12.5px
 .sheet.doc-view { animation: none !important; transform: none !important; }
 
 </style>
-<script>window.GC_CONFIG={"crest":{"sm":"crest-96.png","md":"crest-256.png","lg":"crest.png"},"felt":"felt.jpg","intro":"intro.mp4","poster":"poster.jpg","edges":{"source":"intro.mp4","duration":6.227,"fps":30.189,"band":0.1,"samples":[{"t":0,"top":"#453e30","bottom":"#3d7942"},{"t":0.563,"top":"#443e30","bottom":"#3e7942"},{"t":1.126,"top":"#474032","bottom":"#3f7a43"},{"t":1.689,"top":"#2a592c","bottom":"#2c6130"},{"t":2.252,"top":"#275629","bottom":"#295c2d"},{"t":2.816,"top":"#295228","bottom":"#2d592c"},{"t":3.412,"top":"#3c5831","bottom":"#3d522c"},{"t":3.975,"top":"#32412a","bottom":"#26351f"},{"t":4.538,"top":"#1d301e","bottom":"#192b1a"},{"t":5.101,"top":"#162b1a","bottom":"#142817"},{"t":5.664,"top":"#162a19","bottom":"#142717"},{"t":6.194,"top":"#162a19","bottom":"#142717"}]},"version":"16b788a6bb","numberPrefix":"G-","jsqr":"jsqr.js"};</script>
+<script>window.GC_CONFIG={"crest":{"sm":"crest-96.png","md":"crest-256.png","lg":"crest.png"},"felt":"felt.jpg","intro":"intro.mp4","poster":"poster.jpg","edges":{"source":"intro.mp4","duration":6.227,"fps":30.189,"band":0.1,"samples":[{"t":0,"top":"#453e30","bottom":"#3d7942"},{"t":0.563,"top":"#443e30","bottom":"#3e7942"},{"t":1.126,"top":"#474032","bottom":"#3f7a43"},{"t":1.689,"top":"#2a592c","bottom":"#2c6130"},{"t":2.252,"top":"#275629","bottom":"#295c2d"},{"t":2.816,"top":"#295228","bottom":"#2d592c"},{"t":3.412,"top":"#3c5831","bottom":"#3d522c"},{"t":3.975,"top":"#32412a","bottom":"#26351f"},{"t":4.538,"top":"#1d301e","bottom":"#192b1a"},{"t":5.101,"top":"#162b1a","bottom":"#142817"},{"t":5.664,"top":"#162a19","bottom":"#142717"},{"t":6.194,"top":"#162a19","bottom":"#142717"}]},"version":"717f7b97e5","numberPrefix":"G-","jsqr":"jsqr.js"};</script>
 <script src="config.js"></script>
 </head>
 <body>
@@ -12223,7 +12224,9 @@ JORLibQRCode();
 
   function landing(d) {
     var c = d.club, st = P.openStatus(c);
-    var about = P.clean(c.about), facilities = P.clean(c.facilities);
+    // Until the committee writes their own words, a plain true line and the club's facilities.
+    var about = P.clean(c.about) || 'A members’ club at 27 Cook Street, Cork — snooker, the bar and good company since 1882.';
+    var facilities = P.clean(c.facilities) || 'Snooker room · Bar · Poker room';
     var events = P.upcoming(d.events).slice(0, 4);
     var notices = d.notices.slice(0, 2);
     var honours = P.honoursSorted(d.honours).slice(0, 3);
@@ -12253,7 +12256,9 @@ JORLibQRCode();
       h('section.section.o-join', joinCta()),
       sec('o-contact', 'Contact', { eyebrow: 'Get in touch' }, P.contactRows(c)));
 
-    return [hero, h('div.pub-grid', colA, colB), P.siteFoot(c)];
+    // A column with nothing in it would leave the page lopsided: fall back to one centred column.
+    var grid = colA.childNodes.length ? h('div.pub-grid', colA, colB) : h('div.pub-grid.single', colB);
+    return [hero, grid, P.siteFoot(c)];
   }
 
   // The band's gold button (Members Login, or Members area when signed in) comes from the shell.
@@ -12600,6 +12605,9 @@ JORLibQRCode();
     GC.session.del('siContact');
     GC.loadHome(true).catch(function () { /* the next screen asks again */ });
     if (stay) return;
+    // Standing at the door (they scanned the door poster): the code first; the welcome and the
+    // "put it on your home screen" offer wait until the next time they open the app.
+    if (/^door/.test(GC.session.get('after') || '')) { GC.go(afterPath(), { replace: true }); return; }
     if (!store.get('welcomed')) GC.go('welcome', { replace: true });
     else GC.go(afterPath(), { replace: true });
   }
@@ -13654,7 +13662,9 @@ JORLibQRCode();
             h('p.door-note', changedLine(ds.setAt, true)),
             h('p.door-note.strong', 'Please don’t share the code.'),
             savedNote ? h('p.door-saved', icon('wifiOff'), 'No internet — this is the code saved on this phone ' + fmt.ago(new Date(ds.at).toISOString()) + '.') : null,
-            h('div.door-act', ui.btn('Refresh', { kind: 'secondary', icon: 'refresh', onClick: refresh }))));
+            h('div.door-act', ui.btn('Refresh', { kind: 'secondary', icon: 'refresh', onClick: refresh })),
+            // came from the door poster in a browser: offer the one-tap app for next time
+            !GC.env.standalone ? h('div.door-act', ui.btn('Put the app on your home screen', { kind: 'ghost', icon: 'install', href: '#/install' })) : null));
         } else if (ds && ds.state === 'locked') {
           screen.appendChild(h('div.door-screen-in',
             h('span.door-lock', icon('lock')),
