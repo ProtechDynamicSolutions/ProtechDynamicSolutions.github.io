@@ -2,7 +2,7 @@
    The page is network-first so a redeploy reaches everyone at once (a cache-first page would
    serve the first version forever); static files are cache-first. The club server and the intro
    film are never cached here. Push messages carry no payload: we fetch the text ourselves. */
-var VERSION = '717f7b97e5';
+var VERSION = '260a31c86b';
 var CACHE = 'gc-' + VERSION;
 var STATIC = ["./","index.html","manifest.webmanifest","crest.png","crest-256.png","crest-96.png","felt.jpg","poster.jpg","jsqr.js","icons/apple-touch-icon.png","icons/badge-72.png","icons/favicon-16.png","icons/favicon-32.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","fonts/inter-400.woff2","fonts/inter-500.woff2","fonts/inter-600.woff2","fonts/inter-700.woff2","fonts/playfair-display-400-italic.woff2","fonts/playfair-display-600-700.woff2"];
 
