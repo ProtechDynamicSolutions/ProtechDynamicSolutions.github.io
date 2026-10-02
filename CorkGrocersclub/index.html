@@ -2193,7 +2193,7 @@ html[data-size="1"] .tabbar a, html[data-size="2"] .tabbar a { font-size: 12.5px
 .sheet.doc-view { animation: none !important; transform: none !important; }
 
 </style>
-<script>window.GC_CONFIG={"crest":{"sm":"crest-96.png","md":"crest-256.png","lg":"crest.png"},"felt":"felt.jpg","intro":"intro.mp4","poster":"poster.jpg","edges":{"source":"intro.mp4","duration":6.227,"fps":30.189,"band":0.1,"samples":[{"t":0,"top":"#453e30","bottom":"#3d7942"},{"t":0.563,"top":"#443e30","bottom":"#3e7942"},{"t":1.126,"top":"#474032","bottom":"#3f7a43"},{"t":1.689,"top":"#2a592c","bottom":"#2c6130"},{"t":2.252,"top":"#275629","bottom":"#295c2d"},{"t":2.816,"top":"#295228","bottom":"#2d592c"},{"t":3.412,"top":"#3c5831","bottom":"#3d522c"},{"t":3.975,"top":"#32412a","bottom":"#26351f"},{"t":4.538,"top":"#1d301e","bottom":"#192b1a"},{"t":5.101,"top":"#162b1a","bottom":"#142817"},{"t":5.664,"top":"#162a19","bottom":"#142717"},{"t":6.194,"top":"#162a19","bottom":"#142717"}]},"version":"260a31c86b","numberPrefix":"G-","jsqr":"jsqr.js"};</script>
+<script>window.GC_CONFIG={"crest":{"sm":"crest-96.png","md":"crest-256.png","lg":"crest.png"},"felt":"felt.jpg","intro":"intro.mp4","poster":"poster.jpg","edges":{"source":"intro.mp4","duration":6.227,"fps":30.189,"band":0.1,"samples":[{"t":0,"top":"#453e30","bottom":"#3d7942"},{"t":0.563,"top":"#443e30","bottom":"#3e7942"},{"t":1.126,"top":"#474032","bottom":"#3f7a43"},{"t":1.689,"top":"#2a592c","bottom":"#2c6130"},{"t":2.252,"top":"#275629","bottom":"#295c2d"},{"t":2.816,"top":"#295228","bottom":"#2d592c"},{"t":3.412,"top":"#3c5831","bottom":"#3d522c"},{"t":3.975,"top":"#32412a","bottom":"#26351f"},{"t":4.538,"top":"#1d301e","bottom":"#192b1a"},{"t":5.101,"top":"#162b1a","bottom":"#142817"},{"t":5.664,"top":"#162a19","bottom":"#142717"},{"t":6.194,"top":"#162a19","bottom":"#142717"}]},"version":"e775ae44fb","numberPrefix":"G-","jsqr":"jsqr.js"};</script>
 <script src="config.js"></script>
 </head>
 <body>
@@ -13283,23 +13283,30 @@ JORLibQRCode();
 
   function unlocked(d) {
     GC.setCmUntil(d.until);
+    // The committee home's figures can come back with the unlock, saving a second round trip.
+    if (d.dash) { GC.cmData.dash = { at: Date.now(), d: d.dash }; GC.cmData.today = d.dash.today; }
+    if (S.me && !S.me.pinSet) { S.me.pinSet = true; store.set('me', S.me); }
     GC.refresh();
   }
 
-  GC.cmGate = function () {
+  GC.cmGate = function (route) {
+    var wantDash = !!(route && route.pattern === 'c');
     var body = h('div.cm-gate-body', ui.loading(3));
     var page = GC.page({ cls: 'si-page cm-gate' },
       ui.hero({ center: true, small: true, eyebrow: 'Committee area', title: 'Your committee PIN' },
         h('div.cm-lock', icon('lock'))),
       body);
-    var load = function () {
+    // quiet: the keypad is already showing (this phone knows a PIN is set), so the status only
+    // changes the screen if it is locked, not set up after all, or already unlocked elsewhere.
+    var load = function (quiet) {
       GC.api('cm.pin.status', {}).then(function (st) {
         if (!inPage(body) && body.parentNode) return;
         if (st.unlocked && st.until) { unlocked(st); return; }
         if (!st.set) setupIntro(st);
         else if (st.lockMessage) lockedView(st);
-        else pinView(st);
+        else if (!quiet) pinView(st);
       }, function (e) {
+        if (quiet) return; // the keypad still works; Open reports any problem
         GC.clear(body);
         body.appendChild(ui.empty(e.code === 'NET' ? 'wifiOff' : 'alert', e.code === 'NET' ? 'No connection' : 'Something went wrong', e.message,
           ui.btn('Try again', { kind: 'primary', icon: 'refresh', onClick: load })));
@@ -13316,7 +13323,7 @@ JORLibQRCode();
         v = v || pin.value();
         if (v.length !== 6) { err.show('Your committee PIN is 6 numbers.'); pin.input.focus(); return null; }
         busy = true; err.hide();
-        return GC.api('cm.unlock', { pin: v }, { quietCm: true }).then(function (d) { busy = false; unlocked(d); }, function (e) {
+        return GC.api('cm.unlock', { pin: v, dash: wantDash }, { quietCm: true }).then(function (d) { busy = false; unlocked(d); }, function (e) {
           busy = false; pin.clear();
           if (e.code === 'RATE') { load(); return; }
           err.show(e.message);
@@ -13424,7 +13431,9 @@ JORLibQRCode();
       if (msg) err.show(msg);
     }
 
-    load();
+    // A phone that has unlocked before shows the keypad at once; the status check runs alongside.
+    if (S.me && S.me.pinSet) { pinView({ set: true, admin: GC.can('settings') }); load(true); }
+    else load();
     return page;
   };
 
@@ -20914,11 +20923,29 @@ JORLibQRCode();
   GC.route('c', {
     auth: 'committee', title: 'Committee', tab: 'c',
     render: function () {
-      var c = fresh('dash', 45000);
-      if (c) return homeView(c);
+      // Seen before while unlocked: show it at once and bring it up to date behind the scenes.
+      var c = cmData().dash;
+      if (c && c.d) {
+        if (Date.now() - c.at > 45000) refreshDash();
+        return homeView(c.d);
+      }
       return GC.api('cm.dash', {}).then(function (d) { cmData().today = d.today; return homeView(keep('dash', d)); });
     }
   });
+  var dashBusy = false;
+  function refreshDash() {
+    if (dashBusy) return;
+    dashBusy = true;
+    var was = cmData().dash;
+    GC.api('cm.dash', {}).then(function (d) {
+      dashBusy = false;
+      cmData().today = d.today;
+      var same = !!(was && was.d) && JSON.stringify(was.d) === JSON.stringify(d);
+      keep('dash', d);
+      // Redrawn only when something changed, and only if the committee home is still open.
+      if (!same && GC.S.route && GC.S.route.pattern === 'c') GC.refresh();
+    }, function () { dashBusy = false; });
+  }
 
   /* ── #/c/pay: choose who is paying ───────────────────────────────────────────────────────── */
 
