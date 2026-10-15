@@ -5,7 +5,8 @@
   --ink-2: #191919;
   --paper: #f2efe9;
   --paper-2: #e7e3db;
-  --accent: #ff4f1f;
+  --accent: #ffd400;
+  --accent-deep: #8a6c00; /* the yellow as readable text on paper */
   --white: #ffffff;
   --muted-dark: rgba(255, 255, 255, 0.64);
   --muted-light: #5f5a52;
@@ -59,7 +60,8 @@ button { font: inherit; color: inherit; }
 }
 .skip:focus { top: 12px; }
 
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; }
+.section--ink :focus-visible, .hero :focus-visible, .player :focus-visible { outline-color: var(--accent); }
 
 /* ---------- Header ---------- */
 
@@ -114,6 +116,8 @@ button { font: inherit; color: inherit; }
 
 /* Over the hero photo the orange can sit on a bright patch, so use white. */
 .bar:not(.is-solid) .wordmark__role { color: rgba(255, 255, 255, 0.78); }
+/* Yellow text is too faint on paper, so the solid paper bar uses deep gold. */
+.bar.is-solid:not(.on-ink) .wordmark__role { color: var(--accent-deep); }
 
 .bar__nav { display: flex; gap: 28px; margin-left: auto; }
 
@@ -214,7 +218,7 @@ button { font: inherit; color: inherit; }
 .menu__nav a:nth-child(3) { animation-delay: 0.08s; }
 .menu__nav a:nth-child(4) { animation-delay: 0.12s; }
 .menu__nav a:nth-child(5) { animation-delay: 0.16s; }
-.menu__nav a:hover { color: var(--white); }
+.menu__nav a:hover { color: transparent; -webkit-text-stroke: 2px var(--ink); }
 
 .menu__foot {
   display: flex;
@@ -708,6 +712,7 @@ button { font: inherit; color: inherit; }
 }
 
 .contact .head__tc { color: var(--ink); opacity: 0.7; }
+.section--paper .head__tc { color: var(--accent-deep); }
 
 .contact__title {
   margin: 10px 0 clamp(28px, 4vw, 48px);
@@ -730,7 +735,7 @@ button { font: inherit; color: inherit; }
   word-break: break-word;
 }
 
-.contact__mail:hover { color: var(--white); }
+.contact__mail:hover { opacity: 0.6; }
 
 .contact__links {
   display: flex;

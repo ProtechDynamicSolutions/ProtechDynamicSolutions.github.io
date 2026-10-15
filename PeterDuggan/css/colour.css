@@ -1,12 +1,11 @@
 /* Peter J Duggan · Colour theme
-   Grainy paper, giant type, candy colours taken from broadcast colour bars. */
+   Grainy paper, giant type, candy colours taken from broadcast colour bars, yellow as the accent. */
 
 :root {
   --paper: #f1f0ec;
   --ink: #0d0d0d;
   --ink-2: #1b1b1b;
   --foot: #2a2a2a;
-  --magenta: #e8137f;
   --yellow: #ffd400;
   --white: #ffffff;
   --muted: #55524c;
@@ -58,11 +57,11 @@ body.is-locked { overflow: hidden; }
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--magenta); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; box-shadow: 0 0 0 3px var(--yellow); }
 
 .skip {
   position: absolute; left: 12px; top: -60px; z-index: 100;
-  background: var(--magenta); color: var(--white); padding: 10px 14px; font-weight: 800; text-decoration: none;
+  background: var(--yellow); color: var(--ink); padding: 10px 14px; font-weight: 800; text-decoration: none;
 }
 .skip:focus { top: 12px; }
 
@@ -87,7 +86,7 @@ button { font: inherit; color: inherit; }
 
 .bar.is-solid { background: var(--paper); padding-top: 10px; padding-bottom: 10px; }
 .bar.is-solid.on-ink { background: var(--ink); color: var(--white); }
-.bar.is-solid.on-accent { background: var(--magenta); color: var(--white); }
+.bar.is-solid.on-accent { background: var(--yellow); color: var(--ink); }
 
 .mark { text-decoration: none; display: inline-flex; flex-direction: column; gap: 5px; }
 
@@ -286,15 +285,15 @@ button { font: inherit; color: inherit; }
   position: relative;
   width: 58px; height: 58px;
   border-radius: 50%;
-  background: var(--magenta);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--ink);
   display: grid; place-items: center;
   flex: none;
 }
 .ripple__dot svg { width: 18px; height: 18px; fill: currentColor; margin-left: 3px; }
 .ripple__dot::before, .ripple__dot::after {
   content: ''; position: absolute; inset: -9px; border-radius: 50%;
-  border: 2px solid var(--magenta); opacity: 0.35;
+  border: 2px solid var(--ring, var(--ink)); opacity: 0.3;
   animation: pulse 2.4s var(--ease) infinite;
 }
 .ripple__dot::after { animation-delay: 1.2s; }
@@ -310,7 +309,7 @@ button { font: inherit; color: inherit; }
   line-height: 0.98;
   letter-spacing: -0.03em;
 }
-.shop__title .star { color: var(--magenta); }
+.shop__title .star { background: var(--yellow); padding: 0 0.06em; margin-left: 0.05em; }
 
 .shop__small {
   margin: 24px auto 0;
@@ -325,8 +324,8 @@ button { font: inherit; color: inherit; }
 /* ---------- Magenta band ---------- */
 
 .band {
-  background: var(--magenta);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--ink);
   padding: clamp(72px, 12vw, 190px) var(--gutter);
 }
 
@@ -352,6 +351,7 @@ button { font: inherit; color: inherit; }
   position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 16px;
   font-weight: 900; text-transform: uppercase; font-size: 15px; letter-spacing: 0.02em;
+  color: var(--white); --ring: var(--white);
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
 }
@@ -385,7 +385,7 @@ button { font: inherit; color: inherit; }
 .btn--yellow { background: var(--yellow); color: var(--ink); }
 .btn--yellow:hover { background: var(--white); }
 .btn--dark { background: var(--ink); color: var(--white); }
-.btn--dark:hover { background: var(--magenta); }
+.btn--dark:hover { background: var(--white); color: var(--ink); }
 
 /* ---------- Work: full-width strips ---------- */
 
@@ -463,7 +463,7 @@ button { font: inherit; color: inherit; }
   position: absolute; z-index: 2; left: 50%; top: 50%;
   width: 74px; height: 74px; margin: -37px 0 0 -37px;
   border-radius: 50%;
-  background: var(--magenta); color: var(--white);
+  background: var(--yellow); color: var(--ink);
   display: grid; place-items: center;
   opacity: 0; transform: scale(0.6);
   transition: opacity 0.3s, transform 0.4s var(--ease);
@@ -615,7 +615,7 @@ button { font: inherit; color: inherit; }
   background: linear-gradient(90deg, var(--c1) 0 14.28%, var(--c2) 0 28.57%, var(--c3) 0 42.85%, var(--c4) 0 57.14%, var(--c5) 0 71.42%, var(--c6) 0 85.71%, var(--c7) 0) left bottom / 100% 6px no-repeat;
   word-break: break-word;
 }
-.contact__mail:hover { color: var(--magenta); }
+.contact__mail:hover { opacity: 0.6; }
 
 .contact__links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
 .contact__links:empty { display: none; }
@@ -648,7 +648,7 @@ button { font: inherit; color: inherit; }
 .player__title { margin: 0; font-weight: 900; text-transform: uppercase; font-size: clamp(14px, 1.6vw, 18px); }
 .player__title span { color: rgba(255, 255, 255, 0.6); font-weight: 700; }
 .player__close { border: 0; background: transparent; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; padding: 12px 0 12px 12px; flex: none; }
-.player__close:hover { color: var(--magenta); }
+.player__close:hover { color: var(--yellow); }
 
 .player__stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 12px; }
 
@@ -658,10 +658,10 @@ button { font: inherit; color: inherit; }
 
 .player__step {
   flex: none; width: 50px; height: 50px; border-radius: 50%;
-  border: 0; background: var(--magenta); color: var(--white);
+  border: 0; background: var(--yellow); color: var(--ink);
   font-size: 20px; font-weight: 900; cursor: pointer;
 }
-.player__step:hover { background: var(--yellow); color: var(--ink); }
+.player__step:hover { background: var(--white); }
 
 .player__cuts { display: flex; gap: 10px; overflow-x: auto; padding: 16px 0 4px; justify-content: center; scrollbar-width: thin; }
 .player__cuts:empty { display: none; }
