@@ -160,6 +160,9 @@ window.SITE = {
     ['Bobby Moore Fund', 'bobby-moore-fund']
   ],
 
+  // One line under the laurels in the Colour theme. The name is set in bold.
+  intro: 'Peter J Duggan is an editor, colourist and DIT for commercials, trailers, spots and films, working with brands, agencies and broadcasters.',
+
   about: [
     'Peter J Duggan is an editor, colourist and DIT. He cuts and grades commercials, trailers, spots and films for brands, agencies and broadcasters, and on set he looks after the camera data and the look.',
     'Recent work includes Michelob ULTRA, Samsung Galaxy Z Fold8, Lynx with Anthony Joshua and Calfreezy, and Enterprise x UEFA.'

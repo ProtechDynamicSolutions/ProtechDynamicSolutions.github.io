@@ -53,7 +53,7 @@
   </div>
 
   <main id="top">
-    <section class="hero" aria-label="Introduction">
+    <section class="hero" data-tone="ink" data-clear-bar aria-label="Introduction">
       <div class="hero__media" data-slot="heroImage"></div>
       <div class="hero__shade"></div>
       <div class="grain" aria-hidden="true"></div>
@@ -62,7 +62,7 @@
         <h1 class="hero__title" data-slot="heroTitle"></h1>
         <p class="hero__small" data-slot="heroDisclaimer"></p>
         <div class="hero__actions">
-          <button class="btn btn--accent" id="playLatest">
+          <button class="btn btn--accent" id="playLatest" data-play-latest>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
             Play latest work
           </button>
@@ -71,11 +71,11 @@
       </div>
     </section>
 
-    <div class="ticker" aria-hidden="true">
+    <div class="ticker" data-tone="accent" aria-hidden="true">
       <div class="ticker__track" data-slot="ticker"></div>
     </div>
 
-    <section class="section section--paper" id="work" aria-labelledby="workTitle">
+    <section class="section section--paper" data-tone="paper" id="work" aria-labelledby="workTitle">
       <div class="wrap">
         <header class="head">
           <p class="head__tc">01:00:00:00</p>
@@ -87,7 +87,7 @@
       </div>
     </section>
 
-    <section class="section section--ink" id="films" aria-labelledby="filmsTitle">
+    <section class="section section--ink" data-tone="ink" id="films" aria-labelledby="filmsTitle">
       <div class="wrap">
         <header class="head">
           <p class="head__tc">02:00:00:00</p>
@@ -99,7 +99,7 @@
       </div>
     </section>
 
-    <section class="section section--ink section--tight" id="music" aria-labelledby="musicTitle" hidden>
+    <section class="section section--ink section--tight" data-tone="ink" id="music" aria-labelledby="musicTitle" hidden>
       <div class="wrap">
         <header class="head">
           <p class="head__tc">02:30:00:00</p>
@@ -109,7 +109,7 @@
       </div>
     </section>
 
-    <section class="section section--paper" id="clients" aria-labelledby="clientsTitle">
+    <section class="section section--paper" data-tone="paper" id="clients" aria-labelledby="clientsTitle">
       <div class="wrap">
         <header class="head">
           <p class="head__tc">03:00:00:00</p>
@@ -123,7 +123,7 @@
       <div class="brands" data-slot="brands"></div>
     </section>
 
-    <section class="section section--ink about" id="about" aria-labelledby="aboutTitle">
+    <section class="section section--ink about" data-tone="ink" id="about" aria-labelledby="aboutTitle">
       <div class="wrap about__grid">
         <header class="head head--stack">
           <p class="head__tc">04:00:00:00</p>
@@ -133,7 +133,7 @@
       </div>
     </section>
 
-    <section class="contact" id="contact" aria-labelledby="contactTitle">
+    <section class="contact" data-tone="accent" id="contact" aria-labelledby="contactTitle">
       <div class="wrap">
         <p class="head__tc">05:00:00:00</p>
         <h2 class="contact__title" id="contactTitle">Let’s cut<br>something.</h2>
@@ -166,5 +166,6 @@
   <script src="js/content.js"></script>
   <script src="js/logo-ratios.js"></script>
   <script src="js/site.js"></script>
+<nav aria-label="Preview themes" style="position:fixed;left:12px;bottom:12px;z-index:30;display:flex;gap:4px;padding:4px;background:#0d0d0d;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);font:800 12px/1 Figtree,Archivo,Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase"><a href="./" style="padding:9px 14px;border-radius:999px;text-decoration:none;background:#fff;color:#0d0d0d" aria-current="page">Theme 1</a><a href="colour.html" style="padding:9px 14px;border-radius:999px;text-decoration:none;color:#fff">Theme 2</a></nav>
 </body>
 </html>
