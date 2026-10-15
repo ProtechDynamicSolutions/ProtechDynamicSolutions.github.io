@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Peter J Duggan · Editor, Colourist &amp; DIT</title>
+  <meta name="description" content="Peter J Duggan is an editor, colourist and DIT. Commercials, trailers, spots and films for Michelob ULTRA, Samsung, Lynx, Enterprise x UEFA and more.">
+  <meta name="theme-color" content="#0e0e0e">
+  <link rel="canonical" href="https://peterjduggan.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Peter J Duggan · Editor, Colourist &amp; DIT">
+  <meta property="og:description" content="Edit, colour and DIT for commercials, trailers, spots and films.">
+  <meta property="og:url" content="https://peterjduggan.com/">
+  <meta property="og:image" content="https://peterjduggan.com/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="img/hero.jpg">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <a class="skip" href="#work">Skip to the work</a>
+
+  <header class="bar" id="bar">
+    <a class="wordmark" href="#top" aria-label="Peter J Duggan, back to the top">
+      <span class="wordmark__name">Peter J Duggan</span>
+      <span class="wordmark__role" data-site="role">Editor / Colourist / DIT</span>
+    </a>
+    <nav class="bar__nav" aria-label="Sections">
+      <a href="#work">Work</a>
+      <a href="#films">Films</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="burger" id="menuOpen" aria-label="Open menu" aria-controls="menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <div class="menu" id="menu" hidden>
+    <button class="menu__close" id="menuClose" aria-label="Close menu">Close</button>
+    <nav class="menu__nav" aria-label="Menu">
+      <a href="#top">Home</a>
+      <a href="#work">Work</a>
+      <a href="#films">Films</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="menu__foot" data-slot="menuLinks"></div>
+  </div>
+
+  <main id="top">
+    <section class="hero" aria-label="Introduction">
+      <div class="hero__media" data-slot="heroImage"></div>
+      <div class="hero__shade"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="hero__tc" aria-hidden="true"><span class="rec"></span>TC <span id="tc">00:00:00:00</span></div>
+      <div class="hero__body wrap">
+        <h1 class="hero__title" data-slot="heroTitle"></h1>
+        <p class="hero__small" data-slot="heroDisclaimer"></p>
+        <div class="hero__actions">
+          <button class="btn btn--accent" id="playLatest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+            Play latest work
+          </button>
+          <a class="btn btn--line" href="#work">View work</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker__track" data-slot="ticker"></div>
+    </div>
+
+    <section class="section section--paper" id="work" aria-labelledby="workTitle">
+      <div class="wrap">
+        <header class="head">
+          <p class="head__tc">01:00:00:00</p>
+          <h2 class="head__title" id="workTitle">Latest work</h2>
+          <p class="head__count" data-slot="workCount"></p>
+        </header>
+        <div class="grid grid--work" data-slot="latest"></div>
+        <div class="older" data-slot="older"></div>
+      </div>
+    </section>
+
+    <section class="section section--ink" id="films" aria-labelledby="filmsTitle">
+      <div class="wrap">
+        <header class="head">
+          <p class="head__tc">02:00:00:00</p>
+          <h2 class="head__title" id="filmsTitle">Films &amp; TV</h2>
+          <p class="head__count">Trailers, spots and short films</p>
+        </header>
+        <div class="grid grid--films" data-slot="films"></div>
+        <ul class="laurels" data-slot="laurels" aria-label="Awards and festivals"></ul>
+      </div>
+    </section>
+
+    <section class="section section--ink section--tight" id="music" aria-labelledby="musicTitle" hidden>
+      <div class="wrap">
+        <header class="head">
+          <p class="head__tc">02:30:00:00</p>
+          <h2 class="head__title" id="musicTitle">Music videos</h2>
+        </header>
+        <div class="grid grid--films" data-slot="musicVideos"></div>
+      </div>
+    </section>
+
+    <section class="section section--paper" id="clients" aria-labelledby="clientsTitle">
+      <div class="wrap">
+        <header class="head">
+          <p class="head__tc">03:00:00:00</p>
+          <h2 class="head__title" id="clientsTitle">Worked with</h2>
+          <p class="head__count">Broadcasters, studios and brands</p>
+        </header>
+        <p class="label">Broadcasters &amp; studios</p>
+        <ul class="broadcasters" data-slot="broadcasters"></ul>
+        <p class="label">Brands</p>
+      </div>
+      <div class="brands" data-slot="brands"></div>
+    </section>
+
+    <section class="section section--ink about" id="about" aria-labelledby="aboutTitle">
+      <div class="wrap about__grid">
+        <header class="head head--stack">
+          <p class="head__tc">04:00:00:00</p>
+          <h2 class="head__title" id="aboutTitle">About</h2>
+        </header>
+        <div class="about__text" data-slot="about"></div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact" aria-labelledby="contactTitle">
+      <div class="wrap">
+        <p class="head__tc">05:00:00:00</p>
+        <h2 class="contact__title" id="contactTitle">Let’s cut<br>something.</h2>
+        <a class="contact__mail" data-slot="email" href="#"></a>
+        <div class="contact__links" data-slot="contactLinks"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__row">
+      <span data-slot="copyright"></span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <div class="player" id="player" role="dialog" aria-modal="true" aria-labelledby="playerTitle" hidden>
+    <div class="player__top">
+      <p class="player__title" id="playerTitle"></p>
+      <button class="player__close" id="playerClose" aria-label="Close video">Close ✕</button>
+    </div>
+    <div class="player__stage">
+      <button class="player__step player__step--prev" id="playerPrev" aria-label="Previous project">←</button>
+      <div class="player__frame" id="playerFrame"></div>
+      <button class="player__step player__step--next" id="playerNext" aria-label="Next project">→</button>
+    </div>
+    <div class="player__cuts" id="playerCuts"></div>
+  </div>
+
+  <script src="js/content.js"></script>
+  <script src="js/logo-ratios.js"></script>
+  <script src="js/site.js"></script>
+</body>
+</html>
