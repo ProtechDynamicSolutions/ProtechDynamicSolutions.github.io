@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Made from colour.html by _build/make_tv.py. Edit colour.html, not this file. -->
+<!-- Made from _build/page.html by _build/make_themes.py. Edit page.html, not this file. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -52,6 +52,7 @@
         <path class="tv__grill" d="M50.5 43h7M50.5 46.5h7"/>
         <path class="tv__feet" d="M13 53v5M51 53v5"/>
       </svg>
+      <span class="tv-snow" aria-hidden="true"></span>
     </button>
   </header>
 
@@ -71,7 +72,7 @@
     <section class="hero" data-tone="paper" aria-labelledby="heroWord">
       <div class="hero__stage">
         <div class="cycle" data-slot="heroCycle"></div>
-        <h1 class="hero__word" id="heroWord" data-bars="4,5">Colour</h1>
+        <h1 class="hero__word" id="heroWord" data-slot="heroLines"></h1>
       </div>
       <ul class="laurels" data-slot="laurels" aria-label="Awards and festivals"></ul>
       <div class="intro">
@@ -79,6 +80,11 @@
         <p class="intro__tag"><span>Edit · Colour · DIT</span><span>Commercials · Trailers · Films</span></p>
       </div>
     </section>
+
+    <div class="crawl" role="marquee" aria-label="Movie taglines Peter wishes he’d cut">
+      <span class="crawl__tag" aria-hidden="true">Taglines I wish I’d cut</span>
+      <div class="crawl__window"><div class="crawl__track" data-slot="crawl"></div></div>
+    </div>
 
     <section class="shop" data-tone="paper" aria-labelledby="shopTitle">
       <a class="ripple" href="#work">
@@ -147,6 +153,7 @@
         <div class="split__text" data-slot="about"></div>
       </div>
       <div class="split__light" data-tone="paper">
+        <figure class="tagline" data-slot="aboutLine"></figure>
         <h2 class="stack" id="aboutTitle">
           <span>Cut.</span>
           <span>Grade.</span>
@@ -184,6 +191,6 @@
   <script src="js/content.js"></script>
   <script src="js/logo-ratios.js"></script>
   <script src="js/site.js"></script>
-<nav aria-label="Preview themes" style="position:fixed;right:12px;bottom:12px;z-index:30;display:flex;gap:4px;padding:4px;background:#0d0d0d;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);font:800 12px/1 Figtree,Archivo,Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase"><a href="./" style="padding:9px 14px;border-radius:999px;text-decoration:none;color:#fff">Theme 1</a><a href="colour.html" style="padding:9px 14px;border-radius:999px;text-decoration:none;color:#fff">Theme 2</a><a href="tv.html" style="padding:9px 14px;border-radius:999px;text-decoration:none;background:#fff;color:#0d0d0d" aria-current="page">Theme 3</a></nav>
+<nav aria-label="Preview themes" style="position:fixed;right:12px;bottom:12px;z-index:30;display:flex;gap:4px;padding:4px;background:#0d0d0d;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);font:800 12px/1 Figtree,Archivo,Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase"><a href="./" style="padding:9px 14px;border-radius:999px;text-decoration:none;color:#fff">Theme 1</a><a href="tv.html" style="padding:9px 14px;border-radius:999px;text-decoration:none;background:#fff;color:#0d0d0d" aria-current="page">Theme 3</a></nav>
 </body>
 </html>

@@ -24,6 +24,8 @@
   --font: 'Figtree', 'Helvetica Neue', Arial, system-ui, sans-serif;
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.1 -0.38'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* TV snow: grey noise, full contrast. */
+  --static: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='s' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.6' intercept='-0.8'/%3E%3CfeFuncG type='linear' slope='2.6' intercept='-0.8'/%3E%3CfeFuncB type='linear' slope='2.6' intercept='-0.8'/%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23s)'/%3E%3C/svg%3E");
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -65,6 +67,11 @@ button { font: inherit; color: inherit; }
 }
 .skip:focus { top: 12px; }
 
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
 /* Colour-bar letters (site.js wraps each letter of [data-bars]). */
 .bar-c1 { color: var(--c1); } .bar-c2 { color: var(--c2); } .bar-c3 { color: var(--c3); }
 .bar-c4 { color: var(--c4); } .bar-c5 { color: var(--c5); } .bar-c6 { color: var(--c6); }
@@ -97,29 +104,63 @@ button { font: inherit; color: inherit; }
   line-height: 0.9;
 }
 
-.mark__bars, .menu-btn span { display: flex; height: 6px; }
-.mark__bars i, .menu-btn i { flex: 1; }
-.mark__bars i:nth-child(1), .menu-btn i:nth-child(1) { background: var(--c1); }
-.mark__bars i:nth-child(2), .menu-btn i:nth-child(2) { background: var(--c2); }
-.mark__bars i:nth-child(3), .menu-btn i:nth-child(3) { background: var(--c3); }
-.mark__bars i:nth-child(4), .menu-btn i:nth-child(4) { background: var(--c4); }
-.mark__bars i:nth-child(5), .menu-btn i:nth-child(5) { background: var(--c5); }
-.mark__bars i:nth-child(6), .menu-btn i:nth-child(6) { background: var(--c6); }
-.mark__bars i:nth-child(7), .menu-btn i:nth-child(7) { background: var(--c7); }
+.mark__bars { display: flex; height: 6px; }
+.mark__bars i { flex: 1; }
+.mark__bars i:nth-child(1) { background: var(--c1); }
+.mark__bars i:nth-child(2) { background: var(--c2); }
+.mark__bars i:nth-child(3) { background: var(--c3); }
+.mark__bars i:nth-child(4) { background: var(--c4); }
+.mark__bars i:nth-child(5) { background: var(--c5); }
+.mark__bars i:nth-child(6) { background: var(--c6); }
+.mark__bars i:nth-child(7) { background: var(--c7); }
 
-/* The menu button is a tiny test card. */
+/* ---------- The telly (menu button) ---------- */
+
 .menu-btn {
-  width: 50px;
-  height: 38px;
-  padding: 5px;
-  border: 3px solid currentColor;
-  border-radius: 8px;
-  background: var(--paper);
+  position: relative;
+  width: 62px;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
-  transition: transform 0.3s var(--ease);
 }
-.menu-btn span { height: 100%; }
-.menu-btn:hover { transform: rotate(-6deg) scale(1.06); }
+
+.bar.on-ink .menu-btn { color: var(--white); }
+
+.tv { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.tv__aerial path, .tv__grill, .tv__feet {
+  fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round;
+}
+.tv__aerial circle, .tv__knob { fill: currentColor; }
+.tv__body { fill: var(--paper); stroke: currentColor; stroke-width: 3; }
+.tv__glass { fill: rgba(255, 255, 255, 0.12); stroke: currentColor; stroke-width: 2.2; }
+
+.tv__aerial { transform-origin: 32px 17px; }
+.menu-btn:hover .tv__aerial { animation: wiggle 0.6s var(--ease); }
+
+/* Snow over the screen: a short burst every few seconds, and while hovered.
+   Placed in % of the button to match the screen in the SVG
+   (x 8.5 to 46.5 of 64, y 21.5 to 47.5 of 60). */
+.tv-snow {
+  position: absolute;
+  left: 14.2%; top: 36.8%; width: 57.8%; height: 41.4%;
+  border-radius: 4px;
+  background: var(--static) 0 0 / 60px 60px;
+  opacity: 0;
+  pointer-events: none;
+  animation: tvBlip 7s steps(1) infinite, snowJitter 0.3s steps(4) infinite;
+}
+.menu-btn:hover .tv-snow { opacity: 0.95; animation: snowJitter 0.3s steps(4) infinite; }
+
+@keyframes tvBlip { 0% { opacity: 0; } 90% { opacity: 0.95; } 95% { opacity: 0; } }
+@keyframes snowJitter {
+  0% { background-position: 0 0; } 25% { background-position: -23px 11px; }
+  50% { background-position: 17px -29px; } 75% { background-position: -31px -7px; } 100% { background-position: 0 0; }
+}
+@keyframes wiggle { 25% { transform: rotate(-9deg); } 60% { transform: rotate(7deg); } 100% { transform: rotate(0); } }
 
 /* ---------- Menu ---------- */
 
@@ -185,9 +226,44 @@ button { font: inherit; color: inherit; }
   position: absolute;
   inset: clamp(6px, 0.8vw, 12px);
   padding: 0; border: 0; background: var(--ink); cursor: pointer;
-  opacity: 0; transition: opacity 0.9s ease;
+  opacity: 0;
 }
 .cycle__item.is-on { opacity: 1; z-index: 1; }
+
+/* Channel-change static between stills (site.js adds .is-tuning). */
+.cycle__static {
+  position: absolute;
+  inset: clamp(6px, 0.8vw, 12px);
+  z-index: 3;
+  overflow: hidden;
+  background: #777;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.08s linear;
+}
+.cycle__static::before {
+  content: '';
+  position: absolute;
+  inset: -60px;
+  background: var(--static) 0 0 / 240px 240px;
+}
+.cycle__static::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 30%, rgba(255, 255, 255, 0.35) 38%, transparent 46%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 2px, transparent 2px 4px);
+}
+.cycle.is-tuning .cycle__static { opacity: 1; }
+.cycle.is-tuning .cycle__static::before { animation: snow 0.3s steps(5) infinite; }
+.cycle.is-tuning .cycle__static::after { animation: roll 0.46s linear; }
+@keyframes snow {
+  0% { transform: translate(0, 0); } 20% { transform: translate(-37px, 21px); }
+  40% { transform: translate(19px, -43px); } 60% { transform: translate(-51px, -9px); }
+  80% { transform: translate(31px, 47px); } 100% { transform: translate(0, 0); }
+}
+@keyframes roll { from { background-position: 0 -120%, 0 0; } to { background-position: 0 220%, 0 0; } }
 .cycle__item img { width: 100%; height: 100%; object-fit: cover; }
 
 .cycle__cap {
@@ -206,18 +282,81 @@ button { font: inherit; color: inherit; }
 }
 .cycle__cap::before { content: '▶ Now showing · '; }
 
+/* The card and the giant line share one grid cell. The card keeps a margin
+   of about half a line top and bottom, so line 1 sits over its top edge and
+   line 2 over its bottom edge. */
+.hero__stage { --fs: clamp(44px, 11.4vw, 184px); display: grid; }
+.hero__stage > .cycle, .hero__stage > .hero__word { grid-area: 1 / 1; }
+.hero__stage > .cycle { margin: calc(var(--fs) * 0.55) auto; }
+
 .hero__word {
   position: relative;
   z-index: 2;
-  margin: clamp(-150px, -10.5vw, -40px) 0 0;
-  text-align: center;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   font-weight: 900;
   text-transform: uppercase;
-  font-size: clamp(84px, 21vw, 330px);
-  line-height: 0.82;
+  font-size: var(--fs);
+  line-height: 0.84;
   letter-spacing: -0.05em;
   pointer-events: none;
 }
+
+.hero__line { display: block; white-space: nowrap; }
+.hero__line--1 { align-self: flex-start; margin-left: 5%; }
+.hero__line--2 { align-self: flex-end; margin-right: 2%; }
+
+/* ---------- Tagline crawl ---------- */
+
+.crawl {
+  display: flex;
+  align-items: stretch;
+  background: var(--ink);
+  color: var(--white);
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.crawl__tag {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(12px, 1.6vw, 22px);
+  background: var(--yellow);
+  color: var(--ink);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(11px, 0.95vw, 14px);
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+.crawl__window { flex: 1; min-width: 0; overflow: hidden; }
+.crawl__track { display: flex; width: max-content; animation: slide 110s linear infinite; }
+.crawl:hover .crawl__track { animation-play-state: paused; }
+.crawl__run { display: flex; flex: none; }
+
+.crawl__item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 17px 0 15px;
+  white-space: nowrap;
+}
+
+.crawl__item::after {
+  content: '';
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  margin: 0 28px;
+  background: var(--yellow);
+}
+
+.crawl q { font-weight: 900; font-size: clamp(16px, 1.5vw, 22px); letter-spacing: -0.01em; }
+.crawl cite { font-weight: 800; font-style: italic; font-size: 12px; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.6); }
 
 .laurels {
   list-style: none;
@@ -573,7 +712,9 @@ button { font: inherit; color: inherit; }
 .split__light {
   background: #dcdbd6;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
   padding: clamp(40px, 5vw, 80px) clamp(24px, 4vw, 64px);
 }
 
@@ -587,6 +728,29 @@ button { font: inherit; color: inherit; }
   line-height: 0.88;
   letter-spacing: -0.045em;
 }
+
+/* A movie tagline, set like the line on a poster. */
+.tagline { margin: 0 0 clamp(22px, 3vw, 40px); max-width: 520px; }
+.tagline blockquote {
+  margin: 0;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: clamp(18px, 1.9vw, 28px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.tagline blockquote::before { content: '\201C'; }
+.tagline blockquote::after { content: '\201D'; }
+.tagline figcaption {
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.tagline figcaption::before { content: '\2014  '; }
 
 /* ---------- Contact ---------- */
 
@@ -686,7 +850,9 @@ button { font: inherit; color: inherit; }
 @media (max-width: 640px) {
   body { font-size: 16px; }
   .cycle { width: 100%; }
-  .hero__word { margin-top: -9vw; }
+  .hero__line--1, .hero__line--2 { align-self: center; margin: 0; }
+  .crawl__tag { max-width: 96px; }
+  .menu-btn { width: 54px; height: 50px; }
   .laurels { gap: 14px 18px; }
   .laurels img { height: 54px; }
   .laurels .badge img { height: 48px; }

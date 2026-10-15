@@ -39,6 +39,26 @@
   fill('heroTitle', esc(S.hero.headline).replace(/\*$/, '<span class="star">*</span>'));
   fill('heroDisclaimer', esc(S.hero.disclaimer));
 
+  // The giant landing line, one span per line (coloured below via data-bars).
+  if (S.heroLines) {
+    fill('heroLines', S.heroLines.map(function (line, i) {
+      return '<span class="hero__line hero__line--' + (i + 1) + '" data-bars>' + esc(line) + '</span>';
+    }).join(' '));
+  }
+
+  // Movie taglines in a TV-style crawl. The track holds the list twice so the
+  // loop is seamless; the copy is hidden from screen readers.
+  if (S.taglines) {
+    var lines = S.taglines.map(function (t) {
+      return '<span class="crawl__item"><q>' + esc(t[0]) + '</q> <cite>' + esc(t[1]) + '</cite></span>';
+    }).join('');
+    fill('crawl', '<div class="crawl__run">' + lines + '</div><div class="crawl__run" aria-hidden="true">' + lines + '</div>');
+  }
+
+  if (S.aboutLine) {
+    fill('aboutLine', '<blockquote>' + esc(S.aboutLine[0]) + '</blockquote><figcaption>' + esc(S.aboutLine[1]) + '</figcaption>');
+  }
+
   var words = ['Edit', 'Colour', 'DIT', 'Commercials', 'Trailers', 'Spots', 'Films'];
   var run = words.map(function (w) { return '<span>' + w + '</span><i>✱</i>'; }).join('');
   fill('ticker', run + run + run + run);
@@ -69,11 +89,12 @@
 
   // Letters in colour-bar colours: <h2 data-bars>Colour</h2>. Spaces keep their place
   // in the cycle so a phrase reads as one strip of colour.
+  // Screen readers get the plain text; the per-letter copy is hidden from them.
   $$('[data-bars]').forEach(function (el) {
     var text = el.textContent;
-    var italic = (el.getAttribute('data-bars') || '').split(',').map(Number);
-    el.setAttribute('aria-label', text);
-    el.innerHTML = '<span aria-hidden="true">' + text.split('').map(function (ch, i) {
+    var attr = el.getAttribute('data-bars') || '';
+    var italic = attr ? attr.split(',').map(Number) : [];
+    el.innerHTML = '<span class="sr-only">' + esc(text) + '</span><span aria-hidden="true">' + text.split('').map(function (ch, i) {
       if (ch === ' ') return ' ';
       return '<span class="bar-c' + (i % 7 + 1) + (italic.indexOf(i) > -1 ? ' bar-i' : '') + '">' + esc(ch) + '</span>';
     }).join('') + '</span>';
@@ -115,8 +136,9 @@
     return '<li' + (l.badge ? ' class="badge"' : '') + '><img src="' + esc(l.src) + '" alt="' + esc(l.name) + '" loading="lazy"></li>';
   }).join(''));
 
-  // A stack of the latest stills that cross-fade, standing in for a showreel.
-  // Clicking plays whichever project is showing.
+  // A stack of the latest stills, standing in for a showreel. Between stills
+  // the card bursts into TV static, like flicking channels. Clicking plays
+  // whichever project is showing.
   var cycle = $('[data-slot="heroCycle"]');
   if (cycle) {
     cycle.innerHTML = S.latest.map(function (p, i) {
@@ -124,18 +146,30 @@
         (i === 0 ? '' : ' tabindex="-1"') + ' aria-label="Play ' + esc(p.client + ', ' + p.title) + '">' +
         '<img src="' + esc(p.poster) + '" alt=""' + (i === 0 ? '' : ' loading="lazy"') + '>' +
         '<span class="cycle__cap">' + esc(p.client) + '</span></button>';
-    }).join('');
+    }).join('') + '<span class="cycle__static" aria-hidden="true"></span>';
     var items = $$('.cycle__item', cycle);
     var at = 0;
-    if (!still && items.length > 1) {
-      setInterval(function () {
-        if (document.hidden) return;
-        items[at].classList.remove('is-on');
-        items[at].tabIndex = -1;
-        at = (at + 1) % items.length;
-        items[at].classList.add('is-on');
-        items[at].tabIndex = 0;
-      }, 3200);
+
+    var tune = function (then) {
+      cycle.classList.add('is-tuning');
+      setTimeout(function () { if (then) then(); }, 170);
+      setTimeout(function () { cycle.classList.remove('is-tuning'); }, 460);
+    };
+
+    if (!still) {
+      tune();   // the set warming up on first load
+      if (items.length > 1) {
+        setInterval(function () {
+          if (document.hidden) return;
+          tune(function () {
+            items[at].classList.remove('is-on');
+            items[at].tabIndex = -1;
+            at = (at + 1) % items.length;
+            items[at].classList.add('is-on');
+            items[at].tabIndex = 0;
+          });
+        }, 3600);
+      }
     }
   }
 

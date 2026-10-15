@@ -160,7 +160,26 @@ window.SITE = {
     ['Bobby Moore Fund', 'bobby-moore-fund']
   ],
 
-  // One line under the laurels in the Colour theme. The name is set in bold.
+  // The giant line on the landing page, one entry per line. The second line
+  // sits over the bottom edge of the photo card, the first over the top.
+  heroLines: ['Who you', 'gonna call?'],
+
+  // Movie taglines that scroll across the strip under the landing page: [line, film].
+  taglines: [
+    ['Escape or die frying.', 'Chicken Run'],
+    ['On the air and unaware.', 'The Truman Show'],
+    ['Work sucks.', 'Office Space'],
+    ['The true story of a real fake.', 'Catch Me If You Can'],
+    ['For Harry and Lloyd, every day is a no-brainer.', 'Dumb and Dumber'],
+    ['He may be dead but he’s the life of the party.', 'Weekend at Bernie’s'],
+    ['If you only see one movie this year… you need to get out more often.', 'The Naked Gun'],
+    ['From the brother of the director of Ghost.', 'Naked Gun 33⅓']
+  ],
+
+  // The quote above CUT. GRADE. DELIVER. in the About section: [line, film].
+  aboutLine: ['One man’s struggle to take it easy.', 'Ferris Bueller’s Day Off'],
+
+  // One line under the laurels. The name is set in bold.
   intro: 'Peter J Duggan is an editor, colourist and DIT for commercials, trailers, spots and films, working with brands, agencies and broadcasters.',
 
   about: [

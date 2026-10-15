@@ -1,6 +1,6 @@
-/* Peter J Duggan · TV theme
-   Loaded on top of colour.css. Same page, but the colours are the broadcast
-   test card (top row and bottom row) and the menu button is an old telly. */
+/* Peter J Duggan · Theme 3, TV test card
+   Loaded on top of colour.css. The colours are the broadcast test card
+   (top row and bottom row). The telly in the corner lives in colour.css. */
 
 :root {
   /* Top row of the test card, left to right. */
@@ -49,76 +49,26 @@
 /* A black rule between band and strip, so the strip's yellow block still shows. */
 .t3 .band::before { top: 0; border-bottom: 3px solid var(--ink); }
 .t3 .band::after { bottom: 0; border-top: 3px solid var(--ink); }
+.t3 .foot { position: relative; padding-top: 36px; }
+.t3 .foot::before { top: 0; }
 
 /* Email underline without the white bar, which would vanish on paper. */
 .t3 .contact__mail {
   background: linear-gradient(90deg, #ffff00 0 16.66%, #00ffff 0 33.33%, #00ff00 0 50%,
     #ff00ff 0 66.66%, #ff0000 0 83.33%, #0000ff 0) left bottom / 100% 6px no-repeat;
 }
-.t3 .foot { position: relative; padding-top: 36px; }
-.t3 .foot::before { top: 0; }
 
-.t3 .cycle__cap::before { content: '● On air · '; }
+.t3 .cycle__cap::before { content: '\25CF  On air \00B7  '; }
 
-/* ---------- The telly ---------- */
-
-.t3 .menu-btn {
-  width: 62px;
-  height: 58px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--ink);
-}
-
-.t3 .bar.on-ink .menu-btn { color: var(--white); }
-
-.tv { width: 100%; height: 100%; overflow: visible; }
-
-.tv__aerial path,
-.tv__grill,
-.tv__feet {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-.tv__aerial circle { fill: currentColor; }
-
-.tv__body {
-  fill: var(--paper);
-  stroke: currentColor;
-  stroke-width: 3;
-}
-
-.tv__knob { fill: currentColor; }
-
-/* A little curved-glass shine on the screen. */
-.tv__glass {
-  fill: rgba(255, 255, 255, 0.12);
-  stroke: currentColor;
-  stroke-width: 2.2;
-}
-
-.tv__aerial {
-  transform-origin: 32px 17px;
-  transition: transform 0.3s var(--ease);
-}
-
-.t3 .menu-btn:hover { transform: none; }
-.t3 .menu-btn:hover .tv__aerial { animation: wiggle 0.6s var(--ease); }
-.t3 .menu-btn:hover .tv__screen { animation: flicker 0.35s steps(2) 2; }
-
-@keyframes wiggle {
-  25% { transform: rotate(-9deg); }
-  60% { transform: rotate(7deg); }
-  100% { transform: rotate(0); }
-}
-
-@keyframes flicker { 50% { opacity: 0.35; } }
+/* The crawl's separators run through the test-card colours. */
+.t3 .crawl__item:nth-child(7n+1)::after { background: #ffffff; }
+.t3 .crawl__item:nth-child(7n+2)::after { background: #ffff00; }
+.t3 .crawl__item:nth-child(7n+3)::after { background: #00ffff; }
+.t3 .crawl__item:nth-child(7n+4)::after { background: #00ff00; }
+.t3 .crawl__item:nth-child(7n+5)::after { background: #ff00ff; }
+.t3 .crawl__item:nth-child(7n+6)::after { background: #ff0000; }
+.t3 .crawl__item:nth-child(7n+7)::after { background: #0000ff; }
 
 @media (max-width: 640px) {
-  .t3 .menu-btn { width: 54px; height: 50px; }
   .t3 .band::before, .t3 .band::after { height: 10px; }
 }
