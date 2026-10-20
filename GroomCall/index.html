@@ -1,0 +1,1517 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B6E7F">
+<meta name="description" content="GroomCall demo: open grooming slots at Perth daycares, filled by on call groomers.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Crect%20width%3D%2224%22%20height%3D%2224%22%20rx%3D%226%22%20fill%3D%22%230B6E7F%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%228%22%20r%3D%222.5%22%2F%3E%3Ccircle%20cx%3D%227%22%20cy%3D%2216%22%20r%3D%222.5%22%2F%3E%3Cpath%20d%3D%22M9.2%209.2L19%2019M9.2%2014.8L19%205%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>GroomCall Showcase</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Light only. Layout: chapter strip on top, live phones and panels on the stage, narration beside it on wide screens, above it with one panel at a time on phones */
+:root{
+  --bg:#EEF3F4; --surface:#FFFFFF; --sunk:#F5F8F9; --ink:#10242B; --muted:#56707A; --line:#D3DFE2;
+  --accent:#0B6E7F; --accent-ink:#FFFFFF; --accent-soft:#DDEFF2;
+  --gold:#E8A317; --gold-soft:#FCEFCF; --gold-ink:#6B4500; --gold-btn:#2A1B00;
+  --ok:#2C7A47; --ok-soft:#E1F1E6; --no:#A3392F; --no-soft:#F6E1DE;
+  --sea:#D3E6EB; --river:#B5D6DE; --shadow:0 10px 30px rgba(16,36,43,.12); --finger:rgba(16,36,43,.28);
+  color-scheme:light;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;position:relative;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+p{margin:0}
+.ti{width:1em;height:1em;flex:none;vertical-align:-0.14em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+button,.btnlink{font:inherit;font-weight:600;font-size:14px;border-radius:10px;padding:9px 14px;min-height:42px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:transform .12s,filter .12s}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.gold{background:var(--gold);color:var(--gold-btn);border-color:var(--gold)}
+button:disabled{opacity:.5;cursor:default}
+button.mini{min-height:34px;padding:5px 10px;font-size:13px}
+.pressed{transform:scale(.95);filter:brightness(.92)}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.mark .ti{width:22px;height:22px}
+.brand h1{font-size:28px;line-height:1}
+.brand p{margin-top:4px;color:var(--muted);font-size:14px;max-width:52ch}
+.hctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modes{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.modes button{border:0;background:transparent;color:var(--muted);min-height:36px;padding:6px 14px}
+.modes button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink)}
+.iconbtn{width:44px;padding:0}
+
+/* chapters */
+.chapters{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.chip{flex:none;font-size:13px;min-height:36px;padding:6px 12px;border-radius:99px;color:var(--muted)}
+.chip.seen{color:var(--ink)}
+.chip[aria-current="step"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.narr{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));grid-column:2;grid-row:1;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.narr h2{font-size:24px;line-height:1.15}
+.narr p{font-size:15px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:600}
+.hood{background:var(--sunk);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.hood p{font-size:13.5px;color:var(--muted)}
+.ctl{display:grid;grid-template-columns:44px 1fr auto;gap:8px}
+.ctl button[data-act="prev"]{padding:0}
+.narr ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.stagecol{grid-column:1;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.stage{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start}
+.ptabs{display:none;gap:6px;overflow-x:auto}
+.ptabs button{flex:none;min-height:36px;font-size:13px;padding:6px 12px;border-radius:99px;color:var(--muted)}
+.ptabs button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:transparent}
+.note{font-size:12px;color:var(--muted)}
+.foot{text-align:center}
+.mbar{display:none}
+
+/* panels */
+.panel{display:flex;flex-direction:column;gap:8px;min-width:0}
+.panel.is-phone{width:310px}
+.panel.is-card{width:360px}
+.ptitle{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 6px}
+.ptitle h3{font-size:16px}
+.ptitle span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:right}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:10px;position:relative;overflow:hidden;transition:box-shadow .3s}
+.phone.lit{box-shadow:0 0 0 3px var(--gold)}
+.screen{background:var(--sunk);border-radius:22px;height:600px;overflow-y:auto;padding:0 12px 14px;display:flex;flex-direction:column;gap:10px;position:relative;scrollbar-width:thin}
+.cardpanel{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px}
+.pbody{display:flex;flex-direction:column;gap:12px;position:relative}
+.shead{position:sticky;top:0;z-index:2;background:var(--sunk);padding:12px 0 6px;display:flex;flex-direction:column;gap:8px}
+.bar{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);padding:0 4px;font-variant-numeric:tabular-nums}
+.apptabs{display:flex;gap:4px}
+.apptabs button{flex:1;min-height:34px;padding:4px;font-size:13px;color:var(--muted)}
+.apptabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--ink);border-color:transparent}
+
+/* cards inside phones */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h3{font-size:16px}
+.sub{font-size:13px;color:var(--muted)}
+.sub.ok{color:var(--ok);font-weight:600}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.err{font-size:13px;color:var(--no);font-weight:600;min-height:0}
+.err:empty{display:none}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+select,input{font:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);width:100%;min-width:0;min-height:40px}
+input.typing{outline:2px solid var(--accent);outline-offset:1px}
+.tier{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.tier b{font-weight:600}
+.tier .sub{white-space:nowrap}
+select{padding-right:4px;font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;align-self:flex-start}
+.pill.sm{font-size:11px;padding:2px 8px;margin-top:4px}
+.p-gold{background:var(--gold-soft);color:var(--gold-ink)}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-acc{background:var(--accent-soft);color:var(--accent)}
+.p-mute{background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.p-no{background:var(--no-soft);color:var(--no)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.slot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.slot div{min-width:0}
+.slot p{font-size:14px;font-weight:600}
+.slot small{color:var(--muted);font-size:12px}
+.slot .pill{align-self:center}
+.rows{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.row{display:flex;justify-content:space-between;gap:10px}
+.row>span:first-child{color:var(--muted)}
+.row>span:last-child{text-align:right}
+.row.tot{border-top:1px solid var(--line);padding-top:6px;font-weight:600}
+.row.tot>span:first-child{color:var(--ink)}
+.alert{border:2px solid var(--gold)}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--gold);width:100%;transition:width .1s linear}
+.dog{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.grow1{flex:1;min-width:0}
+.av{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;flex:none;font-size:13px}
+.av.lg{width:44px;height:44px;font-size:18px}
+.tick{width:28px;height:28px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none}
+.big{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.feed ul{margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.feed li{list-style:none;display:flex;gap:8px}
+.feed time{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;flex:none;min-width:52px}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.toggle .tl{font-weight:600;font-size:14px}
+.sw{width:46px;height:26px;min-height:26px;border-radius:99px;border:0;padding:0;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);transition:left .2s}
+.sw[aria-checked="true"]{background:var(--accent)}
+.sw[aria-checked="true"]::after{left:23px}
+.empty{text-align:center;padding:24px 12px;color:var(--muted);font-size:14px;align-items:center}
+.empty .ti{width:30px;height:30px}
+.empty b{color:var(--ink)}
+.notice{display:flex;gap:8px;align-items:flex-start;background:var(--gold-soft);color:var(--gold-ink);border-radius:10px;padding:10px;font-size:13px}
+.okbox{display:flex;gap:10px;align-items:center;background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:10px;font-size:13px}
+.okbox b,.okbox small{display:block}
+.okbox small{color:var(--ink);opacity:.8}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.grow-row{display:flex;gap:6px;align-items:center}
+.gsel{flex:1;justify-content:flex-start;text-align:left;border:1px solid transparent;background:transparent;padding:6px;min-height:48px;gap:10px}
+.gsel[aria-pressed="true"]{background:var(--accent-soft)}
+.gsel b,.gsel small{display:block}
+.gsel small{color:var(--muted);font-weight:500;font-size:12px}
+.star{width:40px;padding:0;color:var(--muted)}
+.star[aria-pressed="true"]{color:var(--gold);background:var(--gold-soft);border-color:transparent}
+.star[aria-pressed="true"] .ti{fill:currentColor}
+.stars{display:flex;align-items:center;gap:4px;color:var(--gold);font-size:14px}
+.stars b{color:var(--ink)}
+.stars .ti.filled{fill:currentColor}
+.att{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+.att b,.att small{display:block}
+.att small{color:var(--muted)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.checks li{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.checks li>.ti,.checks li>.spin{margin-top:3px}
+.checks b,.checks small{display:block}
+.checks small{color:var(--muted)}
+.checks li.ok>.ti{color:var(--ok)}
+.checks li.wait{opacity:.6}
+.spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tile{border:1px dashed var(--line);border-radius:12px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+.tile b,.tile small{display:block}
+.tile small{color:var(--muted)}
+.obsteps{display:flex;gap:4px}
+.obsteps i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.obsteps i.on{background:var(--accent)}
+.plain{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.howto{display:flex;flex-direction:column;gap:8px}
+.hstep{display:flex;gap:10px;align-items:center;font-size:13px}
+.hicon{width:34px;height:34px;border-radius:9px;background:var(--sunk);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);flex:none}
+.hicon.mk{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sysdlg{background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.sysdlg b{font-size:14px}
+.sysdlg small{color:var(--muted);font-size:12px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pics.sm{max-width:120px;gap:4px;margin-top:6px}
+.pics figure{margin:0;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);text-align:center}
+.pic{width:100%;height:auto;display:block;border-radius:10px}
+.picbg{fill:var(--sunk)}
+.head{fill:var(--gold-soft);stroke:var(--gold-ink);stroke-width:.6}
+.ear{fill:var(--gold)}
+.eye,.nose{fill:var(--ink)}
+.fur{fill:none;stroke:var(--gold-ink);stroke-width:1.1;stroke-linecap:round}
+.bow{fill:var(--accent)}
+
+/* push banner and finger */
+.banner{position:absolute;top:16px;left:16px;right:16px;z-index:5;display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:12.5px;line-height:1.35;animation:bannerIn .45s cubic-bezier(.2,.8,.2,1)}
+.banner.out{animation:bannerOut .45s forwards}
+@keyframes bannerIn{from{transform:translateY(-130%);opacity:0}to{transform:none;opacity:1}}
+@keyframes bannerOut{to{transform:translateY(-130%);opacity:0}}
+.bmark{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.btxt{display:grid;grid-template-columns:1fr auto;gap:0 8px;min-width:0}
+.btxt b{font-weight:600}
+.bnow{color:var(--muted)}
+.btxt span:last-child{grid-column:1/-1}
+#fingers{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:60}
+.finger{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:var(--finger);border:2px solid var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:left .6s cubic-bezier(.3,.7,.2,1),top .6s cubic-bezier(.3,.7,.2,1),opacity .25s,transform .15s}
+.finger.on{opacity:1}
+.finger.tap{transform:scale(.78)}
+.finger::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0}
+.finger.tap::after{animation:ripple .5s ease-out}
+@keyframes ripple{from{transform:scale(.6);opacity:.9}to{transform:scale(2.4);opacity:0}}
+
+/* map */
+.map svg{width:100%;height:auto;display:block;border-radius:14px}
+.map .land{fill:var(--sunk)}
+.map .sea{fill:var(--sea)}
+.map .river{fill:none;stroke:var(--river);stroke-width:9;stroke-linecap:round}
+.map .radius{fill:var(--accent-soft);fill-opacity:.5;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:6 5}
+.map text{font-family:var(--body);font-size:11.5px;fill:var(--ink);font-weight:500}
+.map .place{fill:var(--muted);font-size:10.5px}
+.map .sealbl{fill:var(--muted);font-size:12px;letter-spacing:2px}
+.map .cml{font-weight:600;fill:var(--accent)}
+.cm circle{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.cm path{stroke:var(--accent-ink);stroke-width:2.4;stroke-linecap:round;fill:none}
+.gd .dot{fill:var(--line);stroke:var(--surface);stroke-width:2.5}
+.gd.alert .dot{fill:var(--gold)}
+.gd.won .dot{fill:var(--ok)}
+.gd.won text{font-weight:700;fill:var(--ok)}
+.gd.pass .dot,.gd.lost .dot{fill:var(--muted)}
+.gd.pass text,.gd.lost text,.gd.skip text{fill:var(--muted)}
+.gd.skip .dot{fill:var(--surface);stroke:var(--muted);stroke-width:1.8;stroke-dasharray:3 2.5}
+.gd .ping{fill:none;stroke:var(--gold);stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:ping 1.4s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
+.wave{fill:none;stroke:var(--gold);stroke-width:4;transform-box:fill-box;transform-origin:center;animation:wave 1.6s ease-out forwards}
+@keyframes wave{from{transform:scale(.05);opacity:1}to{transform:scale(1);opacity:0}}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.k{width:11px;height:11px;border-radius:50%;display:inline-block;background:var(--line)}
+.k.alert{background:var(--gold)} .k.won{background:var(--ok)} .k.pass{background:var(--muted)}
+.k.skip{background:transparent;border:1.5px dashed var(--muted)}
+.k.c{border-radius:3px;background:var(--accent-soft);border:1px solid var(--accent)} .k.a{border-radius:3px;background:var(--gold)}
+.k.f{border-radius:3px;background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 3px,var(--line) 3px,var(--line) 5px)}
+.skips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.skips b{color:var(--ink);font-weight:600}
+.mstat{font-size:14px}
+
+/* race */
+.log{list-style:none;margin:0;font-variant-numeric:tabular-nums;font-size:12.5px;display:flex;flex-direction:column;gap:6px;background:var(--sunk);border-radius:12px;padding:10px 12px;min-height:118px}
+.log li{display:flex;gap:10px}
+.log .t{color:var(--muted);flex:none}
+.log li.ok span:last-child{color:var(--ok);font-weight:600}
+.log li.no span:last-child{color:var(--no);font-weight:600}
+.grid20{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.grid20 i{aspect-ratio:3/5;border-radius:5px;background:var(--line);border:1px solid var(--line)}
+.grid20 i.win{background:var(--ok);border-color:var(--ok)}
+.grid20 i.lose{background:var(--sunk)}
+.grid20.flick i.win{animation:pop .35s}
+.score{font-size:14px;font-variant-numeric:tabular-nums}
+
+/* capacity */
+.capbar{display:flex;height:36px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 6px,var(--line) 6px,var(--line) 8px)}
+.seg{height:100%;border-right:2px solid var(--surface);display:grid;place-items:center;font-size:11px;font-weight:600;overflow:hidden;white-space:nowrap;flex:none}
+.seg.c{background:var(--accent-soft);color:var(--accent)}
+.seg.a{background:var(--gold);color:var(--gold-btn)}
+.grow{animation:grow .7s ease-out;transform-origin:left}
+@keyframes grow{from{transform:scaleX(0)}}
+.offer{display:flex;gap:10px;align-items:center;font-size:13px}
+.offer b,.offer small{display:block}
+.offer small{color:var(--muted)}
+
+/* money */
+.mblock{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.mtot{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--muted)}
+.total{font-family:var(--display);font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.split{display:flex;height:30px;border-radius:8px;overflow:hidden;transform-origin:left}
+.split span{flex:1;display:grid;place-items:center;font-size:12px;font-weight:600}
+.split .g{background:var(--accent-soft);color:var(--accent)}
+.split .c{background:var(--ok-soft);color:var(--ok)}
+
+/* rules */
+.seg-btns{display:grid;gap:6px}
+.seg-btns button{justify-content:flex-start}
+.seg-btns button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl{display:flex;flex-direction:column;gap:4px}
+.tlbar{position:relative;height:14px;border-radius:7px;background:var(--sunk);border:1px solid var(--line)}
+.tlbar .late{position:absolute;top:0;bottom:0;right:0;width:50%;background:var(--gold-soft);border-radius:0 7px 7px 0}
+.tlbar .mk{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--accent)}
+.tlx{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.outs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.outs li{display:flex;gap:8px;align-items:center;font-size:13.5px;padding:8px 10px;border-radius:10px;background:var(--sunk)}
+.outs li .ti{color:var(--accent)}
+.meter{display:inline-flex;align-items:center;gap:3px}
+.meter i{width:14px;height:10px;border-radius:3px;background:var(--line)}
+.meter i.on{background:var(--gold)}
+
+/* motion */
+.enter{animation:drop .45s ease-out both}
+@keyframes drop{from{transform:translateY(-12px);opacity:.3}to{transform:none;opacity:1}}
+.pop{animation:pop .4s ease-out}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.08)}100%{transform:none}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+body.paused .ping,body.paused .wave,body.paused .spin{animation-play-state:paused}
+
+@media (max-width:1179px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .narr{position:static;grid-column:1;grid-row:1}
+  .stagecol{grid-row:2}
+}
+@media (max-width:759px){
+  .panel:not(.focus){display:none}
+  .panel.is-phone,.panel.is-card{width:100%;max-width:420px}
+  .ptabs{display:flex}
+  .narr{padding:16px}
+  .narr h2{font-size:21px}
+  .narr .ctl{display:none}
+  .brand h1{font-size:24px}
+  .mbar:not([hidden]){display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;gap:10px;align-items:center;background:var(--surface);border-top:1px solid var(--line);
+    padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .mbar .mt{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar .ctl{grid-template-columns:44px auto auto}
+  body{padding-bottom:96px}
+}
+/* GroomCall motion set */
+.mov{position:absolute;inset:10px;border-radius:22px;background:rgba(245,248,249,.95);z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:24px;pointer-events:none;animation:movIn .25s ease-out}
+.mov.out{animation:movOut .28s forwards}
+.mov .mo{width:230px;max-width:86%;height:auto}
+.mov b{font-family:var(--display);font-size:21px;font-weight:700}
+.mov small{color:var(--muted);font-size:13.5px;max-width:28ch}
+@keyframes movIn{from{opacity:0;transform:scale(.97)}}
+@keyframes movOut{to{opacity:0;transform:scale(.98)}}
+.mo{display:block}
+.mo-wide{width:100%;height:auto}
+.mo-lbl{font-family:var(--body);font-size:11px;font-weight:600;fill:#56707A}
+.wayc{align-items:stretch}
+.mo-bladeA{transform-box:view-box;transform-origin:120px 70px;animation:mo-snipA .9s ease-in-out infinite}
+.mo-bladeB{transform-box:view-box;transform-origin:120px 70px;animation:mo-snipB .9s ease-in-out infinite}
+@keyframes mo-snipA{0%,100%{transform:rotate(-18deg)}45%,55%{transform:rotate(0deg)}}
+@keyframes mo-snipB{0%,100%{transform:rotate(18deg)}45%,55%{transform:rotate(0deg)}}
+.mo-tuft{transform-box:fill-box;transform-origin:center;opacity:0}
+.mo-t1{animation:mo-tuft1 1.8s ease-in infinite}
+.mo-t2{animation:mo-tuft2 1.8s ease-in .9s infinite}
+.mo-t3{animation:mo-tuft3 1.8s ease-in infinite}
+@keyframes mo-tuft1{0%,21%{opacity:0;transform:translate(0,0)}25%{opacity:1;transform:translate(0,2px)}100%{opacity:0;transform:translate(-18px,62px) rotate(-50deg)}}
+@keyframes mo-tuft2{0%,21%{opacity:0;transform:translate(0,0)}25%{opacity:1;transform:translate(0,2px)}100%{opacity:0;transform:translate(-40px,66px) rotate(40deg)}}
+@keyframes mo-tuft3{0%,21%{opacity:0;transform:translate(0,0)}25%{opacity:1;transform:translate(0,2px)}100%{opacity:0;transform:translate(-8px,60px) rotate(70deg)}}
+.mo-fetch .mo-roll{transform:translateX(calc(var(--p) * 174px));transition:transform .1s linear}
+.mo-fetch .mo-spin{transform-box:view-box;transform-origin:28px 105px;transform:rotate(calc(var(--p) * 831deg));transition:transform .1s linear}
+.mo-fetch .mo-trail{transform-box:view-box;transform-origin:24px 120px;transform:scaleX(var(--p));transition:transform .1s linear}
+.mo-bell{transform-box:view-box;transform-origin:220px 95px}
+.mo-ring .mo-bell{animation:mo-ring .9s ease-in-out}
+@keyframes mo-ring{0%{transform:rotate(0)}25%{transform:rotate(20deg)}50%{transform:rotate(-16deg)}75%{transform:rotate(10deg)}100%{transform:rotate(0)}}
+.mo-tail{transform-box:view-box;transform-origin:76px 88px;animation:mo-wag .32s ease-in-out infinite alternate}
+@keyframes mo-wag{from{transform:rotate(-20deg)}to{transform:rotate(16deg)}}
+.mo-hop{animation:mo-hop .64s ease-in-out infinite alternate}
+@keyframes mo-hop{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.mo-tick{transform-box:fill-box;transform-origin:center;animation:mo-tick .6s ease-out both}
+@keyframes mo-tick{0%{transform:scale(.4);opacity:0}50%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+.mo-bob{animation:mo-bob 1.2s ease-in-out infinite alternate}
+@keyframes mo-bob{from{transform:translateY(0)}to{transform:translateY(5px)}}
+.mo-bub{transform-box:fill-box;transform-origin:center;opacity:0;animation:mo-rise 2.4s ease-out infinite}
+@keyframes mo-rise{0%{opacity:0;transform:translate(0,0) scale(.5)}15%{opacity:1}50%{transform:translate(6px,-36px) scale(.9)}100%{opacity:0;transform:translate(-4px,-76px) scale(1.15)}}
+.mo-brush{animation:mo-brush 2.4s linear infinite}
+@keyframes mo-brush{0%{transform:translate(0,0)}60%{transform:translate(180px,0)}68%{transform:translate(180px,-20px)}92%{transform:translate(0,-20px)}100%{transform:translate(0,0)}}
+.mo-combA{transform-box:view-box;transform:rotate(-26deg);animation:mo-combA 2.4s linear infinite}
+.mo-combB{transform-box:view-box;transform:rotate(22deg);animation:mo-combB 2.4s linear infinite}
+@keyframes mo-combA{0%{transform:rotate(-26deg)}5%{transform:rotate(6deg)}9%,70%{transform:rotate(0deg)}86%,100%{transform:rotate(-26deg)}}
+@keyframes mo-combB{0%{transform:rotate(22deg)}5%{transform:rotate(6deg)}9%,70%{transform:rotate(0deg)}86%,100%{transform:rotate(22deg)}}
+.mo-paw{transform-box:fill-box;transform-origin:center;opacity:0;animation:mo-step 2.4s ease-out infinite}
+@keyframes mo-step{0%{opacity:0;transform:scale(.5)}8%{opacity:1;transform:scale(1)}55%{opacity:1}75%,100%{opacity:0;transform:scale(1)}}
+.mo-pin{animation:mo-pin .6s ease-in-out infinite alternate}
+@keyframes mo-pin{from{transform:translateY(0)}to{transform:translateY(-7px)}}
+body.paused .mo *{animation-play-state:paused}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="M8.6 8.6L20 20M8.6 15.4L20 4"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.75l-6.17 3.24 1.18-6.87-5-4.86 6.9-1L12 2l3.09 6.26 6.9 1-5 4.86 1.18 6.87z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6M9 17v1a3 3 0 0 0 6 0v-1"/></symbol>
+<symbol id="i-bell-ringing" viewBox="0 0 24 24"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6M9 17v1a3 3 0 0 0 6 0v-1M21 6.73A9 9 0 0 0 18.75 3M3 6.73A9 9 0 0 1 5.25 3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><circle cx="12" cy="11" r="3"/><path d="M17.66 16.66l-4.24 4.24a2 2 0 0 1-2.83 0l-4.24-4.24a8 8 0 1 1 11.31 0z"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3h.39a7.5 7.5 0 0 0 7.92 12.45A9 9 0 1 1 12 3z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10.5" r="1.8"/><circle cx="10" cy="5.8" r="1.8"/><circle cx="14.5" cy="5.8" r="1.8"/><circle cx="18" cy="10.5" r="1.8"/><path d="M7.8 17c0-2.6 2-4.8 4.5-4.8s4.5 2.2 4.5 4.8c0 1.6-1.2 2.5-2.6 2.5-.9 0-1.3-.4-1.9-.4s-1 .4-1.9.4c-1.4 0-2.6-.9-2.6-2.5z"/></symbol>
+<symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v4M12 17.5v.5"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M16 13.5h2"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/></symbol>
+<symbol id="i-plus-square" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6"/></symbol>
+<symbol id="i-user-check" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M3 20v-1a5 5 0 0 1 5-5h2M15 18l2 2 4-4"/></symbol>
+</defs></svg>
+
+<div id="fingers" aria-hidden="true"><div class="finger" id="f1"></div><div class="finger" id="f2"></div></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark"><svg class="ti" aria-hidden="true"><use href="#i-scissors"/></svg></div>
+      <div>
+        <h1>GroomCall</h1>
+        <p>Open grooming slots at Perth daycares, filled by on call groomers. Here's everything it does.</p>
+      </div>
+    </div>
+    <div class="hctl">
+      <div class="modes" role="group" aria-label="How to see it">
+        <button data-act="mode-tour" id="m-tour" aria-pressed="true">Guided tour</button>
+        <button data-act="mode-play" id="m-play" aria-pressed="false">Try it yourself</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+
+  <div class="layout">
+    <aside class="narr" id="narr" aria-live="polite"></aside>
+    <div class="stagecol">
+      <div class="ptabs" id="ptabs" role="group" aria-label="Choose a screen"></div>
+      <div class="stage" id="stage"></div>
+    </div>
+  </div>
+  <p class="note foot">Sample data only. Times are Perth time and prices are in AUD including GST.</p>
+</div>
+<div class="mbar" id="mbar" hidden></div>
+
+<script>
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const ic = (n, c = '') => `<svg class="ti ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const money = n => { const v = Math.round(n * 100) / 100; return 'A$' + v.toLocaleString('en-AU', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isNarrow = () => matchMedia('(max-width: 759px)').matches;
+
+const HEAD_MS = 8000, RADIUS = 15, FEE = 0.10, SHARE = 0.5, ADDON = 95;
+const SIZE_MIN = { small: 45, medium: 60, large: 90 };
+const HOURS = { '9am to 2pm': 300, '1pm to 5pm': 240, '8am to 12pm': 240, '8am to 4pm': 480 };
+const DAYS = ['Thu 22 Oct', 'Fri 23 Oct', 'Mon 26 Oct'];
+const DAY_ORDER = ['Mon 19 Oct', 'Tue 20 Oct', 'Wed 21 Oct', 'Thu 22 Oct', 'Fri 23 Oct', 'Mon 26 Oct'];
+const LONG = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday' };
+const CENTRE = { addr: '12 Main St, Osborne Park WA', checkIn: 'Front desk, ask for Sam', parking: 'Staff bay at the rear', kit: 'Hydraulic table, bath, HV dryer' };
+
+// Groomers placed in km from the centre (north is negative y). All names are made up.
+const G = {
+  jess:  { name: 'Jess K',  area: 'Stirling',     x: 3,    y: -3,   max: 20, fav: true },
+  mia:   { name: 'Mia T',   area: 'Scarborough',  x: -5.5, y: -2,   max: 15, fav: true },
+  ravi:  { name: 'Ravi S',  area: 'Fremantle',    x: -4,   y: 13,   max: 25, fav: true },
+  priya: { name: 'Priya N', area: 'Mount Lawley', x: 6,    y: 3.5,  max: 20 },
+  ben:   { name: 'Ben O',   area: 'Balcatta',     x: 0.5,  y: -6.5, max: 15 },
+  hana:  { name: 'Hana L',  area: 'Innaloo',      x: -2.5, y: -4,   max: 12 },
+  zac:   { name: 'Zac M',   area: 'North Perth',  x: 5,    y: 1.2,  max: 20 },
+  sam:   { name: 'Sam P',   area: 'Wembley',      x: -1.5, y: 5,    max: 20 },
+  chloe: { name: 'Chloe R', area: 'Subiaco',      x: 1,    y: 8,    max: 15 },
+  tom:   { name: 'Tom W',   area: 'Bayswater',    x: 11,   y: 4.5,  max: 8 },
+  lee:   { name: 'Lee H',   area: 'Midland',      x: 16,   y: 0.5,  max: 30 }
+};
+const REL = {
+  jess:  { rating: 4.9, count: 38, acc: 39, comp: 38, late: 1, ns: 0 },
+  mia:   { rating: 4.8, count: 52, acc: 53, comp: 53, late: 0, ns: 0 },
+  ravi:  { rating: 4.7, count: 19, acc: 20, comp: 19, late: 1, ns: 0 },
+  priya: { rating: 4.8, count: 11, acc: 11, comp: 11, late: 0, ns: 0 },
+  ben:   { rating: 4.5, count: 21, acc: 25, comp: 23, late: 1, ns: 1 }
+};
+const CDOGS = [
+  { id: 'ruby',  name: 'Ruby',  breed: 'Groodle',  size: 'medium', service: 'Full groom', notes: 'Matted behind the ears, go gently' },
+  { id: 'tank',  name: 'Tank',  breed: 'Staffy',   size: 'medium', service: 'Wash, de-shed and nails', notes: 'Not keen on the nail clippers' },
+  { id: 'pip',   name: 'Pip',   breed: 'Maltese',  size: 'small',  service: 'Face and feet tidy', notes: 'Tear stains, use the soft brush' },
+  { id: 'coco',  name: 'Coco',  breed: 'Shih tzu', size: 'small',  service: 'Short all over', notes: 'Nervous of the HV dryer' },
+  { id: 'banjo', name: 'Banjo', breed: 'Kelpie cross', size: 'medium', service: 'Wash and nails', notes: '' },
+  { id: 'milo',  name: 'Milo',  breed: 'Moodle',   size: 'small',  service: 'Puppy trim', notes: 'First groom' },
+  { id: 'nala',  name: 'Nala',  breed: 'Golden retriever', size: 'large', service: 'De-shed', notes: '' },
+  { id: 'ollie', name: 'Ollie', breed: 'Schnauzer', size: 'medium', service: 'Breed clip', notes: '' },
+  { id: 'rex',   name: 'Rex',   breed: 'Border collie', size: 'large', service: 'Wash and brush out', notes: '' },
+  { id: 'ziggy', name: 'Ziggy', breed: 'Spoodle',  size: 'small',  service: 'Full groom', notes: '' },
+  { id: 'lola',  name: 'Lola',  breed: 'Labradoodle', size: 'large', service: 'Full groom', notes: '' },
+  { id: 'max',   name: 'Max',   breed: 'Beagle',   size: 'medium', service: 'Wash and nails', notes: '' }
+];
+const ODOGS = [
+  { id: 'biscuit', name: 'Biscuit', breed: 'Cavoodle',   size: 'small', service: 'Full groom', notes: 'Teddy face, same as last time', owner: 'Amy',  day: 'Thu 22 Oct', price: ADDON },
+  { id: 'bella',   name: 'Bella',   breed: 'Toy poodle', size: 'small', service: 'Full groom', notes: 'First groom with us', owner: 'Kate', day: 'Thu 22 Oct', price: ADDON },
+  { id: 'luna',    name: 'Luna',    breed: 'Spoodle',    size: 'small', service: 'Full groom', notes: '', owner: 'Josh', day: 'Thu 22 Oct', price: ADDON }
+];
+
+let S, MODE = 'tour', QUIET = false, runId = 0, timers = [], paused = false;
+
+function fresh() {
+  const g = {}; Object.keys(G).forEach(k => g[k] = { alerted: false, declined: false, taken: false });
+  return {
+    when: { day: 'Tue 20 Oct', time: '9:41am' },
+    form: { day: 'Thu 22 Oct', hours: '9am to 2pm', dogs: '4', pay: '300' }, err: '',
+    slot: null, g,
+    other: [
+      { day: 'Wed 21 Oct', time: '8am to 12pm', dogs: 3, pay: 195, groomer: 'mia', st: 'filled' },
+      { day: 'Fri 23 Oct', time: '12pm to 4pm', dogs: 5, pay: 310, groomer: 'ravi', st: 'filled' }
+    ],
+    feed: [['9:12am', 'Ravi S confirmed for Friday']],
+    offers: [], owner: { on: true },
+    job: { done: {}, photos: {}, checkIn: '', checkOut: '', enRoute: false },
+    tabs: { centre: 'slots', jess: 'home', priya: 'home', owner: 'dogs', admin: 'verify' },
+    profile: 'jess', favs: { jess: true, mia: true, ravi: true },
+    ob: { step: 0, abn: '', abnState: '', abnErr: '', docs: {}, agreed: '', stripe: false, installed: false, dialog: false, denied: false },
+    chloeQueued: false, chloeVerified: false, adminChecks: 0, checking: false, reminderSent: false, renewed: false,
+    race: { log: [], grid: null, runs: 0, singles: 0 },
+    rule: null, hs: { elapsed: 0, running: false }, sceneDone: false,
+    fx: new Set()
+  };
+}
+
+/* timing */
+const STOP = Symbol('stop');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function wait(ms) { const id = runId; let left = ms; while (left > 0) { const step = Math.min(100, left); await sleep(step); if (id !== runId) throw STOP; if (!paused) left -= step; } }
+async function waitFor(fn, max = 12000) { let t = 0; while (!fn() && t < max) { await wait(100); t += 100; } }
+function later(fn, ms) { const id = runId; timers.push(setTimeout(() => { if (id === runId) fn(); }, ms)); }
+
+/* helpers */
+const mark = k => S.fx.add(k);
+const fx = (k, cls) => S.fx.has(k) ? cls : '';
+const isFav = id => !!S.favs[id];
+const dist = id => Math.hypot(G[id].x, G[id].y);
+const dayShort = s => s.day.slice(0, 3);
+const dayLong = s => LONG[dayShort(s)];
+const setWhen = (day, time) => { S.when = { day, time }; };
+function log(t) { S.feed.unshift([S.when.time, t]); S.feed = S.feed.slice(0, 7); mark('log'); }
+function reason(id) {
+  if (id === 'chloe' && !S.chloeVerified) return 'Waiting on verification';
+  if (id === 'sam') return 'Insurance lapsed 18 Oct';
+  if (!isFav(id)) { const d = dist(id); if (d > RADIUS) return Math.round(d) + ' km away, outside the radius'; if (d > G[id].max) return 'Only travels ' + G[id].max + ' km'; }
+  return '';
+}
+function alertCopy(s, fav) { return `Open slot at Osborne Park, ${dayShort(s)} ${s.time}, ${s.dogs} dogs, ${money(s.pay)}. Tap to accept.` + (fav ? ' You have a 10 minute head start.' : ''); }
+function allSlots() { return [...S.other, S.slot].filter(Boolean).sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)); }
+function slotDogs() { const s = S.slot; if (!s) return []; const base = CDOGS.slice(0, s.dogs); return base.concat(S.offers.filter(o => o.st === 'booked').map(o => ODOGS.find(d => d.id === o.dog))); }
+const usedMins = () => slotDogs().reduce((a, d) => a + SIZE_MIN[d.size], 0);
+const freeMins = () => S.slot ? S.slot.mins - usedMins() : 0;
+const addonCount = () => S.offers.filter(o => o.st === 'booked').length;
+function relFor(id) { const r = { ...REL[id] }; if (id === 'ben') { if (S.rule === 'late') r.late++; if (S.rule === 'noshow') r.ns++; } return r; }
+
+/* push banner and gold ring, as in the original demo */
+function flash(id) { const p = panelEl(id)?.querySelector('.phone'); if (!p) return; p.classList.add('lit'); setTimeout(() => p.classList.remove('lit'), 1400); }
+function push(id, text) {
+  if (QUIET) return;
+  const ph = panelEl(id)?.querySelector('.phone'); if (!ph) return;
+  ph.querySelectorAll('.banner').forEach(b => b.remove());
+  const b = document.createElement('div'); b.className = 'banner'; b.setAttribute('role', 'status');
+  b.innerHTML = `<span class="bmark">${ic('scissors')}</span><span class="btxt"><b>GroomCall</b><span class="bnow">now</span><span>${text}</span></span>`;
+  ph.appendChild(b); flash(id);
+  setTimeout(() => b.classList.add('out'), 4400); setTimeout(() => b.remove(), 4900);
+}
+
+/* actions */
+function archive() {
+  const s = S.slot; S.other.push({ day: s.day, time: s.time, dogs: s.dogs, pay: s.pay, groomer: s.groomer, st: 'confirmed' });
+  Object.values(S.g).forEach(g => { g.alerted = g.declined = g.taken = false; });
+  S.offers = []; S.job = { done: {}, photos: {}, checkIn: '', checkOut: '' }; S.slot = null;
+}
+function post() {
+  const f = S.form, dogs = parseInt(f.dogs, 10), pay = parseFloat(f.pay);
+  if (S.slot && S.slot.st !== 'confirmed') return;
+  if (!(dogs >= 1 && dogs <= 12)) { S.err = 'Enter between 1 and 12 dogs.'; mark('err'); render(); return; }
+  if (!(pay >= 50)) { S.err = 'Pay needs to be at least A$50.'; mark('err'); render(); return; }
+  if (S.slot) archive();
+  S.err = '';
+  const s = S.slot = { day: f.day, time: f.hours, mins: HOURS[f.hours], dogs, pay, st: 'fav', groomer: '', filledAt: '' };
+  let n = 0;
+  Object.keys(G).forEach(id => { if (isFav(id) && !reason(id)) { S.g[id].alerted = true; n++; } });
+  S.hs = { elapsed: 0, running: MODE === 'sandbox' };
+  log(`Slot posted. ${n} favourite${n === 1 ? '' : 's'} alerted.`);
+  mark('post');
+  motion('centre', 'snip', 'Sending alert', `${n} favourites first, then everyone nearby`, 1300);
+  if (S.g.jess.alerted) push('jess', alertCopy(s, true));
+  render();
+}
+function openToAll() {
+  const s = S.slot; if (!s || s.st !== 'fav') return;
+  s.st = 'all'; S.hs.running = false; let n = 0;
+  Object.keys(G).forEach(id => { const g = S.g[id]; if (!g.alerted && !g.declined && !reason(id)) { g.alerted = true; n++; } });
+  log(`Head start over. ${n} more groomer${n === 1 ? '' : 's'} alerted.`);
+  mark('wave');
+  if (S.g.priya.alerted) push('priya', alertCopy(s, false));
+  if (!S.g.jess.declined && S.g.jess.alerted) mark('jess-all');
+  if (MODE === 'sandbox' && (S.g.jess.declined || !S.g.jess.alerted)) later(() => accept('priya'), 4000);
+  render();
+}
+function pass(id) {
+  const s = S.slot; if (!s || !(s.st === 'fav' || s.st === 'all')) return;
+  S.g[id].declined = true; log(G[id].name + ' passed');
+  if (MODE === 'sandbox' && id === 'jess' && s.st === 'all') later(() => accept('priya'), 4000);
+  render();
+}
+function accept(id) {
+  const s = S.slot;
+  if (!s || !(s.st === 'fav' || s.st === 'all')) { S.g[id].taken = true; mark('taken'); render(); return { ok: false, reason: 'taken' }; }
+  if (s.st === 'fav' && !isFav(id)) return { ok: false, reason: 'favourites' };
+  s.st = 'filled'; s.groomer = id; s.filledAt = S.when.time; S.hs.running = false;
+  Object.keys(S.g).forEach(o => { if (o !== id && S.g[o].alerted && !S.g[o].declined) S.g[o].taken = true; });
+  log(`${G[id].name} accepted ${dayLong(s)}`);
+  mark('fill');
+  if (id === 'jess' || id === 'priya') motion(id, 'waggy', "It's yours", `${dayLong(s)} ${s.time} at Osborne Park`, 2000);
+  push('centre', `${G[id].name} is in for ${dayLong(s)} ${s.time}.`);
+  if (id !== 'jess' && S.g.jess.alerted && !S.g.jess.declined) push('jess', "That one's gone to another groomer. We'll ping you for the next one.");
+  if (MODE === 'sandbox') later(sendOffers, 1600);
+  render(); return { ok: true };
+}
+function sendOffers() {
+  const s = S.slot; if (!s || !s.groomer || S.offers.length) return;
+  const cands = ODOGS.filter(d => d.day === s.day && (d.id !== 'biscuit' || S.owner.on));
+  if (!cands.length) { log('No opted in dogs at daycare that day'); render(); return; }
+  if (freeMins() < Math.min(...cands.map(d => SIZE_MIN[d.size]))) { log('No spare time on the table for owner grooms'); render(); return; }
+  S.offers = cands.map(d => ({ dog: d.id, st: 'sent' }));
+  log(`Groom offers sent to ${cands.length} owners`);
+  mark('offers');
+  if (S.offers.some(o => o.dog === 'biscuit')) push('owner', `A groomer is in on ${dayLong(s)}. Add a full groom for Biscuit for A$95?`);
+  if (MODE === 'sandbox') { later(() => book('bella'), 6000); later(() => book('luna'), 9000); }
+  render();
+}
+function book(id) {
+  const o = S.offers.find(x => x.dog === id); if (!o || o.st !== 'sent') return;
+  const d = ODOGS.find(x => x.id === id);
+  if (SIZE_MIN[d.size] > freeMins()) { o.st = 'expired'; render(); return; }
+  o.st = 'booked'; mark('book-' + id);
+  if (id === 'biscuit') motion('owner', 'bath', 'Booking the groom', 'Checking there is room on the table', 1300, () => motion('owner', 'waggy', 'Groom booked', 'A$95 at pickup', 1700));
+  log(`${d.owner} added a groom for ${d.name}, ${money(d.price)}`);
+  const left = freeMins();
+  S.offers.forEach(x => { if (x.st === 'sent') { const dd = ODOGS.find(y => y.id === x.dog); if (SIZE_MIN[dd.size] > left) { x.st = 'expired'; log(`Table full. ${dd.owner}'s offer for ${dd.name} withdrawn.`); } } });
+  render();
+}
+function skip(id) { const o = S.offers.find(x => x.dog === id); if (o && o.st === 'sent') { o.st = 'skipped'; log(`${ODOGS.find(d => d.id === id).owner} skipped the groom offer`); render(); } }
+function enRoute() { const s = S.slot; if (!s || s.st !== 'filled' || S.job.enRoute) return; S.job.enRoute = true; log(`${G[s.groomer].name} is on the way`); mark('way'); push('centre', `${G[s.groomer].name} is on the way, about 6 min away.`); render(); }
+function checkIn() { const s = S.slot; if (!s || s.st !== 'filled') return; s.st = 'onsite'; S.job.enRoute = false; S.job.checkIn = S.when.time; log(`${G[s.groomer].name} checked in`); mark('checkin'); render(); }
+function markDone(id) { S.job.done[id] = true; mark('done-' + id); render(); }
+function photos(id) {
+  S.job.photos[id] = true; S.job.done[id] = true; mark('ph-' + id);
+  if (id === 'biscuit') push('owner', "Biscuit's groom is done. Have a look at the before and after.");
+  render();
+}
+function checkOut() { const s = S.slot; if (!s || s.st !== 'onsite') return; s.st = 'done'; S.job.checkOut = S.when.time; log(`${G[s.groomer].name} checked out`); push('centre', `${G[s.groomer].name} has checked out. Confirm the job when you're happy.`); render(); }
+function confirmJob() { const s = S.slot; if (!s || s.st !== 'done') return; s.st = 'confirmed'; log('Job confirmed. Paid on Friday.'); mark('confirmed');
+  if (S.offers.some(o => o.dog === 'biscuit' && o.st === 'booked')) motion('owner', 'bath', 'Paying at pickup', 'A$95 on your saved card', 1500, () => motion('owner', 'waggy', 'Paid', 'Thanks, Amy. Enjoy the new look.', 1500));
+  render(); }
+function runChecks() {
+  if (S.checking || S.adminChecks >= 4 || !S.chloeQueued) return;
+  S.checking = true; render();
+  const step = () => { S.adminChecks++; mark('chk' + (S.adminChecks - 1)); if (S.adminChecks >= 4) S.checking = false; render(); if (S.adminChecks < 4) later(step, 700); };
+  later(step, 700);
+}
+function verify() { if (S.adminChecks < 4 || S.chloeVerified) return; S.chloeVerified = true; mark('verified'); motion('admin', 'waggy', 'Chloe is verified', 'Alerts start from her next slot', 1700); render(); }
+function remind() { if (S.reminderSent) return; S.reminderSent = true; mark('remind'); push('jess', 'Your police clearance expires on 19 Nov. Upload the new one to keep getting alerts.'); render(); }
+function obCanNext() { const o = S.ob; return [true, o.abnState === 'ok', !!(o.docs.pl && o.docs.pc), !!o.agreed, o.stripe, o.installed, false][o.step]; }
+function obNext() { if (!obCanNext()) return; S.ob.step = Math.min(6, S.ob.step + 1); mark('ob'); const sc = SCREENS.chloe; if (sc) sc.scrollTop = 0; render(); }
+function obAbn() {
+  const digits = S.ob.abn.replace(/\D/g, '');
+  if (digits.length !== 11) { S.ob.abnErr = 'An ABN has 11 digits. Check the number and try again.'; render(); return; }
+  S.ob.abnErr = ''; S.ob.abnState = 'checking'; motion('chloe', 'snip', 'Checking ABN Lookup', 'Matching your name and ABN', 1300); render();
+  later(() => { S.ob.abnState = 'ok'; mark('abn'); render(); }, 1300);
+}
+function obAllow() {
+  S.ob.dialog = false; S.ob.step = 7; S.chloeQueued = true; mark('queued');
+  push('chloe', 'Test alert. This is how an open slot will look on your phone.');
+  motion('chloe', 'waggy', "You're on call", 'Alerts are working on this phone', 1900);
+  setTimeout(() => push('admin', 'New groomer to check: Chloe R, Subiaco.'), 900);
+  render();
+}
+function runOnce() {
+  const slot = { open: true }, order = [...Array(20).keys()].sort(() => Math.random() - 0.5), res = Array(20).fill('lose'); let wins = 0;
+  for (const i of order) { if (slot.open) { slot.open = false; res[i] = 'win'; wins++; } }
+  S.race.grid = res; S.race.runs++; if (wins === 1) S.race.singles++; mark('stress');
+}
+function stressBurst(n, gap) { let k = 0; const step = () => { runOnce(); render(); if (++k < n) later(step, gap); }; step(); }
+function raceLine(t, text, cls = '') { S.race.log.push([t, text, cls]); mark('race'); }
+
+
+/* panels */
+const PANELS = {
+  centre: { phone: true, t: 'Centre manager', s: 'Osborne Park daycare', tab: 'Centre' },
+  jess:   { phone: true, t: 'Groomer', s: 'Jess K, a favourite', tab: 'Jess' },
+  priya:  { phone: true, t: 'Groomer', s: 'Priya N', tab: 'Priya' },
+  owner:  { phone: true, t: 'Dog owner', s: "Amy, Biscuit's owner", tab: 'Amy' },
+  admin:  { phone: true, t: 'GroomCall admin', s: 'Checks and slots', tab: 'Admin' },
+  chloe:  { phone: true, t: 'New groomer', s: 'Chloe R signing up', tab: 'Chloe' },
+  map:    { phone: false, t: 'Who gets the alert', s: '15 km around the centre', tab: 'Map' },
+  race:   { phone: false, t: 'On the server', s: 'One slot, one winner', tab: 'Server' },
+  cap:    { phone: false, t: "Thursday's table", s: 'Time and offers', tab: 'Table' },
+  money:  { phone: false, t: 'Where the money goes', s: 'Week to Fri 23 Oct', tab: 'Money' },
+  rules:  { phone: false, t: 'If plans change', s: 'Cancellations', tab: 'Rules' }
+};
+const SCREENS = {};
+const panelEl = id => document.querySelector(`.panel[data-p="${id}"]`);
+
+function setScreen(id, html) {
+  const sc = SCREENS[id]; if (!sc) return;
+  const top = sc.scrollTop, a = document.activeElement;
+  let keep = null; if (a && a.id && sc.contains(a)) keep = { id: a.id, s: a.selectionStart, e: a.selectionEnd };
+  sc.innerHTML = html; sc.scrollTop = top;
+  if (keep) { const n = document.getElementById(keep.id); if (n) { n.focus({ preventScroll: true }); try { n.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+}
+function shead(id, place, tabs) {
+  const t = S.tabs[id];
+  return `<div class="shead"><div class="bar"><span>${S.when.day.slice(0, 3)} ${S.when.time}</span><span>${place}</span></div>` +
+    (tabs ? `<div class="apptabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${t === k}" data-act="tab" data-panel="${id}" data-tab="${k}">${l}</button>`).join('')}</div>` : '') + `</div>`;
+}
+function dogPic(kind, name) {
+  const extra = kind === 'before'
+    ? '<path class="fur" d="M7 21l-3-1M8 14l-4-2M11 9l-2-3M16 7l-1-4M21 7l1-4M25 9l2-3M28 14l4-2M29 21l3-1M13 29l-2 3M23 29l2 3M18 30v3"/>'
+    : '<path class="bow" d="M14 30l4 2 4-2v4l-4-2-4 2z"/>';
+  return `<figure><svg viewBox="0 0 36 36" class="pic" role="img" aria-label="${kind === 'before' ? 'Before' : 'After'} photo of ${name}"><rect width="36" height="36" rx="6" class="picbg"/><ellipse cx="9" cy="17" rx="4" ry="7" class="ear"/><ellipse cx="27" cy="17" rx="4" ry="7" class="ear"/><circle cx="18" cy="18" r="${kind === 'before' ? 11 : 10}" class="head"/><circle cx="14.5" cy="16.5" r="1.3" class="eye"/><circle cx="21.5" cy="16.5" r="1.3" class="eye"/><ellipse cx="18" cy="21.5" rx="2" ry="1.5" class="nose"/>${extra}</svg><figcaption>${kind === 'before' ? 'Before' : 'After'}</figcaption></figure>`;
+}
+
+/* centre */
+function slotPill(x) {
+  const n = x.groomer ? G[x.groomer].name : '';
+  switch (x.st) {
+    case 'fav': return `<span class="pill p-gold">${ic('bell-ringing')}Favourites</span>`;
+    case 'all': return `<span class="pill p-gold${fx('wave', ' pop')}">${ic('bell-ringing')}All nearby</span>`;
+    case 'filled': return `<span class="pill p-ok${x === S.slot ? fx('fill', ' pop') : ''}">${ic('check')}${n}</span>`;
+    case 'onsite': return `<span class="pill p-acc">${ic('map-pin')}On site</span>`;
+    case 'done': return `<span class="pill p-gold">${ic('clock')}Check job</span>`;
+    default: return `<span class="pill p-ok">${ic('check')}Done</span>`;
+  }
+}
+function centreSlots() {
+  const s = S.slot, locked = s && s.st !== 'confirmed';
+  const opt = (arr, v) => arr.map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('');
+  let h = `<div class="card"><h3>Post a grooming slot</h3>
+    <div class="grid2">
+      <div class="field"><label class="lbl" for="f-day">Day</label><select id="f-day">${opt(DAYS, S.form.day)}</select></div>
+      <div class="field"><label class="lbl" for="f-hours">Hours</label><select id="f-hours">${opt(Object.keys(HOURS), S.form.hours)}</select></div>
+      <div class="field"><label class="lbl" for="f-dogs">Dogs booked</label><input id="f-dogs" type="number" inputmode="numeric" min="1" max="12" value="${S.form.dogs}"></div>
+      <div class="field"><label class="lbl" for="f-pay">Pay (A$)</label><input id="f-pay" type="number" inputmode="numeric" min="50" step="10" value="${S.form.pay}" placeholder="300"></div>
+    </div>
+    <div class="tier"><span>${ic('star')} <b>Favourites</b></span><span class="sub">10 min head start</span></div>
+    <div class="tier"><span>${ic('users')} <b>All verified groomers</b></span><span class="sub">within 15 km</span></div>
+    <button class="primary" data-act="post"${locked ? ' disabled' : ''}>${ic('bell')} Send alert</button>
+    <p class="err${fx('err', ' shake')}" id="post-err" role="status">${S.err}</p>
+    ${locked && MODE === 'sandbox' ? '<p class="sub">One live slot at a time in this demo. Post again once the job is confirmed.</p>' : ''}
+  </div>`;
+  const rows = allSlots().map(x => {
+    const mine = x === S.slot, add = mine ? addonCount() : 0;
+    return `<div class="slot${mine ? fx('post', ' enter') : ''}"><div><p>${x.day}</p><small>${x.time} · ${x.dogs} dogs · ${money(x.pay)}${add ? ` · ${add} owner groom${add > 1 ? 's' : ''}` : ''}</small></div>${slotPill(x)}</div>` +
+      (mine && x.st === 'done' ? `<button class="gold" data-act="confirm">${ic('check')} Confirm job done</button>` : '');
+  }).join('');
+  let prog = '';
+  if (s && s.st === 'fav') prog = `${MO.fetch(hsP())}<p class="sub">Favourites alerted · head start <span class="hs-left">10 min left</span></p>`;
+  else if (s && s.st === 'all') prog = `${MO.fetch(1, S.fx.has('wave'))}<p class="sub">Head start over. Every verified groomer nearby has been alerted.</p>`;
+  const way = s && S.job.enRoute ? `<div class="wayc${fx('way', ' enter')}">${MO.onway(G[s.groomer].name + ', 6 min away')}</div>` : '';
+  h += `<div class="card" id="board-centre"><h3>This week</h3>${prog}${way}${rows}</div>`;
+  h += `<div class="card feed"><span class="lbl">Activity</span><ul>${S.feed.map((f, i) => `<li class="${i === 0 ? fx('log', 'enter') : ''}"><time>${f[0]}</time><span>${f[1]}</span></li>`).join('')}</ul></div>`;
+  return h;
+}
+function centreGroomers() {
+  const list = ['jess', 'mia', 'ravi', 'priya', 'ben'];
+  const rows = list.map(id => { const r = REL[id], fav = isFav(id); return `<div class="grow-row"><button class="gsel" data-act="profile" data-g="${id}" aria-pressed="${S.profile === id}"><span class="av">${G[id].name[0]}</span><span><b>${G[id].name}</b><small>${G[id].area} · ${r.rating.toFixed(1)} from ${r.count} jobs</small></span></button><button class="star" data-act="fav" data-g="${id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Add'} ${G[id].name} as a favourite">${ic('star')}</button></div>`; }).join('');
+  const id = S.profile, r = relFor(id);
+  const nsPill = r.ns >= 3 ? `<span class="pill p-no">Paused for review</span>` : r.ns >= 2 ? `<span class="pill p-gold${fx('rule', ' pop')}">${r.ns} of 3</span>` : `<span>${r.ns}</span>`;
+  const stars = [1, 2, 3, 4, 5].map(i => ic('star', i <= Math.round(r.rating) ? 'filled' : '')).join('');
+  return `<div class="card"><span class="lbl">Groomers who work here</span><p class="sub">Star a groomer to give them the 10 minute head start.</p>${rows}</div>
+  <div class="card${fx('rule', ' enter')}" id="profile-centre"><div class="dog"><span class="av lg">${G[id].name[0]}</span><div><h3>${G[id].name}</h3><p class="sub">${G[id].area} · travels up to ${G[id].max} km</p></div></div>
+    <div class="stars">${stars} <b>${r.rating.toFixed(1)}</b> <span class="sub">from ${r.count} jobs</span></div>
+    <div class="rows">
+      <div class="row"><span>Slots accepted</span><span>${r.acc}</span></div>
+      <div class="row"><span>Completed</span><span>${r.comp}</span></div>
+      <div class="row"><span>Late cancels</span><span class="${fx('rule', 'pop')}">${r.late}</span></div>
+      <div class="row"><span>No shows, last 90 days</span>${nsPill}</div>
+      <div class="row"><span>Documents</span><span class="pill p-ok">All current</span></div>
+    </div></div>`;
+}
+function invoiceTotals() { const l = allSlots().filter(x => x.groomer).map(x => ({ label: `${x.day} · ${G[x.groomer].name}`, amt: x.pay })); const sub = l.reduce((a, b) => a + b.amt, 0), fee = sub * FEE; return { l, sub, fee, total: sub + fee }; }
+function centreInvoice() {
+  const v = invoiceTotals();
+  return `<div class="card"><span class="lbl">${ic('receipt')} Invoice, week to Fri 23 Oct</span><div class="rows">${v.l.map(l => `<div class="row"><span>${l.label}</span><span>${money(l.amt)}</span></div>`).join('')}
+    <div class="row"><span>Platform fee, 10%</span><span>${money(v.fee)}</span></div><div class="row tot"><span>Total</span><span>${money(v.total)}</span></div></div>
+    <p class="sub">Charged to your card on file on Fri 23 Oct. Prices include GST.</p></div>
+    <div class="card"><span class="lbl">Owner grooms</span><p class="sub">Owners pay for add on grooms at pickup. The centre keeps its share and the groomer gets theirs in the Friday payout.</p></div>`;
+}
+function renderCentre() {
+  let h = shead('centre', 'Osborne Park', [['slots', 'Slots'], ['groomers', 'Groomers'], ['invoice', 'Invoice']]);
+  const t = S.tabs.centre;
+  h += t === 'slots' ? centreSlots() : t === 'groomers' ? centreGroomers() : centreInvoice();
+  setScreen('centre', h);
+}
+
+/* groomers */
+function gAlert(id) {
+  const s = S.slot, fav = s.st === 'fav' && isFav(id);
+  return `<div class="card alert${fx('post', ' enter')}${fx('wave', ' enter')}" role="alert">
+    <div class="pills"><span class="pill p-gold">${ic('bell-ringing')}Open slot</span>${fav ? `<span class="pill p-acc">${ic('star')}You're a favourite</span>` : ''}</div>
+    <div><h3>Osborne Park daycare</h3><p class="sub">${s.day}, ${s.time} · ${dist(id).toFixed(1)} km away</p></div>
+    ${fav ? `${MO.fetch(hsP())}<p class="sub">Head start for favourites: <span class="hs-left">10 min left</span></p>` : ''}
+    <div class="rows"><div class="row"><span>Dogs</span><span>${s.dogs} booked</span></div><div class="row"><span>Pay</span><span><b>${money(s.pay)}</b> for the slot</span></div><div class="row"><span>Supplied</span><span>${CENTRE.kit}</span></div></div>
+    <div class="grid2"><button class="gold" data-act="accept" data-g="${id}">Accept slot</button><button data-act="pass" data-g="${id}">Not this time</button></div>
+  </div>`;
+}
+function dogRow(d, s) {
+  const owner = ODOGS.includes(d), done = S.job.done[d.id], ph = S.job.photos[d.id];
+  let act = '';
+  if (s.st === 'onsite') act = done ? `<span class="tick${fx('done-' + d.id, ' pop')}${fx('ph-' + d.id, ' pop')}" aria-label="Done">${ic('check')}</span>`
+    : owner ? `<button class="mini" data-act="photos" data-dog="${d.id}">${ic('camera')} Photos</button>` : `<button class="mini" data-act="done" data-dog="${d.id}">Done</button>`;
+  else if (done) act = `<span class="tick" aria-label="Done">${ic('check')}</span>`;
+  return `<div class="dog${owner ? fx('book-' + d.id, ' enter') : ''}"><span class="av">${d.name[0]}</span><div class="grow1"><p><b>${d.name}</b> · ${d.breed}</p><p class="sub">${d.service}${d.notes ? '. ' + d.notes : ''}</p>${owner ? `<span class="pill p-gold sm">Owner add on · ${d.owner}</span>` : ''}${ph ? `<div class="pics sm">${dogPic('before', d.name)}${dogPic('after', d.name)}</div>` : ''}</div>${act}</div>`;
+}
+function gBrief(id) {
+  const s = S.slot, j = S.job, n = addonCount();
+  const st = { filled: ['p-ok', 'check', 'Confirmed'], onsite: ['p-acc', 'map-pin', 'Checked in ' + j.checkIn], done: ['p-gold', 'clock', 'Checked out ' + j.checkOut], confirmed: ['p-ok', 'check', 'Confirmed by the centre'] }[s.st];
+  const dogs = slotDogs();
+  return `<div class="card${fx('fill', ' enter')}" id="brief-${id}">
+    <span class="pill ${st[0]}${fx('checkin', ' pop')}${fx('fill', ' pop')}">${ic(st[1])}${st[2]}</span>
+    <div><h3>Osborne Park, ${s.day}</h3><p class="sub">${s.time} · ${money(s.pay)}${n ? ` plus ${n} owner groom${n > 1 ? 's' : ''}` : ''}</p></div>
+    <div class="rows">
+      <div class="row"><span>Check in</span><span>${CENTRE.checkIn}</span></div>
+      <div class="row"><span>Parking</span><span>${CENTRE.parking}</span></div>
+      <div class="row"><span>Address</span><span>${CENTRE.addr}</span></div>
+      <div class="row"><span>Supplied</span><span>${CENTRE.kit}</span></div>
+    </div>
+    <a class="btnlink" data-act="maps" href="https://www.google.com/maps/search/?api=1&amp;query=Osborne+Park+WA" target="_blank" rel="noopener">${ic('map-pin')} Open in Maps</a>
+    ${s.st === 'filled' && j.enRoute ? `<div class="wayc${fx('way', ' enter')}">${MO.onway('6 min to Osborne Park')}</div>` : ''}
+    ${s.st === 'filled' && !j.enRoute ? `<button data-act="enroute">${ic('map-pin')} I'm on my way</button>` : ''}
+    ${s.st === 'filled' ? `<button class="primary" data-act="checkin">${ic('check')} Check in</button>` : ''}
+  </div>
+  <div class="card" id="dogs-${id}"><span class="lbl">Dogs on your table · ${dogs.length}</span>${dogs.map(d => dogRow(d, s)).join('')}
+    ${s.st === 'onsite' ? `<button class="primary" data-act="checkout">${ic('clock')} Check out</button>` : ''}
+    ${s.st === 'done' ? `<p class="sub">Checked out at ${j.checkOut}. Osborne Park confirms the job, or it confirms itself after 12 hours.</p>` : ''}
+    ${s.st === 'confirmed' ? `<p class="sub ok${fx('confirmed', ' pop')}">${ic('check')} Job confirmed. You're paid on Friday.</p>` : ''}
+  </div>`;
+}
+function jessPay() { const s = S.slot; return s && s.groomer === 'jess' ? s.pay + addonCount() * ADDON * SHARE : 0; }
+function earnedNow() { const s = S.slot; return s && s.groomer === 'jess' && (s.st === 'done' || s.st === 'confirmed') ? jessPay() : 0; }
+function gHome(id) {
+  const s = S.slot, g = S.g[id], open = s && (s.st === 'fav' || s.st === 'all');
+  let h = '';
+  if (s && s.groomer === id) h += gBrief(id);
+  else if (open && g.alerted && !g.declined && !g.taken) h += gAlert(id);
+  else if (s && g.taken) h += `<div class="card empty${fx('fill', ' enter')}${fx('taken', ' enter')}">${ic('moon')}<b>Slot filled</b>That one's gone to another groomer. We'll ping you for the next one.</div>`;
+  else if (open && g.declined) h += `<div class="card empty">${ic('moon')}You passed on Osborne Park. We'll ping you for the next one.</div>`;
+  else h += `<div class="card empty">${ic('bell')}No open slots right now. Alerts come straight to your phone.</div>`;
+  if (id === 'jess') h += `<div class="card"><span class="lbl">October so far</span><div class="big">${money(1580 + earnedNow())}</div><p class="sub">Paid every Friday for finished slots</p></div>`;
+  else h += `<div class="card"><span class="lbl">This week</span><p class="sub">2 slots booked at other centres</p></div>`;
+  return h;
+}
+function gEarn() {
+  const s = S.slot, mine = s && s.groomer === 'jess', n = mine ? addonCount() : 0, pay = jessPay(), earned = earnedNow();
+  return `<div class="card"><span class="lbl">October so far</span><div class="big count" data-to="${1580 + earned}">${money(1580 + earned)}</div><p class="sub">${7 + (earned ? 1 : 0)} slots across 3 centres</p></div>
+  <div class="card"><span class="lbl">${ic('wallet')} Next payout · Fri 23 Oct</span>
+    ${mine ? `<div class="rows"><div class="row"><span>Osborne Park, Thu 22 Oct</span><span>${money(s.pay)}</span></div>${n ? `<div class="row"><span>Owner grooms, ${n} × ${money(ADDON * SHARE)}</span><span>${money(n * ADDON * SHARE)}</span></div>` : ''}<div class="row tot"><span>To your bank</span><span class="count" data-to="${pay}">${money(pay)}</span></div></div><p class="sub">${s.st === 'confirmed' ? 'Confirmed. Paid on Friday.' : 'Paid once the job is confirmed.'}</p>` : '<p class="sub">Nothing due yet. Finished slots are paid every Friday.</p>'}
+  </div>
+  <div class="card"><span class="lbl">Past payouts</span><div class="rows"><div class="row"><span>Fri 16 Oct</span><span>A$540</span></div><div class="row"><span>Fri 9 Oct</span><span>A$385</span></div><div class="row"><span>Fri 2 Oct</span><span>A$655</span></div></div></div>`;
+}
+function gPapers() {
+  const pc = S.renewed ? `<span class="pill p-ok${fx('renew', ' pop')}">To Oct 2029</span>` : `<span class="pill p-gold">Expires 19 Nov</span>`;
+  return `<div class="card"><span class="lbl">Your paperwork</span><div class="rows">
+    <div class="row"><span>ABN</span><span class="pill p-ok">${ic('check')}Verified</span></div>
+    <div class="row"><span>Public liability</span><span class="pill p-ok">To Mar 2027</span></div>
+    <div class="row"><span>Care, custody and control</span><span class="pill p-ok">To Mar 2027</span></div>
+    <div class="row"><span>Police clearance</span>${pc}</div>
+    <div class="row"><span>Contractor agreement</span><span>v1.2, accepted 3 Sep</span></div>
+  </div>
+  ${S.reminderSent && !S.renewed ? `<div class="notice${fx('remind', ' enter')}">${ic('alert')}<span>Your police clearance expires on 19 Nov. Upload the new one to keep getting alerts.</span></div><button class="primary" data-act="renew">${ic('file')} Upload new clearance</button>` : ''}
+  </div>
+  <div class="card"><span class="lbl">Settings</span><div class="rows">
+    <div class="row"><span>Travel up to</span><span>20 km from Stirling</span></div>
+    <div class="row"><span>Alerts</span><span class="pill p-ok">On for this phone</span></div>
+    <div class="row"><span>Backup texts</span><span>On if alerts fail</span></div>
+  </div><span class="lbl">Days I'm free</span><div class="chips">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => `<span class="pill ${i < 5 ? 'p-acc' : 'p-mute'}">${d}</span>`).join('')}</div></div>`;
+}
+function renderGroomer(id) {
+  const tabs = id === 'jess' ? [['home', 'Home'], ['earnings', 'Earnings'], ['papers', 'Paperwork']] : null;
+  const t = id === 'jess' ? S.tabs.jess : 'home';
+  let h = shead(id, ic('map-pin') + ' ' + G[id].area, tabs);
+  h += t === 'home' ? gHome(id) : t === 'earnings' ? gEarn() : gPapers();
+  setScreen(id, h);
+}
+
+/* owner */
+function oDogs() {
+  const o = S.offers.find(x => x.dog === 'biscuit'), s = S.slot;
+  const paid = s && s.st === 'confirmed' && o && o.st === 'booked';
+  let h = `<div class="card"><div class="dog"><span class="av lg">B</span><div><h3>Biscuit</h3><p class="sub">Cavoodle · daycare Tue and Thu at Osborne Park</p></div></div>
+    <div class="toggle"><div><p class="tl">Groom if a groomer's free</p><p class="sub">We'll offer a groom whenever a groomer is in on Biscuit's days.</p></div><button class="sw" role="switch" aria-label="Groom if a groomer is free" aria-checked="${S.owner.on}" data-act="toggle"></button></div></div>`;
+  if (o && o.st === 'sent') h += `<div class="card alert${fx('offers', ' enter')}"><span class="pill p-gold">${ic('scissors')}Groomer in on ${dayLong(s)}</span><h3>Add a full groom for Biscuit?</h3><p class="sub">Done during daycare by ${G[s.groomer].name}, ready at pickup. Teddy face, same as last time.</p><div class="row"><span class="sub">Full groom, small dog</span><b>A$95</b></div><div class="grid2"><button class="primary" data-act="book" data-dog="biscuit">Add groom</button><button data-act="skip" data-dog="biscuit">Skip</button></div><p class="sub">Charged to your card at pickup.</p></div>`;
+  if (o && o.st === 'booked' && S.job.enRoute) h += `<div class="card wayc${fx('way', ' enter')}">${MO.onway(G[s.groomer].name + ', 6 min away')}<p class="sub">${G[s.groomer].name} is on the way to Osborne Park for Biscuit's groom.</p></div>`;
+  if (o && o.st === 'sent') {} else if (o && o.st === 'booked') h += `<div class="card${fx('book-biscuit', ' enter')}"><span class="pill p-ok">${ic('check')}Booked</span><h3>Biscuit's groom is on</h3><p class="sub">${s.day} with ${G[s.groomer].name}. A$95 goes on your card at pickup.</p></div>`;
+  else if (o && o.st === 'skipped') h += `<div class="card empty">${ic('paw')}No problem. Biscuit just gets a play day.</div>`;
+  else if (o && o.st === 'expired') h += `<div class="card empty">${ic('paw')}That one filled up. We'll offer again next time.</div>`;
+  else h += `<div class="card empty">${ic('paw')}${S.owner.on ? "Nothing yet. You'll hear the moment a groomer is in on Biscuit's day." : 'Turn on grooming offers to hear when a groomer is in.'}</div>`;
+  if (S.job.photos.biscuit) h += `<div class="card${fx('ph-biscuit', ' enter')}" id="photos-owner"><span class="pill p-ok">${ic('camera')}Groom done</span><h3>Biscuit's new look</h3><div class="pics">${dogPic('before', 'Biscuit')}${dogPic('after', 'Biscuit')}</div><p class="sub">${paid ? 'A$95 charged at pickup. Thanks, Amy.' : 'Ready at pickup from 2pm.'}</p></div>`;
+  const booked = o && o.st === 'booked';
+  h += `<div class="card"><span class="lbl">Biscuit's week</span><div class="rows"><div class="row"><span>Tue 20 Oct</span><span>Daycare</span></div><div class="row"><span>Thu 22 Oct</span><span>Daycare${booked ? ' and groom' : ''}</span></div><div class="row"><span>Last groom</span><span>12 Sep</span></div></div></div>`;
+  return h;
+}
+function oHistory() {
+  const o = S.offers.find(x => x.dog === 'biscuit'), s = S.slot;
+  const thu = o && o.st === 'booked' ? `<div class="card"><div class="row"><b>Thu 22 Oct · Full groom</b><span>A$95</span></div><p class="sub">With ${G[s.groomer].name} at Osborne Park${s.st === 'confirmed' ? ', paid at pickup' : ''}</p>${S.job.photos.biscuit ? `<div class="pics">${dogPic('before', 'Biscuit')}${dogPic('after', 'Biscuit')}</div>` : ''}</div>` : '';
+  return thu + `<div class="card"><div class="row"><b>Sat 12 Sep · Full groom</b><span>A$95</span></div><p class="sub">With Mia T at Osborne Park</p></div><div class="card"><div class="row"><b>Fri 1 Aug · Wash and tidy</b><span>A$60</span></div><p class="sub">With Mia T at Osborne Park</p></div>`;
+}
+function renderOwner() {
+  let h = shead('owner', 'Hi Amy', [['dogs', 'Biscuit'], ['history', 'History']]);
+  h += S.tabs.owner === 'dogs' ? oDogs() : oHistory();
+  setScreen('owner', h);
+}
+
+
+/* admin */
+function checkList() {
+  const agreed = S.ob.agreed || 'Tue 20 Oct 2026 at 7:14pm';
+  return [['ABN Lookup', 'Active ABN, sole trader, name matches'], ['Public liability', 'A$20m cover including care, custody and control, to Aug 2027'], ['Police clearance', 'Issued Oct 2026, nothing recorded'], ['Contractor agreement', 'Version 1.2 accepted ' + agreed]];
+}
+function renderAdmin() {
+  let h = shead('admin', 'GroomCall admin', [['verify', 'Checks'], ['slots', 'Slots']]);
+  if (S.tabs.admin === 'verify') {
+    if (S.chloeQueued && !S.chloeVerified) {
+      h += `<div class="card${fx('queued', ' enter')}"><div class="dog"><span class="av lg">C</span><div><h3>Chloe R</h3><p class="sub">Subiaco · signed up Tue 7:14pm</p></div></div>
+      <ul class="checks">${checkList().map((c, i) => { const st = i < S.adminChecks ? 'ok' : (S.checking && i === S.adminChecks ? 'run' : 'wait'); return `<li class="${st}${fx('chk' + i, ' pop')}">${st === 'ok' ? ic('check') : st === 'run' ? '<i class="spin"></i>' : ic('clock')}<span><b>${c[0]}</b><small>${st === 'ok' ? c[1] : st === 'run' ? 'Checking' : 'Not checked yet'}</small></span></li>`; }).join('')}</ul>
+      ${S.adminChecks < 4 ? `<button class="primary" data-act="adm-check"${S.checking ? ' disabled' : ''}>${ic('shield')} Run checks</button>` : `<button class="primary" data-act="adm-verify">${ic('user-check')} Verify Chloe</button>`}</div>`;
+    } else if (S.chloeVerified) {
+      h += `<div class="card${fx('verified', ' enter')}"><span class="pill p-ok">${ic('user-check')}Verified</span><h3>Chloe R is ready</h3><p class="sub">She'll be alerted to the next slot within 15 km of Subiaco.</p></div>`;
+    } else h += `<div class="card empty">${ic('user-check')}No one waiting. New sign ups appear here.</div>`;
+    const jessAtt = S.renewed ? `<span class="pill p-ok">Renewed</span>` : S.reminderSent ? `<span class="pill p-ok${fx('remind', ' pop')}">${ic('check')}Reminder sent</span>` : `<button class="mini" data-act="adm-remind">Send reminder</button>`;
+    h += `<div class="card"><span class="lbl">Needs attention</span>
+      <div class="att"><div><b>Sam P</b><small>Public liability lapsed 18 Oct</small></div><span class="pill p-no">${ic('x')}Alerts paused</span></div>
+      <div class="att"><div><b>Jess K</b><small>Police clearance expires 19 Nov</small></div>${jessAtt}</div>
+      <p class="sub">Alerts stop the day a document runs out. Reminders go out 30 days before.</p></div>
+      <div class="card"><div class="rows"><div class="row"><span>Verified groomers</span><span>${9 + (S.chloeVerified ? 1 : 0)}</span></div><div class="row"><span>Centres</span><span>3</span></div><div class="row"><span>Open disputes</span><span>0</span></div></div></div>`;
+  } else {
+    const rows = allSlots().map(x => `<div class="slot"><div><p>Osborne Park, ${x.day}</p><small>${x.time} · ${money(x.pay)}</small></div>${slotPill(x)}</div>`).join('');
+    h += `<div class="card"><span class="lbl">All centres this week</span>${rows}
+      <div class="slot"><div><p>Joondalup, Wed 21 Oct</p><small>8am to 12pm · A$195</small></div><span class="pill p-ok">${ic('check')}Hana L</span></div>
+      <div class="slot"><div><p>Fremantle, Fri 23 Oct</p><small>12pm to 4pm · A$310</small></div><span class="pill p-ok">${ic('check')}Ravi S</span></div></div>`;
+  }
+  setScreen('admin', h);
+}
+
+/* new groomer sign up */
+const OB = ['Your details', 'ABN', 'Documents', 'Agreement', 'Get paid', 'Home screen', 'Alerts'];
+const fmtAbn = d => d.replace(/\D/g, '').replace(/^(\d{0,2})(\d{0,3})(\d{0,3})(\d{0,3}).*/, (m, a, b, c, e) => [a, b, c, e].filter(Boolean).join(' '));
+const okbox = (b, s, k = '') => `<div class="okbox${k}">${ic('check')}<span><b>${b}</b><small>${s}</small></span></div>`;
+function obBody(o) {
+  const next = `<button class="primary" data-act="ob-next"${obCanNext() ? '' : ' disabled'}>Next ${ic('chev-right')}</button>`;
+  switch (o.step) {
+    case 0: return `<h3>Welcome to GroomCall</h3><p class="sub">Pick up paid grooming slots at daycares near you, on the days that suit you.</p>
+      <div class="rows"><div class="row"><span>Name</span><span>Chloe R</span></div><div class="row"><span>Mobile</span><span>0400 000 000</span></div><div class="row"><span>Home suburb</span><span>Subiaco</span></div><div class="row"><span>Travel up to</span><span>15 km</span></div><div class="row"><span>Days free</span><span>Mon to Fri</span></div></div>${next}`;
+    case 1: return `<h3>Your ABN</h3><p class="sub">You work as an independent contractor, so we check your ABN with the government's ABN Lookup.</p>
+      <div class="field"><label class="lbl" for="ob-abn">ABN</label><input id="ob-abn" inputmode="numeric" value="${fmtAbn(o.abn)}" placeholder="11 digits"></div>
+      ${o.abnErr ? `<p class="err">${o.abnErr}</p>` : ''}
+      ${o.abnState === 'ok' ? okbox('Active ABN', 'Sole trader · Chloe R', fx('abn', ' enter')) : `<button data-act="ob-abn"${o.abnState === 'checking' ? ' disabled' : ''}>${o.abnState === 'checking' ? '<i class="spin"></i> Checking ABN Lookup' : 'Check ABN'}</button>`}${next}`;
+    case 2: return `<h3>Your documents</h3><p class="sub">We check these before you get a single alert, and remind you before they run out.</p>
+      ${[['pl', 'Public liability insurance', 'Include care, custody and control cover', 'A$20m · to Aug 2027'], ['pc', 'Police clearance', 'WA Police or national check', 'Issued Oct 2026']].map(([k, t, hint, done]) => `<div class="tile${fx('doc-' + k, ' pop')}"><div><b>${t}</b><small>${o.docs[k] ? done : hint}</small></div>${o.docs[k] ? `<span class="pill p-ok">${ic('check')}Uploaded</span>` : `<button class="mini" data-act="ob-doc" data-doc="${k}">${ic('file')} Upload</button>`}</div>`).join('')}
+      <div class="tile"><div><b>Qualifications</b><small>Optional, shown on your profile</small></div><span class="pill p-mute">Later</span></div>${next}`;
+    case 3: return `<h3>Contractor agreement</h3><ul class="plain"><li>You run your own grooming business.</li><li>You choose which slots you take.</li><li>You hold your own insurance and police clearance.</li></ul>
+      ${o.agreed ? okbox('Agreed to version 1.2', o.agreed, ' pop') : `<button data-act="ob-agree">I agree to version 1.2</button>`}${next}`;
+    case 4: return `<h3>Get paid every Friday</h3><p class="sub">Payouts go straight to your bank through Stripe. Setup takes about 2 minutes.</p>
+      ${o.stripe ? okbox('Payouts set up', 'Bank account ending 21', ' pop') : `<button data-act="ob-stripe">${ic('wallet')} Set up payouts</button>`}${next}`;
+    case 5: return `<h3>Put GroomCall on your home screen</h3><p class="sub">On iPhone, alerts only work once the app is on your home screen.</p>
+      <div class="howto"><div class="hstep"><span class="hicon">${ic('share')}</span><span>Tap Share in Safari</span></div><div class="hstep"><span class="hicon">${ic('plus-square')}</span><span>Choose Add to Home Screen</span></div><div class="hstep"><span class="hicon mk">${ic('scissors')}</span><span>Open GroomCall from the new icon</span></div></div>
+      ${o.installed ? okbox('On your home screen', 'Opened from the home screen icon', ' pop') : `<button data-act="ob-install">I've added it</button>`}${next}`;
+    default: return `<h3>Turn on alerts</h3><p class="sub">Slots go to the first groomer who accepts, so alerts matter.</p>
+      ${o.denied ? `<div class="notice">${ic('alert')}<span>Alerts are off, so you'll miss slots. We'll text you instead until they're on.</span></div>` : ''}
+      ${o.dialog ? `<div class="sysdlg enter"><b>"GroomCall" would like to send you notifications</b><small>These may include alerts, sounds and icon badges.</small><div class="grid2"><button data-act="ob-deny">Don't Allow</button><button class="primary" data-act="ob-allow">Allow</button></div></div>` : `<button class="primary" data-act="ob-alerts">${ic('bell')} Turn on alerts</button>`}`;
+  }
+}
+function renderChloe() {
+  const o = S.ob;
+  let h = shead('chloe', ic('map-pin') + ' Subiaco', null);
+  if (o.step >= 7) {
+    h += `<div class="card${fx('queued', ' enter')}"><span class="pill p-ok">${ic('check')}You're on call</span><h3>All set, Chloe</h3><p class="sub">We check your documents within one working day. Alerts start once you're verified.</p>
+      <div class="rows">${['ABN', 'Insurance', 'Police clearance', 'Agreement', 'Payouts', 'Alerts'].map(k => `<div class="row"><span>${k}</span><span class="pill p-ok">${ic('check')}Done</span></div>`).join('')}</div></div>
+      <div class="card"><span class="pill ${S.chloeVerified ? 'p-ok' : 'p-gold'}${fx('verified', ' pop')}">${S.chloeVerified ? 'Verified' : 'Waiting for checks'}</span><p class="sub">${S.chloeVerified ? 'You are verified. Slots near Subiaco will come straight to this phone.' : 'You will hear from us as soon as the checks are done.'}</p></div>`;
+  } else {
+    h += `<div class="obsteps" aria-hidden="true">${OB.map((_, i) => `<i class="${i <= o.step ? 'on' : ''}"></i>`).join('')}</div><p class="lbl">Step ${o.step + 1} of 7 · ${OB[o.step]}</p>`;
+    h += `<div class="card${fx('ob', ' enter')}">${obBody(o)}</div>`;
+  }
+  setScreen('chloe', h);
+}
+
+/* map */
+function mapState(id) {
+  const s = S.slot, g = S.g[id];
+  if (!s) return reason(id) ? 'skip' : 'idle';
+  if (s.groomer === id) return 'won';
+  if (reason(id)) return 'skip';
+  if (g.declined) return 'pass';
+  if (g.taken) return 'lost';
+  if (g.alerted) return (s.st === 'fav' || s.st === 'all') ? 'alert' : 'lost';
+  return 'idle';
+}
+function renderMap() {
+  const K = 10, s = S.slot;
+  const dots = Object.keys(G).map(id => {
+    const g = G[id], st = mapState(id), right = g.x * K > 120;
+    return `<g class="gd ${st}" transform="translate(${g.x * K} ${g.y * K})">${st === 'alert' ? '<circle class="ping" r="9"/>' : ''}<circle class="dot" r="${st === 'won' ? 11 : 8}"/><text x="${right ? -13 : 13}" y="4" text-anchor="${right ? 'end' : 'start'}">${g.name}${isFav(id) ? ' ★' : ''}</text></g>`;
+  }).join('');
+  const svg = `<svg viewBox="-200 -200 400 400" role="img" aria-label="Map of groomers within 15 km of Osborne Park">
+    <rect class="land" x="-200" y="-200" width="400" height="400"/>
+    <path class="sea" d="M-200 -200H-85C-78 -120 -70 -60 -68 0C-66 60 -84 100 -76 140C-70 170 -80 190 -85 200H-200Z"/>
+    <path class="river" d="M-70 158C-40 142 -10 126 10 112C30 98 22 82 50 74C80 66 92 42 120 36C140 32 152 18 175 12"/>
+    <text class="sealbl" x="-140" y="60" transform="rotate(-90 -140 60)">INDIAN OCEAN</text>
+    <circle class="radius" r="150"/>
+    <text class="place" x="0" y="-157" text-anchor="middle">15 km</text>
+    <text class="place" x="62" y="96">Perth CBD</text>
+    ${S.fx.has('wave') ? '<circle class="wave" r="150"/>' : ''}${S.fx.has('post') ? '<circle class="wave" r="70"/>' : ''}
+    <g class="cm"><circle r="13"/><path d="M-5 -5L5 5M-5 5L5 -5"/></g>
+    <text class="cml" x="0" y="31" text-anchor="middle">Daycare</text>
+    ${dots}</svg>`;
+  const favN = Object.keys(G).filter(id => isFav(id) && !reason(id)).length;
+  const allN = Object.keys(G).filter(id => !isFav(id) && !reason(id)).length;
+  let stat = 'Post a slot and watch who hears about it.';
+  if (s && s.st === 'fav') stat = `<b>Minute 0.</b> ${favN} favourites alerted. Head start: <span class="hs-left">10 min left</span>`;
+  else if (s && s.st === 'all') stat = `<b>Minute 10.</b> Opened to ${allN} more verified groomers within 15 km.`;
+  else if (s && s.groomer) stat = `<b>Filled</b> by ${G[s.groomer].name} at ${s.filledAt}.`;
+  const skips = Object.keys(G).filter(id => reason(id)).map(id => `<li><b>${G[id].name}</b> · ${reason(id)}</li>`).join('');
+  SCREENS.map.innerHTML = `<p class="mstat" aria-live="polite">${stat}</p>${s && (s.st === 'fav' || s.st === 'all') ? MO.fetch(hsP(), S.fx.has('wave')) : ''}
+    <div class="map">${svg}</div>
+    <div class="keys"><span><i class="k alert"></i>Alerted</span><span><i class="k won"></i>Got the slot</span><span><i class="k pass"></i>Passed or missed out</span><span><i class="k skip"></i>Never alerted</span></div>
+    <span class="lbl">Never alerted</span><ul class="skips">${skips}</ul><p class="note">★ marks the centre's favourites.</p>`;
+}
+
+/* server race */
+function renderRace() {
+  const r = S.race;
+  const log = r.log.length ? r.log.map((l, i) => `<li class="${l[2]}${i === r.log.length - 1 ? fx('race', ' enter') : ''}"><span class="t">${l[0]}</span><span>${l[1]}</span></li>`).join('') : '<li><span class="t">Waiting for taps</span></li>';
+  const grid = (r.grid || Array(20).fill('')).map(c => `<i class="${c}"></i>`).join('');
+  SCREENS.race.innerHTML = `<ol class="log">${log}</ol>
+    <span class="lbl">Stress test</span><p class="sub">20 groomers tap Accept at the same instant. Exactly one should get the slot.</p>
+    <div class="grid20${fx('stress', ' flick')}" aria-hidden="true">${grid}</div>
+    <p class="score"><b>${r.runs}</b> runs · <b>${r.singles}</b> with exactly one winner</p>
+    <button data-act="stress">${ic('refresh')} Run it 10 more times</button>
+    <p class="note">Simulated in your browser. The real test fires 20 accepts at the server.</p>`;
+}
+
+/* capacity */
+function offerPill(o) { return { sent: `<span class="pill p-gold">Offer sent</span>`, booked: `<span class="pill p-ok${fx('book-' + o.dog, ' pop')}">${ic('check')}Booked</span>`, skipped: `<span class="pill p-mute">Skipped</span>`, expired: `<span class="pill p-mute">Table full</span>` }[o.st]; }
+function renderCap() {
+  const s = S.slot;
+  if (!s || !s.groomer) { SCREENS.cap.innerHTML = '<p class="sub">Once a groomer is booked, spare time on their table is offered to owners.</p>'; return; }
+  const dogs = slotDogs(), total = s.mins, free = freeMins();
+  const segs = dogs.map(d => { const own = ODOGS.includes(d); return `<span class="seg ${own ? 'a' : 'c'}${own ? fx('book-' + d.id, ' grow') : ''}" style="width:${SIZE_MIN[d.size] / total * 100}%">${d.name}</span>`; }).join('');
+  const offers = S.offers.length ? S.offers.map(o => { const d = ODOGS.find(x => x.id === o.dog); return `<div class="offer${fx('offers', ' enter')}"><span class="av">${d.name[0]}</span><div class="grow1"><b>${d.name}</b><small>${d.owner}'s ${d.breed.toLowerCase()} · ${SIZE_MIN[d.size]} min · ${money(d.price)}</small></div>${offerPill(o)}</div>`; }).join('') : '<p class="sub">Offers go to opted in owners once a groomer is booked.</p>';
+  SCREENS.cap.innerHTML = `<span class="lbl">${G[s.groomer].name}'s table, ${s.time}</span>
+    <div class="capbar" role="img" aria-label="${total - free} of ${total} minutes booked">${segs}</div>
+    <div class="keys"><span><i class="k c"></i>Centre bookings</span><span><i class="k a"></i>Owner grooms</span><span><i class="k f"></i>Free ${free} min</span></div>
+    <div class="rows">${dogs.map(d => `<div class="row"><span>${d.name}, ${d.size}</span><span>${SIZE_MIN[d.size]} min</span></div>`).join('')}<div class="row tot"><span>Free time</span><span>${free} of ${total} min</span></div></div>
+    <span class="lbl">Offers</span>${offers}
+    <p class="note">Small dogs 45 min, medium 60, large 90. Each centre can change these.</p>`;
+}
+
+/* money */
+function renderMoney() {
+  const v = invoiceTotals(), s = S.slot, n = addonCount(), pay = jessPay();
+  SCREENS.money.innerHTML = `
+    <div class="mblock"><span class="lbl">${ic('receipt')} Osborne Park's weekly invoice</span><div class="rows">${v.l.map(l => `<div class="row"><span>${l.label}</span><span>${money(l.amt)}</span></div>`).join('')}<div class="row"><span>Platform fee, 10%</span><span>${money(v.fee)}</span></div></div><div class="mtot"><span>Charged Fri 23 Oct</span><span class="total count" data-to="${v.total}">${money(v.total)}</span></div></div>
+    <div class="mblock"><span class="lbl">${ic('wallet')} Jess K's Friday payout</span><div class="rows"><div class="row"><span>Osborne Park, Thu 22 Oct</span><span>${money(s && s.groomer === 'jess' ? s.pay : 0)}</span></div><div class="row"><span>Owner grooms, ${n} × ${money(ADDON * SHARE)}</span><span>${money(n * ADDON * SHARE)}</span></div></div><div class="mtot"><span>To her bank</span><span class="total count" data-to="${pay}">${money(pay)}</span></div></div>
+    <div class="mblock"><span class="lbl">${ic('paw')} Amy's card at pickup</span><div class="mtot"><span>Biscuit's full groom</span><span class="total count" data-to="${ADDON}">${money(ADDON)}</span></div><div class="split${fx('count', ' grow')}"><span class="g">Jess ${money(ADDON * SHARE)}</span><span class="c">Centre ${money(ADDON * (1 - SHARE))}</span></div><p class="sub">Charged when Biscuit is picked up, after the groom is done.</p></div>
+    <p class="note">All prices include GST. Payments run through Stripe.</p>`;
+}
+
+/* cancellations */
+const RULES = {
+  early:  { btn: 'Cancels 2 days before', when: 'Tue 11am, 46 hours before the slot', pos: 4, out: [['refresh', 'Slot reopens to every groomer nearby'], ['check', 'Nothing recorded against Ben']] },
+  late:   { btn: 'Cancels 6 hours before', when: 'Thu 3am, 6 hours before the slot', pos: 87.5, out: [['refresh', 'Slot reopens to every groomer nearby'], ['bell', 'Osborne Park is told straight away'], ['alert', 'Late cancel recorded']] },
+  noshow: { btn: "Doesn't turn up", when: 'Thu 9:30am, no check in', pos: 99, out: [['x', 'The centre marks a no show'], ['refresh', 'Slot reopens for the rest of the day'], ['alert', 'No show recorded, 2 of 3 in 90 days']] }
+};
+function renderRules() {
+  const r = S.rule, R = r && RULES[r], rel = relFor('ben');
+  SCREENS.rules.innerHTML = `<p class="sub">Ben O has Thursday's 9am slot at Osborne Park. What happens if plans change?</p>
+    <div class="seg-btns">${Object.entries(RULES).map(([k, v]) => `<button data-act="rule" data-rule="${k}" aria-pressed="${r === k}">${v.btn}</button>`).join('')}</div>
+    <div class="tl"><div class="tlbar"><span class="late"></span>${R ? `<i class="mk${fx('rule', ' pop')}" style="left:${R.pos}%"></i>` : ''}</div><div class="tlx"><span>Tue 9am</span><span>Wed 9am</span><span>Thu 9am</span></div><p class="note">Shaded: under 24 hours before the slot.</p></div>
+    ${R ? `<p><b>${R.when}</b></p><ul class="outs">${R.out.map((o, i) => `<li class="${fx('rule', 'enter')}" style="animation-delay:${i * 160}ms">${ic(o[0])}<span>${o[1]}</span></li>`).join('')}</ul>` : '<p class="sub">Pick one to see what happens.</p>'}
+    <div class="rows"><div class="row"><span>Ben's late cancels</span><span>${rel.late}</span></div><div class="row"><span>No shows in 90 days</span><span class="meter">${[0, 1, 2].map(i => `<i class="${i < rel.ns ? 'on' : ''}"></i>`).join('')} ${rel.ns} of 3</span></div></div>
+    <p class="note">Three no shows in 90 days pauses the account until we review it.</p>`;
+}
+
+function updateHs() {
+  const left = Math.max(0, HEAD_MS - S.hs.elapsed), pct = left / HEAD_MS * 100, mins = Math.max(1, Math.ceil(left / HEAD_MS * 10));
+  $$('.hs-bar').forEach(b => b.style.width = pct + '%');
+  if (S.slot && S.slot.st === 'fav') $$('.mo-fetch').forEach(f => f.style.setProperty('--p', 1 - pct / 100));
+  $$('.hs-left').forEach(t => t.textContent = mins + ' min left');
+}
+function runCounts() {
+  if (!S.fx.has('count') || reduceMotion) return;
+  $$('.count').forEach(el => {
+    const to = parseFloat(el.dataset.to) || 0, d = 1300; let t0 = null;
+    const f = now => { if (t0 === null) t0 = now; const k = Math.min(1, Math.max(0, (now - t0) / d)), e = 1 - Math.pow(1 - k, 3); if (!el.isConnected) return; el.textContent = money(k < 1 ? Math.round(to * e) : to); if (k < 1) requestAnimationFrame(f); };
+    requestAnimationFrame(f);
+    setTimeout(() => { if (el.isConnected) el.textContent = money(to); }, d + 150);
+  });
+}
+function render() {
+  renderCentre(); renderGroomer('jess'); renderGroomer('priya'); renderOwner(); renderAdmin(); renderChloe();
+  renderMap(); renderRace(); renderCap(); renderMoney(); renderRules();
+  updateHs(); runCounts();
+  S.fx.clear();
+}
+
+
+/* GroomCall motion set: Snip, Fetch, Waggy, Bath time, Brush out, On the way (from the GroomCall Motion canvas) */
+const PAWS = [[34, 114, 0], [58, 98, .3], [82, 112, .6], [106, 96, .9], [130, 110, 1.2], [154, 98, 1.5]];
+const pawG = (x, y, d) => `<g transform="translate(${x} ${y}) rotate(90) scale(1.2)"><g class="mo-paw" style="animation-delay:${d}s"><ellipse cx="0" cy="3" rx="6.5" ry="5.5" fill="#0B6E7F"/><circle cx="-6.5" cy="-5" r="2.6" fill="#0B6E7F"/><circle cx="-2.4" cy="-9" r="2.6" fill="#0B6E7F"/><circle cx="2.4" cy="-9" r="2.6" fill="#0B6E7F"/><circle cx="6.5" cy="-5" r="2.6" fill="#0B6E7F"/></g></g>`;
+const MO = {
+  snip: () => `<svg class="mo" viewBox="0 0 240 160" role="img" aria-label="Shears snipping fur"><ellipse cx="116" cy="142" rx="44" ry="5" fill="#D3DFE2"/><path d="M86 140 q4 -12 12 -4 q5 -12 13 -3 q6 -12 13 -1 q6 -10 12 2 q6 -6 10 6 Z" fill="#E2B27A" stroke="#10242B" stroke-width="2" stroke-linejoin="round"/>
+    <g class="mo-tuft mo-t1"><path d="M156 70 q4 -7 8 0 q4 7 8 0" fill="none" stroke="#C98B4E" stroke-width="3.5" stroke-linecap="round"/></g><g class="mo-tuft mo-t2"><path d="M168 68 q3 -6 6 0 q3 6 6 0" fill="none" stroke="#A86B35" stroke-width="3.5" stroke-linecap="round"/></g><g class="mo-tuft mo-t3"><path d="M146 72 q3 -6 6 0 q3 6 6 0" fill="none" stroke="#D9A066" stroke-width="3.5" stroke-linecap="round"/></g>
+    <g class="mo-bladeB"><path d="M120 70 L78 50" fill="none" stroke="#0B6E7F" stroke-width="7" stroke-linecap="round"/><circle cx="68" cy="46" r="12" fill="none" stroke="#0B6E7F" stroke-width="7"/><path d="M116 68 L198 70 Q205 71 198 73 L116 74 Z" fill="#8FA3AA" stroke="#10242B" stroke-width="2" stroke-linejoin="round"/></g>
+    <g class="mo-bladeA"><path d="M120 70 L78 90" fill="none" stroke="#0B6E7F" stroke-width="7" stroke-linecap="round"/><circle cx="68" cy="94" r="12" fill="none" stroke="#0B6E7F" stroke-width="7"/><path d="M116 66 L198 67 Q205 68 198 70 L116 72 Z" fill="#C3D1D5" stroke="#10242B" stroke-width="2" stroke-linejoin="round"/></g>
+    <circle cx="120" cy="70" r="5" fill="#E8A317" stroke="#10242B" stroke-width="2"/></svg>`,
+  waggy: () => `<svg class="mo" viewBox="0 0 240 160" role="img" aria-label="A happy dog wagging its tail with a green tick"><ellipse cx="128" cy="136" rx="62" ry="5" fill="#D3DFE2"/><g class="mo-hop"><g class="mo-tail"><path d="M76 88 Q56 78 54 56" fill="none" stroke="#10242B" stroke-width="11" stroke-linecap="round"/><path d="M76 88 Q56 78 54 56" fill="none" stroke="#D9A066" stroke-width="7" stroke-linecap="round"/></g>
+    <rect x="84" y="100" width="12" height="32" rx="6" fill="#C98B4E" stroke="#10242B" stroke-width="2"/><rect x="100" y="100" width="12" height="32" rx="6" fill="#C98B4E" stroke="#10242B" stroke-width="2"/><rect x="140" y="100" width="12" height="32" rx="6" fill="#C98B4E" stroke="#10242B" stroke-width="2"/><rect x="156" y="100" width="12" height="32" rx="6" fill="#C98B4E" stroke="#10242B" stroke-width="2"/>
+    <rect x="72" y="76" width="96" height="38" rx="19" fill="#D9A066" stroke="#10242B" stroke-width="2"/><circle cx="176" cy="66" r="22" fill="#D9A066" stroke="#10242B" stroke-width="2"/><path d="M158 80 Q166 92 182 88" fill="none" stroke="#0B6E7F" stroke-width="6" stroke-linecap="round"/><circle cx="170" cy="92" r="4" fill="#E8A317" stroke="#10242B" stroke-width="1.5"/>
+    <ellipse cx="164" cy="66" rx="8" ry="15" fill="#A86B35" stroke="#10242B" stroke-width="2" transform="rotate(16 164 66)"/><path d="M192 82 q0 10 6 10 q6 0 5 -10 Z" fill="#E8798A" stroke="#10242B" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="196" cy="74" rx="13" ry="10" fill="#E9BC85" stroke="#10242B" stroke-width="2"/><ellipse cx="207" cy="70" rx="4.5" ry="3.5" fill="#10242B"/><circle cx="182" cy="58" r="3" fill="#10242B"/></g>
+    <g class="mo-tick"><circle cx="116" cy="40" r="16" fill="#2C7A47"/><path d="M108 40 L114 46 L125 34" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`,
+  bath: () => `<svg class="mo" viewBox="0 0 240 160" role="img" aria-label="A sudsy dog bobbing in a bath"><g class="mo-bob"><ellipse cx="99" cy="76" rx="7" ry="13" fill="#A86B35" stroke="#10242B" stroke-width="2" transform="rotate(20 99 76)"/><ellipse cx="141" cy="76" rx="7" ry="13" fill="#A86B35" stroke="#10242B" stroke-width="2" transform="rotate(-20 141 76)"/><circle cx="120" cy="78" r="22" fill="#D9A066" stroke="#10242B" stroke-width="2"/><circle cx="112" cy="73" r="2.8" fill="#10242B"/><circle cx="128" cy="73" r="2.8" fill="#10242B"/><ellipse cx="120" cy="82" rx="4" ry="3" fill="#10242B"/><circle cx="108" cy="58" r="8" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/><circle cx="132" cy="58" r="8" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/><circle cx="120" cy="53" r="10" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/></g>
+    <path d="M36 94 H204 V104 Q204 132 174 132 H66 Q36 132 36 104 Z" fill="#FFFFFF" stroke="#10242B" stroke-width="2.5" stroke-linejoin="round"/><rect x="28" y="86" width="184" height="11" rx="5.5" fill="#DDEFF2" stroke="#10242B" stroke-width="2.5"/><circle cx="66" cy="137" r="5" fill="#10242B"/><circle cx="174" cy="137" r="5" fill="#10242B"/>
+    <circle cx="48" cy="84" r="7" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/><circle cx="60" cy="81" r="8" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/><circle cx="180" cy="81" r="8" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/><circle cx="192" cy="84" r="7" fill="#FFFFFF" stroke="#10242B" stroke-width="2"/>
+    ${[[80, 78, 6, 0], [98, 80, 4, -.5], [146, 78, 7, -1], [164, 80, 4, -1.5], [88, 80, 5, -1.9], [156, 80, 5, -.25]].map(([x, y, r, d]) => `<circle class="mo-bub" cx="${x}" cy="${y}" r="${r}" fill="#FFFFFF" stroke="#0B6E7F" stroke-width="2" style="animation-delay:${d}s"/>`).join('')}</svg>`,
+  brush: () => `<svg class="mo" viewBox="0 0 240 160" role="img" aria-label="A brush combing messy fur straight">
+    ${Array.from({ length: 10 }, (_, i) => `<line class="${i % 2 ? 'mo-combB' : 'mo-combA'}" x1="${30 + i * 20}" y1="128" x2="${30 + i * 20}" y2="96" stroke="${i % 2 ? '#C98B4E' : '#D9A066'}" stroke-width="5" stroke-linecap="round" style="transform-origin:${30 + i * 20}px 128px;animation-delay:${(i * .16).toFixed(2)}s"/>`).join('')}
+    <rect x="18" y="126" width="204" height="14" rx="7" fill="#E9BC85" stroke="#10242B" stroke-width="2"/><g class="mo-brush"><rect x="24" y="44" width="10" height="34" rx="5" fill="#E8A317" stroke="#10242B" stroke-width="2" transform="rotate(-25 29 78)"/><rect x="6" y="74" width="48" height="14" rx="6" fill="#0B6E7F" stroke="#10242B" stroke-width="2"/><path d="M12 88 V95 M18 88 V95 M24 88 V95 M30 88 V95 M36 88 V95 M42 88 V95 M48 88 V95" fill="none" stroke="#10242B" stroke-width="2" stroke-linecap="round"/></g></svg>`,
+  onway: label => `<svg class="mo mo-wide" viewBox="0 70 240 86" role="img" aria-label="Paw prints walking towards a map pin"><path d="M30 112 Q110 92 194 112" fill="none" stroke="#D3DFE2" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 8"/>${PAWS.map(p => pawG(...p)).join('')}
+    <ellipse cx="194" cy="116" rx="9" ry="3" fill="#D3DFE2"/><g transform="translate(194 112)"><g class="mo-pin"><path d="M0 0 C0 0 -12 -12 -12 -22 A12 12 0 0 1 12 -22 C12 -12 0 0 0 0 Z" fill="#E8A317" stroke="#10242B" stroke-width="2" stroke-linejoin="round"/><circle cx="0" cy="-22" r="4.5" fill="#FFFFFF" stroke="#10242B" stroke-width="1.5"/></g></g>
+    <text x="120" y="148" class="mo-lbl" text-anchor="middle">${label}</text></svg>`,
+  // Fetch is driven by the head start clock: --p runs 0 to 1, the bell rings when the slot opens to everyone
+  fetch: (p, ring) => `<svg class="mo mo-wide mo-fetch${ring ? ' mo-ring' : ''}" viewBox="8 84 232 68" style="--p:${p}" role="img" aria-label="Head start progress"><line x1="24" y1="120" x2="202" y2="120" stroke="#D3DFE2" stroke-width="6" stroke-linecap="round"/><line class="mo-trail" x1="24" y1="120" x2="202" y2="120" stroke="#E8A317" stroke-width="6" stroke-linecap="round"/>
+    <g class="mo-bell"><path d="M220 97 V94" fill="none" stroke="#10242B" stroke-width="2" stroke-linecap="round"/><path d="M210 116 H230 L227 111 V104 A7 7 0 0 0 213 104 V111 Z" fill="#E8A317" stroke="#10242B" stroke-width="2" stroke-linejoin="round"/><circle cx="220" cy="119" r="2.6" fill="#10242B"/></g>
+    <g class="mo-roll"><g class="mo-spin"><circle cx="28" cy="105" r="12" fill="#CFE03A" stroke="#10242B" stroke-width="2"/><path d="M17 100 Q28 107 39 100" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><path d="M17 110 Q28 103 39 110" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/></g></g>
+    <text x="24" y="146" class="mo-lbl">Favourites</text><text x="230" y="146" class="mo-lbl" text-anchor="end">All nearby</text></svg>`
+};
+const hsP = () => S.slot && S.slot.st === 'fav' ? Math.min(1, S.hs.elapsed / HEAD_MS) : 1;
+
+/* a short full screen moment on one phone: loading, payment, syncing or success */
+function motion(id, kind, title, sub = '', ms = 1600, then) {
+  if (QUIET) { if (then) then(); return; }
+  const ph = panelEl(id)?.querySelector('.phone'); if (!ph) { if (then) then(); return; }
+  ph.querySelectorAll('.mov').forEach(m => m.remove());
+  const m = document.createElement('div'); m.className = 'mov'; m.setAttribute('role', 'status');
+  m.innerHTML = `${MO[kind]()}<b>${title}</b>${sub ? `<small>${sub}</small>` : ''}`;
+  ph.appendChild(m);
+  setTimeout(() => m.classList.add('out'), ms - 280); setTimeout(() => m.remove(), ms);
+  if (then) later(then, ms);
+}
+
+
+/* the fake finger */
+const F1 = $('#f1'), F2 = $('#f2');
+let focusId = 'centre', sceneIx = 0, finale = false, curPanels = [];
+const seen = new Set();
+function fingersOff() { F1.classList.remove('on', 'tap'); F2.classList.remove('on', 'tap'); }
+function moveFinger(f, el) {
+  const r = el.getBoundingClientRect(), b = document.body.getBoundingClientRect();
+  const x = r.left - b.left + r.width / 2, y = r.top - b.top + Math.min(r.height / 2, 22);
+  if (!f.classList.contains('on')) { f.style.transition = 'none'; f.style.left = (x - 40) + 'px'; f.style.top = (y + 70) + 'px'; void f.offsetWidth; f.style.transition = ''; f.classList.add('on'); }
+  f.style.left = x + 'px'; f.style.top = y + 'px';
+}
+const relTop = (el, sc) => el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+async function ensureVisible(el) {
+  const sc = el.closest('.screen');
+  if (sc) {
+    const top = relTop(el, sc);
+    if (top < sc.scrollTop + 80 || top + el.offsetHeight > sc.scrollTop + sc.clientHeight - 16) {
+      sc.scrollTo({ top: Math.max(0, top - sc.clientHeight / 2 + el.offsetHeight / 2), behavior: reduceMotion ? 'auto' : 'smooth' }); await wait(450);
+    }
+  }
+  if (isNarrow()) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 100) { window.scrollBy({ top: r.top - innerHeight / 2, behavior: reduceMotion ? 'auto' : 'smooth' }); await wait(450); } }
+}
+async function scrollScreen(id, sel) {
+  const sc = SCREENS[id], el = sc && sc.querySelector(sel); if (!el) return;
+  sc.scrollTo({ top: Math.max(0, relTop(el, sc) - 70), behavior: reduceMotion ? 'auto' : 'smooth' }); await wait(600);
+}
+async function tap(id, sel, opt = {}) {
+  if (isNarrow() && focusId !== id) setFocus(id);
+  const root = panelEl(id); let el = root && root.querySelector(sel);
+  if (!el) return false;
+  await ensureVisible(el);
+  const f = opt.finger === 2 ? F2 : F1;
+  moveFinger(f, el); await wait(opt.fast ? 380 : 700);
+  f.classList.add('tap'); el.classList.add('pressed'); await wait(200);
+  f.classList.remove('tap'); el.classList.remove('pressed');
+  el = root.querySelector(sel) || el;
+  if (!opt.noClick) el.click();
+  await wait(250);
+  return true;
+}
+async function typeInto(id, sel, text) {
+  if (!await tap(id, sel, { noClick: true })) return;
+  const el = panelEl(id).querySelector(sel); el.classList.add('typing');
+  el.value = ''; el.dispatchEvent(new Event('input', { bubbles: true }));
+  for (const ch of text) { await wait(120); el.value += ch; el.dispatchEvent(new Event('input', { bubbles: true })); }
+  el.classList.remove('typing');
+}
+
+/* chapters */
+const SCENES = [
+  { short: 'Post a slot', panels: ['centre', 'map'], focus: 'centre',
+    h: 'A slot posted in seconds',
+    p: 'The centre manager picks the day, the hours, how many dogs are booked and what the slot pays. One tap sends the alert. If something doesn\'t add up, the form says so before anything goes out.',
+    hood: 'Pay must be at least A$50 and dogs between 1 and 12. The slot is saved with a head start clock that ends 10 minutes after posting.',
+    prep() { setWhen('Tue 20 Oct', '9:41am'); S.tabs.centre = 'slots'; S.form.pay = ''; },
+    ff() { S.form.pay = '300'; post(); },
+    async run() {
+      await wait(900);
+      await typeInto('centre', '#f-pay', '40'); await tap('centre', '[data-act=post]'); await wait(1700);
+      await typeInto('centre', '#f-pay', '300'); await wait(300);
+      await tap('centre', '[data-act=post]'); await wait(500);
+      if (isNarrow()) setFocus('map');
+      await wait(2800);
+    } },
+  { short: 'Who hears first', panels: ['map', 'jess'], focus: 'map',
+    h: 'Favourites hear first',
+    p: 'The centre\'s three favourite groomers get the alert straight away with a 10 minute head start. If none of them takes it, every verified groomer within 15 km hears about it next.',
+    hood: 'A groomer is only alerted if the centre\'s radius and their own travel limit both cover the distance, and their insurance and police clearance are current. In this demo 10 minutes runs in 8 seconds.',
+    prep() { setWhen('Tue 20 Oct', '9:42am'); S.tabs.jess = 'home'; },
+    ff() { pass('mia'); S.hs.elapsed = HEAD_MS; openToAll(); },
+    async run() {
+      await wait(700); push('jess', alertCopy(S.slot, true)); await wait(1400);
+      S.hs.running = true; await wait(2600);
+      pass('mia'); await waitFor(() => S.slot.st === 'all');
+      await wait(700); if (isNarrow()) setFocus('jess');
+      await wait(3400);
+    } },
+  { short: 'First tap wins', panels: ['jess', 'race', 'priya'], focus: 'jess',
+    h: 'First tap wins, every time',
+    p: 'Jess and Priya tap Accept a few thousandths of a second apart. Jess gets the slot. Priya is told straight away, and nobody is ever double booked.',
+    hood: 'Accepting is one locked step on the server: check the slot is still open, check the groomer has no clash, then fill it. A test fires 20 accepts at once and checks exactly one wins.',
+    prep() { setWhen('Tue 20 Oct', '9:52am'); S.tabs.jess = 'home'; S.race.log = []; },
+    ff() {
+      S.race.log = [['9:52:07.112', 'Jess K taps Accept', ''], ['9:52:07.118', 'Priya N taps Accept', ''], ['9:52:07.131', 'Jess K: still open, no clash. Filled.', 'ok'], ['9:52:07.139', 'Priya N: already filled. Told straight away.', 'no']];
+      accept('jess'); accept('priya'); for (let i = 0; i < 16; i++) runOnce();
+    },
+    async run() {
+      await wait(1000);
+      if (!isNarrow()) await Promise.all([tap('jess', '[data-act=accept]', { noClick: true }), tap('priya', '[data-act=accept]', { noClick: true, finger: 2 })]);
+      else { await tap('jess', '[data-act=accept]', { noClick: true }); setFocus('race'); }
+      raceLine('9:52:07.112', 'Jess K taps Accept'); render(); await wait(350);
+      raceLine('9:52:07.118', 'Priya N taps Accept'); render(); await wait(900);
+      raceLine('9:52:07.131', 'Jess K: still open, no clash. Filled.', 'ok'); accept('jess'); await wait(800);
+      raceLine('9:52:07.139', 'Priya N: already filled. Told straight away.', 'no'); accept('priya');
+      push('priya', "That one's gone to another groomer. We'll ping you for the next one.");
+      fingersOff(); await wait(1800);
+      if (isNarrow()) { setFocus('priya'); await wait(2200); setFocus('race'); }
+      stressBurst(16, 260); await wait(16 * 260 + 1500);
+    } },
+  { short: 'The brief', panels: ['centre', 'jess'], focus: 'jess',
+    h: 'The brief lands on their phone',
+    p: 'Jess gets everything she needs: the dogs and their notes, where to check in, where to park and a map link. On the centre\'s board her name goes green.',
+    hood: 'Groomers see the owner\'s first name and the dog\'s notes only. Owner phone numbers and emails are never shared.',
+    prep() { setWhen('Tue 20 Oct', '9:52am'); S.tabs.centre = 'slots'; S.tabs.jess = 'home'; },
+    ff() {},
+    async run() {
+      await wait(500); push('centre', `Jess K is in for ${dayLong(S.slot)} ${S.slot.time}.`);
+      if (isNarrow()) { setFocus('centre'); await wait(800); }
+      await scrollScreen('centre', '#board-centre'); await wait(2200);
+      setFocus('jess'); await scrollScreen('jess', '#brief-jess'); await wait(1400);
+      await tap('jess', '[data-act=maps]', { noClick: true }); await wait(900);
+      await scrollScreen('jess', '#dogs-jess'); fingersOff(); await wait(3200);
+    } },
+  { short: 'Owner offers', panels: ['owner', 'cap'], focus: 'owner',
+    h: 'Owners top up the day',
+    p: 'With a groomer booked, owners who said yes to grooming offers get one for their dog\'s daycare day. Offers fill the spare time on Jess\'s table, first come first served, and stop the moment it\'s full.',
+    hood: 'Time is estimated at 45 minutes for a small dog, 60 medium and 90 large, and each centre can change that. The owner\'s card is charged at pickup.',
+    prep() { setWhen('Tue 20 Oct', '9:53am'); S.tabs.owner = 'dogs'; },
+    ff() { sendOffers(); book('biscuit'); book('bella'); },
+    async run() {
+      await wait(900); sendOffers(); await wait(2600);
+      await tap('owner', '[data-act=book][data-dog=biscuit]'); fingersOff(); await wait(3200);
+      if (isNarrow()) setFocus('cap');
+      await wait(700); book('bella'); await wait(3400);
+    } },
+  { short: 'On the day', panels: ['jess', 'owner'], focus: 'jess',
+    h: 'Check in, groom, check out',
+    p: 'Jess taps that she\'s on her way, checks in when she arrives and out when she leaves. Before and after photos go to the owner, so Amy sees Biscuit\'s new look before pickup.',
+    hood: 'Check in records the time and a rough location. The centre confirms the job is done, or it confirms itself 12 hours after check out. Amy\'s card is charged at pickup.',
+    prep() { setWhen('Thu 22 Oct', '8:50am'); S.tabs.jess = 'home'; S.tabs.owner = 'dogs'; },
+    ff() { checkIn(); ['ruby', 'tank', 'pip', 'coco'].forEach(markDone); photos('biscuit'); photos('bella'); setWhen('Thu 22 Oct', '1:52pm'); checkOut(); setWhen('Thu 22 Oct', '2:10pm'); confirmJob(); },
+    async run() {
+      await wait(800);
+      await tap('jess', '[data-act=enroute]'); fingersOff(); await wait(1600);
+      setFocus('owner'); await wait(2400); setFocus('jess');
+      setWhen('Thu 22 Oct', '8:56am'); render();
+      await tap('jess', '[data-act=checkin]'); await wait(1100);
+      setWhen('Thu 22 Oct', '11:40am'); render();
+      for (const d of ['ruby', 'tank', 'pip', 'coco']) await tap('jess', `[data-act=done][data-dog=${d}]`, { fast: true });
+      await tap('jess', '[data-act=photos][data-dog=biscuit]'); fingersOff(); await wait(1200);
+      setFocus('owner'); await scrollScreen('owner', '#photos-owner'); await wait(2800);
+      setFocus('jess');
+      await tap('jess', '[data-act=photos][data-dog=bella]', { fast: true });
+      setWhen('Thu 22 Oct', '1:52pm'); render();
+      await tap('jess', '[data-act=checkout]'); fingersOff(); await wait(1500);
+      setWhen('Thu 22 Oct', '2:10pm'); setFocus('owner'); confirmJob(); await wait(3400);
+    } },
+  { short: 'Money', panels: ['money', 'jess'], focus: 'money',
+    h: 'Everyone gets paid without chasing',
+    p: 'The centre gets one invoice a week. Groomers are paid every Friday for finished slots. Owners pay for add on grooms at pickup, and the groomer and the centre share the price.',
+    hood: 'Payments run through Stripe and prices include GST. The platform fee starts at 10 percent and the groomer\'s share of an owner groom starts at 50 percent. Both can be changed.',
+    prep() { setWhen('Fri 23 Oct', '5:00pm'); S.tabs.jess = 'earnings'; mark('count'); },
+    ff() {},
+    async run() { motion('jess', 'brush', 'Syncing your week', 'Pulling in finished slots', 1300); await wait(5500); if (isNarrow()) { setFocus('jess'); mark('count'); render(); } await wait(3000); } },
+  { short: 'Sign up', panels: ['chloe', 'admin'], focus: 'chloe',
+    h: 'Groomers set up in minutes',
+    p: 'Meanwhile a new groomer signs up. The app walks Chloe through her ABN, documents, agreement and bank account, then gets itself onto her home screen with alerts switched on.',
+    hood: 'On iPhone, alerts only work once the app is on the home screen. The app checks, shows a clear warning if alerts are off, and sends a text instead until they\'re fixed.',
+    prep() { setWhen('Tue 20 Oct', '7:12pm'); S.tabs.admin = 'verify'; },
+    ff() { S.ob = { step: 7, abn: '12345678901', abnState: 'ok', abnErr: '', docs: { pl: true, pc: true }, agreed: 'Tue 20 Oct 2026 at 7:14pm', stripe: true, installed: true, dialog: false, denied: false }; S.chloeQueued = true; },
+    async run() {
+      await wait(800);
+      await tap('chloe', '[data-act=ob-next]');
+      await typeInto('chloe', '#ob-abn', '12345678901');
+      await tap('chloe', '[data-act=ob-abn]'); await waitFor(() => S.ob.abnState === 'ok'); await wait(800);
+      await tap('chloe', '[data-act=ob-next]');
+      await tap('chloe', '[data-act=ob-doc][data-doc=pl]', { fast: true }); await tap('chloe', '[data-act=ob-doc][data-doc=pc]', { fast: true });
+      await tap('chloe', '[data-act=ob-next]');
+      setWhen('Tue 20 Oct', '7:14pm');
+      await tap('chloe', '[data-act=ob-agree]', { fast: true }); await tap('chloe', '[data-act=ob-next]');
+      await tap('chloe', '[data-act=ob-stripe]', { fast: true }); await wait(1400); await tap('chloe', '[data-act=ob-next]');
+      await tap('chloe', '[data-act=ob-install]', { fast: true }); await wait(500); await tap('chloe', '[data-act=ob-next]');
+      await wait(900);
+      await tap('chloe', '[data-act=ob-alerts]'); await wait(700);
+      await tap('chloe', '[data-act=ob-allow]'); fingersOff(); await wait(2200);
+      if (isNarrow()) setFocus('admin');
+      await wait(2200);
+    } },
+  { short: 'Safety checks', panels: ['admin', 'jess'], focus: 'admin',
+    h: 'Only checked groomers get alerts',
+    p: 'Every groomer is checked before they hear about a single slot. When a document runs out their alerts stop the same day, and they get a reminder well before that.',
+    hood: 'ABNs are checked against the government\'s ABN Lookup. Insurance and police clearances are checked by a person, and reminders go out 30 days before expiry.',
+    prep() { setWhen('Wed 21 Oct', '8:30am'); S.tabs.admin = 'verify'; S.tabs.jess = 'papers'; },
+    ff() { S.adminChecks = 4; verify(); S.reminderSent = true; },
+    async run() {
+      await wait(800);
+      await tap('admin', '[data-act=adm-check]'); fingersOff(); await waitFor(() => S.adminChecks >= 4); await wait(800);
+      await tap('admin', '[data-act=adm-verify]'); fingersOff(); await wait(1800);
+      await tap('admin', '[data-act=adm-remind]'); fingersOff(); await wait(900);
+      setFocus('jess'); await wait(3600);
+    } },
+  { short: 'Reliability', panels: ['rules', 'centre'], focus: 'rules',
+    h: 'Reliability you can see',
+    p: 'Every groomer has a rating and a track record. Cancel early and the slot simply reopens. Cancel late or don\'t turn up and it counts, and three no shows in 90 days pauses the account for review.',
+    hood: 'Cancelling more than 24 hours out reopens the slot to everyone with no mark against the groomer. Under 24 hours, the centre is told and it\'s recorded.',
+    prep() { setWhen('Wed 21 Oct', '9:00am'); S.tabs.centre = 'groomers'; S.profile = 'ben'; },
+    ff() { S.rule = 'noshow'; },
+    async run() {
+      await wait(800);
+      if (!isNarrow()) scrollScreen('centre', '#profile-centre');
+      for (const r of ['early', 'late', 'noshow']) { await tap('rules', `[data-rule=${r}]`); await wait(2700); }
+      fingersOff(); if (isNarrow()) setFocus('centre');
+      await wait(2600);
+    } }
+];
+
+/* controller */
+function stopAll() { runId++; timers.forEach(clearTimeout); timers = []; fingersOff(); $$('.banner, .mov').forEach(b => b.remove()); }
+function setFocus(id) {
+  focusId = id;
+  $$('.panel').forEach(p => p.classList.toggle('focus', p.dataset.p === id));
+  $$('#ptabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === id));
+}
+function showPanels(list, focus) {
+  curPanels = list;
+  $$('.panel').forEach(p => { const i = list.indexOf(p.dataset.p); p.hidden = i < 0; p.style.order = i; });
+  Object.values(SCREENS).forEach(sc => sc.scrollTop = 0);
+  $('#ptabs').innerHTML = list.map(id => `<button data-act="focus" data-p="${id}" aria-pressed="false">${PANELS[id].tab}</button>`).join('');
+  setFocus(focus || list[0]);
+}
+function setPaused(v) { paused = v; document.body.classList.toggle('paused', v); renderNarr(); }
+function startTour(ix) {
+  stopAll(); MODE = 'tour'; finale = false; paused = false; document.body.classList.remove('paused');
+  S = fresh(); QUIET = true; for (let i = 0; i < ix; i++) { SCENES[i].prep(); SCENES[i].ff(); } QUIET = false;
+  sceneIx = ix; seen.add(ix);
+  const sc = SCENES[ix]; sc.prep();
+  showPanels(sc.panels, sc.focus); renderNarr(); render();
+  runScene(ix);
+}
+async function runScene(ix) {
+  try {
+    await SCENES[ix].run(); fingersOff(); S.sceneDone = true; renderNarr();
+    await wait(3500);
+    if (ix + 1 < SCENES.length) startTour(ix + 1); else showFinale();
+  } catch (e) { if (e !== STOP) console.error(e); }
+}
+function showFinale() { stopAll(); finale = true; renderNarr(); }
+function startSandbox() {
+  stopAll(); MODE = 'sandbox'; finale = false; paused = false; document.body.classList.remove('paused');
+  S = fresh(); showPanels(['centre', 'jess', 'owner', 'map', 'admin', 'chloe'], 'centre'); renderNarr(); render();
+}
+function ctlHtml() {
+  return `<div class="ctl"><button data-act="prev" aria-label="Previous chapter"${sceneIx === 0 ? ' disabled' : ''}>${ic('chev-left')}</button><button class="primary" data-act="pause">${paused ? ic('play') + ' Play' : ic('pause') + ' Pause'}</button><button data-act="next">Next ${ic('chev-right')}</button></div>`;
+}
+function renderNarr() {
+  const n = $('#narr'), m = $('#mbar'), ch = $('#chapters');
+  $('#m-tour').setAttribute('aria-pressed', MODE === 'tour'); $('#m-play').setAttribute('aria-pressed', MODE === 'sandbox');
+  if (MODE === 'sandbox') {
+    ch.hidden = true; m.hidden = true;
+    n.innerHTML = `<p class="eyebrow">Try it yourself</p><h2>Everything on these phones works</h2>
+      <ol><li>Post a slot from the centre phone.</li><li>Watch the map, then accept or pass as Jess.</li><li>As Amy, add or skip Biscuit's groom.</li><li>As Jess, check in, mark dogs done, add photos and check out.</li><li>Confirm the job on the centre phone, then look at the invoice.</li><li>Sign Chloe up, then check and verify her as admin.</li></ol>
+      <div class="hood"><p>Other groomers and owners act on their own. Pass as Jess and Priya takes the slot. The 10 minute head start runs in 8 seconds.</p></div>
+      <div class="grid2"><button data-act="reset">${ic('refresh')} Start again</button><button class="primary" data-act="mode-tour">${ic('play')} Watch the tour</button></div>`;
+    return;
+  }
+  ch.hidden = false;
+  $$('#chapters .chip').forEach((c, i) => { c.setAttribute('aria-current', !finale && i === sceneIx ? 'step' : 'false'); c.classList.toggle('seen', seen.has(i)); });
+  const act = $$('#chapters .chip')[sceneIx]; if (act && !finale) ch.scrollLeft = Math.max(0, act.offsetLeft - ch.clientWidth / 2 + act.offsetWidth / 2);
+  if (finale) {
+    m.hidden = true;
+    n.innerHTML = `<p class="eyebrow">The whole loop</p><h2>That's GroomCall</h2><p>Centres fill grooming gaps in minutes. Groomers pick up paid work close to home. Owners get their dog groomed without a separate trip.</p>
+      <div class="hood"><span class="lbl">${ic('shield')} Built for Perth</span><p>Prices in AUD including GST, Perth time, ABN checks, contractor agreements and Australian privacy rules from day one.</p></div>
+      <div class="grid2"><button data-act="restart">${ic('refresh')} Watch again</button><button class="primary" data-act="mode-play">Try it yourself</button></div>`;
+    return;
+  }
+  const sc = SCENES[sceneIx];
+  const status = paused ? 'Paused. Tap around the phones, or press Play to carry on.' : S.sceneDone ? 'Next chapter in a moment.' : 'Plays on its own. Tap any phone to take over.';
+  n.innerHTML = `<p class="eyebrow">Chapter ${sceneIx + 1} of ${SCENES.length}</p><h2>${sc.h}</h2><p>${sc.p}</p>
+    <div class="hood"><span class="lbl">${ic('shield')} Behind the scenes</span><p>${sc.hood}</p></div>${ctlHtml()}<p class="note">${status}</p>`;
+  m.hidden = false; m.innerHTML = `<span class="mt"><b>${sceneIx + 1}/${SCENES.length}</b> ${sc.short}</span>${ctlHtml()}`;
+}
+
+/* events */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, d = b.dataset;
+  if (e.isTrusted && MODE === 'tour' && !finale && b.closest('#stage') && !paused) setPaused(true);
+  switch (a) {
+    case 'post': post(); break;
+    case 'accept': { const r = accept(d.g); if (!r.ok && r.reason === 'taken') push(d.g, "That one's gone to another groomer. We'll ping you for the next one."); break; }
+    case 'pass': pass(d.g); break;
+    case 'tab': S.tabs[d.panel] = d.tab; SCREENS[d.panel].scrollTop = 0; if (d.tab === 'earnings') mark('count');
+      if (['earnings', 'invoice', 'history'].includes(d.tab) || (d.panel === 'admin' && d.tab === 'slots')) motion(d.panel, 'brush', 'Syncing your week', '', 1000);
+      render(); break;
+    case 'book': book(d.dog); break;
+    case 'skip': skip(d.dog); break;
+    case 'toggle': S.owner.on = !S.owner.on; render(); break;
+    case 'enroute': enRoute(); break;
+    case 'checkin': checkIn(); break;
+    case 'done': markDone(d.dog); break;
+    case 'photos': photos(d.dog); break;
+    case 'checkout': checkOut(); break;
+    case 'confirm': confirmJob(); break;
+    case 'maps': return;
+    case 'fav': S.favs[d.g] = !S.favs[d.g]; render(); break;
+    case 'profile': S.profile = d.g; render(); break;
+    case 'adm-check': runChecks(); break;
+    case 'adm-verify': verify(); break;
+    case 'adm-remind': remind(); break;
+    case 'renew': S.renewed = true; mark('renew'); render(); break;
+    case 'ob-next': obNext(); break;
+    case 'ob-abn': obAbn(); break;
+    case 'ob-doc': S.ob.docs[d.doc] = true; mark('doc-' + d.doc); render(); break;
+    case 'ob-agree': S.ob.agreed = `${S.when.day} 2026 at ${S.when.time}`; render(); break;
+    case 'ob-stripe': S.ob.stripe = true; motion('chloe', 'bath', 'Setting up payouts', 'Secure setup with Stripe', 1300); render(); break;
+    case 'ob-install': S.ob.installed = true; render(); break;
+    case 'ob-alerts': S.ob.dialog = true; render(); break;
+    case 'ob-allow': obAllow(); break;
+    case 'ob-deny': S.ob.dialog = false; S.ob.denied = true; render(); break;
+    case 'rule': S.rule = d.rule; mark('rule'); render(); break;
+    case 'stress': stressBurst(10, 180); break;
+    case 'focus': setFocus(d.p); break;
+    case 'chapter': startTour(+d.i); break;
+    case 'prev': startTour(Math.max(0, sceneIx - 1)); break;
+    case 'next': if (finale) break; if (sceneIx + 1 < SCENES.length) startTour(sceneIx + 1); else showFinale(); break;
+    case 'pause': setPaused(!paused); break;
+    case 'restart': case 'mode-tour': startTour(0); break;
+    case 'mode-play': case 'reset': startSandbox(); break;
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'f-dogs') S.form.dogs = t.value;
+  else if (t.id === 'f-pay') S.form.pay = t.value;
+  else if (t.id === 'ob-abn') { S.ob.abn = t.value.replace(/\D/g, '').slice(0, 11); S.ob.abnErr = ''; }
+  else return;
+  if (S.err) { S.err = ''; const el = $('#post-err'); if (el) el.textContent = ''; }
+  if (e.isTrusted && MODE === 'tour' && !finale && !paused) setPaused(true);
+});
+document.addEventListener('change', e => { const t = e.target; if (t.id === 'f-day') S.form.day = t.value; else if (t.id === 'f-hours') S.form.hours = t.value; });
+
+/* boot */
+(function init() {
+  $('#stage').innerHTML = Object.entries(PANELS).map(([id, p]) => `<section class="panel ${p.phone ? 'is-phone' : 'is-card'}" data-p="${id}" hidden><div class="ptitle"><h3>${p.t}</h3><span>${p.s}</span></div>${p.phone ? '<div class="phone"><div class="screen"></div></div>' : '<div class="cardpanel"><div class="pbody"></div></div>'}</section>`).join('');
+  Object.keys(PANELS).forEach(id => SCREENS[id] = panelEl(id).querySelector('.screen, .pbody'));
+  $('#chapters').innerHTML = SCENES.map((s, i) => `<button class="chip" data-act="chapter" data-i="${i}">${i + 1}. ${s.short}</button>`).join('');
+  setInterval(() => {
+    if (paused || !S || !S.hs.running) return;
+    S.hs.elapsed += 100;
+    if (S.hs.elapsed >= HEAD_MS) { S.hs.running = false; openToAll(); } else updateHs();
+  }, 100);
+  const m = location.hash.match(/^#ch(\d+)$/);
+  if (location.hash === '#play') startSandbox();
+  else startTour(m ? Math.min(SCENES.length, Math.max(1, +m[1])) - 1 : 0);
+})();
+
+</script>
+</body>
+</html>
