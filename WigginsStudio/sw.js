@@ -1,7 +1,7 @@
 /* Report Studio offline copy. The page is fetched fresh whenever there is a connection (so a new
    publish reaches everyone at once) and the cached copy is used only offline. The film is left to
    the network. VERSION is stamped by publish.py on every publish. */
-const CACHE = 'wig-studio-20261022185336';
+const CACHE = 'wig-studio-20261022192532';
 const SHELL = ['./', 'manifest.webmanifest', 'hero.jpg', 'icons/logo-light.svg', 'icons/favicon-64.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
