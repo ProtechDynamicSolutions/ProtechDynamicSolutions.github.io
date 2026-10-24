@@ -30,15 +30,22 @@ async function launch() {
     // GitHub's Linux runners have no user namespace sandbox for Chrome
     ...(process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
     'about:blank',
-  ], { stdio: 'ignore' });
-  // port 0: Chrome picks a free port and writes it to DevToolsActivePort
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  let errText = '', exited = null;
+  proc.stderr.on('data', d => { errText = (errText + d).slice(-2000); });
+  proc.on('exit', c => { exited = c; });
+  // port 0: Chrome picks a free port and writes it to DevToolsActivePort (slow on a cold cloud machine)
   const portFile = path.join(dir, 'DevToolsActivePort');
   let port;
-  for (let i = 0; i < 100 && !port; i++) {
+  for (let i = 0; i < 300 && !port && exited === null; i++) {
     await sleep(100);
     if (fs.existsSync(portFile)) port = +fs.readFileSync(portFile, 'utf8').split('\n')[0];
   }
-  if (!port) { proc.kill(); throw new Error('Chrome did not start'); }
+  if (!port) {
+    proc.kill();
+    const why = errText.split('\n').filter(l => l.trim()).slice(-3).join(' | ').slice(0, 400);
+    throw new Error(`Chrome did not start (${CHROME}${exited !== null ? ', exit ' + exited : ''})${why ? ': ' + why : ''}`);
+  }
   const list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
   const page = list.find(t => t.type === 'page');
   const ws = new WebSocket(page.webSocketDebuggerUrl);
