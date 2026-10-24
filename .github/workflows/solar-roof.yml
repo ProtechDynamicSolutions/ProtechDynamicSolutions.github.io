@@ -11,9 +11,6 @@ on:
       token:
         description: one-time job token
         required: true
-      callback:
-        description: relay URL
-        required: true
 
 permissions:
   contents: read
@@ -26,11 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Hide job details from the log
-        run: |
-          echo "::add-mask::${{ github.event.inputs.token }}"
-          echo "::add-mask::${{ github.event.inputs.callback }}"
-
+      # The relay URL comes from the SOLAR_RELAY_URL repository secret, never from the inputs:
+      # inputs can show in a public repo's run log, secrets are always masked.
+      # The job token alone is useless without that URL.
       - uses: actions/checkout@v4
         with:
           sparse-checkout: AllenEnergyAssessments/SolarRoof/worker
@@ -52,6 +47,6 @@ jobs:
         env:
           JOB: ${{ github.event.inputs.job }}
           TOKEN: ${{ github.event.inputs.token }}
-          CALLBACK: ${{ github.event.inputs.callback }}
+          CALLBACK: ${{ secrets.SOLAR_RELAY_URL }}
           PYTHON: python
         run: node AllenEnergyAssessments/SolarRoof/worker/worker.js

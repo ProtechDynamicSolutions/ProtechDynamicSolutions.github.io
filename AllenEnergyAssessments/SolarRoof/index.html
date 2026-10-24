@@ -268,10 +268,30 @@ if (BRAND.logo) $('#brand svg').outerHTML = `<img class="logo" src="${esc(BRAND.
 document.title = BRAND.product === BRAND.name ? BRAND.name : `${BRAND.product} | ${BRAND.name}`;
 
 // ---------- transport: the local server, or the cloud relay (Apps Script + GitHub Actions) ----------
-const RELAY = window.SRF_RELAY || null;
-const KEY_STORE = 'srf.key';
-const getKey = () => { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } };
+// The published config holds the relay link sealed with the access code (SRF_RELAY_LOCKED);
+// the code typed on a device opens it, and the opened link is kept on that device.
+const LOCKED = window.SRF_RELAY_LOCKED || null;
+const CLOUD = !!(window.SRF_RELAY || LOCKED);
+const KEY_STORE = 'srf.key', RELAY_STORE = 'srf.relay';
+const store = {
+  get: k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+const getKey = () => store.get(KEY_STORE);
+// a link opened on this device before, still good while the sealed link is unchanged
+function savedRelay() {
+  try { const s = JSON.parse(store.get(RELAY_STORE) || 'null'); return s && LOCKED && s.ct === LOCKED.ct ? s.url : null; } catch (e) { return null; }
+}
+let RELAY = window.SRF_RELAY || savedRelay();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function unlock(code) {
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b(LOCKED.salt), iterations: LOCKED.iter, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(LOCKED.iv) }, key, b(LOCKED.ct)));
+}
 
 async function relay(params) {
   const u = RELAY + '?' + new URLSearchParams({ ...params, key: getKey() });
@@ -300,7 +320,7 @@ async function waitFor(start, onLog) {
   throw new Error('The cloud lookup took too long. Try again.');
 }
 
-const api = RELAY ? {
+const api = CLOUD ? {
   find: async (code, fresh, onLog) => waitFor(await relay({ action: 'find', code, fresh: fresh ? 1 : 0 }), onLog),
   pick: async (code, at, onLog) => waitFor(await relay({ action: 'pick', code, ...at }), onLog),
   pv: (lat, lng, angle, aspect) => relay({ action: 'pv', lat, lng, angle, aspect }),
@@ -333,22 +353,32 @@ function askKey(why) {
   inp.focus();
   g.querySelector('form').onsubmit = async e => {
     e.preventDefault();
-    try { localStorage.setItem(KEY_STORE, inp.value.trim()); } catch (er) {}
+    const code = inp.value.trim();
+    msg.textContent = '';
     try {
-      const r = await (await fetch(RELAY + '?' + new URLSearchParams({ action: 'ping', key: inp.value.trim() }))).json();
+      let url = window.SRF_RELAY;
+      if (!url) {
+        // a wrong code cannot open the sealed link, so it never reaches the relay
+        try { url = await unlock(code); } catch (er) { throw new Error('Wrong access code'); }
+      }
+      const r = await (await fetch(url + '?' + new URLSearchParams({ action: 'ping', key: code }))).json();
       if (!r.ok) throw new Error(r.error);
+      store.set(KEY_STORE, code);
+      if (LOCKED && !window.SRF_RELAY) store.set(RELAY_STORE, JSON.stringify({ ct: LOCKED.ct, url }));
+      RELAY = url;
       g.remove();
     } catch (er) { msg.textContent = er.message || 'Could not check the code'; }
   };
 }
-if (RELAY && !getKey()) askKey();
+if (CLOUD && (!getKey() || !RELAY)) askKey();
 
 async function find(fresh) {
   const code = $('#code').value.trim();
   if (code.replace(/\s/g, '').length !== 7) { log('An Eircode has 7 characters, e.g. A65 F4E2', true); return; }
-  if (!RELAY && location.protocol === 'https:') { log('This page is not connected to its relay yet.', true); return; }
+  if (!CLOUD && location.protocol === 'https:') { log('This page is not connected to its relay yet.', true); return; }
+  if (CLOUD && !RELAY) { askKey(); return; }
   $('#go').disabled = true;
-  log(RELAY ? 'Sending to the cloud' : 'Starting', false, true);
+  log(CLOUD ? 'Sending to the cloud' : 'Starting', false, true);
   try { load(await api.find(code, fresh, m => log(m, false, true))); }
   catch (e) { log(e.message, true); }
   finally { $('#go').disabled = false; }

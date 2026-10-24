@@ -11,7 +11,8 @@ const here = p => { try { return require(path.join(__dirname, p)); } catch (e) {
 const { find } = here('pipeline');
 
 const { CALLBACK, JOB, TOKEN } = process.env;
-if (!CALLBACK || !JOB || !TOKEN) { console.error('CALLBACK, JOB and TOKEN are required'); process.exit(2); }
+if (!CALLBACK) { console.error('The SOLAR_RELAY_URL repository secret is not set'); process.exit(2); }
+if (!JOB || !TOKEN) { console.error('JOB and TOKEN are required'); process.exit(2); }
 
 async function post(body) {
   // text/plain keeps Apps Script happy; the redirect after the POST only fetches the reply
