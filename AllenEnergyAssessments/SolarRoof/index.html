@@ -146,6 +146,16 @@ body.locked > :not(.gate) { visibility: hidden; }
 .steps li.run .ic { border-color: rgba(255, 255, 255, .25); border-top-color: #4ade80; animation: spin .8s linear infinite; }
 .steps li.done .ic { border: 0; background: #22c55e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
 .steps li.wait .ic { border-color: #facc15; background: #facc15; }
+.steps .secs { font-weight: 500; color: #94a3b8; font-variant-numeric: tabular-nums; }
+/* phones: one slim line at the bottom with just the current step, so the house stays in view */
+@media (max-width: 600px) {
+  .steps { top: auto; bottom: 10px; left: 10px; right: 10px; padding: 8px 12px; }
+  .steps li { display: none; padding: 0; }
+  .steps li.run, .steps li.wait { display: flex; }
+  .steps li.run::after, .steps li.wait::after { content: attr(data-n) " of 5"; margin-left: auto; padding-left: 8px; font-weight: 500; color: #94a3b8; }
+  .steps ~ .taphint { display: none; }
+  .aiask { bottom: 58px; }
+}
 .pulse { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 0 rgba(37, 99, 235, .7); animation: pulse 1.4s ease-out infinite; }
 @keyframes pulse { to { box-shadow: 0 0 0 26px rgba(37, 99, 235, 0); } }
 .drawon { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawon .9s ease-out forwards; }
@@ -833,14 +843,23 @@ function loadLeaflet() {
 }
 
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-const OVERPASS = 'https://overpass-api.de/api/interpreter';
+// OpenStreetMap's free servers are sometimes slow or busy: ask two at once, first answer wins
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const T = { map: null, eircode: '', mode: 'tap', corners: [], layer: null, busy: false };
 const tapHint = t => { const h = $('#taphint'); if (h) h.textContent = t; };
 
-async function overpass(q) {
-  const r = await fetch(OVERPASS, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-  if (!r.ok) throw new Error('The map service is busy. Try again in a moment.');
-  return (await r.json()).elements;
+async function overpass(q, secs = 12) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), secs * 1000);
+  try {
+    return await Promise.any(OVERPASS.map(async url => {
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl.signal });
+      if (!r.ok) throw new Error('busy');
+      return (await r.json()).elements;
+    }));
+  } catch (e) {
+    throw new Error('The map service is slow right now.');
+  } finally { clearTimeout(timer); ctl.abort(); }
 }
 
 // some houses carry their Eircode on OpenStreetMap: then we know exactly where it is
@@ -870,7 +889,15 @@ function step(i, state, text) {
   const li = document.querySelectorAll('#steps li')[i];
   if (!li) return;
   li.className = state;
-  if (text) li.querySelector('span:last-child').textContent = text;
+  if (text) li.querySelector('span:nth-child(2)').textContent = text;
+  // a running step counts its seconds, so a slow server never looks frozen
+  clearInterval(li._t);
+  const secs = li.querySelector('.secs');
+  secs.textContent = '';
+  if (state === 'run') {
+    const t0 = Date.now();
+    li._t = setInterval(() => { secs.textContent = ` ${Math.round((Date.now() - t0) / 1000)} s`; }, 1000);
+  }
 }
 const flyTo = (at, z, secs) => new Promise(res => {
   const done = () => { clearTimeout(t); res(); };
@@ -916,7 +943,7 @@ function openMap(at, zoom, withSteps) {
   if (T.map) { T.map.remove(); T.map = null; }
   $('#view').innerHTML = `<div id="tmap"></div>
     <form class="tapsearch" id="tapsearch"><input placeholder="Search an address or townland" aria-label="Search an address"><button class="small primary">Go</button><button type="button" class="small" id="drawBtn" title="Tap the 4 roof corners yourself">Draw it</button></form>
-    ${withSteps ? `<ol class="steps" id="steps">${STEPS.map(s => `<li><span class="ic"></span><span>${s}</span></li>`).join('')}</ol>` : ''}
+    ${withSteps ? `<ol class="steps" id="steps">${STEPS.map((s, i) => `<li data-n="${i + 1}"><span class="ic"></span><span>${s}</span><span class="secs"></span></li>`).join('')}</ol>` : ''}
     <div class="taphint" id="taphint">${withSteps ? 'Working...' : 'Zoom in and tap the roof of the house'}</div>`;
   $('#view').scrollIntoView({ behavior: 'smooth', block: 'center' });
   T.mode = 'tap'; T.corners = [];
@@ -988,8 +1015,13 @@ async function analyseAt(lat, lng) {
   if (!$('#steps')) L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<span class="pulse"></span>', iconSize: [0, 0] }), interactive: false }).addTo(T.layer);
   let ring = null;
   try {
-    const els = await overpass(`[out:json][timeout:15];way["building"](around:35,${lat},${lng});out geom;`);
-    const rings = els.filter(e => e.geometry && e.geometry.length > 3).map(e => e.geometry.map(g => [g.lat, g.lon]));
+    // OpenStreetMap buildings from the vector tiles (fast); the Overpass servers only if the tiles fail
+    let rings;
+    try { rings = await tileRings(lat, lng); }
+    catch (e) {
+      const els = await overpass(`[out:json][timeout:15];way["building"](around:35,${lat},${lng});out geom;`);
+      rings = els.filter(e => e.geometry && e.geometry.length > 3).map(e => e.geometry.map(g => [g.lat, g.lon]));
+    }
     ring = rings.find(r => inRing([lat, lng], r)) || null;
     if (!ring) {
       const near = rings.map(r => [ringDist([lat, lng], r), r]).sort((a, b) => a[0] - b[0])[0];
@@ -1018,11 +1050,25 @@ async function analyseAt(lat, lng) {
     try {
       const ai = await aiRoof(lat, lng);
       if (ai) {
-        L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.12, className: 'drawon' }).addTo(T.layer);
-        step(2, 'done', `Roof found by AI (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
-        await sleep(900);
-        T.busy = false;
-        return finishRoof(ai.ring, 'ai', ai.wings);
+        const shape = L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.15, className: 'drawon' }).addTo(T.layer);
+        ai.wings.forEach(w => L.polygon(w.rect, { color: '#facc15', weight: 1.5, fill: false, dashArray: '4 4' }).addTo(T.layer));
+        T.map.fitBounds(shape.getBounds(), { maxZoom: 20, padding: [40, 40] });
+        step(2, 'wait', 'AI found a roof: check it');
+        tapHint('Is the green shape the roof?');
+        // a person checks the AI before anything is worked out from it
+        const box = document.createElement('div');
+        box.className = 'aiask';
+        box.innerHTML = `<b>Is the green shape the roof?</b><span>AI drew it from the photo.</span>
+          <div><button class="small primary" data-a="yes">Yes, carry on</button><button class="small" data-a="draw">Draw it myself</button></div>`;
+        $('#view').appendChild(box);
+        const ok = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a === 'yes')));
+        box.remove();
+        if (ok) {
+          step(2, 'done', `Roof found by AI (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
+          T.busy = false;
+          return finishRoof(ai.ring, 'ai', ai.wings);
+        }
+        T.forceDraw = true;
       }
     } catch (e) { console.warn('AI roof:', e); }
   }
@@ -1292,21 +1338,17 @@ function irelandPV(pv, lat, lng, angle, aspect) {
 }
 
 // ----- Gemini reads the roof when the house is not on OpenStreetMap -----
-// The key is sealed in config.js with the access code (SRF_AI_LOCKED) and opened in the browser.
+// Gemini is good at saying which pixels are roof (a segmentation mask) and poor at exact corner numbers
+// for a tilted house, so it only gives the mask; the tilt, sections and ridge are worked out here.
 // AI_PROMPT is also read by test/gemini-score.js: keep it between the markers.
 /* AI_PROMPT_START */
-const AI_PROMPT = `This is a top-down aerial photo, north at the top, about METRES metres across.
-A small red ring marks one house. Find the roof of the building under the red ring.
-Describe that roof as rectangular sections: a plain house is 1 section, an L or T shaped house is 2 or 3.
-Include attached extensions and garages that share the building. Leave out separate sheds, neighbours, driveways and trees.
-For each section give:
-- corners: its 4 corners in order around the rectangle, each [y, x] normalised to 0-1000 of the image
-- ridge_bearing: compass direction of the roof ridge line in degrees, 0 to 179 (0 = north-south, 90 = east-west)
-- type: "gable", "hip" or "flat"
-Reply with JSON only: {"sections":[{"corners":[[y,x],[y,x],[y,x],[y,x]],"ridge_bearing":0,"type":"gable"}],"found":true}
-If there is no building under the ring, reply {"sections":[],"found":false}.`;
+const AI_PROMPT = `Give the segmentation mask for the roof of the single building under the small red ring in this top-down aerial photo (north at the top, about METRES metres across).
+Include extensions attached to that building. Leave out separate sheds, neighbouring houses, driveways, gardens and trees.
+Output a JSON list of segmentation masks where each entry contains the 2D bounding box in the key "box_2d", the segmentation mask in key "mask", and the text label in the key "label".
+Use the label "roof", and add the key "type" with "gable", "hip" or "flat" for that roof.
+If there is no building under the red ring, output [].`;
 /* AI_PROMPT_END */
-const AI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+const AI_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite'];
 
 async function openSealed(obj, code) {
   const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -1368,35 +1410,28 @@ $('#aiBtn').onclick = () => aiKeyDialog();
 async function askGemini(key, jpegB64, prompt) {
   let last = null;
   for (const model of AI_MODELS) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: jpegB64 } }, { text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0 },
-        }),
-        signal: AbortSignal.timeout(45000),
-      });
-      const j = await r.json();
-      if (!r.ok) { last = new Error((j.error && j.error.message) || 'Gemini ' + r.status); continue; }
-      const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
-      return JSON.parse(text.replace(/^```(json)?|```$/g, '').trim());
-    } catch (e) { last = e; }
+    // no "thinking": Google advises it off for finding things in pictures, and it is much quicker
+    for (const think of [true, false]) {
+      try {
+        const generationConfig = { responseMimeType: 'application/json', temperature: 0.2 };
+        if (think) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: jpegB64 } }, { text: prompt }] }], generationConfig }),
+          signal: AbortSignal.timeout(30000),
+        });
+        const j = await r.json();
+        if (!r.ok) {
+          last = new Error((j.error && j.error.message) || 'Gemini ' + r.status);
+          if (think && /think/i.test(last.message)) continue;  // this model must think: ask again without the setting
+          break;
+        }
+        const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+        return JSON.parse(text.replace(/^```(json)?|```$/g, '').trim());
+      } catch (e) { last = e; break; }
+    }
   }
   throw last || new Error('Gemini did not answer');
-}
-
-// a rough quadrilateral from the model -> a true rectangle (same centre, averaged sides)
-function rectify(p) {
-  const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-  const c = p.reduce((s, q) => add(s, mul(q, 0.25)), [0, 0]);
-  const uu = unit(add(sub(p[1], p[0]), sub(p[2], p[3])));
-  let vv = [-uu[1], uu[0]];
-  if (dot(vv, add(sub(p[3], p[0]), sub(p[2], p[1]))) < 0) vv = mul(vv, -1);
-  const L = Math.abs(dot(sub(p[1], p[0]), uu) + dot(sub(p[2], p[3]), uu)) / 2;
-  const W = Math.abs(dot(sub(p[3], p[0]), vv) + dot(sub(p[2], p[1]), vv)) / 2;
-  const at = (s, t) => add(c, add(mul(uu, s * L / 2), mul(vv, t * W / 2)));
-  return [at(-1, -1), at(1, -1), at(1, 1), at(-1, 1)];
 }
 
 function hull(pts) {
@@ -1408,25 +1443,67 @@ function hull(pts) {
   return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 
-// sections from the model (normalised [y, x]) -> wings in image pixels with the ridge along a->b
-function sectionsToWings(sections, ox, oy, size) {
-  const out = [];
-  for (const s of sections || []) {
-    if (!Array.isArray(s.corners) || s.corners.length !== 4) continue;
-    let rect = rectify(s.corners.map(([y, x]) => [ox + x / 1000 * size, oy + y / 1000 * size]));
-    const [a, b, , d] = rect;
-    if (len(sub(b, a)) < 4 || len(sub(d, a)) < 4) continue;
-    // the ridge runs along a->b: pick the side closest to the bearing the model gave, else the long side
-    const along = bearing(sub(b, a)) % 180, rb = Number(s.ridge_bearing);
-    const off = x => Math.min(Math.abs(x - rb) % 180, 180 - Math.abs(x - rb) % 180);
-    const turn = isFinite(rb) && s.type !== 'flat' ? off(along) > off((along + 90) % 180) : len(sub(b, a)) < len(sub(d, a));
-    if (turn) rect = [rect[1], rect[2], rect[3], rect[0]];
-    out.push({ rect, type: ['gable', 'hip', 'flat'].includes(s.type) ? s.type : 'gable' });
+// the tilt of the smallest rectangle round the shape: houses are built square to it
+function minRectAngle(h) {
+  let best = [Infinity, 0];
+  for (let i = 0; i < h.length; i++) {
+    const v = sub(h[(i + 1) % h.length], h[i]);
+    if (len(v) < 1e-6) continue;
+    const a = ((Math.atan2(v[1], v[0]) * 180 / Math.PI) % 90 + 90) % 90;
+    const r = h.map(p => rotP(p, a, [0, 0]));
+    const xs = r.map(p => p[0]), ys = r.map(p => p[1]);
+    const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+    if (area < best[0]) best = [area, a];
+  }
+  return best[1];
+}
+
+// roof pixels -> up to four rectangular sections, square to the house
+function wingsFromPixels(pts, ang, m) {
+  const c = pts.reduce((s, p) => [s[0] + p[0] / pts.length, s[1] + p[1] / pts.length], [0, 0]);
+  const rp = pts.map(p => rotP(p, ang, c));
+  const cell = 0.25 / m;
+  const mn = [Math.min(...rp.map(p => p[0])), Math.min(...rp.map(p => p[1]))];
+  const W = Math.ceil((Math.max(...rp.map(p => p[0])) - mn[0]) / cell) + 2, H = Math.ceil((Math.max(...rp.map(p => p[1])) - mn[1]) / cell) + 2;
+  let grid = new Uint8Array(W * H);
+  // each pixel is ~0.18 m, a cell 0.25 m: mark the cells a pixel covers, then close the pinholes
+  const r = Math.max(1, Math.ceil(0.5 / cell));
+  for (const p of rp) {
+    const x = Math.floor((p[0] - mn[0]) / cell), y = Math.floor((p[1] - mn[1]) / cell);
+    for (let dy = 0; dy <= 1; dy++) for (let dx = 0; dx <= 1; dx++) if (x + dx < W && y + dy < H) grid[(y + dy) * W + x + dx] = 1;
+  }
+  const morph = (g, keep) => {  // keep=1: dilate, keep=0: erode (3x3)
+    const o = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      let any = 0, all = 1;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const v = (x + dx >= 0 && y + dy >= 0 && x + dx < W && y + dy < H) ? g[(y + dy) * W + x + dx] : 0;
+        any |= v; all &= v;
+      }
+      o[y * W + x] = keep ? any : all;
+    }
+    return o;
+  };
+  for (let i = 0; i < r; i++) grid = morph(grid, 1);
+  for (let i = 0; i < r; i++) grid = morph(grid, 0);
+  let total = 0; for (let i = 0; i < grid.length; i++) total += grid[i];
+  const out = [], minA = Math.max(0.10 * total, 14 / 0.0625);
+  for (let it = 0; it < 10 && out.length < 4; it++) {
+    const rr = maxRect(grid, W, H);
+    if (!rr) break;
+    const [x0, y0, x1, y1] = rr, area = (x1 - x0) * (y1 - y0);
+    const clear = () => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) grid[y * W + x] = 0; };
+    if (Math.min(x1 - x0, y1 - y0) * 0.25 < 3 && area >= minA) { clear(); continue; }
+    if (area < minA) break;
+    clear();
+    out.push([[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(p => unrotP([p[0] * cell + mn[0], p[1] * cell + mn[1]], ang, c)));
   }
   return out;
 }
 
-// returns { ring (lat/lng hull), wings (lat/lng rects + type) } or null
+const loadImg = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('bad mask')); im.src = src; });
+
+// returns { ring (lat/lng outline), wings (lat/lng rects + type) } or null
 async function aiRoof(lat, lng) {
   const key = await aiKey();
   if (!key) return null;
@@ -1436,16 +1513,137 @@ async function aiRoof(lat, lng) {
   const g = c2.getContext('2d');
   g.drawImage(cv, o, o, crop, crop, 0, 0, crop, crop);
   g.strokeStyle = '#ff2020'; g.lineWidth = 2.5; g.beginPath(); g.arc(crop / 2, crop / 2, 6, 0, Math.PI * 2); g.stroke();
-  const b64 = c2.toDataURL('image/jpeg', 0.9).split(',')[1];
-  const ans = await askGemini(key, b64, AI_PROMPT.replace('METRES', Math.round(crop * mpp)));
-  const wingsPx = sectionsToWings(ans.sections, o, o, crop);
-  if (!ans.found || !wingsPx.length) return null;
+  const ans = await askGemini(key, c2.toDataURL('image/jpeg', 0.9).split(',')[1], AI_PROMPT.replace('METRES', Math.round(crop * mpp)));
+  const list = Array.isArray(ans) ? ans : (ans.masks || ans.items || [ans]);
+  const m = list.find(x => x && Array.isArray(x.box_2d) && typeof x.mask === 'string');
+  if (!m) return null;
+  // the mask is a picture the size of its box: scale it into the box and keep the strong pixels
+  const [by0, bx0, by1, bx1] = m.box_2d.map(v => v / 1000 * crop);
+  const bw = Math.round(bx1 - bx0), bh = Math.round(by1 - by0);
+  if (bw < 8 || bh < 8) return null;
+  const im = await loadImg(m.mask.startsWith('data:') ? m.mask : 'data:image/png;base64,' + m.mask);
+  const mc = document.createElement('canvas'); mc.width = bw; mc.height = bh;
+  const mg = mc.getContext('2d'); mg.drawImage(im, 0, 0, bw, bh);
+  const d = mg.getImageData(0, 0, bw, bh).data, pts = [];
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+    const i = (y * bw + x) * 4;
+    if (Math.max(d[i], d[i + 1], d[i + 2]) * (d[i + 3] / 255) > 127) pts.push([o + bx0 + x + 0.5, o + by0 + y + 0.5]);
+  }
+  const area = pts.length * mpp * mpp;
+  if (area < 25 || area > 1500) return null;
+  // it must be the building under the pin, not a neighbour
+  const ctr = [cv.width / 2, cv.height / 2];
+  if (Math.min(...pts.map(p => len(sub(p, ctr)))) * mpp > 4) return null;
+  const h = hull(pts), ang = minRectAngle(h);
+  const G = grayOf(cv);
+  const type = ['gable', 'hip', 'flat'].includes(m.type) ? m.type : 'gable';
+  const wingsPx = wingsFromPixels(pts, ang, mpp).map(rect => {
+    let [a, b, cc, dd] = rect, e1 = len(sub(b, a)), e2 = len(sub(dd, a));
+    if (e1 < e2) { rect = [a, dd, cc, b]; [a, b, cc, dd] = rect; [e1, e2] = [e2, e1]; }
+    if (e1 / Math.max(e2, 1e-6) < 1.3) {  // near square: the photo's lit/shaded split picks the ridge
+      const alt = [b, cc, dd, a];
+      if (ridgeContrast(G, alt) > 1.5 * ridgeContrast(G, rect) && ridgeContrast(G, alt) > 10) rect = alt;
+    }
+    return rect;
+  });
+  if (!wingsPx.length) return null;
   const toLL = p => { const n = 256 * 2 ** z, X = origin[0] + p[0], Y = origin[1] + p[1];
     return [Math.atan(Math.sinh(Math.PI * (1 - 2 * Y / n))) * 180 / Math.PI, X / n * 360 - 180]; };
+  return { ring: h.map(toLL), wings: wingsPx.map(rect => ({ rect: rect.map(toLL), type })) };
+}
+
+// ----- building outlines from OpenFreeMap's vector tiles (OpenStreetMap data on a fast CDN) -----
+// The Overpass servers are often slow or refusing; a z14 tile answers in about 0.1 s.
+// A minimal Mapbox Vector Tile reader: only the "building" layer's polygons are needed.
+let TILE_URL = null;
+async function tileUrl() {
+  if (TILE_URL) return TILE_URL;
+  const j = await (await fetch('https://tiles.openfreemap.org/planet', { signal: AbortSignal.timeout(8000) })).json();
+  return TILE_URL = j.tiles[0];
+}
+
+function pbf(buf) {
+  let pos = 0;
+  const varint = () => { let r = 0, s = 0, b; do { b = buf[pos++]; r += (b & 0x7f) * 2 ** s; s += 7; } while (b & 0x80); return r; };
   return {
-    ring: hull(wingsPx.flatMap(w => w.rect)).map(toLL),
-    wings: wingsPx.map(w => ({ rect: w.rect.map(toLL), type: w.type })),
+    get end() { return pos >= buf.length; },
+    tag() { const t = varint(); return [t >> 3, t & 7]; },
+    varint,
+    bytes() { const n = varint(); const out = buf.subarray(pos, pos + n); pos += n; return out; },
+    // read a length before moving: "pos += varint()" would add it to the old pos
+    skip(wt) { if (wt === 0) varint(); else if (wt === 1) pos += 8; else if (wt === 2) { const n = varint(); pos += n; } else if (wt === 5) pos += 4; },
   };
+}
+
+// rings of every building polygon in one tile, in tile units (0..extent)
+function tileBuildings(buf) {
+  const out = [];
+  const t = pbf(buf);
+  while (!t.end) {
+    const [f, wt] = t.tag();
+    if (f !== 3 || wt !== 2) { t.skip(wt); continue; }
+    const L = pbf(t.bytes());
+    let name = '', extent = 4096;
+    const feats = [];
+    while (!L.end) {
+      const [lf, lwt] = L.tag();
+      if (lf === 1) name = new TextDecoder().decode(L.bytes());
+      else if (lf === 2) feats.push(L.bytes());
+      else if (lf === 5) extent = L.varint();
+      else L.skip(lwt);
+    }
+    if (name !== 'building') continue;
+    for (const fb of feats) {
+      const F = pbf(fb);
+      let type = 0, geom = null;
+      while (!F.end) {
+        const [ff, fwt] = F.tag();
+        if (ff === 3) type = F.varint();
+        else if (ff === 4) geom = F.bytes();
+        else F.skip(fwt);
+      }
+      if (type !== 3 || !geom) continue;
+      const G = pbf(geom), zz = n => (n >>> 1) ^ -(n & 1);
+      let x = 0, y = 0, ring = null;
+      while (!G.end) {
+        const c = G.varint(), id = c & 7, n = c >> 3;
+        if (id === 1 || id === 2) {
+          for (let i = 0; i < n; i++) {
+            x += zz(G.varint()); y += zz(G.varint());
+            if (id === 1) { ring = []; out.push({ ring, extent }); }
+            ring.push([x, y]);
+          }
+        } // 7 = close path: the ring is already complete
+      }
+    }
+  }
+  return out;
+}
+
+// building outlines (lat/lng rings) round a point, from the z14 tile(s) it touches
+async function tileRings(lat, lng) {
+  const z = 14, n = 2 ** z;
+  const [wx, wy] = wpx(lat, lng, z).map(v => v / 256);
+  const tx = Math.floor(wx), ty = Math.floor(wy);
+  // a house near a tile edge may sit in the next tile too
+  const near = 0.03, tiles = new Set([`${tx},${ty}`]);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    if ((dx < 0 && wx - tx < near) || (dx > 0 && tx + 1 - wx < near) || (dy < 0 && wy - ty < near) || (dy > 0 && ty + 1 - wy < near)) tiles.add(`${tx + dx},${ty + dy}`);
+  }
+  const url = await tileUrl();
+  const rings = [];
+  await Promise.all([...tiles].map(async k => {
+    const [x, y] = k.split(',').map(Number);
+    const r = await fetch(url.replace('{z}', z).replace('{x}', x).replace('{y}', y), { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return;
+    for (const b of tileBuildings(new Uint8Array(await r.arrayBuffer()))) {
+      rings.push(b.ring.map(([gx, gy]) => {
+        const X = (x + gx / b.extent) / n, Y = (y + gy / b.extent) / n;
+        return [Math.atan(Math.sinh(Math.PI * (1 - 2 * Y))) * 180 / Math.PI, X * 360 - 180];
+      }));
+    }
+  }));
+  return rings.filter(r => r.length > 3);
 }
 </script>
 </body>
