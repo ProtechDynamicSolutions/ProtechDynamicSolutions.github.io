@@ -1,0 +1,57 @@
+# Solar Roof Finder worker: looks one Eircode up on Eircode Finder in headless Chrome
+# and works out the roof. Started by the Apps Script relay (workflow_dispatch).
+name: solar-roof
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: job id
+        required: true
+      token:
+        description: one-time job token
+        required: true
+      callback:
+        description: relay URL
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: solar-roof-${{ github.event.inputs.job }}
+
+jobs:
+  roof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Hide job details from the log
+        run: |
+          echo "::add-mask::${{ github.event.inputs.token }}"
+          echo "::add-mask::${{ github.event.inputs.callback }}"
+
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: AllenEnergyAssessments/SolarRoof/worker
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: AllenEnergyAssessments/SolarRoof/worker/requirements.txt
+
+      - run: pip install -r AllenEnergyAssessments/SolarRoof/worker/requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Look up and analyse
+        env:
+          JOB: ${{ github.event.inputs.job }}
+          TOKEN: ${{ github.event.inputs.token }}
+          CALLBACK: ${{ github.event.inputs.callback }}
+          PYTHON: python
+        run: node AllenEnergyAssessments/SolarRoof/worker/worker.js

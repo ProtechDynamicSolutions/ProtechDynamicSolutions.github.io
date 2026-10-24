@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Roof Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8fafc; --card: #ffffff; --ink: #0f172a; --text: #1e293b; --muted: #64748b; --line: #e2e8f0;
+  --blue: #2563eb; --blue-d: #1d4ed8; --blue-l: #dbeafe; --navy: #1e3a8a;
+  --green: #16a34a; --green-l: #22c55e; --green-bg: #f0fdf4; --green-line: #bbf7d0;
+  --accent: var(--blue); --warn: #b45309; --warn-bg: #fffbeb;
+  --best: #16a34a; --good: #65a30d; --fair: #d97706; --poor: #94a3b8;
+  --panel: #0b1f4d; --panel-edge: #93c5fd; --ridge: #facc15;
+  --shadow: 0 10px 30px -12px rgba(15, 23, 42, .18), 0 2px 6px rgba(15, 23, 42, .05);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+input, select, button { font: inherit; }
+button { padding: 10px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; font-weight: 600; transition: background .15s, box-shadow .15s, transform .05s; }
+button:hover:not(:disabled) { background: #f1f5f9; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button.primary { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 8px 20px -8px rgba(37, 99, 235, .6); }
+button.primary:hover:not(:disabled) { background: var(--blue-d); }
+button:disabled { opacity: .55; cursor: default; }
+button.small { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+
+.topbar { background: #fff; border-bottom: 1px solid var(--line); }
+.topbar .in { max-width: 1280px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
+.brand svg, .brand img { width: 40px; height: 40px; flex: none; }
+.brand img.logo { width: 50px; height: 50px; filter: drop-shadow(0 0 12px rgba(126, 184, 79, .6)); }
+.brand b { display: block; font-size: 18px; line-height: 1.15; font-weight: 700; color: var(--navy); }
+.brand small { display: block; font-size: 11.5px; font-weight: 600; color: var(--green); letter-spacing: .01em; }
+.spacer { flex: 1; }
+
+.hero { background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 45%, #f0fdf4 100%); border-bottom: 1px solid var(--line); }
+.hero .in { max-width: 1280px; margin: 0 auto; padding: 28px 20px; }
+.herocard { background: rgba(255, 255, 255, .92); border-radius: 18px; border-left: 5px solid var(--green-l); box-shadow: var(--shadow); padding: 24px 26px; max-width: 760px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-line); border-radius: 99px; padding: 4px 12px; }
+.herocard h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; margin: 14px 0 8px; color: var(--ink); font-weight: 800; letter-spacing: -.02em; }
+.grad { background: linear-gradient(90deg, var(--blue) 0%, #0e7490 55%, var(--green) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.herocard p { color: #475569; margin: 0 0 18px; }
+form.find { display: flex; gap: 10px; flex-wrap: wrap; }
+#code { flex: 1 1 220px; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; font-size: 17px; color: var(--ink); min-width: 0; background: #fff; }
+#code:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-l); }
+#go { flex: 0 0 auto; padding: 12px 22px; font-size: 16px; }
+
+#log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
+#log .err { color: #b91c1c; font-weight: 600; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--blue-l); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.band { background: var(--navy); color: #fff; }
+.band .in { max-width: 1280px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 13.5px; font-weight: 500; }
+.band span { display: inline-flex; align-items: center; gap: 7px; }
+.band svg { width: 16px; height: 16px; color: #4ade80; }
+
+main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; padding: 22px 20px 48px; max-width: 1280px; margin: 0 auto; }
+main > * { min-width: 0; }
+@media (max-width: 1000px) { main { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+@media (max-width: 600px) { .hero .in { padding: 16px; } .herocard { padding: 18px 16px; } .topbar .in, .band .in { padding-left: 16px; padding-right: 16px; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+#facesCard { overflow-x: auto; }
+.card h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 12px; font-weight: 700; }
+.view { position: relative; aspect-ratio: 1; background: #1e293b; border-radius: 12px; overflow: hidden; }
+.view svg { width: 100%; height: 100%; display: block; }
+.view .empty { position: absolute; inset: 0; display: grid; place-items: center; color: #94a3b8; text-align: center; padding: 30px; }
+.viewbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.viewbar .hint { font-size: 12.5px; color: var(--muted); }
+.picking .view { outline: 3px solid var(--fair); cursor: crosshair; }
+.addr { font-size: 18px; font-weight: 700; color: var(--ink); }
+.sub { color: var(--muted); font-size: 13.5px; }
+.sub a { color: var(--blue); font-weight: 600; }
+.headline { margin-top: 14px; padding: 16px; border-radius: 14px; background: var(--green-bg); border: 1px solid var(--green-line); border-left: 5px solid var(--green-l); }
+.headline .big { font-size: 22px; font-weight: 800; color: var(--green); letter-spacing: -.01em; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+.kpis div { background: #fff; border: 1px solid var(--green-line); border-radius: 10px; padding: 9px 11px; }
+.kpis b { display: block; font-size: 18px; color: var(--ink); }
+.kpis span { font-size: 12px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 6px; }
+td { border-bottom: 1px solid var(--line); padding: 8px 6px; vertical-align: middle; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.off td { color: #94a3b8; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.rating { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: #fff; white-space: nowrap; }
+.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; border-radius: 10px; padding: 9px 11px; font-size: 13.5px; margin-top: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } .kpis b { font-size: 16px; } }
+label.f { display: flex; flex-direction: column; font-size: 12.5px; color: var(--muted); gap: 4px; font-weight: 500; }
+label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; color: var(--ink); background: #fff; }
+.wing { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.wing:last-child { border-bottom: 0; }
+.wing b { min-width: 74px; color: var(--ink); }
+.seg { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: 13px; box-shadow: none; }
+.seg button.on { background: var(--blue); color: #fff; }
+.stack { display: grid; gap: 20px; align-content: start; }
+.chart svg { width: 100%; height: auto; display: block; }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.thumbs figure { margin: 0; }
+.thumbs img { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; aspect-ratio: 4/3; object-fit: cover; object-position: top; }
+.thumbs figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.notes { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; padding-left: 18px; }
+.gate { position: fixed; inset: 0; background: rgba(15, 23, 42, .55); display: grid; place-items: center; z-index: 10; padding: 16px; }
+.gate .card { max-width: 380px; width: 100%; box-shadow: var(--shadow); border-left: 5px solid var(--green-l); }
+.gate input { width: 100%; padding: 11px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; margin: 10px 0; font-size: 16px; }
+.printonly { display: none; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff; font-size: 12px; }
+  .topbar, .hero, .band, .viewbar, .noprint, .settings, .gate { display: none !important; }
+  .printonly { display: block; }
+  main { display: grid; grid-template-columns: 92mm 1fr; gap: 4mm 7mm; padding: 0; max-width: none; }
+  .stack { display: contents; }
+  #facesCard, #chartCard { grid-column: 1 / -1; overflow: visible; }
+  .card { border: 0; padding: 0; box-shadow: none; break-inside: avoid; }
+  .headline { margin-top: 8px; padding: 10px; }
+  .headline .big { font-size: 18px; }
+  .kpis b { font-size: 15px; }
+  td, th { padding: 4px 6px; }
+  .chart svg { max-height: 52mm; }
+  .thumbs { display: none; }
+}
+.short { display: none; }
+@media (max-width: 600px) { .short { display: inline; } .long { display: none; } }
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="topbar"><div class="in">
+  <a class="brand" id="brand" href="#">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#16a34a"/></linearGradient></defs>
+      <path d="M5 19 L20 7 L35 19" fill="none" stroke="url(#bg1)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 17 V33 H30 V17" fill="none" stroke="#1e3a8a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M14 30 L19 22 H27 L22 30 Z" fill="#2563eb"/><path d="M19.5 26 H24.5" stroke="#fff" stroke-width="1"/><path d="M21.5 22.5 L18.8 29.5" stroke="#fff" stroke-width="1"/></svg>
+    <span><b id="brandName">Solar Roof Check</b><small id="brandTag">Instant solar assessment from an Eircode</small></span>
+  </a>
+  <div class="spacer"></div>
+  <button id="printBtn" class="small" disabled>Print report</button>
+</div></div>
+
+<div class="hero"><div class="in">
+  <div class="herocard">
+    <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.3 8 11 4.5-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg> Using EU PVGIS sunshine data</span>
+    <h1>Find the best roof for <span class="grad">solar panels</span></h1>
+    <p>Enter an Eircode. We trace the house from the national map, check which way every roof face points and work out what panels there would make in a year.</p>
+    <form class="find" id="findForm">
+      <input id="code" placeholder="Eircode, e.g. A65 F4E2" autocomplete="off" spellcheck="false" maxlength="9" aria-label="Eircode">
+      <button class="primary" id="go">Check my roof</button>
+    </form>
+    <div id="log"></div>
+  </div>
+</div></div>
+
+<div class="band"><div class="in">
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Traced from the Eircode Finder map</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Every roof face rated</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>One page report to print</span>
+</div></div>
+
+<main>
+  <section class="card">
+    <div class="printonly" id="printHead"></div>
+    <div class="view" id="view">
+      <div class="empty" id="empty">Type an Eircode and press Find roof.<br>The house is looked up on Eircode Finder, traced from its map, and laid over the aerial photo.</div>
+    </div>
+    <div class="viewbar">
+      <button class="small" id="pickBtn" disabled>Wrong building?</button>
+      <button class="small" id="refreshBtn" disabled>Look up again</button>
+      <span class="hint" id="hint">Click a roof face to include or leave it out.</span>
+    </div>
+    <div class="thumbs noprint" id="thumbs"></div>
+  </section>
+  <div class="stack">
+    <section class="card" id="summary" hidden></section>
+    <section class="card" id="facesCard" hidden>
+      <h2>Roof faces</h2>
+      <table id="faces"></table>
+    </section>
+    <section class="card chart" id="chartCard" hidden>
+      <h2>Monthly generation, chosen faces</h2>
+      <div id="chart"></div>
+      <p class="printonly sub" id="printNotes" style="margin-top:10px"></p>
+    </section>
+    <section class="card settings" id="settingsCard" hidden>
+      <h2>Roof and panels</h2>
+      <div id="wings"></div>
+      <div class="grid2" style="margin-top:12px">
+        <label class="f">Roof pitch (degrees)<input id="pitch" type="number" min="5" max="60" step="1" value="35"></label>
+        <label class="f">Panel rating (W)<input id="watts" type="number" min="200" max="700" step="5" value="440"></label>
+        <label class="f">Panel size (mm)<select id="psize">
+          <option value="1722x1134" selected>1722 x 1134 (400-450 W)</option>
+          <option value="1762x1134">1762 x 1134 (430-460 W)</option>
+          <option value="1909x1134">1909 x 1134 (480-500 W)</option>
+          <option value="1755x1038">1755 x 1038 (360-380 W)</option>
+        </select></label>
+        <label class="f">Clearance to edges (m)<input id="edge" type="number" min="0" max="1.5" step="0.05" value="0.4"></label>
+        <label class="f">System losses (%)<input id="loss" type="number" min="5" max="30" step="1" value="14"></label>
+        <label class="f">System size cap (kWp, 0 = fill the roof)<input id="cap" type="number" min="0" max="50" step="0.1" value="6"></label>
+        <label class="f">Faces used by default<select id="minRating">
+          <option value="0.9">Excellent only</option>
+          <option value="0.8" selected>Good and better</option>
+          <option value="0.7">Fair and better</option>
+          <option value="0">All</option>
+        </select></label>
+      </div>
+      <ul class="notes">
+        <li>The cap fills the best faces first. 6 kWp is the usual single-phase micro-generation size; larger systems need ESB Networks approval first.</li>
+        <li>Pitch is not visible from above. 35 degrees is typical for an Irish one-off house; check on site.</li>
+        <li>Yields are from PVGIS (EU Joint Research Centre) for this exact spot, before shading from trees, chimneys or dormers.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const S = { data: null, wings: [], use: {}, pv: {}, picking: false };
+const COMPASS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const NAMES = { N: 'North', NNE: 'North-north-east', NE: 'North-east', ENE: 'East-north-east', E: 'East', ESE: 'East-south-east', SE: 'South-east', SSE: 'South-south-east', S: 'South', SSW: 'South-south-west', SW: 'South-west', WSW: 'West-south-west', W: 'West', WNW: 'West-north-west', NW: 'North-west', NNW: 'North-north-west' };
+const compass = d => COMPASS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+const fmt = (n, d = 0) => Number(n).toLocaleString('en-IE', { minimumFractionDigits: d, maximumFractionDigits: d });
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const mul = (a, k) => [a[0] * k, a[1] * k];
+const len = a => Math.hypot(a[0], a[1]);
+const unit = a => mul(a, 1 / (len(a) || 1));
+const bearing = v => ((Math.atan2(v[0], -v[1]) * 180 / Math.PI) + 360) % 360;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- Eircode box ----------
+$('#code').addEventListener('input', e => {
+  const c = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+  e.target.value = c.length > 3 ? c.slice(0, 3) + ' ' + c.slice(3) : c;
+});
+$('#findForm').addEventListener('submit', e => { e.preventDefault(); find(false); });
+$('#refreshBtn').onclick = () => find(true);
+$('#printBtn').onclick = () => window.print();
+$('#pickBtn').onclick = () => {
+  S.picking = !S.picking;
+  document.body.classList.toggle('picking', S.picking);
+  $('#pickBtn').textContent = S.picking ? 'Cancel' : 'Wrong building?';
+  $('#hint').textContent = S.picking ? 'Click the right roof on the photo.' : 'Click a roof face to include or leave it out.';
+};
+['pitch', 'watts', 'psize', 'edge', 'loss'].forEach(id => $('#' + id).addEventListener('change', () => { S.use = {}; refresh(); }));
+$('#cap').addEventListener('change', () => { saveSettings(); render(); });
+$('#minRating').addEventListener('change', () => { S.use = {}; render(); });
+try { const saved = JSON.parse(localStorage.getItem('srf.settings') || '{}'); for (const k in saved) if ($('#' + k)) $('#' + k).value = saved[k]; } catch (e) {}
+function saveSettings() {
+  try { localStorage.setItem('srf.settings', JSON.stringify(Object.fromEntries(['pitch', 'watts', 'psize', 'edge', 'loss', 'cap', 'minRating'].map(k => [k, $('#' + k).value])))); } catch (e) {}
+}
+
+function log(msg, err, busy) {
+  $('#log').innerHTML = `${busy ? '<span class="spin"></span>' : ''}<span class="${err ? 'err' : ''}">${esc(msg)}</span>`;
+}
+
+// ---------- brand (one place: name, tagline, logo) ----------
+const BRAND = Object.assign({ product: 'Solar Roof Check', name: 'Solar Roof Check', tagline: 'Instant solar assessment from an Eircode', logo: null, url: '#' }, window.SRF_BRAND || {});
+$('#brandName').textContent = BRAND.name;
+$('#brandTag').textContent = BRAND.tagline;
+$('#brand').href = BRAND.url;
+if (BRAND.logo) $('#brand svg').outerHTML = `<img class="logo" src="${esc(BRAND.logo)}" alt="${esc(BRAND.name)} logo">`;
+document.title = BRAND.product === BRAND.name ? BRAND.name : `${BRAND.product} | ${BRAND.name}`;
+
+// ---------- transport: the local server, or the cloud relay (Apps Script + GitHub Actions) ----------
+const RELAY = window.SRF_RELAY || null;
+const KEY_STORE = 'srf.key';
+const getKey = () => { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function relay(params) {
+  const u = RELAY + '?' + new URLSearchParams({ ...params, key: getKey() });
+  const r = await fetch(u);
+  const j = await r.json();
+  if (!j.ok) {
+    if (/access code/i.test(j.error || '')) { askKey(j.error); }
+    throw new Error(j.error || 'The relay did not answer');
+  }
+  return j;
+}
+
+// cloud jobs take about a minute: poll the relay and show what the worker says
+async function waitFor(start, onLog) {
+  if (start.status === 'done') return start.result;
+  const t0 = Date.now();
+  let last = '';
+  while (Date.now() - t0 < 7 * 60 * 1000) {
+    await sleep(3500);
+    const s = await relay({ action: 'status', job: start.job });
+    last = (s.logs && s.logs[s.logs.length - 1]) || last;
+    onLog(`${last} (${Math.round((Date.now() - t0) / 1000)} s, usually about a minute)`);
+    if (s.state === 'done') return s.result;
+    if (s.state === 'fail') throw new Error(s.error || 'The cloud lookup failed');
+  }
+  throw new Error('The cloud lookup took too long. Try again.');
+}
+
+const api = RELAY ? {
+  find: async (code, fresh, onLog) => waitFor(await relay({ action: 'find', code, fresh: fresh ? 1 : 0 }), onLog),
+  pick: async (code, at, onLog) => waitFor(await relay({ action: 'pick', code, ...at }), onLog),
+  pv: (lat, lng, angle, aspect) => relay({ action: 'pv', lat, lng, angle, aspect }),
+} : {
+  find: (code, fresh, onLog) => new Promise((res, rej) => {
+    const es = new EventSource(`/api/find?code=${encodeURIComponent(code)}${fresh ? '&fresh=1' : ''}`);
+    es.addEventListener('log', e => onLog(JSON.parse(e.data)));
+    es.addEventListener('result', e => { es.close(); res(JSON.parse(e.data)); });
+    es.addEventListener('fail', e => { es.close(); rej(new Error(JSON.parse(e.data))); });
+    es.onerror = () => { es.close(); rej(new Error('Lost contact with the local server. Is START.bat still running?')); };
+  }),
+  pick: async (code, at) => {
+    const d = await (await fetch(`/api/pick?${new URLSearchParams({ code, ...at })}`)).json();
+    if (d.error) throw new Error(d.error);
+    return d;
+  },
+  pv: (lat, lng, angle, aspect) => fetch(`/api/pv?lat=${lat}&lng=${lng}&angle=${angle}&aspect=${aspect}`).then(r => r.json()),
+};
+
+// the relay's access code: asked once per device, checked before it is kept
+function askKey(why) {
+  if ($('.gate')) return;
+  const g = document.createElement('div');
+  g.className = 'gate';
+  g.innerHTML = `<form class="card"><h2>Access code</h2><div class="sub">${esc(why && !/wrong/i.test(why) ? why : 'Enter the access code you were given. It is kept on this device.')}</div>
+    <input type="password" autocomplete="current-password" placeholder="Access code"><div class="sub err" style="color:#b91c1c;min-height:18px"></div>
+    <button class="primary" style="width:100%">Continue</button></form>`;
+  document.body.appendChild(g);
+  const inp = g.querySelector('input'), msg = g.querySelector('.err');
+  inp.focus();
+  g.querySelector('form').onsubmit = async e => {
+    e.preventDefault();
+    try { localStorage.setItem(KEY_STORE, inp.value.trim()); } catch (er) {}
+    try {
+      const r = await (await fetch(RELAY + '?' + new URLSearchParams({ action: 'ping', key: inp.value.trim() }))).json();
+      if (!r.ok) throw new Error(r.error);
+      g.remove();
+    } catch (er) { msg.textContent = er.message || 'Could not check the code'; }
+  };
+}
+if (RELAY && !getKey()) askKey();
+
+async function find(fresh) {
+  const code = $('#code').value.trim();
+  if (code.replace(/\s/g, '').length !== 7) { log('An Eircode has 7 characters, e.g. A65 F4E2', true); return; }
+  if (!RELAY && location.protocol === 'https:') { log('This page is not connected to its relay yet.', true); return; }
+  $('#go').disabled = true;
+  log(RELAY ? 'Sending to the cloud' : 'Starting', false, true);
+  try { load(await api.find(code, fresh, m => log(m, false, true))); }
+  catch (e) { log(e.message, true); }
+  finally { $('#go').disabled = false; }
+}
+
+// images arrive as URLs from the local server and as base64 from the relay
+// (base64 JPEG starts "/9j/", so only the local server's /runs/ paths count as URLs)
+function imgSrc(v, type) { return !v ? '' : /^(\/runs\/|data:|https?:)/.test(v) ? v : `data:${type};base64,${v}`; }
+
+function load(d) {
+  d.images = d.images || {};
+  S.data = d; S.use = {}; S.pv = {};
+  const r = d.roof;
+  if (!r.ok) { log(r.error || 'Could not read the roof', true); return; }
+  // ridges sit on the centre line of nearly every pitched roof; the photo only chose its direction
+  S.wings = r.wings.map(w => ({ rect: w.rect, off: 0.5, type: 'gable' }));
+  log(`${d.finder.address}`);
+  ['pickBtn', 'refreshBtn', 'printBtn'].forEach(id => $('#' + id).disabled = false);
+  refresh();
+}
+
+// ---------- geometry: faces from wings ----------
+function settings() {
+  const [ph, pw] = $('#psize').value.split('x').map(v => +v / 1000);
+  return { pitch: +$('#pitch').value || 35, watts: +$('#watts').value || 440, ph, pw, edge: +$('#edge').value, loss: +$('#loss').value || 14, gap: 0.02 };
+}
+
+function facesOf() {
+  const m = S.data.roof.mpp, out = [];
+  S.wings.forEach((w, wi) => {
+    const [a, b, c, d] = w.rect;
+    const along = sub(b, a), across = sub(d, a);
+    const L = len(along) * m, Wd = len(across) * m;
+    if (w.type === 'flat') {
+      out.push({ id: `${wi}F`, wing: wi, flat: true, poly: [a, b, c, d], az: 180, L, D: Wd, e0: a, e1: b, inward: unit(across) });
+      return;
+    }
+    const r0 = add(a, mul(across, w.off)), r1 = add(b, mul(across, w.off));
+    const hip = w.type === 'hip';
+    // hip: the ridge stops short by half the width at each end
+    const inset = hip ? mul(unit(along), Math.min(len(along) / 2 - 1, len(across) / 2)) : [0, 0];
+    const q0 = add(r0, inset), q1 = sub(r1, inset);
+    out.push({ id: `${wi}A`, wing: wi, poly: [a, b, q1, q0], az: bearing(mul(across, -1)), L, D: w.off * Wd, hip, e0: a, e1: b, inward: unit(across) });
+    out.push({ id: `${wi}B`, wing: wi, poly: [d, c, q1, q0], az: bearing(across), L, D: (1 - w.off) * Wd, hip, e0: d, e1: c, inward: mul(unit(across), -1) });
+    if (hip) {
+      out.push({ id: `${wi}C`, wing: wi, poly: [a, d, q0], az: bearing(mul(along, -1)), L: Wd, D: len(inset) * m, hip, e0: a, e1: d, inward: unit(along) });
+      out.push({ id: `${wi}D`, wing: wi, poly: [b, c, q1], az: bearing(along), L: Wd, D: len(inset) * m, hip, e0: b, e1: c, inward: mul(unit(along), -1) });
+    }
+  });
+  return out;
+}
+
+// panels on one face: rows up the slope, hips narrow each row at both ends
+function layout(f, s) {
+  if (f.flat) {
+    // flat roof: south-facing frames at 15 degrees, rows spaced to avoid self-shading
+    const tilt = 15, depth = s.ph * Math.cos(tilt * Math.PI / 180), pitchRow = depth + s.ph * Math.sin(tilt * Math.PI / 180) * 2.5;
+    const rows = Math.max(0, Math.floor((f.D - 2 * s.edge - depth) / pitchRow) + 1);
+    const cols = Math.max(0, Math.floor((f.L - 2 * s.edge + s.gap) / (s.pw + s.gap)));
+    return { n: rows * cols, rects: [], tilt, flatNote: true };
+  }
+  const cos = Math.cos(s.pitch * Math.PI / 180);
+  const slope = f.D / cos;
+  let best = { n: 0, rects: [] };
+  for (const [pw, ph] of [[s.pw, s.ph], [s.ph, s.pw]]) {
+    const rects = [];
+    for (let k = 0; ; k++) {
+      const y0 = s.edge + k * (ph + s.gap), y1 = y0 + ph;
+      if (y1 > slope - s.edge + 1e-9) break;
+      const vTop = y1 * cos;
+      const avail = f.L - (f.hip ? 2 * vTop : 0) - 2 * s.edge;
+      const cols = Math.floor((avail + s.gap) / (pw + s.gap));
+      if (cols <= 0) continue;
+      const used = cols * pw + (cols - 1) * s.gap;
+      const u0 = (f.L - used) / 2;
+      for (let i = 0; i < cols; i++) rects.push([u0 + i * (pw + s.gap), y0, pw, ph]);
+    }
+    if (rects.length > best.n) best = { n: rects.length, rects };
+  }
+  return best;
+}
+
+// n panels as a tidy block: as few rows as will hold them, spread evenly, each row centred
+function pickPanels(rects, n) {
+  if (n >= rects.length) return rects;
+  const rows = [];
+  for (const r of rects) {
+    const last = rows[rows.length - 1];
+    if (last && Math.abs(last[0][1] - r[1]) < 1e-6) last.push(r); else rows.push([r]);
+  }
+  let k = 0, cap = 0;
+  while (cap < n && k < rows.length) cap += rows[k++].length;
+  const out = [];
+  let left = n;
+  for (let i = 0; i < k; i++) {
+    const take = Math.min(rows[i].length, Math.ceil(left / (k - i)));
+    const skip = Math.floor((rows[i].length - take) / 2);
+    out.push(...rows[i].slice(skip, skip + take));
+    left -= take;
+  }
+  return out;
+}
+
+// face coordinates (metres along eave, metres up the slope) to image pixels
+function toPx(f, u, y, s) {
+  const m = S.data.roof.mpp, cos = Math.cos(s.pitch * Math.PI / 180);
+  const U = unit(sub(f.e1, f.e0));
+  return add(f.e0, add(mul(U, u / m), mul(f.inward, y * cos / m)));
+}
+
+// ---------- yield ----------
+async function pvFor(f, s) {
+  const { lat, lng } = S.data.finder;
+  const angle = f.flat ? 15 : s.pitch;
+  const aspect = f.flat ? 0 : ((f.az - 180 + 540) % 360) - 180;
+  const key = `${Math.round(angle)},${Math.round(aspect)}`;
+  if (!S.pv[key]) S.pv[key] = api.pv(lat, lng, angle, aspect).catch(e => { delete S.pv[key]; throw e; });
+  return S.pv[key];
+}
+
+async function refresh() {
+  saveSettings();
+  const s = settings();
+  const faces = facesOf();
+  log('Getting sunshine figures from PVGIS');
+  try {
+    const best = await pvFor({ az: 180, flat: false }, { ...s, pitch: 35 });
+    S.bestY = best.E_y;
+    await Promise.all(faces.map(async f => { f.pv = await pvFor(f, s); }));
+    log(S.data.finder.address);
+  } catch (e) { log('PVGIS did not answer: ' + e.message, true); }
+  S.faces = faces;
+  render();
+}
+
+function ratingOf(ratio) {
+  if (ratio >= 0.9) return ['Excellent', 'var(--best)'];
+  if (ratio >= 0.8) return ['Good', 'var(--good)'];
+  if (ratio >= 0.7) return ['Fair', 'var(--fair)'];
+  return ['Poor', 'var(--poor)'];
+}
+
+function render() {
+  if (!S.faces) return;
+  const s = settings(), r = S.data.roof, min = +$('#minRating').value;
+  const lossAdj = (100 - s.loss) / 86; // PVGIS figures are at 14% loss
+  for (const f of S.faces) {
+    f.lay = layout(f, s);
+    f.spec = f.pv ? f.pv.E_y * lossAdj : 0;
+    f.ratio = f.pv && S.bestY ? f.pv.E_y / S.bestY : 0;
+    if (S.use[f.id] === undefined) S.use[f.id] = f.ratio >= min && f.lay.n > 0;
+    f.on = S.use[f.id];
+  }
+  // fill the best chosen faces first, up to the system size cap
+  const cap = +$('#cap').value || 0;
+  let left = cap ? Math.floor(cap * 1000 / s.watts + 1e-9) : Infinity;
+  for (const f of [...S.faces].sort((a, b) => b.spec - a.spec)) {
+    f.used = f.on ? Math.min(f.lay.n, left) : 0;
+    left -= f.used;
+    f.kwp = f.used * s.watts / 1000;
+    f.kwh = f.kwp * f.spec;
+  }
+  drawView(s);
+  drawSummary(s);
+  drawTable();
+  drawChart(s, lossAdj);
+  drawWings();
+}
+
+function drawView(s) {
+  const r = S.data.roof, run = S.data.run;
+  const pts = r.outline;
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const pad = 9 / r.mpp;
+  let x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad, y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad;
+  const side = Math.max(x1 - x0, y1 - y0, 40 / r.mpp);
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  const vb = [cx - side / 2, cy - side / 2, side, side];
+  const k = side / 600; // stroke scale
+  const stamp = S.data.stamp;
+  let g = `<image href="${imgSrc(S.data.images.aerial, 'image/jpeg')}" x="0" y="0" width="${r.size}" height="${r.size}"/>`;
+  g += `<polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="${2 * k}" stroke-dasharray="${5 * k} ${4 * k}" opacity=".85"/>`;
+  for (const f of S.faces) {
+    const col = f.on ? ratingOf(f.ratio)[1] : 'rgba(30,30,30,.35)';
+    g += `<polygon class="face" data-id="${f.id}" points="${f.poly.map(p => p.join(',')).join(' ')}" fill="${col}" fill-opacity="${f.on ? 0.28 : 0.35}" stroke="${f.on ? '#fff' : 'rgba(255,255,255,.4)'}" stroke-width="${1.2 * k}" style="cursor:pointer"/>`;
+    if (f.on) for (const [u, y, w, h] of pickPanels(f.lay.rects, f.used)) {
+      const q = [toPx(f, u, y, s), toPx(f, u + w, y, s), toPx(f, u + w, y + h, s), toPx(f, u, y + h, s)];
+      g += `<polygon points="${q.map(p => p.join(',')).join(' ')}" fill="var(--panel)" fill-opacity=".88" stroke="var(--panel-edge)" stroke-width="${0.8 * k}" pointer-events="none"/>`;
+    }
+  }
+  S.wings.forEach((w, i) => {
+    if (w.type === 'flat') return;
+    const f = S.faces.find(f => f.id === `${i}A`);
+    g += `<line x1="${f.poly[3][0]}" y1="${f.poly[3][1]}" x2="${f.poly[2][0]}" y2="${f.poly[2][1]}" stroke="var(--ridge)" stroke-width="${2.2 * k}" pointer-events="none"/>`;
+  });
+  for (const f of S.faces) {
+    const c = f.poly.reduce((a, p) => add(a, mul(p, 1 / f.poly.length)), [0, 0]);
+    const lbl = f.flat ? 'Flat' : compass(f.az);
+    const arrow = f.flat ? '' : (() => { const v = mul(f.inward, -9 * k); return `<line x1="${c[0]}" y1="${c[1] + 8 * k}" x2="${c[0] + v[0]}" y2="${c[1] + 8 * k + v[1]}" stroke="#fff" stroke-width="${1.6 * k}" marker-end="url(#ah)"/>`; })();
+    g += `<g pointer-events="none"><text x="${c[0]}" y="${c[1]}" text-anchor="middle" font-size="${14 * k}" font-weight="700" fill="#fff" stroke="rgba(0,0,0,.6)" stroke-width="${3 * k}" paint-order="stroke">${lbl}</text>${arrow}</g>`;
+  }
+  // north arrow
+  const na = [vb[0] + vb[2] - 30 * k, vb[1] + 34 * k];
+  g += `<g transform="translate(${na[0]},${na[1]}) scale(${k})" pointer-events="none"><circle r="18" fill="rgba(0,0,0,.45)"/><path d="M0,-13 L6,7 L0,3 L-6,7 Z" fill="#fff"/><text y="-21" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">N</text></g>`;
+  // 10 m scale bar
+  const sb = 10 / r.mpp, sx = vb[0] + 16 * k, sy = vb[1] + vb[3] - 18 * k;
+  g += `<g pointer-events="none"><rect x="${sx - 6 * k}" y="${sy - 18 * k}" width="${sb + 12 * k}" height="${26 * k}" rx="${4 * k}" fill="rgba(0,0,0,.45)"/><line x1="${sx}" y1="${sy}" x2="${sx + sb}" y2="${sy}" stroke="#fff" stroke-width="${2 * k}"/><text x="${sx + sb / 2}" y="${sy - 6 * k}" text-anchor="middle" font-size="${11 * k}" fill="#fff">10 m</text></g>`;
+  $('#view').innerHTML = `<svg viewBox="${vb.join(' ')}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#fff"/></marker></defs>${g}</svg>`;
+  const svg = $('#view svg');
+  svg.addEventListener('click', ev => {
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    if (S.picking) return pick(p.x, p.y);
+    const id = ev.target.dataset && ev.target.dataset.id;
+    if (id) { S.use[id] = !S.use[id]; render(); }
+  });
+  const f = S.data.finder;
+  const im = S.data.images;
+  $('#thumbs').innerHTML = (im.cut ? `<figure><img src="${imgSrc(im.cut, 'image/jpeg')}" alt="Eircode Finder map with the traced outline"><figcaption>Outline traced from the Eircode Finder map</figcaption></figure>` : '') +
+    (im.result ? `<figure><img src="${imgSrc(im.result, 'image/jpeg')}" alt="Eircode Finder result"><figcaption>Eircode Finder result</figcaption></figure>` : '');
+}
+
+function pick(px, py) {
+  const r = S.data.roof;
+  const n = 256 * 2 ** r.zoom;
+  const ll = (x, y) => [Math.atan(Math.sinh(Math.PI * (1 - 2 * (r.origin[1] + y) / n))) * 180 / Math.PI, (r.origin[0] + x) / n * 360 - 180];
+  // the photo sits shift_m away from the finder map: undo that to find the map building
+  const sh = r.shift_m || [0, 0];
+  const [slat, slng] = ll(px, py), [lat, lng] = ll(px - sh[0] / r.mpp, py - sh[1] / r.mpp);
+  $('#pickBtn').click();
+  log('Tracing the building you clicked', false, true);
+  api.pick(S.data.finder.eircode, { lat, lng, slat, slng }, m => log(m, false, true))
+    .then(load).catch(e => log(e.message, true));
+}
+
+function totals() {
+  const on = S.faces.filter(f => f.on && f.used);
+  return { on, n: on.reduce((a, f) => a + f.used, 0), kwp: on.reduce((a, f) => a + f.kwp, 0), kwh: on.reduce((a, f) => a + f.kwh, 0) };
+}
+
+function drawSummary(s) {
+  const f = S.data.finder, r = S.data.roof, t = totals();
+  const best = [...S.faces].filter(x => x.lay.n).sort((a, b) => b.spec - a.spec)[0];
+  const warn = [];
+  if (r.footprint && r.footprint.warn) warn.push(r.footprint.warn);
+  if (r.warn) warn.push(r.warn);
+  if (r.fallback) warn.push('Not on the finder map, so the outline was cut from the photo. Check it.');
+  if (r.footprint && r.footprint.shared_with) warn.push(`This building holds ${r.footprint.shared_with + 1} addresses (semi-detached or terrace). Only this address's share is used.`);
+  const gm = `https://www.google.com/maps?q=${f.lat},${f.lng}&t=k&z=20`;
+  const wingTxt = S.wings.length === 1 ? 'one roof section' : `${S.wings.length} roof sections`;
+  $('#summary').hidden = false;
+  $('#summary').innerHTML = `
+    <div class="addr">${esc(f.address)}</div>
+    <div class="sub">${esc(f.eircode)} &middot; ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)} &middot; <a href="${gm}" target="_blank" rel="noopener">Google Maps</a> &middot; outline ${fmt(r.area_m2)} m&sup2;, ${wingTxt}</div>
+    ${best ? `<div class="headline">
+      <div class="sub">Best place for panels</div>
+      <div class="big">${NAMES[compass(best.az)] || 'Flat'} face${best.flat ? '' : ` (${Math.round(best.az)}&deg;)`}</div>
+      <div class="kpis">
+        <div><b>${fmt(t.n)}</b><span>panels on chosen faces</span></div>
+        <div><b>${fmt(t.kwp, 2)} kWp</b><span>${s.watts} W panels</span></div>
+        <div><b>${fmt(t.kwh)} kWh</b><span>per year, estimated</span></div>
+      </div></div>` : ''}
+    ${warn.map(w => `<div class="warn">${esc(w)}</div>`).join('')}`;
+  const cap = +$('#cap').value || 0;
+  $('#printHead').innerHTML = `<div style="display:flex;align-items:center;gap:10px">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:40px;height:40px">` : ''}<div><div class="addr">Solar roof assessment</div><div class="sub">${esc(BRAND.name === BRAND.product ? '' : BRAND.name + ' · ')}${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div></div><br>`;
+  $('#printNotes').innerHTML = `Assumes a ${s.pitch}&deg; roof pitch, ${s.watts} W panels (${$('#psize').value.replace('x', ' x ')} mm), ${s.edge} m clear of roof edges, ${s.loss}% system losses${cap ? `, system capped at ${cap} kWp` : ''}.
+    Outline from the Eircode Finder map; aerial photo &copy; Esri and its suppliers; yields from PVGIS (EU Joint Research Centre) before local shading. A site survey should confirm pitch, roof condition and shading.`;
+}
+
+function drawTable() {
+  const rows = [...S.faces].sort((a, b) => b.spec - a.spec);
+  $('#facesCard').hidden = false;
+  $('#faces').innerHTML = `<tr><th>Face</th><th>Rating</th><th class="num" title="Used / fit on the face">Panels</th><th class="num">kWp</th><th class="num">kWh/yr</th><th class="num">kWh/kWp</th><th class="noprint"></th></tr>` +
+    rows.map(f => {
+      const [rt, col] = ratingOf(f.ratio);
+      const name = f.flat ? 'Flat roof' : `<span class="long">${NAMES[compass(f.az)]}</span><span class="short">${compass(f.az)}</span> <span class="sub">${Math.round(f.az)}&deg;</span>`;
+      return `<tr class="${f.on ? '' : 'off'}"><td><span class="dot" style="background:${col}"></span>${name}${S.wings.length > 1 ? ` <span class="sub">s${f.wing + 1}</span>` : ''}</td>
+        <td><span class="rating" style="background:${col}">${rt}</span></td>
+        <td class="num">${f.used}<span class="sub"> / ${f.lay.n}</span></td><td class="num">${fmt(f.kwp, 2)}</td><td class="num">${fmt(f.kwh)}</td><td class="num">${fmt(f.spec)}</td>
+        <td class="noprint"><input type="checkbox" data-face="${f.id}" ${f.on ? 'checked' : ''} ${f.lay.n ? '' : 'disabled'} title="Use this face"></td></tr>`;
+    }).join('');
+  $('#faces').querySelectorAll('input[data-face]').forEach(cb => cb.onchange = () => { S.use[cb.dataset.face] = cb.checked; render(); });
+}
+
+function drawChart(s, lossAdj) {
+  const t = totals();
+  const months = Array(12).fill(0);
+  for (const f of t.on) f.pv.E_m.forEach((v, i) => months[i] += v * lossAdj * f.kwp);
+  const max = Math.max(...months, 1);
+  const W = 560, H = 170, bw = W / 12;
+  const nice = Math.ceil(max / 100) * 100;
+  let g = '';
+  for (const v of [0, nice / 2, nice]) {
+    const y = H - 20 - (v / nice) * (H - 40);
+    g += `<line x1="34" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="30" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${fmt(v)}</text>`;
+  }
+  'JFMAMJJASOND'.split('').forEach((c, i) => {
+    const h = (months[i] / nice) * (H - 40), x = 38 + i * ((W - 40) / 12);
+    g += `<rect x="${x + 3}" y="${H - 20 - h}" width="${(W - 40) / 12 - 6}" height="${h}" rx="3" fill="var(--accent)"><title>${fmt(months[i])} kWh</title></rect>
+      <text x="${x + (W - 40) / 24}" y="${H - 5}" text-anchor="middle" font-size="11" fill="var(--muted)">${c}</text>`;
+  });
+  $('#chartCard').hidden = !t.n;
+  $('#chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}">${g}</svg><div class="sub">kWh per month. Summer is about four times winter in Ireland.</div>`;
+}
+
+function drawWings() {
+  $('#settingsCard').hidden = false;
+  $('#wings').innerHTML = S.wings.map((w, i) => {
+    const r = S.data.roof.wings[i];
+    return `<div class="wing"><b>Section ${i + 1}</b><span class="sub">${fmt(r.length_m, 1)} x ${fmt(r.width_m, 1)} m</span>
+      <span class="seg">${['gable', 'hip', 'flat'].map(t => `<button data-w="${i}" data-type="${t}" class="${w.type === t ? 'on' : ''}">${{ gable: 'Gable', hip: 'Hipped', flat: 'Flat' }[t]}</button>`).join('')}</span>
+      <button class="small" data-turn="${i}" ${w.type === 'flat' ? 'disabled' : ''}>Turn ridge 90&deg;</button></div>`;
+  }).join('');
+  $('#wings').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => { S.wings[+b.dataset.w].type = b.dataset.type; S.use = {}; refresh(); });
+  $('#wings').querySelectorAll('button[data-turn]').forEach(b => b.onclick = () => {
+    const w = S.wings[+b.dataset.turn];
+    const [a, bb, c, d] = w.rect;
+    w.rect = [bb, c, d, a]; w.off = 0.5;
+    S.use = {}; refresh();
+  });
+}
+</script>
+</body>
+</html>
