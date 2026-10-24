@@ -131,7 +131,12 @@ async function lookup(code, log = () => {}) {
     log('Opening Eircode Finder');
     await send('Page.navigate', { url: 'https://finder.eircode.ie/#/' });
     const box = `document.querySelector('input[placeholder*="Eircode"]')`;
-    if (!await until(send, '!!' + box, 20000)) throw new Error('Eircode Finder did not load');
+    if (!await until(send, '!!' + box, 45000)) {
+      // say what the page did show: a block page, a challenge, or nothing at all
+      let seen = '';
+      try { seen = await evaluate(send, `location.href + ' | ' + document.title + ' | ' + (document.body ? document.body.innerText : '').replace(/\\s+/g, ' ').slice(0, 200)`); } catch (e) { seen = e.message; }
+      throw new Error('Eircode Finder did not load: ' + seen);
+    }
     await sleep(800);
     // cookie banner: decline the optional ones
     await clickWhere(send, `return /^decline all$/i.test((e.textContent||'').trim()) && e.children.length === 0`, 1500);
