@@ -303,7 +303,7 @@ async function relay(params) {
   const u = RELAY + '?' + new URLSearchParams({ ...params, key: getKey() });
   const r = await fetch(u);
   const j = await r.json();
-  if (!j.ok) {
+  if (!j.ok && j.E_y === undefined) {
     if (/access code/i.test(j.error || '')) { askKey(j.error); }
     throw new Error(j.error || 'The relay did not answer');
   }

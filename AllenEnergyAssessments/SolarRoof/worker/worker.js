@@ -10,9 +10,13 @@ const path = require('path');
 const here = p => { try { return require(path.join(__dirname, p)); } catch (e) { return require(path.join(__dirname, '..', p)); } };
 const { find } = here('pipeline');
 
-const { CALLBACK, JOB, TOKEN } = process.env;
-if (!CALLBACK) { console.error('The SOLAR_RELAY_URL repository secret is not set'); process.exit(2); }
-if (!JOB || !TOKEN) { console.error('JOB and TOKEN are required'); process.exit(2); }
+// the dispatch inputs are read from the runner's event file, never from the log-printed env
+let inputs = {};
+try { inputs = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs || {}; } catch (e) {}
+const CALLBACK = process.env.CALLBACK || inputs.callback;   // a SOLAR_RELAY_URL secret wins if set
+const JOB = process.env.JOB || inputs.job, TOKEN = process.env.TOKEN || inputs.token;
+if (!CALLBACK) { console.error('No relay URL: not in the job and no SOLAR_RELAY_URL secret'); process.exit(2); }
+if (!JOB || !TOKEN) { console.error('No job id or token in the job'); process.exit(2); }
 
 async function post(body) {
   // text/plain keeps Apps Script happy; the redirect after the POST only fetches the reply
