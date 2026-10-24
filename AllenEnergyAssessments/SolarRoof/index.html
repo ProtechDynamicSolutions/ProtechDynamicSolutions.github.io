@@ -150,6 +150,9 @@ body.locked > :not(.gate) { visibility: hidden; }
 @keyframes pulse { to { box-shadow: 0 0 0 26px rgba(37, 99, 235, 0); } }
 .drawon { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawon .9s ease-out forwards; }
 @keyframes drawon { to { stroke-dashoffset: 0; } }
+.aiask { position: absolute; left: 10px; right: 10px; bottom: 54px; z-index: 650; background: #fff; border-radius: 12px; border-left: 5px solid var(--green-l); box-shadow: var(--shadow); padding: 12px 14px; font-size: 14px; display: grid; gap: 4px; }
+.aiask span { color: var(--muted); font-size: 13px; }
+.aiask div { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 .view.flash::after { content: ''; position: absolute; inset: 0; background: #fff; z-index: 900; animation: flash .38s ease-out forwards; }
 @keyframes flash { from { opacity: .95; } to { opacity: 0; } }
 .tapsearch { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; gap: 6px; }
@@ -168,6 +171,7 @@ body.locked > :not(.gate) { visibility: hidden; }
     <span><b id="brandName">Solar Roof Check</b><small id="brandTag">Instant solar assessment from an Eircode</small></span>
   </a>
   <div class="spacer"></div>
+  <button id="aiBtn" class="small" title="Gemini key for AI roof reading">AI key</button>
   <button id="printBtn" class="small" disabled>Print report</button>
 </div></div>
 
@@ -500,7 +504,7 @@ function load(d) {
   const r = d.roof;
   if (!r.ok) { log(r.error || 'Could not read the roof', true); return; }
   // ridges sit on the centre line of nearly every pitched roof; the photo only chose its direction
-  S.wings = r.wings.map(w => ({ rect: w.rect, off: 0.5, type: 'gable' }));
+  S.wings = r.wings.map(w => ({ rect: w.rect, off: 0.5, type: w.type || 'gable' }));
   log(`${d.finder.address}`);
   ['pickBtn', 'refreshBtn', 'printBtn'].forEach(id => $('#' + id).disabled = false);
   refresh();
@@ -911,7 +915,7 @@ async function tapMode(code, centre) {
 function openMap(at, zoom, withSteps) {
   if (T.map) { T.map.remove(); T.map = null; }
   $('#view').innerHTML = `<div id="tmap"></div>
-    <form class="tapsearch" id="tapsearch"><input placeholder="Search an address or townland" aria-label="Search an address"><button class="small primary">Go</button></form>
+    <form class="tapsearch" id="tapsearch"><input placeholder="Search an address or townland" aria-label="Search an address"><button class="small primary">Go</button><button type="button" class="small" id="drawBtn" title="Tap the 4 roof corners yourself">Draw it</button></form>
     ${withSteps ? `<ol class="steps" id="steps">${STEPS.map(s => `<li><span class="ic"></span><span>${s}</span></li>`).join('')}</ol>` : ''}
     <div class="taphint" id="taphint">${withSteps ? 'Working...' : 'Zoom in and tap the roof of the house'}</div>`;
   $('#view').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -920,6 +924,13 @@ function openMap(at, zoom, withSteps) {
   L.tileLayer(ESRI, { maxNativeZoom: 19, maxZoom: 21, attribution: 'Imagery &copy; Esri' }).addTo(T.map);
   T.layer = L.layerGroup().addTo(T.map);
   T.map.on('click', e => onMapTap(e.latlng.lat, e.latlng.lng));
+  $('#drawBtn').onclick = () => {
+    if (T.busy) return;
+    T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
+    if (T.map.getZoom() < 18) T.map.setZoom(19);
+    tapHint('Tap the 4 corners of the roof');
+    log('Tap the 4 corners of the roof on the photo.');
+  };
   $('#tapsearch').onsubmit = async e => {
     e.preventDefault();
     const q = $('#tapsearch input').value.trim();
@@ -985,8 +996,39 @@ async function analyseAt(lat, lng) {
       if (near && near[0] < 4) ring = near[1];
     }
   } catch (e) { log(e.message, true); }
+  if (!ring && !T.forceDraw && !(await aiKey())) {
+    // no key on this device yet: offer one, or drawing by hand
+    step(2, 'wait', 'Not on the map yet');
+    tapHint('This house is not on the map yet');
+    log('This house is not on OpenStreetMap. Let AI read the roof, or draw it yourself.');
+    const box = document.createElement('div');
+    box.className = 'aiask';
+    box.innerHTML = `<b>This house is not on the map yet.</b><span>AI can read its roof from the photo.</span>
+      <div><button class="small primary" data-a="key">Add Gemini key</button><button class="small" data-a="draw">Draw it myself</button></div>`;
+    $('#view').appendChild(box);
+    const choice = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a)));
+    box.remove();
+    if (choice !== 'key' || !(await aiKeyDialog())) T.forceDraw = true;
+  }
+  if (!ring && !T.forceDraw) {
+    // not on OpenStreetMap: let Gemini read the roof from the aerial photo
+    step(2, 'run', 'Reading the roof with AI');
+    tapHint('Reading the roof with AI...');
+    log('This house is not on OpenStreetMap. Reading its roof from the photo with AI.', false, true);
+    try {
+      const ai = await aiRoof(lat, lng);
+      if (ai) {
+        L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.12, className: 'drawon' }).addTo(T.layer);
+        step(2, 'done', `Roof found by AI (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
+        await sleep(900);
+        T.busy = false;
+        return finishRoof(ai.ring, 'ai', ai.wings);
+      }
+    } catch (e) { console.warn('AI roof:', e); }
+  }
   T.busy = false;
   if (!ring) {
+    T.forceDraw = false;
     T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
     T.map.setView([lat, lng], Math.max(T.map.getZoom(), 19));
     step(2, 'wait', 'Tap the 4 roof corners');
@@ -1157,7 +1199,7 @@ function ridgeContrast(G, rect) {
   return best;
 }
 
-async function finishRoof(ring, source) {
+async function finishRoof(ring, source, preset) {
   T.busy = true;
   tapHint('Working out the roof...');
   log('Fetching the aerial photo and working out the roof', false, true);
@@ -1174,8 +1216,13 @@ async function finishRoof(ring, source) {
     let area = 0;
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; area += p[0] * q[1] - q[0] * p[1]; }
     area = Math.abs(area) / 2 * mpp * mpp;
+    const toPx = p => { const [x, y] = wpx(p[0], p[1], z); return [x - origin[0], y - origin[1]]; };
     const ang = dominantAngle(poly);
-    const wings = wingsOf(poly, ang, mpp).map(rect => {
+    // the AI gives its sections (ridge already along a->b); otherwise split the outline ourselves
+    const wings = preset ? preset.map(w => {
+      const rect = w.rect.map(toPx);
+      return { rect, length_m: len(sub(rect[1], rect[0])) * mpp, width_m: len(sub(rect[3], rect[0])) * mpp, type: w.type };
+    }) : wingsOf(poly, ang, mpp).map(rect => {
       let [a, b, cc, d] = rect;
       let e1 = len(sub(b, a)), e2 = len(sub(d, a));
       if (e1 < e2) { rect = [a, d, cc, b]; [a, b, cc, d] = rect; [e1, e2] = [e2, e1]; }
@@ -1187,7 +1234,8 @@ async function finishRoof(ring, source) {
     });
     if (!wings.length) throw new Error('Could not find a roof shape in that outline. Tap the 4 roof corners instead.');
     const warn = area < 40 ? `Outline is only ${Math.round(area)} m², a shed or garage? Use Wrong building? to pick the house.`
-      : area > 900 ? `Outline is ${Math.round(area)} m², big for a house. Check it is the right building.` : null;
+      : area > 900 ? `Outline is ${Math.round(area)} m², big for a house. Check it is the right building.`
+      : source === 'ai' ? 'Roof traced by AI from the aerial photo. If it is off, press Wrong building? and then Draw it.' : null;
     let address = `Near ${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
     try {
       const rv = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${c[0]}&lon=${c[1]}`, { signal: AbortSignal.timeout(5000) })).json();
@@ -1241,6 +1289,163 @@ function irelandPV(pv, lat, lng, angle, aspect) {
     }
   }
   return { E_y: out[0] / wsum, E_m: out.slice(1).map(v => v / wsum) };
+}
+
+// ----- Gemini reads the roof when the house is not on OpenStreetMap -----
+// The key is sealed in config.js with the access code (SRF_AI_LOCKED) and opened in the browser.
+// AI_PROMPT is also read by test/gemini-score.js: keep it between the markers.
+/* AI_PROMPT_START */
+const AI_PROMPT = `This is a top-down aerial photo, north at the top, about METRES metres across.
+A small red ring marks one house. Find the roof of the building under the red ring.
+Describe that roof as rectangular sections: a plain house is 1 section, an L or T shaped house is 2 or 3.
+Include attached extensions and garages that share the building. Leave out separate sheds, neighbours, driveways and trees.
+For each section give:
+- corners: its 4 corners in order around the rectangle, each [y, x] normalised to 0-1000 of the image
+- ridge_bearing: compass direction of the roof ridge line in degrees, 0 to 179 (0 = north-south, 90 = east-west)
+- type: "gable", "hip" or "flat"
+Reply with JSON only: {"sections":[{"corners":[[y,x],[y,x],[y,x],[y,x]],"ridge_bearing":0,"type":"gable"}],"found":true}
+If there is no building under the ring, reply {"sections":[],"found":false}.`;
+/* AI_PROMPT_END */
+const AI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+
+async function openSealed(obj, code) {
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b(obj.salt), iterations: obj.iter, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(obj.iv) }, key, b(obj.ct)));
+}
+// the Gemini key: typed into the app once and kept on this device (srf.gemini),
+// or a key sealed into config.js with the access code
+let AI_KEY = null;
+async function aiKey() {
+  const own = store.get('srf.gemini');
+  if (own) return own;
+  if (AI_KEY) return AI_KEY;
+  if (!window.SRF_AI_LOCKED || !getKey()) return null;
+  try { AI_KEY = await openSealed(window.SRF_AI_LOCKED, getKey()); } catch (e) { AI_KEY = null; }
+  return AI_KEY;
+}
+const aiBtnLabel = () => { $('#aiBtn').textContent = store.get('srf.gemini') ? 'AI on' : 'AI key'; };
+aiBtnLabel();
+
+// a dialog to paste, check and keep the key; resolves true when a working key is saved
+function aiKeyDialog() {
+  return new Promise(done => {
+    const g = document.createElement('div');
+    g.className = 'gate';
+    const has = !!store.get('srf.gemini');
+    g.innerHTML = `<form class="card"><h2>AI roof reading</h2>
+      <div class="sub">When a house is not on the map, Google's Gemini reads its roof from the aerial photo.
+      Paste a free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It is kept on this device only.</div>
+      <input type="password" autocomplete="off" spellcheck="false" placeholder="${has ? 'A key is saved. Paste a new one to replace it' : 'Gemini API key (starts AIza)'}">
+      <div class="sub err" style="color:#b91c1c;min-height:18px"></div>
+      <div style="display:flex;gap:8px"><button class="primary" style="flex:1">Save</button>
+      ${has ? '<button type="button" data-act="remove">Remove</button>' : ''}<button type="button" data-act="cancel">Cancel</button></div></form>`;
+    document.body.appendChild(g);
+    const inp = g.querySelector('input'), msg = g.querySelector('.err');
+    inp.focus();
+    const close = ok => { g.remove(); aiBtnLabel(); done(ok); };
+    g.querySelector('[data-act=cancel]').onclick = () => close(false);
+    const rm = g.querySelector('[data-act=remove]');
+    if (rm) rm.onclick = () => { try { localStorage.removeItem('srf.gemini'); } catch (e) {} close(false); };
+    g.querySelector('form').onsubmit = async e => {
+      e.preventDefault();
+      const k = inp.value.trim();
+      if (!k) return close(has);
+      msg.style.color = '#64748b'; msg.textContent = 'Checking the key...';
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', { headers: { 'x-goog-api-key': k } });
+        if (!r.ok) throw new Error(((await r.json()).error || {}).message || 'Google refused that key');
+        store.set('srf.gemini', k);
+        close(true);
+      } catch (er) { msg.style.color = '#b91c1c'; msg.textContent = er.message; }
+    };
+  });
+}
+$('#aiBtn').onclick = () => aiKeyDialog();
+
+async function askGemini(key, jpegB64, prompt) {
+  let last = null;
+  for (const model of AI_MODELS) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({
+          contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: jpegB64 } }, { text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      const j = await r.json();
+      if (!r.ok) { last = new Error((j.error && j.error.message) || 'Gemini ' + r.status); continue; }
+      const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+      return JSON.parse(text.replace(/^```(json)?|```$/g, '').trim());
+    } catch (e) { last = e; }
+  }
+  throw last || new Error('Gemini did not answer');
+}
+
+// a rough quadrilateral from the model -> a true rectangle (same centre, averaged sides)
+function rectify(p) {
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+  const c = p.reduce((s, q) => add(s, mul(q, 0.25)), [0, 0]);
+  const uu = unit(add(sub(p[1], p[0]), sub(p[2], p[3])));
+  let vv = [-uu[1], uu[0]];
+  if (dot(vv, add(sub(p[3], p[0]), sub(p[2], p[1]))) < 0) vv = mul(vv, -1);
+  const L = Math.abs(dot(sub(p[1], p[0]), uu) + dot(sub(p[2], p[3]), uu)) / 2;
+  const W = Math.abs(dot(sub(p[3], p[0]), vv) + dot(sub(p[2], p[1]), vv)) / 2;
+  const at = (s, t) => add(c, add(mul(uu, s * L / 2), mul(vv, t * W / 2)));
+  return [at(-1, -1), at(1, -1), at(1, 1), at(-1, 1)];
+}
+
+function hull(pts) {
+  const P = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of P) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of P.reverse()) { while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+
+// sections from the model (normalised [y, x]) -> wings in image pixels with the ridge along a->b
+function sectionsToWings(sections, ox, oy, size) {
+  const out = [];
+  for (const s of sections || []) {
+    if (!Array.isArray(s.corners) || s.corners.length !== 4) continue;
+    let rect = rectify(s.corners.map(([y, x]) => [ox + x / 1000 * size, oy + y / 1000 * size]));
+    const [a, b, , d] = rect;
+    if (len(sub(b, a)) < 4 || len(sub(d, a)) < 4) continue;
+    // the ridge runs along a->b: pick the side closest to the bearing the model gave, else the long side
+    const along = bearing(sub(b, a)) % 180, rb = Number(s.ridge_bearing);
+    const off = x => Math.min(Math.abs(x - rb) % 180, 180 - Math.abs(x - rb) % 180);
+    const turn = isFinite(rb) && s.type !== 'flat' ? off(along) > off((along + 90) % 180) : len(sub(b, a)) < len(sub(d, a));
+    if (turn) rect = [rect[1], rect[2], rect[3], rect[0]];
+    out.push({ rect, type: ['gable', 'hip', 'flat'].includes(s.type) ? s.type : 'gable' });
+  }
+  return out;
+}
+
+// returns { ring (lat/lng hull), wings (lat/lng rects + type) } or null
+async function aiRoof(lat, lng) {
+  const key = await aiKey();
+  if (!key) return null;
+  const z = 19, { cv, origin, mpp } = await aerialCanvas(lat, lng, z);
+  const crop = 400, o = (cv.width - crop) / 2;
+  const c2 = document.createElement('canvas'); c2.width = c2.height = crop;
+  const g = c2.getContext('2d');
+  g.drawImage(cv, o, o, crop, crop, 0, 0, crop, crop);
+  g.strokeStyle = '#ff2020'; g.lineWidth = 2.5; g.beginPath(); g.arc(crop / 2, crop / 2, 6, 0, Math.PI * 2); g.stroke();
+  const b64 = c2.toDataURL('image/jpeg', 0.9).split(',')[1];
+  const ans = await askGemini(key, b64, AI_PROMPT.replace('METRES', Math.round(crop * mpp)));
+  const wingsPx = sectionsToWings(ans.sections, o, o, crop);
+  if (!ans.found || !wingsPx.length) return null;
+  const toLL = p => { const n = 256 * 2 ** z, X = origin[0] + p[0], Y = origin[1] + p[1];
+    return [Math.atan(Math.sinh(Math.PI * (1 - 2 * Y / n))) * 180 / Math.PI, X / n * 360 - 180]; };
+  return {
+    ring: hull(wingsPx.flatMap(w => w.rect)).map(toLL),
+    wings: wingsPx.map(w => ({ rect: w.rect.map(toLL), type: w.type })),
+  };
 }
 </script>
 </body>
