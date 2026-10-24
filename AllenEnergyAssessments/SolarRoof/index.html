@@ -72,7 +72,7 @@ main > * { min-width: 0; }
 #facesCard { overflow-x: auto; }
 .card h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 12px; font-weight: 700; }
 .view { position: relative; aspect-ratio: 1; background: #1e293b; border-radius: 12px; overflow: hidden; }
-.view svg { width: 100%; height: 100%; display: block; }
+.view > svg { width: 100%; height: 100%; display: block; }
 .view .empty { position: absolute; inset: 0; display: grid; place-items: center; color: #94a3b8; text-align: center; padding: 30px; }
 .viewbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
 .viewbar .hint { font-size: 12.5px; color: var(--muted); }
@@ -112,6 +112,8 @@ label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; bo
 .thumbs figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .notes { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; padding-left: 18px; }
 .gate { position: fixed; inset: 0; background: rgba(15, 23, 42, .55); display: grid; place-items: center; z-index: 10; padding: 16px; }
+.gate.opening { background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 45%, #f0fdf4 100%); }
+body.locked > :not(.gate) { visibility: hidden; }
 .gate .card { max-width: 380px; width: 100%; box-shadow: var(--shadow); border-left: 5px solid var(--green-l); }
 .gate input { width: 100%; padding: 11px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; margin: 10px 0; font-size: 16px; }
 .printonly { display: none; }
@@ -133,6 +135,13 @@ label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; bo
 }
 .short { display: none; }
 @media (max-width: 600px) { .short { display: inline; } .long { display: none; } }
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-control-layers-toggle{background-image:url(images/layers.png);width:36px;height:36px}.leaflet-retina .leaflet-control-layers-toggle{background-image:url(images/layers-2x.png);background-size:26px 26px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-default-icon-path{background-image:url(images/marker-icon.png)}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* tap-the-roof map (Leaflet core styles inlined above: a CDN stylesheet is the part that fails) */
+#tmap { position: absolute; inset: 0; background: #1e293b; }
+.tapsearch { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; gap: 6px; }
+.tapsearch input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-shadow: var(--shadow); }
+.taphint { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 500; background: rgba(15, 23, 42, .78); color: #fff; font-size: 13.5px; font-weight: 600; border-radius: 10px; padding: 8px 12px; text-align: center; pointer-events: none; }
 </style>
 <script src="config.js"></script>
 </head>
@@ -153,7 +162,7 @@ label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; bo
   <div class="herocard">
     <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.3 8 11 4.5-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg> Using EU PVGIS sunshine data</span>
     <h1>Find the best roof for <span class="grad">solar panels</span></h1>
-    <p>Enter an Eircode. We trace the house from the national map, check which way every roof face points and work out what panels there would make in a year.</p>
+    <p>Enter an Eircode and tap the roof. We work out which way every roof face points and what panels there would make in a year.</p>
     <form class="find" id="findForm">
       <input id="code" placeholder="Eircode, e.g. A65 F4E2" autocomplete="off" spellcheck="false" maxlength="9" aria-label="Eircode">
       <button class="primary" id="go">Check my roof</button>
@@ -164,7 +173,7 @@ label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; bo
 </div></div>
 
 <div class="band"><div class="in">
-  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Traced from the Eircode Finder map</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Works from any Eircode</span>
   <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Every roof face rated</span>
   <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>One page report to print</span>
 </div></div>
@@ -245,9 +254,12 @@ $('#code').addEventListener('input', e => {
   e.target.value = c.length > 3 ? c.slice(0, 3) + ' ' + c.slice(3) : c;
 });
 $('#findForm').addEventListener('submit', e => { e.preventDefault(); find(false); });
-$('#refreshBtn').onclick = () => S.demoPV ? log('Looking up again needs live lookups, which are not switched on in this demo.', true) : find(true);
+// on a tapped (free) result, both buttons reopen the map on the house to tap again
+const retap = () => tapMode(S.data.finder.eircode.replace(/\s/g, ''), { lat: S.data.finder.lat, lng: S.data.finder.lng }).catch(e => log(e.message, true));
+$('#refreshBtn').onclick = () => S.freePV ? retap() : S.demoPV ? log('Looking up again needs live lookups, which are not switched on in this demo.', true) : find(true);
 $('#printBtn').onclick = () => window.print();
 $('#pickBtn').onclick = () => {
+  if (S.freePV && !S.picking) return retap();
   S.picking = !S.picking;
   document.body.classList.toggle('picking', S.picking);
   $('#pickBtn').textContent = S.picking ? 'Cancel' : 'Wrong building?';
@@ -376,8 +388,40 @@ function askKey(why) {
     } catch (er) { msg.textContent = er.message || 'Could not check the code'; }
   };
 }
+// ---------- the access code before the page opens (published copy) ----------
+// SRF_GATE holds PBKDF2(code), not the code. Once opened, this device remembers it.
+const GATE = window.SRF_GATE || null;
+async function gateHash(code) {
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: b(GATE.salt), iterations: GATE.iter, hash: 'SHA-256' }, base, 256);
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));
+}
+if (GATE && store.get('srf.gate') !== GATE.hash) {
+  document.body.classList.add('locked');
+  const g = document.createElement('div');
+  g.className = 'gate opening';
+  g.innerHTML = `<form class="card">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:56px;height:56px;display:block;margin:0 auto 8px">` : ''}
+    <h2 style="text-align:center">${esc(BRAND.product)}</h2><div class="sub" style="text-align:center">Enter the access code to continue.</div>
+    <input type="password" autocomplete="current-password" placeholder="Access code" aria-label="Access code"><div class="sub err" style="color:#b91c1c;min-height:18px"></div>
+    <button class="primary" style="width:100%">Open</button></form>`;
+  document.body.appendChild(g);
+  const inp = g.querySelector('input');
+  inp.focus();
+  g.querySelector('form').onsubmit = async e => {
+    e.preventDefault();
+    const code = inp.value.trim();
+    if (await gateHash(code) !== GATE.hash) { g.querySelector('.err').textContent = 'Wrong access code'; inp.select(); return; }
+    store.set('srf.gate', GATE.hash);
+    store.set(KEY_STORE, code);  // the same code serves the relay when live lookups are on
+    document.body.classList.remove('locked');
+    g.remove();
+  };
+}
+
 // ---------- demo: finished results shipped beside the page (demo.json), no relay or code needed ----------
-const PUBLISHED = CLOUD || location.protocol === 'https:';
+const FREE = window.SRF_MODE === 'free';
+const PUBLISHED = CLOUD || FREE || location.protocol === 'https:';
 let DEMO = null;
 const demoReady = PUBLISHED ? fetch('demo.json').then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
   DEMO = d;
@@ -410,7 +454,7 @@ async function find(fresh) {
   await demoReady;
   if (DEMO && DEMO.codes[key]) {
     const d = DEMO.codes[key];
-    S.demoPV = d.pv;
+    S.demoPV = d.pv; S.freePV = false;
     log('Looking up on Eircode Finder', false, true);
     await sleep(500); log('Tracing the house from the national map', false, true);
     await sleep(500); log('Checking every roof face against PVGIS sunshine data', false, true);
@@ -418,8 +462,12 @@ async function find(fresh) {
     load(JSON.parse(JSON.stringify(d.result)));
     return;
   }
-  S.demoPV = null;
-  if (!CLOUD && location.protocol === 'https:') { log(demoOnly(), true); return; }
+  S.demoPV = null; S.freePV = false;
+  // published without a relay: place the Eircode by area and let the visitor tap the roof
+  if (FREE || (!CLOUD && location.protocol === 'https:')) {
+    try { await tapMode(key); } catch (e) { log(e.message, true); }
+    return;
+  }
   if (CLOUD && !RELAY) { askKey(); return; }
   $('#go').disabled = true;
   log(CLOUD ? 'Sending to the cloud' : 'Starting', false, true);
@@ -541,6 +589,7 @@ async function pvFor(f, s) {
   const aspect = f.flat ? 0 : ((f.az - 180 + 540) % 360) - 180;
   const key = `${Math.round(angle)},${Math.round(aspect)}`;
   if (S.demoPV) return demoPV(S.demoPV, angle, aspect);
+  if (S.freePV) return irelandPV((await tables()).pv, lat, lng, angle, aspect);
   if (!S.pv[key]) S.pv[key] = api.pv(lat, lng, angle, aspect).catch(e => { delete S.pv[key]; throw e; });
   return S.pv[key];
 }
@@ -746,6 +795,385 @@ function drawWings() {
     w.rect = [bb, c, d, a]; w.off = 0.5;
     S.use = {}; refresh();
   });
+}
+
+// ---------- free mode: tap the roof (no Eircode Finder, nothing behind the page) ----------
+// The Eircode Finder will not answer other websites, so on the published page any Eircode that is not a
+// demo address is placed by area (routing-keys.json, or an exact OpenStreetMap tag), the visitor taps the
+// roof, and the outline comes from OpenStreetMap (or four tapped corners). Everything runs in the browser.
+let TABLES = null;
+const tables = () => TABLES || (TABLES = Promise.all([
+  fetch('routing-keys.json').then(r => r.json()).catch(() => ({})),
+  fetch('pv-ireland.json').then(r => r.json()),
+]).then(([keys, pv]) => ({ keys, pv })));
+
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  const add = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  return add('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')
+    .catch(() => add('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'))
+    .catch(() => { throw new Error('Could not load the map. Check the internet connection.'); });
+}
+
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
+const T = { map: null, eircode: '', mode: 'tap', corners: [], layer: null, busy: false };
+const tapHint = t => { const h = $('#taphint'); if (h) h.textContent = t; };
+
+async function overpass(q) {
+  const r = await fetch(OVERPASS, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+  if (!r.ok) throw new Error('The map service is busy. Try again in a moment.');
+  return (await r.json()).elements;
+}
+
+// some houses carry their Eircode on OpenStreetMap: then we know exactly where it is
+async function osmEircode(code, k) {
+  if (!k) return null;
+  const d = Math.min(0.5, Math.max(0.05, k.km * 2.5 / 111));
+  const re = `^${code.slice(0, 3)} ?${code.slice(3)}$`;
+  const els = await overpass(`[out:json][timeout:15];nwr["addr:postcode"~"${re}",i](${k.lat - d},${k.lng - d * 1.6},${k.lat + d},${k.lng + d * 1.6});out center 1;`);
+  const e = els[0];
+  if (!e) return null;
+  const c = e.center || e;
+  return { lat: c.lat, lng: c.lon };
+}
+
+async function tapMode(code, centre) {
+  T.eircode = code.slice(0, 3) + ' ' + code.slice(3);
+  S.demoPV = null;
+  log('Finding the area', false, true);
+  const { keys } = await tables();
+  let at = centre || null, zoom = 19, exact = false;
+  if (!at) {
+    const k = keys[code.slice(0, 3)];
+    try { const hit = await osmEircode(code, k); if (hit) { at = hit; exact = true; } } catch (e) {}
+    if (!at && k) { at = { lat: k.lat, lng: k.lng }; zoom = k.km > 6 ? 12 : k.km > 2.5 ? 13 : 14; }
+    if (!at) { at = { lat: 53.4, lng: -8.0 }; zoom = 7; }
+  }
+  await loadLeaflet();
+  openMap(at, zoom);
+  if (exact) {
+    log(`Found ${T.eircode} on the map. Tracing the house.`, false, true);
+    return analyseAt(at.lat, at.lng);
+  }
+  log(centre ? 'Tap the roof you want.' : `Showing the ${code.slice(0, 3)} area. Zoom in on the house and tap its roof, or search the address.`);
+}
+
+function openMap(at, zoom) {
+  if (T.map) { T.map.remove(); T.map = null; }
+  $('#view').innerHTML = `<div id="tmap"></div>
+    <form class="tapsearch" id="tapsearch"><input placeholder="Search an address or townland" aria-label="Search an address"><button class="small primary">Go</button></form>
+    <div class="taphint" id="taphint">Zoom in and tap the roof of the house</div>`;
+  T.mode = 'tap'; T.corners = [];
+  T.map = L.map('tmap', { zoomControl: true, attributionControl: true, maxZoom: 21 }).setView([at.lat, at.lng], zoom);
+  L.tileLayer(ESRI, { maxNativeZoom: 19, maxZoom: 21, attribution: 'Imagery &copy; Esri' }).addTo(T.map);
+  T.layer = L.layerGroup().addTo(T.map);
+  T.map.on('click', e => onMapTap(e.latlng.lat, e.latlng.lng));
+  $('#tapsearch').onsubmit = async e => {
+    e.preventDefault();
+    const q = $('#tapsearch input').value.trim();
+    if (!q) return;
+    try {
+      const r = await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ie&limit=1&q=${encodeURIComponent(q)}`)).json();
+      if (!r.length) return tapHint('Not found. Try a townland and county, e.g. Moneygurney, Douglas');
+      T.map.setView([+r[0].lat, +r[0].lon], r[0].type === 'house' || r[0].class === 'building' ? 19 : 17);
+      tapHint('Zoom in and tap the roof of the house');
+    } catch (er) { tapHint('Search is not answering. Zoom in by hand.'); }
+  };
+}
+
+function onMapTap(lat, lng) {
+  if (T.busy) return;
+  if (T.mode === 'corners') {
+    T.corners.push([lat, lng]);
+    L.circleMarker([lat, lng], { radius: 6, color: '#facc15', weight: 3, fillOpacity: 0.9 }).addTo(T.layer);
+    if (T.corners.length > 1) L.polyline(T.corners, { color: '#facc15', weight: 2 }).addTo(T.layer);
+    if (T.corners.length < 4) return tapHint(`Corner ${T.corners.length + 1} of 4`);
+    const c = T.corners.reduce((a, p) => [a[0] + p[0] / 4, a[1] + p[1] / 4], [0, 0]);
+    const ring = [...T.corners].sort((p, q) => Math.atan2(p[0] - c[0], p[1] - c[1]) - Math.atan2(q[0] - c[0], q[1] - c[1]));
+    return finishRoof(ring, 'corners');
+  }
+  if (T.map.getZoom() < 17) { T.map.setView([lat, lng], 19); return tapHint('Now tap the roof'); }
+  analyseAt(lat, lng);
+}
+
+function inRing(pt, ring) {
+  let ins = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [yi, xi] = ring[i], [yj, xj] = ring[j];
+    if ((yi > pt[0]) !== (yj > pt[0]) && pt[1] < (xj - xi) * (pt[0] - yi) / (yj - yi) + xi) ins = !ins;
+  }
+  return ins;
+}
+
+// metres from a point to a ring's nearest edge (flat earth is fine at this size)
+function ringDist(pt, ring) {
+  const k = 111320 * Math.cos(pt[0] * Math.PI / 180);
+  const P = ring.map(p => [(p[1] - pt[1]) * k, (p[0] - pt[0]) * 110540]);
+  let best = Infinity;
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length], ab = sub(b, a), t = Math.max(0, Math.min(1, -(a[0] * ab[0] + a[1] * ab[1]) / ((ab[0] ** 2 + ab[1] ** 2) || 1)));
+    best = Math.min(best, len(add(a, mul(ab, t))));
+  }
+  return best;
+}
+
+async function analyseAt(lat, lng) {
+  T.busy = true;
+  tapHint('Tracing the house...');
+  log('Tracing the house from OpenStreetMap', false, true);
+  L.circleMarker([lat, lng], { radius: 5, color: '#fff', weight: 2, fillColor: '#2563eb', fillOpacity: 1 }).addTo(T.layer);
+  let ring = null;
+  try {
+    const els = await overpass(`[out:json][timeout:15];way["building"](around:35,${lat},${lng});out geom;`);
+    const rings = els.filter(e => e.geometry && e.geometry.length > 3).map(e => e.geometry.map(g => [g.lat, g.lon]));
+    ring = rings.find(r => inRing([lat, lng], r)) || null;
+    if (!ring) {
+      const near = rings.map(r => [ringDist([lat, lng], r), r]).sort((a, b) => a[0] - b[0])[0];
+      if (near && near[0] < 4) ring = near[1];
+    }
+  } catch (e) { log(e.message, true); }
+  T.busy = false;
+  if (!ring) {
+    T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
+    T.map.setView([lat, lng], Math.max(T.map.getZoom(), 19));
+    tapHint('This house is not on the map yet. Tap its 4 roof corners.');
+    log('This house is not on OpenStreetMap. Tap the 4 corners of its roof on the photo.');
+    return;
+  }
+  L.polygon(ring, { color: '#22c55e', weight: 2, fillOpacity: 0.15 }).addTo(T.layer);
+  return finishRoof(ring, 'map outline');
+}
+
+// ----- the roof analysis (same steps as roof.py) -----
+const wpx = (lat, lng, z) => {
+  const n = 256 * 2 ** z, s = Math.sin(lat * Math.PI / 180);
+  return [(lng + 180) / 360 * n, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n];
+};
+
+async function aerialCanvas(lat, lng, z, size = 640) {
+  const [cx, cy] = wpx(lat, lng, z);
+  const x0 = Math.floor(cx - size / 2), y0 = Math.floor(cy - size / 2);
+  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  const g = cv.getContext('2d');
+  const jobs = [];
+  for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + size - 1) / 256); ty++)
+    for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + size - 1) / 256); tx++)
+      jobs.push(new Promise(res => {
+        const im = new Image(); im.crossOrigin = 'anonymous';
+        im.onload = () => { g.drawImage(im, tx * 256 - x0, ty * 256 - y0); res(); };
+        im.onerror = res;
+        im.src = ESRI.replace('{z}', z).replace('{y}', ty).replace('{x}', tx);
+      }));
+  await Promise.all(jobs);
+  return { cv, origin: [x0, y0], mpp: 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** z };
+}
+
+function grayOf(cv) {
+  const { width: w, height: h } = cv, d = cv.getContext('2d').getImageData(0, 0, w, h).data;
+  let gr = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) gr[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  for (let pass = 0; pass < 2; pass++) {  // light blur, as roof.py does before edges
+    const o = new Float32Array(w * h);
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += gr[(y + dy) * w + x + dx];
+      o[y * w + x] = s / 9;
+    }
+    gr = o;
+  }
+  return { gr, w, h };
+}
+
+// slide the map outline onto the photo's roof edges (the two disagree by metres in the country)
+function register(G, poly, m, reach = 6) {
+  const { gr, w, h } = G;
+  const gx = (x, y) => gr[y * w + x + 1] - gr[y * w + x - 1], gy = (x, y) => gr[(y + 1) * w + x] - gr[(y - 1) * w + x];
+  const pts = [], nrm = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i], q = poly[(i + 1) % poly.length], L0 = len(sub(q, p));
+    if (L0 < 1e-6) continue;
+    const t = mul(sub(q, p), 1 / L0), n = [-t[1], t[0]];
+    for (let s = 0; s < L0; s += 0.3 / m) { pts.push(add(p, mul(t, s))); nrm.push(n); }
+  }
+  const score = (dx, dy) => {
+    let s = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const x = Math.min(w - 2, Math.max(1, Math.round(pts[i][0] + dx))), y = Math.min(h - 2, Math.max(1, Math.round(pts[i][1] + dy)));
+      s += Math.abs(gx(x, y) * nrm[i][0] + gy(x, y) * nrm[i][1]);
+    }
+    return s / pts.length;
+  };
+  const R = Math.round(reach / m), base = score(0, 0), pen = (dx, dy) => 1 - 0.02 * Math.hypot(dx, dy) * m;
+  let best = [base, 0, 0];
+  for (let dy = -R; dy <= R; dy += 2) for (let dx = -R; dx <= R; dx += 2) {
+    if (dx * dx + dy * dy > R * R) continue;
+    const sc = score(dx, dy) * pen(dx, dy); if (sc > best[0]) best = [sc, dx, dy];
+  }
+  const [, bx, by] = best;
+  for (let dy = by - 2; dy <= by + 2; dy++) for (let dx = bx - 2; dx <= bx + 2; dx++) {
+    const sc = score(dx, dy) * pen(dx, dy); if (sc > best[0]) best = [sc, dx, dy];
+  }
+  if (best[0] < base * 1.15) return { poly, shift: [0, 0] };
+  return { poly: poly.map(p => [p[0] + best[1], p[1] + best[2]]), shift: [best[1] * m, best[2] * m] };
+}
+
+function dominantAngle(poly) {
+  let best = 0, score = -1;
+  for (let a = 0; a < 90; a += 0.5) {
+    let s = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const v = sub(poly[(i + 1) % poly.length], poly[i]), L0 = len(v);
+      if (L0 < 1e-6) continue;
+      const e = ((Math.atan2(v[1], v[0]) * 180 / Math.PI) % 90 + 90) % 90, d = Math.min(Math.abs(e - a), 90 - Math.abs(e - a));
+      s += L0 * Math.exp(-((d / 4) ** 2));
+    }
+    if (s > score) { best = a; score = s; }
+  }
+  return best;
+}
+
+const rotP = (p, a, c) => { const r = a * Math.PI / 180, ca = Math.cos(r), sa = Math.sin(r), x = p[0] - c[0], y = p[1] - c[1]; return [x * ca + y * sa, -x * sa + y * ca]; };
+const unrotP = (p, a, c) => { const r = a * Math.PI / 180, ca = Math.cos(r), sa = Math.sin(r); return [p[0] * ca - p[1] * sa + c[0], p[0] * sa + p[1] * ca + c[1]]; };
+
+function maxRect(grid, W, H) {
+  const hts = new Int32Array(W);
+  let best = [0, null];
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) hts[x] = grid[y * W + x] ? hts[x] + 1 : 0;
+    const st = [];
+    for (let x = 0; x <= W; x++) {
+      const hh = x < W ? hts[x] : 0;
+      let start = x;
+      while (st.length && st[st.length - 1][1] >= hh) {
+        const [sx, sh] = st.pop();
+        if (sh * (x - sx) > best[0]) best = [sh * (x - sx), [sx, y - sh + 1, x, y + 1]];
+        start = sx;
+      }
+      st.push([start, hh]);
+    }
+  }
+  return best[1];
+}
+
+// split the outline into up to four rectangular wings (largest rectangle first)
+function wingsOf(poly, ang, m) {
+  const c = poly.reduce((a, p) => [a[0] + p[0] / poly.length, a[1] + p[1] / poly.length], [0, 0]);
+  const rp = poly.map(p => rotP(p, ang, c));
+  const mn = [Math.min(...rp.map(p => p[0])), Math.min(...rp.map(p => p[1]))];
+  const cell = 0.25 / m;
+  const W = Math.ceil((Math.max(...rp.map(p => p[0])) - mn[0]) / cell) + 1, H = Math.ceil((Math.max(...rp.map(p => p[1])) - mn[1]) / cell) + 1;
+  const grid = new Uint8Array(W * H);
+  const ring = rp.map(p => [(p[1] - mn[1]) / cell, (p[0] - mn[0]) / cell]); // [y, x] for inRing
+  let total = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inRing([y + 0.5, x + 0.5], ring)) { grid[y * W + x] = 1; total++; }
+  const out = [], minA = Math.max(0.10 * total, 14 / 0.0625);
+  for (let it = 0; it < 10 && out.length < 4; it++) {
+    const r = maxRect(grid, W, H);
+    if (!r) break;
+    const [x0, y0, x1, y1] = r, area = (x1 - x0) * (y1 - y0);
+    const clear = () => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) grid[y * W + x] = 0; };
+    if (Math.min(x1 - x0, y1 - y0) * 0.25 < 3 && area >= minA) { clear(); continue; }  // a sliver, not a roof
+    if (area < minA) break;
+    clear();
+    out.push([[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(p => unrotP([p[0] * cell + mn[0], p[1] * cell + mn[1]], ang, c)));
+  }
+  return out;
+}
+
+// across the wing, where does brightness step? that is the ridge (only used to pick the ridge direction)
+function ridgeContrast(G, rect) {
+  const [a, b, , d] = rect, along = sub(b, a), across = sub(d, a), L0 = len(along), D = len(across);
+  if (L0 < 2 || D < 2) return 0;
+  const n = Math.max(8, Math.round(D)), prof = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n, vals = [];
+    for (let k = 0; k < 24; k++) {
+      const s = 0.15 + 0.7 * k / 23, p = add(a, add(mul(along, s), mul(across, t)));
+      const x = Math.round(p[0]), y = Math.round(p[1]);
+      if (x >= 0 && y >= 0 && x < G.w && y < G.h) vals.push(G.gr[y * G.w + x]);
+    }
+    vals.sort((p, q) => p - q);
+    prof.push(vals.length ? vals[vals.length >> 1] : 0);
+  }
+  const mean = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+  let best = 0;
+  for (let i = Math.floor(n * 0.3); i < Math.max(Math.floor(n * 0.3) + 1, Math.floor(n * 0.7)); i++) best = Math.max(best, Math.abs(mean(prof.slice(0, i)) - mean(prof.slice(i))));
+  return best;
+}
+
+async function finishRoof(ring, source) {
+  T.busy = true;
+  tapHint('Working out the roof...');
+  log('Fetching the aerial photo and working out the roof', false, true);
+  try {
+    const c = ring.reduce((a, p) => [a[0] + p[0] / ring.length, a[1] + p[1] / ring.length], [0, 0]);
+    const z = 19;
+    const { cv, origin, mpp } = await aerialCanvas(c[0], c[1], z);
+    const G = grayOf(cv);
+    let poly = ring.map(p => { const [x, y] = wpx(p[0], p[1], z); return [x - origin[0], y - origin[1]]; });
+    let shift = [0, 0];
+    if (source === 'map outline') ({ poly, shift } = register(G, poly, mpp));
+    let area = 0;
+    for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; area += p[0] * q[1] - q[0] * p[1]; }
+    area = Math.abs(area) / 2 * mpp * mpp;
+    const ang = dominantAngle(poly);
+    const wings = wingsOf(poly, ang, mpp).map(rect => {
+      let [a, b, cc, d] = rect;
+      let e1 = len(sub(b, a)), e2 = len(sub(d, a));
+      if (e1 < e2) { rect = [a, d, cc, b]; [a, b, cc, d] = rect; [e1, e2] = [e2, e1]; }
+      if (e1 / Math.max(e2, 1e-6) < 1.3) {  // near square: let the photo's lit/shaded split choose the ridge
+        const alt = [b, cc, d, a], c1 = ridgeContrast(G, rect), c2 = ridgeContrast(G, alt);
+        if (c2 > 1.5 * c1 && c2 > 10) { rect = alt; [e1, e2] = [e2, e1]; }
+      }
+      return { rect, length_m: e1 * mpp, width_m: e2 * mpp };
+    });
+    if (!wings.length) throw new Error('Could not find a roof shape in that outline. Tap the 4 roof corners instead.');
+    const warn = area < 40 ? `Outline is only ${Math.round(area)} m², a shed or garage? Use Wrong building? to pick the house.`
+      : area > 900 ? `Outline is ${Math.round(area)} m², big for a house. Check it is the right building.` : null;
+    let address = `Near ${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
+    try {
+      const rv = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${c[0]}&lon=${c[1]}`, { signal: AbortSignal.timeout(5000) })).json();
+      const a = rv.address || {};
+      address = [a.road, a.hamlet || a.village || a.suburb || a.town, a.city || a.county].filter(Boolean).join(', ') || address;
+    } catch (e) {}
+    const result = {
+      finder: { eircode: T.eircode, address: `${address}, ${T.eircode}`, lat: c[0], lng: c[1], zoom: z },
+      roof: { ok: true, zoom: z, mpp, size: cv.width, origin, outline: poly, area_m2: Math.round(area * 10) / 10, shift_m: shift,
+        source, wings, warn, footprint: { area_m2: area, shared_with: 0 },
+        fallback: source === 'corners' ? null : undefined },
+      images: { aerial: cv.toDataURL('image/jpeg', 0.88) },
+      run: 'free', stamp: Date.now(),
+    };
+    if (T.map) { T.map.remove(); T.map = null; }
+    S.freePV = true;
+    load(result);
+  } catch (e) {
+    log(e.message || 'Could not work out that roof', true);
+    tapHint('Try tapping the roof again');
+  } finally { T.busy = false; }
+}
+
+// ----- sunshine: PVGIS figures for 12 places in Ireland, any direction and pitch, blended by distance -----
+function irelandPV(pv, lat, lng, angle, aspect) {
+  const P = pv.pitches, A = pv.aspects, step = A[1] - A[0];
+  const p = Math.min(P[P.length - 1], Math.max(P[0], angle));
+  let pi = P.findIndex((v, i) => i < P.length - 1 && p <= P[i + 1]); if (pi < 0) pi = P.length - 2;
+  const tp = (p - P[pi]) / (P[pi + 1] - P[pi]);
+  const a = ((aspect - A[0]) % 360 + 360) % 360, ai = Math.floor(a / step) % A.length, ta = (a - ai * step) / step, aj = (ai + 1) % A.length;
+  const at = (t, i, j) => t[i][j];
+  const sites = pv.sites.map(s => [Math.hypot((s.lat - lat) * 111, (s.lng - lng) * 111 * Math.cos(lat * Math.PI / 180)), s])
+    .sort((x, y) => x[0] - y[0]).slice(0, 3);
+  const out = new Array(13).fill(0);
+  let wsum = 0;
+  for (const [d, s] of sites) {
+    const w = 1 / Math.max(1, d) ** 2;
+    wsum += w;
+    for (let k = 0; k < 13; k++) {
+      const v00 = at(s.t, pi, ai)[k], v01 = at(s.t, pi, aj)[k], v10 = at(s.t, pi + 1, ai)[k], v11 = at(s.t, pi + 1, aj)[k];
+      out[k] += w * ((v00 * (1 - ta) + v01 * ta) * (1 - tp) + (v10 * (1 - ta) + v11 * ta) * tp);
+    }
+  }
+  return { E_y: out[0] / wsum, E_m: out.slice(1).map(v => v / wsum) };
 }
 </script>
 </body>
