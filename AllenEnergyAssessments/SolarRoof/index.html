@@ -181,7 +181,7 @@ body.locked > :not(.gate) { visibility: hidden; }
     <span><b id="brandName">Solar Roof Check</b><small id="brandTag">Instant solar assessment from an Eircode</small></span>
   </a>
   <div class="spacer"></div>
-  <button id="aiBtn" class="small" title="Gemini key for AI roof reading">AI key</button>
+  <button id="aiBtn" class="small" hidden>AI key</button>
   <button id="printBtn" class="small" disabled>Print report</button>
 </div></div>
 
@@ -1028,49 +1028,35 @@ async function analyseAt(lat, lng) {
       if (near && near[0] < 4) ring = near[1];
     }
   } catch (e) { log(e.message, true); }
-  if (!ring && !T.forceDraw && !(await aiKey())) {
-    // no key on this device yet: offer one, or drawing by hand
-    step(2, 'wait', 'Not on the map yet');
-    tapHint('This house is not on the map yet');
-    log('This house is not on OpenStreetMap. Let AI read the roof, or draw it yourself.');
-    const box = document.createElement('div');
-    box.className = 'aiask';
-    box.innerHTML = `<b>This house is not on the map yet.</b><span>AI can read its roof from the photo.</span>
-      <div><button class="small primary" data-a="key">Add Gemini key</button><button class="small" data-a="draw">Draw it myself</button></div>`;
-    $('#view').appendChild(box);
-    const choice = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a)));
-    box.remove();
-    if (choice !== 'key' || !(await aiKeyDialog())) T.forceDraw = true;
-  }
   if (!ring && !T.forceDraw) {
-    // not on OpenStreetMap: let Gemini read the roof from the aerial photo
-    step(2, 'run', 'Reading the roof with AI');
-    tapHint('Reading the roof with AI...');
-    log('This house is not on OpenStreetMap. Reading its roof from the photo with AI.', false, true);
+    // not on OpenStreetMap: our roof model (trained on Irish houses) reads the roof from the photo
+    step(2, 'run', 'Reading the roof from the photo');
+    tapHint('Reading the roof from the photo...');
+    log('This house is not on OpenStreetMap. Reading its roof from the aerial photo.', false, true);
     try {
-      const ai = await aiRoof(lat, lng);
+      const ai = await modelRoof(lat, lng);
       if (ai) {
         const shape = L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.15, className: 'drawon' }).addTo(T.layer);
         ai.wings.forEach(w => L.polygon(w.rect, { color: '#facc15', weight: 1.5, fill: false, dashArray: '4 4' }).addTo(T.layer));
         T.map.fitBounds(shape.getBounds(), { maxZoom: 20, padding: [40, 40] });
-        step(2, 'wait', 'AI found a roof: check it');
+        step(2, 'wait', 'Roof found: check it');
         tapHint('Is the green shape the roof?');
-        // a person checks the AI before anything is worked out from it
+        // a person checks the model before anything is worked out from it
         const box = document.createElement('div');
         box.className = 'aiask';
-        box.innerHTML = `<b>Is the green shape the roof?</b><span>AI drew it from the photo.</span>
+        box.innerHTML = `<b>Is the green shape the roof?</b><span>Read from the aerial photo.</span>
           <div><button class="small primary" data-a="yes">Yes, carry on</button><button class="small" data-a="draw">Draw it myself</button></div>`;
         $('#view').appendChild(box);
         const ok = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a === 'yes')));
         box.remove();
         if (ok) {
-          step(2, 'done', `Roof found by AI (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
+          step(2, 'done', `Roof read from the photo (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
           T.busy = false;
           return finishRoof(ai.ring, 'ai', ai.wings);
         }
         T.forceDraw = true;
       }
-    } catch (e) { console.warn('AI roof:', e); }
+    } catch (e) { console.warn('roof model:', e); }
   }
   T.busy = false;
   if (!ring) {
@@ -1281,7 +1267,7 @@ async function finishRoof(ring, source, preset) {
     if (!wings.length) throw new Error('Could not find a roof shape in that outline. Tap the 4 roof corners instead.');
     const warn = area < 40 ? `Outline is only ${Math.round(area)} m², a shed or garage? Use Wrong building? to pick the house.`
       : area > 900 ? `Outline is ${Math.round(area)} m², big for a house. Check it is the right building.`
-      : source === 'ai' ? 'Roof traced by AI from the aerial photo. If it is off, press Wrong building? and then Draw it.' : null;
+      : source === 'ai' ? 'Roof read from the aerial photo. If it is off, press Wrong building? and then Draw it.' : null;
     let address = `Near ${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
     try {
       const rv = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${c[0]}&lon=${c[1]}`, { signal: AbortSignal.timeout(5000) })).json();
@@ -1644,6 +1630,71 @@ async function tileRings(lat, lng) {
     }
   }));
   return rings.filter(r => r.length > 3);
+}
+
+// ----- our own roof model (train/train.py): runs in the browser, no key, no server -----
+// Trained on a few thousand Irish OpenStreetMap house outlines over Esri aerials.
+// Input: the 224 px (about 40 m) aerial around the pin. Output: the roof under the pin.
+const ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+let ROOF_SESSION = null;
+async function roofSession() {
+  if (ROOF_SESSION) return ROOF_SESSION;
+  if (!window.ort) await new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = ORT_URL + 'ort.min.js'; s.onload = res; s.onerror = () => rej(new Error('Could not load the roof model runtime'));
+    document.head.appendChild(s);
+  });
+  ort.env.wasm.wasmPaths = ORT_URL;
+  ort.env.wasm.numThreads = 1;  // GitHub Pages cannot enable the cross-origin isolation threads need
+  ROOF_SESSION = await ort.InferenceSession.create('roof.onnx', { executionProviders: ['wasm'] });
+  return ROOF_SESSION;
+}
+
+// returns { ring (lat/lng outline), wings (lat/lng rects) } or null
+async function modelRoof(lat, lng) {
+  const IN = 224, z = 19;
+  const [sess, aer] = await Promise.all([roofSession(), aerialCanvas(lat, lng, z)]);
+  const { cv, origin, mpp } = aer;
+  const o = (cv.width - IN) / 2;
+  const px = cv.getContext('2d').getImageData(o, o, IN, IN).data;
+  const mean = [0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225];
+  const x = new Float32Array(3 * IN * IN);
+  for (let i = 0; i < IN * IN; i++) for (let c = 0; c < 3; c++) x[c * IN * IN + i] = (px[i * 4 + c] / 255 - mean[c]) / std[c];
+  const out = await sess.run({ image: new ort.Tensor('float32', x, [1, 3, IN, IN]) });
+  const logit = out.logits.data;
+  // the blob under the pin (flood fill from the centre, or from the nearest roof pixel)
+  const on = i => logit[i] > 0;
+  let seed = (IN / 2) * IN + IN / 2;
+  if (!on(seed)) {
+    let best = Infinity;
+    for (let i = 0; i < IN * IN; i++) if (on(i)) { const d = (i % IN - IN / 2) ** 2 + (Math.floor(i / IN) - IN / 2) ** 2; if (d < best) { best = d; seed = i; } }
+    if (best * mpp * mpp > 16) return null;  // nothing within 4 m of the pin
+  }
+  const seen = new Uint8Array(IN * IN), stack = [seed], pts = [];
+  seen[seed] = 1;
+  while (stack.length) {
+    const i = stack.pop(), xx = i % IN, yy = Math.floor(i / IN);
+    pts.push([o + xx + 0.5, o + yy + 0.5]);
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = xx + dx, ny = yy + dy, j = ny * IN + nx;
+      if (nx >= 0 && ny >= 0 && nx < IN && ny < IN && !seen[j] && on(j)) { seen[j] = 1; stack.push(j); }
+    }
+  }
+  const area = pts.length * mpp * mpp;
+  if (area < 25 || area > 1200) return null;
+  const h = hull(pts), ang = minRectAngle(h), G = grayOf(cv);
+  const wingsPx = wingsFromPixels(pts, ang, mpp).map(rect => {
+    let [a, b, cc, d] = rect, e1 = len(sub(b, a)), e2 = len(sub(d, a));
+    if (e1 < e2) { rect = [a, d, cc, b]; [a, b, cc, d] = rect; [e1, e2] = [e2, e1]; }
+    if (e1 / Math.max(e2, 1e-6) < 1.3) {
+      const alt = [b, cc, d, a];
+      if (ridgeContrast(G, alt) > 1.5 * ridgeContrast(G, rect) && ridgeContrast(G, alt) > 10) rect = alt;
+    }
+    return rect;
+  });
+  if (!wingsPx.length) return null;
+  const toLL = p => { const n = 256 * 2 ** z, X = origin[0] + p[0], Y = origin[1] + p[1];
+    return [Math.atan(Math.sinh(Math.PI * (1 - 2 * Y / n))) * 180 / Math.PI, X / n * 360 - 180]; };
+  return { ring: h.map(toLL), wings: wingsPx.map(rect => ({ rect: rect.map(toLL), type: 'gable' })) };
 }
 </script>
 </body>
