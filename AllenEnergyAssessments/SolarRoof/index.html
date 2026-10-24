@@ -51,6 +51,11 @@ form.find { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
 #log .err { color: #b91c1c; font-weight: 600; }
+.demolist { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.demolist:empty { display: none; }
+.chip { padding: 5px 11px; border-radius: 99px; font-size: 13px; font-weight: 700; color: var(--navy); background: var(--blue-l); border: 1px solid #bfdbfe; letter-spacing: .03em; }
+.chip span { font-weight: 500; color: #475569; letter-spacing: 0; }
+.chip:hover:not(:disabled) { background: #bfdbfe; }
 .spin { width: 14px; height: 14px; border: 2px solid var(--blue-l); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -154,6 +159,7 @@ label.f input, label.f select { padding: 8px 10px; border: 1px solid #cbd5e1; bo
       <button class="primary" id="go">Check my roof</button>
     </form>
     <div id="log"></div>
+    <div id="demoList" class="demolist"></div>
   </div>
 </div></div>
 
@@ -239,7 +245,7 @@ $('#code').addEventListener('input', e => {
   e.target.value = c.length > 3 ? c.slice(0, 3) + ' ' + c.slice(3) : c;
 });
 $('#findForm').addEventListener('submit', e => { e.preventDefault(); find(false); });
-$('#refreshBtn').onclick = () => find(true);
+$('#refreshBtn').onclick = () => S.demoPV ? log('Looking up again needs live lookups, which are not switched on in this demo.', true) : find(true);
 $('#printBtn').onclick = () => window.print();
 $('#pickBtn').onclick = () => {
   S.picking = !S.picking;
@@ -370,19 +376,58 @@ function askKey(why) {
     } catch (er) { msg.textContent = er.message || 'Could not check the code'; }
   };
 }
-if (CLOUD && (!getKey() || !RELAY)) askKey();
+// ---------- demo: finished results shipped beside the page (demo.json), no relay or code needed ----------
+const PUBLISHED = CLOUD || location.protocol === 'https:';
+let DEMO = null;
+const demoReady = PUBLISHED ? fetch('demo.json').then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+  DEMO = d;
+  if (d && d.list.length) {
+    $('#demoList').innerHTML = `<span class="sub">Try:</span> ` + d.list.map(x =>
+      `<button type="button" class="chip" data-code="${esc(x.code)}">${esc(x.code)} <span>${esc(x.place)}</span></button>`).join('');
+    $('#demoList').querySelectorAll('.chip').forEach(b => b.onclick = () => { $('#code').value = b.dataset.code; find(false); });
+  }
+  return d;
+}) : Promise.resolve(null);
+
+// sunshine figures from the demo table: nearest direction, pitch interpolated between 5 degree steps
+function demoPV(pv, angle, aspect) {
+  const rows = Object.keys(pv).map(k => k.split(',').map(Number));
+  const asp = rows.map(r => r[1]).reduce((best, a) => {
+    const d = x => Math.abs(((x - aspect + 540) % 360) - 180);
+    return d(a) < d(best) ? a : best;
+  }, rows[0][1]);
+  const ps = [...new Set(rows.filter(r => r[1] === asp).map(r => r[0]))].sort((a, b) => a - b);
+  const p = Math.min(ps[ps.length - 1], Math.max(ps[0], angle));
+  const lo = ps.filter(x => x <= p).pop(), hi = ps.find(x => x >= p);
+  const A = pv[`${lo},${asp}`], B = pv[`${hi},${asp}`], t = hi === lo ? 0 : (p - lo) / (hi - lo);
+  return { E_y: A.E_y + (B.E_y - A.E_y) * t, E_m: A.E_m.map((v, i) => v + (B.E_m[i] - v) * t) };
+}
 
 async function find(fresh) {
   const code = $('#code').value.trim();
-  if (code.replace(/\s/g, '').length !== 7) { log('An Eircode has 7 characters, e.g. A65 F4E2', true); return; }
-  if (!CLOUD && location.protocol === 'https:') { log('This page is not connected to its relay yet.', true); return; }
+  const key = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (key.length !== 7) { log('An Eircode has 7 characters, e.g. A65 F4E2', true); return; }
+  await demoReady;
+  if (DEMO && DEMO.codes[key]) {
+    const d = DEMO.codes[key];
+    S.demoPV = d.pv;
+    log('Looking up on Eircode Finder', false, true);
+    await sleep(500); log('Tracing the house from the national map', false, true);
+    await sleep(500); log('Checking every roof face against PVGIS sunshine data', false, true);
+    await sleep(400);
+    load(JSON.parse(JSON.stringify(d.result)));
+    return;
+  }
+  S.demoPV = null;
+  if (!CLOUD && location.protocol === 'https:') { log(demoOnly(), true); return; }
   if (CLOUD && !RELAY) { askKey(); return; }
   $('#go').disabled = true;
   log(CLOUD ? 'Sending to the cloud' : 'Starting', false, true);
   try { load(await api.find(code, fresh, m => log(m, false, true))); }
-  catch (e) { log(e.message, true); }
+  catch (e) { log(/not set|GitHub/i.test(e.message) && DEMO ? demoOnly() : e.message, true); }
   finally { $('#go').disabled = false; }
 }
+const demoOnly = () => 'Live lookups for any Eircode are not switched on in this demo yet. Try one of the addresses below.';
 
 // images arrive as URLs from the local server and as base64 from the relay
 // (base64 JPEG starts "/9j/", so only the local server's /runs/ paths count as URLs)
@@ -495,6 +540,7 @@ async function pvFor(f, s) {
   const angle = f.flat ? 15 : s.pitch;
   const aspect = f.flat ? 0 : ((f.az - 180 + 540) % 360) - 180;
   const key = `${Math.round(angle)},${Math.round(aspect)}`;
+  if (S.demoPV) return demoPV(S.demoPV, angle, aspect);
   if (!S.pv[key]) S.pv[key] = api.pv(lat, lng, angle, aspect).catch(e => { delete S.pv[key]; throw e; });
   return S.pv[key];
 }
@@ -603,6 +649,7 @@ function drawView(s) {
 
 function pick(px, py) {
   const r = S.data.roof;
+  if (S.demoPV) { $('#pickBtn').click(); log('Picking another building needs live lookups, which are not switched on in this demo.', true); return; }
   const n = 256 * 2 ** r.zoom;
   const ll = (x, y) => [Math.atan(Math.sinh(Math.PI * (1 - 2 * (r.origin[1] + y) / n))) * 180 / Math.PI, (r.origin[0] + x) / n * 360 - 180];
   // the photo sits shift_m away from the finder map: undo that to find the map building
