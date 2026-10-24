@@ -139,6 +139,19 @@ body.locked > :not(.gate) { visibility: hidden; }
 
 /* tap-the-roof map (Leaflet core styles inlined above: a CDN stylesheet is the part that fails) */
 #tmap { position: absolute; inset: 0; background: #1e293b; }
+.steps { position: absolute; top: 56px; left: 10px; z-index: 600; margin: 0; padding: 10px 14px; list-style: none; background: rgba(15, 23, 42, .82); color: #fff; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow); pointer-events: none; max-width: calc(100% - 20px); }
+.steps li { display: flex; align-items: center; gap: 9px; padding: 3px 0; opacity: .45; transition: opacity .3s; }
+.steps li.run, .steps li.done, .steps li.wait { opacity: 1; }
+.steps .ic { width: 15px; height: 15px; flex: none; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5); }
+.steps li.run .ic { border-color: rgba(255, 255, 255, .25); border-top-color: #4ade80; animation: spin .8s linear infinite; }
+.steps li.done .ic { border: 0; background: #22c55e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+.steps li.wait .ic { border-color: #facc15; background: #facc15; }
+.pulse { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 0 rgba(37, 99, 235, .7); animation: pulse 1.4s ease-out infinite; }
+@keyframes pulse { to { box-shadow: 0 0 0 26px rgba(37, 99, 235, 0); } }
+.drawon { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawon .9s ease-out forwards; }
+@keyframes drawon { to { stroke-dashoffset: 0; } }
+.view.flash::after { content: ''; position: absolute; inset: 0; background: #fff; z-index: 900; animation: flash .38s ease-out forwards; }
+@keyframes flash { from { opacity: .95; } to { opacity: 0; } }
 .tapsearch { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; gap: 6px; }
 .tapsearch input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-shadow: var(--shadow); }
 .taphint { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 500; background: rgba(15, 23, 42, .78); color: #fff; font-size: 13.5px; font-weight: 600; border-radius: 10px; padding: 8px 12px; text-align: center; pointer-events: none; }
@@ -838,32 +851,70 @@ async function osmEircode(code, k) {
   return { lat: c.lat, lng: c.lon };
 }
 
+async function esriEircode(code) {
+  const q = encodeURIComponent(code.slice(0, 3) + ' ' + code.slice(3));
+  const r = await (await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${q}&countryCode=IRL&maxLocations=1&outFields=Addr_type,Score&f=json`, { signal: AbortSignal.timeout(8000) })).json();
+  const c = (r.candidates || [])[0];
+  // only a full Eircode match counts; a town or area match would put us in the wrong place
+  if (!c || c.attributes.Addr_type !== 'PostalExt' || c.score < 90) return null;
+  return { lat: c.location.y, lng: c.location.x };
+}
+
+// the progress panel over the map: each step spins, then ticks
+const STEPS = ['Finding the Eircode', 'Flying to the house', 'Tracing the outline', 'Reading the roof from the photo', 'Checking the sunshine on every face'];
+function step(i, state, text) {
+  const li = document.querySelectorAll('#steps li')[i];
+  if (!li) return;
+  li.className = state;
+  if (text) li.querySelector('span:last-child').textContent = text;
+}
+const flyTo = (at, z, secs) => new Promise(res => {
+  const done = () => { clearTimeout(t); res(); };
+  const t = setTimeout(done, secs * 1000 + 1500);
+  T.map.once('moveend', done);
+  T.map.flyTo([at.lat, at.lng], z, { duration: secs });
+});
+
 async function tapMode(code, centre) {
   T.eircode = code.slice(0, 3) + ' ' + code.slice(3);
   S.demoPV = null;
-  log('Finding the area', false, true);
-  const { keys } = await tables();
-  let at = centre || null, zoom = 19, exact = false;
-  if (!at) {
-    const k = keys[code.slice(0, 3)];
-    try { const hit = await osmEircode(code, k); if (hit) { at = hit; exact = true; } } catch (e) {}
-    if (!at && k) { at = { lat: k.lat, lng: k.lng }; zoom = k.km > 6 ? 12 : k.km > 2.5 ? 13 : 14; }
-    if (!at) { at = { lat: 53.4, lng: -8.0 }; zoom = 7; }
-  }
+  log(`Looking up ${T.eircode}`, false, true);
+  const tablesP = tables();
   await loadLeaflet();
-  openMap(at, zoom);
+  if (centre) { openMap(centre, 19, false); log('Tap the roof you want.'); return; }
+  // the satellite view of Ireland goes up straight away, then flies down to the house
+  openMap({ lat: 53.45, lng: -8.0 }, 6, true);
+  step(0, 'run');
+  const { keys } = await tablesP;
+  const k = keys[code.slice(0, 3)];
+  let at = null, exact = false;
+  // Esri's geocoder knows full Eircodes (it lands on the same point as the Eircode Finder)
+  try { const hit = await esriEircode(code); if (hit) { at = hit; exact = true; } } catch (e) {}
+  if (!at) try { const hit = await osmEircode(code, k); if (hit) { at = hit; exact = true; } } catch (e) {}
   if (exact) {
-    log(`Found ${T.eircode} on the map. Tracing the house.`, false, true);
+    step(0, 'done', `Found ${T.eircode}`);
+    step(1, 'run');
+    await flyTo(at, 19, 3.2);
+    L.marker([at.lat, at.lng], { icon: L.divIcon({ className: '', html: '<span class="pulse"></span>', iconSize: [0, 0] }), interactive: false }).addTo(T.layer);
+    step(1, 'done');
+    log(`Found ${T.eircode}. Tracing the house.`, false, true);
     return analyseAt(at.lat, at.lng);
   }
-  log(centre ? 'Tap the roof you want.' : `Showing the ${code.slice(0, 3)} area. Zoom in on the house and tap its roof, or search the address.`);
+  // not known exactly: fly to its area and let the visitor tap the roof
+  step(0, 'done', k ? `${code.slice(0, 3)} area found` : 'Eircode not found');
+  if (k) await flyTo(k, k.km > 6 ? 12 : k.km > 2.5 ? 13 : 14, 2.4);
+  $('#steps').remove();
+  tapHint('Zoom in and tap the roof of the house');
+  log(`Showing the ${code.slice(0, 3)} area. Zoom in on the house and tap its roof, or search the address.`);
 }
 
-function openMap(at, zoom) {
+function openMap(at, zoom, withSteps) {
   if (T.map) { T.map.remove(); T.map = null; }
   $('#view').innerHTML = `<div id="tmap"></div>
     <form class="tapsearch" id="tapsearch"><input placeholder="Search an address or townland" aria-label="Search an address"><button class="small primary">Go</button></form>
-    <div class="taphint" id="taphint">Zoom in and tap the roof of the house</div>`;
+    ${withSteps ? `<ol class="steps" id="steps">${STEPS.map(s => `<li><span class="ic"></span><span>${s}</span></li>`).join('')}</ol>` : ''}
+    <div class="taphint" id="taphint">${withSteps ? 'Working...' : 'Zoom in and tap the roof of the house'}</div>`;
+  $('#view').scrollIntoView({ behavior: 'smooth', block: 'center' });
   T.mode = 'tap'; T.corners = [];
   T.map = L.map('tmap', { zoomControl: true, attributionControl: true, maxZoom: 21 }).setView([at.lat, at.lng], zoom);
   L.tileLayer(ESRI, { maxNativeZoom: 19, maxZoom: 21, attribution: 'Imagery &copy; Esri' }).addTo(T.map);
@@ -922,7 +973,8 @@ async function analyseAt(lat, lng) {
   T.busy = true;
   tapHint('Tracing the house...');
   log('Tracing the house from OpenStreetMap', false, true);
-  L.circleMarker([lat, lng], { radius: 5, color: '#fff', weight: 2, fillColor: '#2563eb', fillOpacity: 1 }).addTo(T.layer);
+  step(2, 'run');
+  if (!$('#steps')) L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<span class="pulse"></span>', iconSize: [0, 0] }), interactive: false }).addTo(T.layer);
   let ring = null;
   try {
     const els = await overpass(`[out:json][timeout:15];way["building"](around:35,${lat},${lng});out geom;`);
@@ -937,11 +989,15 @@ async function analyseAt(lat, lng) {
   if (!ring) {
     T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
     T.map.setView([lat, lng], Math.max(T.map.getZoom(), 19));
+    step(2, 'wait', 'Tap the 4 roof corners');
     tapHint('This house is not on the map yet. Tap its 4 roof corners.');
     log('This house is not on OpenStreetMap. Tap the 4 corners of its roof on the photo.');
     return;
   }
-  L.polygon(ring, { color: '#22c55e', weight: 2, fillOpacity: 0.15 }).addTo(T.layer);
+  // draw the outline on, edge by edge
+  L.polygon(ring, { color: '#22c55e', weight: 3, fillOpacity: 0.12, className: 'drawon' }).addTo(T.layer);
+  step(2, 'done');
+  await sleep(900);
   return finishRoof(ring, 'map outline');
 }
 
@@ -1105,6 +1161,8 @@ async function finishRoof(ring, source) {
   T.busy = true;
   tapHint('Working out the roof...');
   log('Fetching the aerial photo and working out the roof', false, true);
+  if (source === 'corners') step(2, 'done', 'Outline from your 4 taps');
+  step(3, 'run');
   try {
     const c = ring.reduce((a, p) => [a[0] + p[0] / ring.length, a[1] + p[1] / ring.length], [0, 0]);
     const z = 19;
@@ -1144,6 +1202,15 @@ async function finishRoof(ring, source) {
       images: { aerial: cv.toDataURL('image/jpeg', 0.88) },
       run: 'free', stamp: Date.now(),
     };
+    step(3, 'done', `Roof read: ${wings.length} section${wings.length > 1 ? 's' : ''}`);
+    step(4, 'run');
+    await tables();
+    await sleep(700);
+    step(4, 'done');
+    // the snip: a camera flash as the aerial is taken, then the result
+    $('#view').classList.add('flash');
+    await sleep(380);
+    $('#view').classList.remove('flash');
     if (T.map) { T.map.remove(); T.map = null; }
     S.freePV = true;
     load(result);
