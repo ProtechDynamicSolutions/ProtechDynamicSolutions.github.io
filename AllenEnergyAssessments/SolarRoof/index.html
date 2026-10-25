@@ -51,6 +51,8 @@ form.find { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
 #log .err { color: #b91c1c; font-weight: 600; }
+button.x { width: 26px; height: 26px; padding: 0; border-radius: 50%; font-size: 17px; line-height: 1; color: #b91c1c; border-color: #fecaca; display: grid; place-items: center; }
+.wing.removed { opacity: .6; }
 .facelist { display: grid; gap: 6px; margin-top: 8px; }
 .facelist div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .facelist b { font-size: 15.5px; color: var(--ink); }
@@ -234,6 +236,7 @@ body.locked > :not(.gate) { visibility: hidden; }
     <section class="card" id="facesCard" hidden>
       <h2>Roof faces</h2>
       <table id="faces"></table>
+      <div id="hiddenNote" class="sub noprint" style="margin-top:8px"></div>
     </section>
     <section class="card chart" id="chartCard" hidden>
       <h2>Monthly generation, chosen faces</h2>
@@ -534,7 +537,7 @@ function imgSrc(v, type) { return !v ? '' : /^(\/runs\/|data:|https?:)/.test(v) 
 
 function load(d) {
   d.images = d.images || {};
-  S.data = d; S.use = {}; S.pv = {};
+  S.data = d; S.use = {}; S.pv = {}; S.hide = {};
   const r = d.roof;
   if (!r.ok) { log(r.error || 'Could not read the roof', true); return; }
   // ridges sit on the centre line of nearly every pitched roof; the photo only chose its direction
@@ -572,7 +575,8 @@ function facesOf() {
       out.push({ id: `${wi}D`, wing: wi, poly: [b, c, q1], az: bearing(along), L: Wd, D: len(inset) * m, hip, e0: b, e1: c, inward: mul(unit(along), -1) });
     }
   });
-  return out;
+  // faces and sections the user removed as not really roof
+  return out.filter(f => !S.hide[f.id] && !S.wings[f.wing].removed);
 }
 
 // panels on one face: rows up the slope, hips narrow each row at both ends
@@ -742,7 +746,8 @@ function drawView(s) {
   }
   S.wings.forEach((w, i) => {
     if (w.type === 'flat') return;
-    const f = S.faces.find(f => f.id === `${i}A`);
+    const f = S.faces.find(f => f.id === `${i}A`) || S.faces.find(f => f.id === `${i}B`);
+    if (!f) return;
     g += `<line x1="${f.poly[3][0]}" y1="${f.poly[3][1]}" x2="${f.poly[2][0]}" y2="${f.poly[2][1]}" stroke="var(--ridge)" stroke-width="${2.2 * k}" pointer-events="none"/>`;
   });
   for (const f of S.faces) {
@@ -801,7 +806,8 @@ function drawSummary(s) {
   if (r.fallback) warn.push('Not on the finder map, so the outline was cut from the photo. Check it.');
   if (r.footprint && r.footprint.shared_with) warn.push(`This building holds ${r.footprint.shared_with + 1} addresses (semi-detached or terrace). Only this address's share is used.`);
   const gm = `https://www.google.com/maps?q=${f.lat},${f.lng}&t=k&z=20`;
-  const wingTxt = S.wings.length === 1 ? 'one roof section' : `${S.wings.length} roof sections`;
+  const nw = S.wings.filter(w => !w.removed).length;
+  const wingTxt = nw === 1 ? 'one roof section' : `${nw} roof sections`;
   $('#summary').hidden = false;
   $('#summary').innerHTML = `
     <div class="addr">${esc(f.address)}</div>
@@ -854,15 +860,15 @@ function drawTable() {
   $('#facesCard').hidden = false;
   if (S.roofOnly) {
     const s = settings();
-    $('#faces').innerHTML = `<tr><th>Face</th><th>Sun</th><th class="num">Facing</th><th class="num">Area m&sup2;</th><th class="num" title="Yearly yield of 1 kWp of panels on this face">kWh/kWp</th></tr>` +
+    $('#faces').innerHTML = `<tr><th>Face</th><th>Sun</th><th class="num">Facing</th><th class="num">Area m&sup2;</th><th class="num" title="Yearly yield of 1 kWp of panels on this face">kWh/kWp</th><th class="noprint"></th></tr>` +
       rows.map(f => {
         const [rt, col] = ratingOf(f.ratio);
         const name = f.flat ? 'Flat roof' : `<span class="long">${NAMES[compass(f.az)]}</span><span class="short">${compass(f.az)}</span>`;
         return `<tr><td><span class="dot" style="background:${col}"></span>${name}${S.wings.length > 1 ? ` <span class="sub">s${f.wing + 1}</span>` : ''}</td>
           <td><span class="rating" style="background:${col}">${rt}</span></td>
-          <td class="num">${f.flat ? '-' : Math.round(f.az) + '&deg;'}</td><td class="num">${fmt(faceArea(f, s))}</td><td class="num">${fmt(f.spec)}</td></tr>`;
+          <td class="num">${f.flat ? '-' : Math.round(f.az) + '&deg;'}</td><td class="num">${fmt(faceArea(f, s))}</td><td class="num">${fmt(f.spec)}</td>${removeCell(f)}</tr>`;
       }).join('');
-    return;
+    return wireRemove();
   }
   $('#faces').innerHTML = `<tr><th>Face</th><th>Rating</th><th class="num" title="Used / fit on the face">Panels</th><th class="num">kWp</th><th class="num">kWh/yr</th><th class="num">kWh/kWp</th><th class="noprint"></th></tr>` +
     rows.map(f => {
@@ -871,9 +877,23 @@ function drawTable() {
       return `<tr class="${f.on ? '' : 'off'}"><td><span class="dot" style="background:${col}"></span>${name}${S.wings.length > 1 ? ` <span class="sub">s${f.wing + 1}</span>` : ''}</td>
         <td><span class="rating" style="background:${col}">${rt}</span></td>
         <td class="num">${f.used}<span class="sub"> / ${f.lay.n}</span></td><td class="num">${fmt(f.kwp, 2)}</td><td class="num">${fmt(f.kwh)}</td><td class="num">${fmt(f.spec)}</td>
-        <td class="noprint"><input type="checkbox" data-face="${f.id}" ${f.on ? 'checked' : ''} ${f.lay.n ? '' : 'disabled'} title="Use this face"></td></tr>`;
+        <td class="noprint"><input type="checkbox" data-face="${f.id}" ${f.on ? 'checked' : ''} ${f.lay.n ? '' : 'disabled'} title="Use this face"></td>${removeCell(f)}</tr>`;
     }).join('');
   $('#faces').querySelectorAll('input[data-face]').forEach(cb => cb.onchange = () => { S.use[cb.dataset.face] = cb.checked; render(); });
+  wireRemove();
+}
+
+// a face that is not really roof (a lean-to, a shadow, a neighbour's bit) can be taken out
+const removeCell = f => `<td class="noprint"><button class="x" data-hide="${f.id}" title="Not really roof: remove this face" aria-label="Remove this face">&times;</button></td>`;
+function wireRemove() {
+  $('#faces').querySelectorAll('[data-hide]').forEach(b => b.onclick = () => {
+    if (S.faces.length <= 1) return log('That is the last face. Use Wrong building? or Draw it instead.', true);
+    S.hide[b.dataset.hide] = true; S.use = {}; refresh();
+  });
+  const n = Object.keys(S.hide).length + S.wings.filter(w => w.removed).length;
+  $('#hiddenNote').innerHTML = n ? `${n} removed &middot; <a href="#" id="showAll">Show all</a>` : 'Wrong face? Tap &times; to remove it.';
+  const a = $('#showAll');
+  if (a) a.onclick = e => { e.preventDefault(); S.hide = {}; S.wings.forEach(w => { w.removed = false; }); S.use = {}; refresh(); };
 }
 
 function drawChart(s, lossAdj) {
@@ -901,10 +921,14 @@ function drawWings() {
   $('#settingsCard').hidden = false;
   $('#wings').innerHTML = S.wings.map((w, i) => {
     const r = S.data.roof.wings[i];
+    if (w.removed) return `<div class="wing removed"><b>Section ${i + 1}</b><span class="sub">removed</span><button class="small" data-restore="${i}">Restore</button></div>`;
     return `<div class="wing"><b>Section ${i + 1}</b><span class="sub">${fmt(r.length_m, 1)} x ${fmt(r.width_m, 1)} m</span>
       <span class="seg">${['gable', 'hip', 'flat'].map(t => `<button data-w="${i}" data-type="${t}" class="${w.type === t ? 'on' : ''}">${{ gable: 'Gable', hip: 'Hipped', flat: 'Flat' }[t]}</button>`).join('')}</span>
-      <button class="small" data-turn="${i}" ${w.type === 'flat' ? 'disabled' : ''}>Turn ridge 90&deg;</button></div>`;
+      <button class="small" data-turn="${i}" ${w.type === 'flat' ? 'disabled' : ''}>Turn ridge 90&deg;</button>
+      ${S.wings.filter(x => !x.removed).length > 1 ? `<button class="small" data-remove="${i}" title="This section is not really roof">Remove section</button>` : ''}</div>`;
   }).join('');
+  $('#wings').querySelectorAll('button[data-remove]').forEach(b => b.onclick = () => { S.wings[+b.dataset.remove].removed = true; S.use = {}; refresh(); });
+  $('#wings').querySelectorAll('button[data-restore]').forEach(b => b.onclick = () => { S.wings[+b.dataset.restore].removed = false; S.use = {}; refresh(); });
   $('#wings').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => { S.wings[+b.dataset.w].type = b.dataset.type; S.use = {}; refresh(); });
   $('#wings').querySelectorAll('button[data-turn]').forEach(b => b.onclick = () => {
     const w = S.wings[+b.dataset.turn];
