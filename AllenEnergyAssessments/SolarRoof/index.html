@@ -186,6 +186,7 @@ body.locked > :not(.gate) { visibility: hidden; }
   </a>
   <div class="spacer"></div>
   <button id="aiBtn" class="small" hidden>AI key</button>
+  <button id="trainBtn" class="small" title="Check or draw roofs to teach the roof model">Train</button>
   <button id="printBtn" class="small" disabled>Print report</button>
 </div></div>
 
@@ -320,7 +321,7 @@ document.title = BRAND.product === BRAND.name ? BRAND.name : `${BRAND.product} |
 // The published config holds the relay link sealed with the access code (SRF_RELAY_LOCKED);
 // the code typed on a device opens it, and the opened link is kept on that device.
 const LOCKED = window.SRF_RELAY_LOCKED || null;
-const CLOUD = !!(window.SRF_RELAY || LOCKED);
+const CLOUD = window.SRF_MODE !== 'free' && !!(window.SRF_RELAY || LOCKED);
 const KEY_STORE = 'srf.key', RELAY_STORE = 'srf.relay';
 const store = {
   get: k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
@@ -1722,6 +1723,188 @@ async function modelRoof(lat, lng) {
     return [Math.atan(Math.sinh(Math.PI * (1 - 2 * Y / n))) * 180 / Math.PI, X / n * 360 - 180]; };
   return { ring: h.map(toLL), wings: wingsPx.map(rect => ({ rect: rect.map(toLL), type: 'gable' })) };
 }
+
+// ----- training mode: check or draw roofs to teach the roof model (saved to Drive through the relay) -----
+const TR = { state: 'pick', at: null, model: null, poly: [], ridges: [], pend: null, layer: null, saved: +(store.get('srf.trained') || 0) };
+
+// the relay link: sealed in config.js, opened with the access code typed at the door
+async function labelRelay() {
+  if (RELAY) return RELAY;
+  if (!LOCKED || !getKey()) return null;
+  try { RELAY = await unlock(getKey()); store.set(RELAY_STORE, JSON.stringify({ ct: LOCKED.ct, url: RELAY })); } catch (e) { RELAY = null; }
+  return RELAY;
+}
+
+async function startTraining() {
+  await loadLeaflet();
+  const at = S.data ? { lat: S.data.finder.lat, lng: S.data.finder.lng } : { lat: 53.4, lng: -8.0 };
+  openMap(at, S.data ? 19 : 7, false);
+  $('#drawBtn').hidden = true;
+  T.map.off('click');
+  T.map.on('click', e => trainTap(e.latlng.lat, e.latlng.lng));
+  TR.layer = L.layerGroup().addTo(T.map);
+  document.body.classList.add('training');
+  $('#view').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  trainState('pick');
+}
+
+function trainPanel(html) {
+  let p = $('#trainPanel');
+  if (!p) { p = document.createElement('div'); p.id = 'trainPanel'; p.className = 'aiask trainpanel'; $('#view').after(p); }
+  p.innerHTML = html;
+  p.querySelectorAll('[data-t]').forEach(b => b.onclick = () => trainAction(b.dataset.t));
+}
+
+function trainState(s, note) {
+  TR.state = s;
+  const count = `<span class="sub">Roofs saved: <b>${TR.saved}</b></span>`;
+  const btn = (t, label, primary) => `<button class="small${primary ? ' primary' : ''}" data-t="${t}">${label}</button>`;
+  if (s === 'pick') {
+    TR.layer.clearLayers(); TR.poly = []; TR.ridges = []; TR.model = null; TR.pend = null;
+    tapHint('Tap a house roof');
+    trainPanel(`<b>Training mode</b><span>Tap any house roof, or jump to a random one. Check the model's outline, or draw the real one.</span>
+      ${note ? `<span class="sub">${esc(note)}</span>` : ''}${count}<div>${btn('random', 'Random house', true)}${btn('exit', 'Finish')}</div>`);
+  } else if (s === 'busy') {
+    trainPanel(`<b>Reading the roof...</b>${count}`);
+  } else if (s === 'check') {
+    tapHint('Is the green shape the roof?');
+    trainPanel(`<b>Is the green shape exactly the roof?</b><span>Only say Correct if the edges sit on the roof edges.</span>${count}
+      <div>${btn('ok', 'Correct', true)}${btn('draw', 'Draw it')}${btn('skip', 'Skip')}</div>`);
+  } else if (s === 'draw') {
+    tapHint('Tap each roof corner');
+    trainPanel(`<b>Draw the roof</b><span>Tap each corner of the roof in order (any number, L shapes are fine). Tap the first corner again to finish.</span>${count}
+      <div>${btn('undo', 'Undo')}${btn('close', 'Finish shape', true)}${btn('skip', 'Skip')}</div>`);
+  } else if (s === 'ridge') {
+    tapHint('Tap both ends of each ridge (optional)');
+    trainPanel(`<b>Ridge lines (optional)</b><span>Tap both ends of each ridge, the top line where roof slopes meet. Skip it for a flat roof.</span>${count}
+      <div>${btn('save', 'Save roof', true)}${btn('undo', 'Undo')}${btn('skip', 'Skip')}</div>`);
+  }
+}
+
+function trainRedraw() {
+  TR.layer.clearLayers();
+  if (TR.state === 'check' && TR.model) L.polygon(TR.model, { color: '#22c55e', weight: 3, fillOpacity: 0.15 }).addTo(TR.layer);
+  if (TR.poly.length) {
+    const closed = TR.state === 'ridge';
+    (closed ? L.polygon : L.polyline)(TR.poly, { color: '#22c55e', weight: 3, fillOpacity: 0.12 }).addTo(TR.layer);
+    TR.poly.forEach((p, i) => L.circleMarker(p, { radius: i ? 4 : 7, color: '#fff', weight: 2, fillColor: i ? '#22c55e' : '#16a34a', fillOpacity: 1 }).addTo(TR.layer));
+  }
+  for (const r of TR.ridges) L.polyline(r, { color: '#facc15', weight: 4 }).addTo(TR.layer);
+  if (TR.pend) L.circleMarker(TR.pend, { radius: 5, color: '#facc15', weight: 3, fillOpacity: 1 }).addTo(TR.layer);
+}
+
+async function trainTap(lat, lng) {
+  if (TR.state === 'pick') {
+    if (T.map.getZoom() < 17) { T.map.setView([lat, lng], 19); return; }
+    TR.at = [lat, lng];
+    trainState('busy');
+    try {
+      const m = await modelRoof(lat, lng);
+      if (m) { TR.model = m.ring; trainState('check'); trainRedraw(); return; }
+    } catch (e) { console.warn(e); }
+    trainState('draw', 'The model found nothing here: draw it.');
+    return;
+  }
+  if (TR.state === 'draw') {
+    // tapping the first corner again closes the shape
+    if (TR.poly.length >= 3) {
+      const a = T.map.latLngToContainerPoint(TR.poly[0]), b = T.map.latLngToContainerPoint([lat, lng]);
+      if (a.distanceTo(b) < 18) return trainAction('close');
+    }
+    TR.poly.push([lat, lng]);
+    trainRedraw();
+    return;
+  }
+  if (TR.state === 'ridge') {
+    if (!TR.pend) TR.pend = [lat, lng];
+    else { TR.ridges.push([TR.pend, [lat, lng]]); TR.pend = null; }
+    trainRedraw();
+  }
+}
+
+async function trainAction(t) {
+  if (t === 'exit') { location.reload(); return; }
+  if (t === 'skip') return trainState('pick');
+  if (t === 'random') return randomHouse();
+  if (t === 'ok') { TR.poly = TR.model.slice(); TR.kind = 'model-ok'; trainState('ridge'); return trainRedraw(); }
+  if (t === 'draw') { TR.poly = []; TR.kind = 'drawn'; trainState('draw'); return trainRedraw(); }
+  if (t === 'undo') {
+    if (TR.state === 'draw') TR.poly.pop();
+    else if (TR.state === 'ridge') { if (TR.pend) TR.pend = null; else TR.ridges.pop(); }
+    return trainRedraw();
+  }
+  if (t === 'close') {
+    if (TR.poly.length < 3) return tapHint('Tap at least 3 corners');
+    trainState('ridge');
+    return trainRedraw();
+  }
+  if (t === 'save') {
+    const label = {
+      v: 1, kind: TR.kind, at: TR.at, z: 19, outline: TR.poly.map(p => [+p[0].toFixed(7), +p[1].toFixed(7)]),
+      ridges: TR.ridges.map(r => r.map(p => [+p[0].toFixed(7), +p[1].toFixed(7)])),
+      model: TR.model ? TR.model.map(p => [+p[0].toFixed(7), +p[1].toFixed(7)]) : null,
+      eircode: T.eircode || null, t: new Date().toISOString(),
+    };
+    trainState('busy');
+    try {
+      const url = await labelRelay();
+      if (!url) throw new Error('Saving is not connected yet');
+      const r = await (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'label', key: getKey(), label }) })).json();
+      if (!r.ok) throw new Error(r.error || 'not saved');
+      TR.saved++; store.set('srf.trained', TR.saved);
+      trainState('pick', 'Saved. Next one.');
+    } catch (e) {
+      // keep it on the phone and send it with the next one that works
+      const q = JSON.parse(store.get('srf.trainq') || '[]'); q.push(label); store.set('srf.trainq', JSON.stringify(q));
+      trainState('pick', `Kept on this phone (${e.message}); it will be sent later.`);
+    }
+    flushTrainQueue();
+  }
+}
+
+async function flushTrainQueue() {
+  const q = JSON.parse(store.get('srf.trainq') || '[]');
+  if (!q.length) return;
+  const url = await labelRelay();
+  if (!url) return;
+  const left = [];
+  for (const label of q) {
+    try {
+      const r = await (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'label', key: getKey(), label }) })).json();
+      if (!r.ok) throw new Error(r.error);
+      TR.saved++;
+    } catch (e) { left.push(label); }
+  }
+  store.set('srf.trainq', JSON.stringify(left));
+  store.set('srf.trained', TR.saved);
+}
+
+// a random house in Ireland: a random map tile, a random house-sized building on it
+async function randomHouse() {
+  trainState('busy');
+  for (let tries = 0; tries < 12; tries++) {
+    const lat = 51.5 + Math.random() * 3.8, lng = -10.3 + Math.random() * 4.2;
+    try {
+      const rings = (await tileRings(lat, lng)).filter(r => {
+        const k = 111320 * Math.cos(r[0][0] * Math.PI / 180);
+        let a = 0;
+        for (let i = 0; i < r.length; i++) { const p = r[i], q = r[(i + 1) % r.length]; a += (p[1] * k) * (q[0] * 110540) - (q[1] * k) * (p[0] * 110540); }
+        a = Math.abs(a) / 2;
+        return a > 60 && a < 450;
+      });
+      if (!rings.length) continue;
+      const r = rings[Math.floor(Math.random() * rings.length)];
+      const c = r.reduce((s, p) => [s[0] + p[0] / r.length, s[1] + p[1] / r.length], [0, 0]);
+      T.map.setView(c, 19);
+      TR.state = 'pick';
+      return trainTap(c[0], c[1]);
+    } catch (e) { /* try another place */ }
+  }
+  trainState('pick', 'Could not find a house just now. Tap one yourself.');
+}
+
+$('#trainBtn').onclick = () => startTraining();
+flushTrainQueue();
 </script>
 </body>
 </html>
