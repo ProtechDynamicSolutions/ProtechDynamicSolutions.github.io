@@ -51,6 +51,10 @@ form.find { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
 #log .err { color: #b91c1c; font-weight: 600; }
+.pitchpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; }
+.pitchpick b { font-size: 13px; color: var(--ink); margin-right: 4px; }
+.pitchpick .sub { flex-basis: 100%; font-size: 12.5px; }
+.chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 .demolist { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
 .demolist:empty { display: none; }
 .chip { padding: 5px 11px; border-radius: 99px; font-size: 13px; font-weight: 700; color: var(--navy); background: var(--blue-l); border: 1px solid #bfdbfe; letter-spacing: .03em; }
@@ -764,7 +768,15 @@ function drawSummary(s) {
         <div><b>${fmt(t.kwp, 2)} kWp</b><span>${s.watts} W panels</span></div>
         <div><b>${fmt(t.kwh)} kWh</b><span>per year, estimated</span></div>
       </div></div>` : ''}
+    <div class="pitchpick noprint"><b>Roof pitch</b>${[20, 25, 30, 35, 40, 45, 50].map(p =>
+      `<button class="chip${p === s.pitch ? ' on' : ''}" data-p="${p}">${p}&deg;</button>`).join('')}
+      <span class="sub">Outline right but the roof steeper or flatter? Pick its pitch. Most Irish houses are 30&ndash;40&deg;.</span></div>
     ${warn.map(w => `<div class="warn">${esc(w)}</div>`).join('')}`;
+  // one tap sets the pitch and works everything out again
+  $('#summary').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    $('#pitch').value = b.dataset.p;
+    $('#pitch').dispatchEvent(new Event('change'));
+  });
   const cap = +$('#cap').value || 0;
   $('#printHead').innerHTML = `<div style="display:flex;align-items:center;gap:10px">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:40px;height:40px">` : ''}<div><div class="addr">Solar roof assessment</div><div class="sub">${esc(BRAND.name === BRAND.product ? '' : BRAND.name + ' · ')}${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div></div><br>`;
   $('#printNotes').innerHTML = `Assumes a ${s.pitch}&deg; roof pitch, ${s.watts} W panels (${$('#psize').value.replace('x', ' x ')} mm), ${s.edge} m clear of roof edges, ${s.loss}% system losses${cap ? `, system capped at ${cap} kWp` : ''}.
@@ -1028,52 +1040,65 @@ async function analyseAt(lat, lng) {
       if (near && near[0] < 4) ring = near[1];
     }
   } catch (e) { log(e.message, true); }
+  // every outline is checked by a person: OpenStreetMap's can be rough or out of date too
+  const ask = async (title, note, buttons) => {
+    const box = document.createElement('div');
+    box.className = 'aiask';
+    box.innerHTML = `<b>${title}</b><span>${note}</span><div>${buttons.map(([a, t], i) =>
+      `<button class="small${i ? '' : ' primary'}" data-a="${a}">${t}</button>`).join('')}</div>`;
+    $('#view').after(box);  // under the map, so the outline stays in view
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const a = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a)));
+    box.remove();
+    return a;
+  };
+  const show = r => {
+    const shape = L.polygon(r, { color: '#22c55e', weight: 3, fillOpacity: 0.15, className: 'drawon' }).addTo(T.layer);
+    T.map.fitBounds(shape.getBounds(), { maxZoom: 19, padding: [50, 50] });
+  };
+  if (ring && !T.forceDraw) {
+    show(ring);
+    step(2, 'wait', 'Outline from the map: check it');
+    tapHint('Is the green shape the roof?');
+    const a = await ask('Is the green shape the roof?', 'Outline from OpenStreetMap. These are drawn by volunteers and can be rough or out of date.',
+      [['yes', 'Yes, carry on'], ['model', 'Read it from the photo'], ['draw', 'Draw it myself']]);
+    if (a === 'yes') {
+      step(2, 'done', 'Outline from the map');
+      T.busy = false;
+      return finishRoof(ring, 'map outline');
+    }
+    T.layer.clearLayers();
+    if (a === 'draw') T.forceDraw = true;
+    ring = null;
+  }
   if (!ring && !T.forceDraw) {
-    // not on OpenStreetMap: our roof model (trained on Irish houses) reads the roof from the photo
+    // our roof model (trained on Irish houses) reads the roof from the photo
     step(2, 'run', 'Reading the roof from the photo');
     tapHint('Reading the roof from the photo...');
-    log('This house is not on OpenStreetMap. Reading its roof from the aerial photo.', false, true);
+    log('Reading the roof from the aerial photo.', false, true);
     try {
       const ai = await modelRoof(lat, lng);
       if (ai) {
-        const shape = L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.15, className: 'drawon' }).addTo(T.layer);
+        show(ai.ring);
         ai.wings.forEach(w => L.polygon(w.rect, { color: '#facc15', weight: 1.5, fill: false, dashArray: '4 4' }).addTo(T.layer));
-        T.map.fitBounds(shape.getBounds(), { maxZoom: 19, padding: [50, 50] });
         step(2, 'wait', 'Roof found: check it');
         tapHint('Is the green shape the roof?');
-        // a person checks the model before anything is worked out from it
-        const box = document.createElement('div');
-        box.className = 'aiask';
-        box.innerHTML = `<b>Is the green shape the roof?</b><span>Read from the aerial photo.</span>
-          <div><button class="small primary" data-a="yes">Yes, carry on</button><button class="small" data-a="draw">Draw it myself</button></div>`;
-        $('#view').after(box);  // under the map, so the outline stays in view
-        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        const ok = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a === 'yes')));
-        box.remove();
-        if (ok) {
+        const a = await ask('Is the green shape the roof?', 'Read from the aerial photo.', [['yes', 'Yes, carry on'], ['draw', 'Draw it myself']]);
+        if (a === 'yes') {
           step(2, 'done', `Roof read from the photo (${ai.wings.length} section${ai.wings.length > 1 ? 's' : ''})`);
           T.busy = false;
           return finishRoof(ai.ring, 'ai', ai.wings);
         }
-        T.forceDraw = true;
       }
     } catch (e) { console.warn('roof model:', e); }
   }
   T.busy = false;
-  if (!ring) {
-    T.forceDraw = false;
-    T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
-    T.map.setView([lat, lng], Math.max(T.map.getZoom(), 19));
-    step(2, 'wait', 'Tap the 4 roof corners');
-    tapHint('This house is not on the map yet. Tap its 4 roof corners.');
-    log('This house is not on OpenStreetMap. Tap the 4 corners of its roof on the photo.');
-    return;
-  }
-  // draw the outline on, edge by edge
-  L.polygon(ring, { color: '#22c55e', weight: 3, fillOpacity: 0.12, className: 'drawon' }).addTo(T.layer);
-  step(2, 'done');
-  await sleep(900);
-  return finishRoof(ring, 'map outline');
+  T.forceDraw = false;
+  T.mode = 'corners'; T.corners = []; T.layer.clearLayers();
+  T.map.setView([lat, lng], Math.max(T.map.getZoom(), 19));
+  step(2, 'wait', 'Tap the 4 roof corners');
+  tapHint('Tap the 4 corners of the roof.');
+  log('Tap the 4 corners of the roof on the photo.');
 }
 
 // ----- the roof analysis (same steps as roof.py) -----
