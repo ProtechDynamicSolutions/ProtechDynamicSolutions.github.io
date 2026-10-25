@@ -51,6 +51,9 @@ form.find { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
 #log .err { color: #b91c1c; font-weight: 600; }
+.facelist { display: grid; gap: 6px; margin-top: 8px; }
+.facelist div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.facelist b { font-size: 15.5px; color: var(--ink); }
 .stepper { display: flex; align-items: center; gap: 8px; }
 .stepper button { width: 30px; height: 30px; padding: 0; border-radius: 50%; font-size: 18px; line-height: 1; display: grid; place-items: center; color: var(--blue); border-color: #bfdbfe; }
 .pitchpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; }
@@ -219,6 +222,7 @@ body.locked > :not(.gate) { visibility: hidden; }
       <div class="empty" id="empty">Type an Eircode and press Find roof.<br>The house is looked up on Eircode Finder, traced from its map, and laid over the aerial photo.</div>
     </div>
     <div class="viewbar">
+      <span class="seg noprint" id="modeSeg"><button class="small" data-mode="panels">Panels</button><button class="small" data-mode="roof">Roof only</button></span>
       <button class="small" id="pickBtn" disabled>Wrong building?</button>
       <button class="small" id="refreshBtn" disabled>Look up again</button>
       <span class="hint" id="hint">Click a roof face to include or leave it out.</span>
@@ -663,6 +667,29 @@ function ratingOf(ratio) {
   return ['Poor', 'var(--poor)'];
 }
 
+// Panels, or Roof only: the roof's directions, sun and areas with no panels (BER work, quick checks)
+S.roofOnly = store.get('srf.roofOnly') === '1';
+const modeButtons = () => {
+  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', (b.dataset.mode === 'roof') === S.roofOnly));
+  if (!S.picking) $('#hint').textContent = S.roofOnly ? 'Each face shows the compass direction it looks towards.' : 'Click a roof face to include or leave it out.';
+};
+modeButtons();
+document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => {
+  S.roofOnly = b.dataset.mode === 'roof';
+  store.set('srf.roofOnly', S.roofOnly ? '1' : '0');
+  modeButtons();
+  render();
+});
+
+// sloped area of one face in m²: its outline on the photo, stretched by the pitch
+function faceArea(f, s) {
+  const m = S.data.roof.mpp;
+  let a = 0;
+  for (let i = 0; i < f.poly.length; i++) { const p = f.poly[i], q = f.poly[(i + 1) % f.poly.length]; a += p[0] * q[1] - q[0] * p[1]; }
+  a = Math.abs(a) / 2 * m * m;
+  return f.flat ? a : a / Math.cos(s.pitch * Math.PI / 180);
+}
+
 function render() {
   if (!S.faces) return;
   const s = settings(), r = S.data.roof, min = +$('#minRating').value;
@@ -704,9 +731,11 @@ function drawView(s) {
   let g = `<image href="${imgSrc(S.data.images.aerial, 'image/jpeg')}" x="0" y="0" width="${r.size}" height="${r.size}"/>`;
   g += `<polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="${2 * k}" stroke-dasharray="${5 * k} ${4 * k}" opacity=".85"/>`;
   for (const f of S.faces) {
-    const col = f.on ? ratingOf(f.ratio)[1] : 'rgba(30,30,30,.35)';
-    g += `<polygon class="face" data-id="${f.id}" points="${f.poly.map(p => p.join(',')).join(' ')}" fill="${col}" fill-opacity="${f.on ? 0.28 : 0.35}" stroke="${f.on ? '#fff' : 'rgba(255,255,255,.4)'}" stroke-width="${1.2 * k}" style="cursor:pointer"/>`;
-    if (f.on) for (const [u, y, w, h] of pickPanels(f.lay.rects, f.used)) {
+    // roof only: every face coloured by its sun rating; panels: the chosen faces
+    const lit = S.roofOnly || f.on;
+    const col = lit ? ratingOf(f.ratio)[1] : 'rgba(30,30,30,.35)';
+    g += `<polygon class="face" data-id="${f.id}" points="${f.poly.map(p => p.join(',')).join(' ')}" fill="${col}" fill-opacity="${lit ? (S.roofOnly ? 0.4 : 0.28) : 0.35}" stroke="${lit ? '#fff' : 'rgba(255,255,255,.4)'}" stroke-width="${1.2 * k}" style="cursor:${S.roofOnly ? 'default' : 'pointer'}"/>`;
+    if (f.on && !S.roofOnly) for (const [u, y, w, h] of pickPanels(f.lay.rects, f.used)) {
       const q = [toPx(f, u, y, s), toPx(f, u + w, y, s), toPx(f, u + w, y + h, s), toPx(f, u, y + h, s)];
       g += `<polygon points="${q.map(p => p.join(',')).join(' ')}" fill="var(--panel)" fill-opacity=".88" stroke="var(--panel-edge)" stroke-width="${0.8 * k}" pointer-events="none"/>`;
     }
@@ -718,7 +747,7 @@ function drawView(s) {
   });
   for (const f of S.faces) {
     const c = f.poly.reduce((a, p) => add(a, mul(p, 1 / f.poly.length)), [0, 0]);
-    const lbl = f.flat ? 'Flat' : compass(f.az);
+    const lbl = f.flat ? 'Flat' : S.roofOnly ? `${compass(f.az)} ${Math.round(f.az)}&#176;` : compass(f.az);
     const arrow = f.flat ? '' : (() => { const v = mul(f.inward, -9 * k); return `<line x1="${c[0]}" y1="${c[1] + 8 * k}" x2="${c[0] + v[0]}" y2="${c[1] + 8 * k + v[1]}" stroke="#fff" stroke-width="${1.6 * k}" marker-end="url(#ah)"/>`; })();
     g += `<g pointer-events="none"><text x="${c[0]}" y="${c[1]}" text-anchor="middle" font-size="${14 * k}" font-weight="700" fill="#fff" stroke="rgba(0,0,0,.6)" stroke-width="${3 * k}" paint-order="stroke">${lbl}</text>${arrow}</g>`;
   }
@@ -735,7 +764,7 @@ function drawView(s) {
     const p = pt.matrixTransform(svg.getScreenCTM().inverse());
     if (S.picking) return pick(p.x, p.y);
     const id = ev.target.dataset && ev.target.dataset.id;
-    if (id) { S.use[id] = !S.use[id]; render(); }
+    if (id && !S.roofOnly) { S.use[id] = !S.use[id]; render(); }
   });
   const f = S.data.finder;
   const im = S.data.images;
@@ -777,7 +806,19 @@ function drawSummary(s) {
   $('#summary').innerHTML = `
     <div class="addr">${esc(f.address)}</div>
     <div class="sub">${esc(f.eircode)} &middot; ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)} &middot; <a href="${gm}" target="_blank" rel="noopener">Google Maps</a> &middot; outline ${fmt(r.area_m2)} m&sup2;, ${wingTxt}</div>
-    ${best ? `<div class="headline">
+    ${S.roofOnly ? (() => {
+      const faces = [...S.faces].sort((a, b) => b.spec - a.spec);
+      const area = faces.reduce((a, x) => a + faceArea(x, s), 0);
+      return `<div class="headline">
+        <div class="sub">Roof orientation</div>
+        <div class="facelist">${faces.map(x => { const [rt, col] = ratingOf(x.ratio); return `<div><span class="dot" style="background:${col}"></span>
+          <b>${x.flat ? 'Flat roof' : `${NAMES[compass(x.az)]} ${Math.round(x.az)}&deg;`}</b><span class="sub">${rt} sun &middot; ${fmt(faceArea(x, s))} m&sup2;${S.wings.length > 1 ? ` &middot; section ${x.wing + 1}` : ''}</span></div>`; }).join('')}</div>
+        <div class="kpis">
+          <div><b>${faces.length}</b><span>roof faces</span></div>
+          <div><b>${fmt(area)} m&sup2;</b><span>roof area at ${s.pitch}&deg;</span></div>
+          <div><b>${best ? `${compass(best.az)} ${Math.round(best.az)}&deg;` : '-'}</b><span>sunniest face</span></div>
+        </div></div>`;
+    })() : best ? `<div class="headline">
       <div class="sub">Best place for panels</div>
       <div class="big">${NAMES[compass(best.az)] || 'Flat'} face${best.flat ? '' : ` (${Math.round(best.az)}&deg;)`}</div>
       <div class="kpis">
@@ -802,14 +843,27 @@ function drawSummary(s) {
     $('#pitch').dispatchEvent(new Event('change'));
   });
   const cap = +$('#cap').value || 0;
-  $('#printHead').innerHTML = `<div style="display:flex;align-items:center;gap:10px">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:40px;height:40px">` : ''}<div><div class="addr">Solar roof assessment</div><div class="sub">${esc(BRAND.name === BRAND.product ? '' : BRAND.name + ' · ')}${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div></div><br>`;
-  $('#printNotes').innerHTML = `Assumes a ${s.pitch}&deg; roof pitch, ${s.watts} W panels (${$('#psize').value.replace('x', ' x ')} mm), ${s.edge} m clear of roof edges, ${s.loss}% system losses${cap ? `, system capped at ${cap} kWp` : ''}.
+  $('#printHead').innerHTML = `<div style="display:flex;align-items:center;gap:10px">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:40px;height:40px">` : ''}<div><div class="addr">${S.roofOnly ? 'Roof orientation' : 'Solar roof assessment'}</div><div class="sub">${esc(BRAND.name === BRAND.product ? '' : BRAND.name + ' · ')}${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div></div><br>`;
+  $('#printNotes').innerHTML = S.roofOnly ? `Directions are compass bearings the roof faces look towards (180&deg; = due south). Areas assume a ${s.pitch}&deg; pitch.
+    Sun ratings from PVGIS (EU Joint Research Centre) for this spot, before local shading. Aerial photo &copy; Esri and its suppliers. A site survey should confirm pitch and condition.` : `Assumes a ${s.pitch}&deg; roof pitch, ${s.watts} W panels (${$('#psize').value.replace('x', ' x ')} mm), ${s.edge} m clear of roof edges, ${s.loss}% system losses${cap ? `, system capped at ${cap} kWp` : ''}.
     Outline from the Eircode Finder map; aerial photo &copy; Esri and its suppliers; yields from PVGIS (EU Joint Research Centre) before local shading. A site survey should confirm pitch, roof condition and shading.`;
 }
 
 function drawTable() {
   const rows = [...S.faces].sort((a, b) => b.spec - a.spec);
   $('#facesCard').hidden = false;
+  if (S.roofOnly) {
+    const s = settings();
+    $('#faces').innerHTML = `<tr><th>Face</th><th>Sun</th><th class="num">Facing</th><th class="num">Area m&sup2;</th><th class="num" title="Yearly yield of 1 kWp of panels on this face">kWh/kWp</th></tr>` +
+      rows.map(f => {
+        const [rt, col] = ratingOf(f.ratio);
+        const name = f.flat ? 'Flat roof' : `<span class="long">${NAMES[compass(f.az)]}</span><span class="short">${compass(f.az)}</span>`;
+        return `<tr><td><span class="dot" style="background:${col}"></span>${name}${S.wings.length > 1 ? ` <span class="sub">s${f.wing + 1}</span>` : ''}</td>
+          <td><span class="rating" style="background:${col}">${rt}</span></td>
+          <td class="num">${f.flat ? '-' : Math.round(f.az) + '&deg;'}</td><td class="num">${fmt(faceArea(f, s))}</td><td class="num">${fmt(f.spec)}</td></tr>`;
+      }).join('');
+    return;
+  }
   $('#faces').innerHTML = `<tr><th>Face</th><th>Rating</th><th class="num" title="Used / fit on the face">Panels</th><th class="num">kWp</th><th class="num">kWh/yr</th><th class="num">kWh/kWp</th><th class="noprint"></th></tr>` +
     rows.map(f => {
       const [rt, col] = ratingOf(f.ratio);
@@ -839,7 +893,7 @@ function drawChart(s, lossAdj) {
     g += `<rect x="${x + 3}" y="${H - 20 - h}" width="${(W - 40) / 12 - 6}" height="${h}" rx="3" fill="var(--accent)"><title>${fmt(months[i])} kWh</title></rect>
       <text x="${x + (W - 40) / 24}" y="${H - 5}" text-anchor="middle" font-size="11" fill="var(--muted)">${c}</text>`;
   });
-  $('#chartCard').hidden = !t.n;
+  $('#chartCard').hidden = !t.n || S.roofOnly;
   $('#chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}">${g}</svg><div class="sub">kWh per month. Summer is about four times winter in Ireland.</div>`;
 }
 
