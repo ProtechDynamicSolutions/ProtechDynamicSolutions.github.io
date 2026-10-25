@@ -51,6 +51,8 @@ form.find { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #log { font-size: 13.5px; color: var(--muted); margin-top: 12px; min-height: 22px; display: flex; align-items: center; gap: 8px; }
 #log .err { color: #b91c1c; font-weight: 600; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 30px; height: 30px; padding: 0; border-radius: 50%; font-size: 18px; line-height: 1; display: grid; place-items: center; color: var(--blue); border-color: #bfdbfe; }
 .pitchpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; }
 .pitchpick b { font-size: 13px; color: var(--ink); margin-right: 4px; }
 .pitchpick .sub { flex-basis: 100%; font-size: 12.5px; }
@@ -431,6 +433,19 @@ async function gateHash(code) {
 }
 if (GATE && store.get('srf.gate') !== GATE.hash) {
   document.body.classList.add('locked');
+  // each publish makes a new lock: a code this device already knows is checked against it
+  // quietly, so people are only ever asked once
+  (async () => {
+    const kept = getKey();
+    if (kept && await gateHash(kept) === GATE.hash) {
+      store.set('srf.gate', GATE.hash);
+      document.body.classList.remove('locked');
+      return;
+    }
+    askGate();
+  })();
+}
+function askGate() {
   const g = document.createElement('div');
   g.className = 'gate opening';
   g.innerHTML = `<form class="card">${BRAND.logo ? `<img src="${esc(BRAND.logo)}" alt="" style="width:56px;height:56px;display:block;margin:0 auto 8px">` : ''}
@@ -750,6 +765,7 @@ function totals() {
 function drawSummary(s) {
   const f = S.data.finder, r = S.data.roof, t = totals();
   const best = [...S.faces].filter(x => x.lay.n).sort((a, b) => b.spec - a.spec)[0];
+  const fit = S.faces.filter(x => x.on).reduce((a, x) => a + x.lay.n, 0);  // panels the chosen faces can take
   const warn = [];
   if (r.footprint && r.footprint.warn) warn.push(r.footprint.warn);
   if (r.warn) warn.push(r.warn);
@@ -765,7 +781,7 @@ function drawSummary(s) {
       <div class="sub">Best place for panels</div>
       <div class="big">${NAMES[compass(best.az)] || 'Flat'} face${best.flat ? '' : ` (${Math.round(best.az)}&deg;)`}</div>
       <div class="kpis">
-        <div><b>${fmt(t.n)}</b><span>panels on chosen faces</span></div>
+        <div><span class="stepper"><button class="noprint" data-n="-1" aria-label="One panel fewer">&minus;</button><b>${fmt(t.n)}</b><button class="noprint" data-n="1" aria-label="One panel more">+</button></span><span>panels${fit > t.n ? ` (up to ${fit})` : ' (roof full)'}</span></div>
         <div><b>${fmt(t.kwp, 2)} kWp</b><span>${s.watts} W panels</span></div>
         <div><b>${fmt(t.kwh)} kWh</b><span>per year, estimated</span></div>
       </div></div>` : ''}
@@ -773,6 +789,13 @@ function drawSummary(s) {
       `<button class="chip${p === s.pitch ? ' on' : ''}" data-p="${p}">${p}&deg;</button>`).join('')}
       <span class="sub">Outline right but the roof steeper or flatter? Pick its pitch. Most Irish houses are 30&ndash;40&deg;.</span></div>
     ${warn.map(w => `<div class="warn">${esc(w)}</div>`).join('')}`;
+  // one panel more or fewer: the size cap becomes exactly that many panels, best faces filled first
+  $('#summary').querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
+    const n = Math.max(1, Math.min(fit, t.n + +b.dataset.n));
+    $('#cap').value = (n * s.watts / 1000).toFixed(3).replace(/\.?0+$/, '');
+    saveSettings();
+    render();
+  });
   // one tap sets the pitch and works everything out again
   $('#summary').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
     $('#pitch').value = b.dataset.p;
