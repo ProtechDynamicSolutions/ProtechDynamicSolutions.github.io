@@ -154,13 +154,13 @@ body.locked > :not(.gate) { visibility: hidden; }
   .steps li.run, .steps li.wait { display: flex; }
   .steps li.run::after, .steps li.wait::after { content: attr(data-n) " of 5"; margin-left: auto; padding-left: 8px; font-weight: 500; color: #94a3b8; }
   .steps ~ .taphint { display: none; }
-  .aiask { bottom: 58px; }
+  .aiask { padding: 10px 12px; }
 }
 .pulse { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 0 rgba(37, 99, 235, .7); animation: pulse 1.4s ease-out infinite; }
 @keyframes pulse { to { box-shadow: 0 0 0 26px rgba(37, 99, 235, 0); } }
 .drawon { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawon .9s ease-out forwards; }
 @keyframes drawon { to { stroke-dashoffset: 0; } }
-.aiask { position: absolute; left: 10px; right: 10px; bottom: 54px; z-index: 650; background: #fff; border-radius: 12px; border-left: 5px solid var(--green-l); box-shadow: var(--shadow); padding: 12px 14px; font-size: 14px; display: grid; gap: 4px; }
+.aiask { margin-top: 12px; background: #fff; border-radius: 12px; border-left: 5px solid var(--green-l); box-shadow: var(--shadow); padding: 12px 14px; font-size: 14px; display: grid; gap: 4px; }
 .aiask span { color: var(--muted); font-size: 13px; }
 .aiask div { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 .view.flash::after { content: ''; position: absolute; inset: 0; background: #fff; z-index: 900; animation: flash .38s ease-out forwards; }
@@ -1038,7 +1038,7 @@ async function analyseAt(lat, lng) {
       if (ai) {
         const shape = L.polygon(ai.ring, { color: '#22c55e', weight: 3, fillOpacity: 0.15, className: 'drawon' }).addTo(T.layer);
         ai.wings.forEach(w => L.polygon(w.rect, { color: '#facc15', weight: 1.5, fill: false, dashArray: '4 4' }).addTo(T.layer));
-        T.map.fitBounds(shape.getBounds(), { maxZoom: 20, padding: [40, 40] });
+        T.map.fitBounds(shape.getBounds(), { maxZoom: 19, padding: [50, 50] });
         step(2, 'wait', 'Roof found: check it');
         tapHint('Is the green shape the roof?');
         // a person checks the model before anything is worked out from it
@@ -1046,7 +1046,8 @@ async function analyseAt(lat, lng) {
         box.className = 'aiask';
         box.innerHTML = `<b>Is the green shape the roof?</b><span>Read from the aerial photo.</span>
           <div><button class="small primary" data-a="yes">Yes, carry on</button><button class="small" data-a="draw">Draw it myself</button></div>`;
-        $('#view').appendChild(box);
+        $('#view').after(box);  // under the map, so the outline stays in view
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         const ok = await new Promise(res => box.querySelectorAll('button').forEach(b => b.onclick = () => res(b.dataset.a === 'yes')));
         box.remove();
         if (ok) {
