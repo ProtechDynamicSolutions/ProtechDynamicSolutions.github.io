@@ -25,6 +25,18 @@
         .dashboard-card { border-radius: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s ease; }
         .tide-gradient { background: linear-gradient(135deg, #eef2ff 0%, #e6e9f0 100%); }
         hr { border-color: #e2e8f0; }
+        .ico { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+        .ico-spin { animation: icoSpin 1s linear infinite; }
+        @keyframes icoSpin { to { transform: rotate(360deg); } }
+        .eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #829ab1; }
+        .tab-btn { display: inline-flex; align-items: center; gap: .5rem; white-space: nowrap; }
+        .boat-pin { width: 36px; height: 36px; border-radius: 999px; background: #2C3E50; color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px #FFD700, 0 6px 14px rgba(16,42,67,.35); }
+        .boat-pin.two { background: #52718D; }
+        .live-dot { width: .5rem; height: .5rem; border-radius: 999px; background: #FFD700; box-shadow: 0 0 0 0 rgba(255,215,0,.6); animation: liveDot 2s infinite; }
+        @keyframes liveDot { 0% { box-shadow: 0 0 0 0 rgba(255,215,0,.55); } 70% { box-shadow: 0 0 0 8px rgba(255,215,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); } }
+        @media (prefers-reduced-motion: reduce) { .live-dot, .ico-spin { animation: none; } }
+        nav.tabs { overflow-x: auto; scrollbar-width: none; }
+        nav.tabs::-webkit-scrollbar { display: none; }
         header .ccm-logo { display: block; height: 5.5rem; width: auto; }
         @media (max-width: 640px) { header .ccm-logo { height: 4.5rem; } }
         
@@ -48,13 +60,14 @@
     </script>
 </head>
 <body class="bg-slate-50 text-slate-700">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol><symbol id="i-cloud-sun" viewBox="0 0 24 24"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M15.95 12.65a4 4 0 0 0-5.93-4.61"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></symbol><symbol id="i-drizzle" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M8 19v1M8 14v1M16 19v1M16 14v1M12 21v1M12 16v1"/></symbol><symbol id="i-rain" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M16 14v6M8 14v6M12 16v6"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></symbol><symbol id="i-fog" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M16 17H7M17 21H9"/></symbol><symbol id="i-storm" viewBox="0 0 24 24"><path d="M6 16.33A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.97"/><path d="m13 12-3 5h4l-3 5"/></symbol><symbol id="i-waves" viewBox="0 0 24 24"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="M14.1 4.6 9.9 2.8a2 2 0 0 0-1.8 0L3.6 5.1A1 1 0 0 0 3 6v13.4a1 1 0 0 0 1.4.9l3.7-1.9a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.3a1 1 0 0 0 .6-.9V4.6a1 1 0 0 0-1.4-.9l-3.7 1.9a2 2 0 0 1-1.8 0Z"/><path d="M15 5.8v15M9 3.2v15"/></symbol><symbol id="i-anchor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></symbol><symbol id="i-ship" viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4M12 2v3"/></symbol><symbol id="i-tank" viewBox="0 0 24 24"><path d="M9.5 4h5M12 4V2"/><rect x="7" y="5" width="10" height="17" rx="5"/><path d="M7 11h10"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol><symbol id="i-stop" viewBox="0 0 24 24"><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z"/><path d="M12 8v4M12 16h.01"/></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-roster" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></symbol><symbol id="i-box" viewBox="0 0 24 24"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol><symbol id="i-mobile" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol></defs></svg>
 
     <!-- Emergency / banner -->
-    <div class="bg-brand-800 text-white text-sm py-2 px-4 text-center font-medium tracking-wide">
-        🚨 OPERATIONAL DASHBOARD · CORK CITY SEARCH & RECOVERY
+    <div class="bg-brand-900 text-white text-[11px] sm:text-xs py-2 px-4 flex items-center justify-center gap-2.5 font-semibold tracking-[.18em] uppercase">
+        <span class="live-dot"></span><span>Operational dashboard</span><span class="hidden sm:inline text-brand-300">·</span><span class="hidden sm:inline text-brand-200">Cork City Search &amp; Recovery</span>
     </div>
-    <div class="bg-amber-100 text-amber-900 text-xs py-1.5 px-4 text-center font-semibold border-b border-amber-200">
-        Boat positions, tank pressures, roster and gear are SAMPLE figures until they are connected to real sources. Weather is live.
+    <div class="bg-amber-50 text-amber-900 text-xs py-1.5 px-4 flex items-center justify-center gap-2 font-medium border-b border-amber-200/70 text-center">
+        <svg class="ico w-3.5 h-3.5 text-amber-600" aria-hidden="true"><use href="#i-warn"/></svg><span>Boat positions, tank pressures, roster and gear are sample figures until they are connected to real sources. Weather is live.</span>
     </div>
 
     <!-- Header -->
@@ -67,7 +80,7 @@
                 <div class="flex items-center gap-4">
                 <a href="index.html" class="text-sm font-semibold text-brand-800 hover:underline whitespace-nowrap">Public website</a>
                 <div class="hidden md:flex items-center gap-3 bg-brand-100/60 px-4 py-2 rounded-full">
-                    <span class="text-xs font-bold text-brand-800" id="headerStatusText">⚙️ COMMAND DASHBOARD</span>
+                    <svg class="ico w-4 h-4 text-brand-700" aria-hidden="true"><use href="#i-shield"/></svg><span class="text-xs font-bold tracking-wider text-brand-800" id="headerStatusText">COMMAND DASHBOARD</span>
                     <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     <span class="text-xs text-brand-700">active session</span>
                 </div>
@@ -77,15 +90,15 @@
         
         <!-- Tab Navigation -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
-            <nav class="flex space-x-6">
-                <button onclick="switchTab('live')" id="tab-live" class="border-b-2 border-brand-800 py-3 px-2 text-sm font-bold text-brand-800 focus:outline-none transition-colors">
-                    📡 Live Operations
+            <nav class="tabs flex space-x-6">
+                <button onclick="switchTab('live')" id="tab-live" class="tab-btn border-b-[3px] border-accent py-3 px-1 text-sm font-bold text-brand-800 focus:outline-none transition-colors">
+                    <svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-activity"/></svg><span class="sm:hidden">Live</span><span class="hidden sm:inline">Live Operations</span>
                 </button>
-                <button onclick="switchTab('manage')" id="tab-manage" class="border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors">
-                    👥 Readiness & Gear Management
+                <button onclick="switchTab('manage')" id="tab-manage" class="tab-btn border-b-[3px] border-transparent py-3 px-1 text-sm font-semibold text-slate-500 hover:text-brand-800 hover:border-brand-200 focus:outline-none transition-colors">
+                    <svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-users"/></svg><span class="sm:hidden">Gear</span><span class="hidden sm:inline">Readiness &amp; Gear</span>
                 </button>
-                <button onclick="switchTab('po')" id="tab-po" class="border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors">
-                    🧾 Purchase Orders
+                <button onclick="switchTab('po')" id="tab-po" class="tab-btn border-b-[3px] border-transparent py-3 px-1 text-sm font-semibold text-slate-500 hover:text-brand-800 hover:border-brand-200 focus:outline-none transition-colors">
+                    <svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-file"/></svg><span class="sm:hidden">Orders</span><span class="hidden sm:inline">Purchase Orders</span>
                 </button>
             </nav>
         </div>
@@ -96,18 +109,18 @@
         <!-- Dashboard header -->
         <div class="flex flex-wrap justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>📊</span> Marine & Asset Operations</h1>
-                <p class="text-slate-500 text-sm mt-1">Live asset tracking · river & sea conditions</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-3"><span class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-800 text-accent ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-5 h-5" aria-hidden="true"><use href="#i-chart"/></svg></span> Marine &amp; Asset Operations</h1>
+                <p class="text-slate-500 text-sm mt-1.5">Live asset tracking · river &amp; sea conditions</p>
             </div>
-            <div class="text-right text-xs text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm" id="liveTimestamp">Last update: --:--:--</div>
+            <div class="flex items-center gap-1.5 text-xs text-slate-500 bg-white px-3 py-1.5 rounded-full shadow-sm ring-1 ring-slate-200/70"><svg class="ico w-3.5 h-3.5 text-brand-400" aria-hidden="true"><use href="#i-clock"/></svg><span id="liveTimestamp">Last update --:--:--</span></div>
         </div>
 
         <!-- Row: Weather & Tides -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 dashboard-card">
                 <div class="flex justify-between items-start">
-                    <div><h3 class="font-bold text-lg text-brand-700">🌦️ Cork Harbour Weather</h3><p class="text-xs text-slate-400">Live data (Open-Meteo API)</p></div>
-                    <div class="bg-brand-50 p-2 rounded-xl"><span class="text-2xl" id="weatherIcon">☁️</span></div>
+                    <div><p class="eyebrow">Live · Open-Meteo</p><h3 class="font-bold text-lg text-brand-800 mt-0.5">Cork Harbour Weather</h3></div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 text-accent flex items-center justify-center shadow-sm" id="weatherIcon"><svg class="ico w-8 h-8" aria-hidden="true"><use href="#i-cloud"/></svg></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mt-3">
                     <div><span class="text-slate-500 text-sm">Temperature</span><div class="text-2xl font-bold" id="weatherTemp">--°C</div></div>
@@ -117,13 +130,13 @@
                 </div>
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 dashboard-card tide-gradient">
-                <h3 class="font-bold text-lg text-brand-700">🌊 Tides · River Lee & Sea (Cork Harbour)</h3>
+                <div class="flex items-center gap-3"><span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white text-brand-700 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-5 h-5" aria-hidden="true"><use href="#i-waves"/></svg></span><div><p class="eyebrow">Cork Harbour</p><h3 class="font-bold text-lg text-brand-800 mt-0.5">Tides · River Lee &amp; Sea</h3></div></div>
                 <div class="flex flex-wrap gap-5 mt-3 justify-between">
-                    <div><span class="text-xs text-slate-500 uppercase">Sea Level (Cobh)</span><div class="text-2xl font-mono font-bold" id="seaTide">-- m</div><span class="text-xs" id="seaTrend">--</span></div>
-                    <div><span class="text-xs text-slate-500 uppercase">River Lee (City)</span><div class="text-2xl font-mono font-bold" id="riverLevel">-- m</div><span class="text-xs" id="riverTrend">--</span></div>
+                    <div><span class="text-xs text-slate-500 uppercase">Sea Level (Cobh)</span><div class="text-2xl tabular-nums font-bold" id="seaTide">-- m</div><span class="text-xs" id="seaTrend">--</span></div>
+                    <div><span class="text-xs text-slate-500 uppercase">River Lee (City)</span><div class="text-2xl tabular-nums font-bold" id="riverLevel">-- m</div><span class="text-xs" id="riverTrend">--</span></div>
                     <div><span class="text-xs text-slate-500">Next High Tide</span><div class="font-semibold" id="nextHighTide">--:--</div></div>
                 </div>
-                <div class="mt-3 text-xs text-slate-400">🌊 tidal coefficient: moderate spring</div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center gap-1.5"><svg class="ico w-3.5 h-3.5 text-brand-400" aria-hidden="true"><use href="#i-gauge"/></svg>Tidal coefficient: moderate spring</div>
             </div>
         </div>
 
@@ -131,8 +144,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="p-3 border-b border-slate-100 bg-brand-50/30 flex justify-between items-center">
-                    <span class="font-semibold text-brand-800">🗺️ ASSET POSITIONS (Boats on water)</span>
-                    <span class="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">sample positions</span>
+                    <span class="flex items-center gap-2.5 font-bold text-brand-800"><span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white text-brand-700 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-map"/></svg></span>Asset positions <span class="hidden sm:inline font-medium text-slate-400 text-sm">Boats on water</span></span>
+                    <span class="whitespace-nowrap text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">sample positions</span>
                 </div>
                 <div id="map" style="height: 420px; width: 100%; z-index: 1;"></div>
             </div>
@@ -140,23 +153,23 @@
             <div class="space-y-6">
                 <!-- Boat 1 -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 dashboard-card" id="boat1Card">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <div><span class="font-bold text-brand-800">⚓ RIB RESCUE 1</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">ON WATER</span></div>
-                        <div class="text-xs text-brand-500" id="boat1LastCheck">check: --:--</div>
+                    <div class="flex justify-between items-center gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5"><span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-brand-800 text-accent ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-[18px] h-[18px]" aria-hidden="true"><use href="#i-anchor"/></svg></span><span class="font-bold tracking-wide text-brand-800 whitespace-nowrap">RIB Rescue 1</span><span class="ml-1 inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 px-2 py-0.5 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>ON WATER</span></div>
+                        <div class="text-xs text-brand-500 whitespace-nowrap inline-flex items-center gap-1"><svg class="ico w-3.5 h-3.5" aria-hidden="true"><use href="#i-clock"/></svg><span id="boat1LastCheck">--:--</span></div>
                     </div>
-                    <div class="mt-3"><span class="text-sm font-semibold">🔧 5 x Dive Tanks · Pressure</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
+                    <div class="mt-3"><span class="text-sm font-semibold inline-flex items-center gap-1.5"><svg class="ico w-4 h-4 text-brand-500" aria-hidden="true"><use href="#i-tank"/></svg>5 dive tanks · pressure</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
                     <div id="boat1Tanks" class="grid grid-cols-5 gap-2 mt-2"></div>
-                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span>🛠️ Gear: BCD, Regulators</span><span id="boat1GearStatus" class="font-medium text-green-600">--</span></div>
+                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span class="inline-flex items-center gap-1.5"><svg class="ico w-3.5 h-3.5 text-brand-400" aria-hidden="true"><use href="#i-wrench"/></svg>Gear: BCD, regulators</span><span id="boat1GearStatus" class="font-medium text-green-600">--</span></div>
                 </div>
                 <!-- Boat 2 -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 dashboard-card" id="boat2Card">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <div><span class="font-bold text-brand-800">🛥️ COASTAL GUARDIAN</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">AT SEA</span></div>
-                        <div class="text-xs text-brand-500" id="boat2LastCheck">check: --:--</div>
+                    <div class="flex justify-between items-center gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5"><span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-brand-600 text-white ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-[18px] h-[18px]" aria-hidden="true"><use href="#i-ship"/></svg></span><span class="font-bold tracking-wide text-brand-800 whitespace-nowrap">Coastal Guardian</span><span class="ml-1 inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 px-2 py-0.5 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>AT SEA</span></div>
+                        <div class="text-xs text-brand-500 whitespace-nowrap inline-flex items-center gap-1"><svg class="ico w-3.5 h-3.5" aria-hidden="true"><use href="#i-clock"/></svg><span id="boat2LastCheck">--:--</span></div>
                     </div>
-                    <div class="mt-3"><span class="text-sm font-semibold">🧯 5 x Tanks (Steel/Alu)</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
+                    <div class="mt-3"><span class="text-sm font-semibold inline-flex items-center gap-1.5"><svg class="ico w-4 h-4 text-brand-500" aria-hidden="true"><use href="#i-tank"/></svg>5 tanks · steel / alu</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
                     <div id="boat2Tanks" class="grid grid-cols-5 gap-2 mt-2"></div>
-                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span>🛠️ Dive gear set + SMB</span><span id="boat2GearStatus" class="font-medium text-green-600">--</span></div>
+                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span class="inline-flex items-center gap-1.5"><svg class="ico w-3.5 h-3.5 text-brand-400" aria-hidden="true"><use href="#i-wrench"/></svg>Dive gear set + SMB</span><span id="boat2GearStatus" class="font-medium text-green-600">--</span></div>
                 </div>
             </div>
         </div>
@@ -168,21 +181,21 @@
                     <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Compliant Gear</p>
                     <p class="text-2xl font-bold text-brand-800 mt-1" id="countCompliant">0</p>
                 </div>
-                <div class="text-3xl">✅</div>
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-6 h-6" aria-hidden="true"><use href="#i-ok"/></svg></span>
             </div>
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-yellow-500 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-amber-400 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
                 <div>
                     <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Services Due &lt; 3 Months</p>
                     <p class="text-2xl font-bold text-brand-800 mt-1" id="countNearDue">0</p>
                 </div>
-                <div class="text-3xl">⚠️</div>
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-50 text-amber-600 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-6 h-6" aria-hidden="true"><use href="#i-warn"/></svg></span>
             </div>
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-red-500 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
                 <div>
                     <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Overdue / Action Reqd</p>
                     <p class="text-2xl font-bold text-brand-800 mt-1" id="countOverdue">0</p>
                 </div>
-                <div class="text-3xl">🔴</div>
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 text-red-600 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-6 h-6" aria-hidden="true"><use href="#i-stop"/></svg></span>
             </div>
         </div>
     </main>
@@ -192,7 +205,7 @@
         
         <div class="flex flex-wrap justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>👥</span> Readiness & Asset Management</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-3"><span class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-800 text-accent ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-5 h-5" aria-hidden="true"><use href="#i-users"/></svg></span> Readiness &amp; Asset Management</h1>
                 <p class="text-slate-500 text-sm mt-1">Smart team deployment · advanced gear tracking & maintenance records</p>
             </div>
         </div>
@@ -204,7 +217,7 @@
                 
                 <!-- Smart Team Builder Widget -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card">
-                    <h3 class="font-bold text-lg text-brand-800 flex items-center gap-2">⚡ Smart Team Builder</h3>
+                    <h3 class="font-bold text-lg text-brand-800 flex items-center gap-2.5"><span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-zap"/></svg></span>Smart Team Builder</h3>
                     <p class="text-xs text-slate-500 mb-4">Auto-suggests fastest available personnel based on required skills.</p>
                     
                     <div class="grid grid-cols-3 gap-3 mb-4">
@@ -223,7 +236,7 @@
                     </div>
                     
                     <button onclick="assembleTeam()" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-2 px-4 rounded-xl transition-colors mb-4 flex justify-center items-center gap-2 shadow-sm">
-                        <span>🔍 Find Available Team</span>
+                        <svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-search"/></svg><span>Find available team</span>
                     </button>
                     
                     <!-- Team Results -->
@@ -238,7 +251,7 @@
                 <!-- Volunteer Live Roster -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card h-[450px] flex flex-col">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-lg text-brand-800">📋 Active Roster</h3>
+                        <h3 class="font-bold text-lg text-brand-800 flex items-center gap-2.5"><span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-roster"/></svg></span>Active Roster</h3>
                         <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full border border-slate-200" id="total-volunteers">Loading...</span>
                     </div>
                     
@@ -252,11 +265,11 @@
             <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 dashboard-card flex flex-col h-[750px] overflow-hidden">
                 <div class="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-lg text-brand-800">🧰 Advanced Equipment Tracking</h3>
+                        <h3 class="font-bold text-lg text-brand-800 flex items-center gap-2.5"><span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white text-brand-700 ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-box"/></svg></span>Equipment Tracking</h3>
                         <p class="text-xs text-slate-500 mt-1">Lifecycle monitoring, assignments & faults.</p>
                     </div>
-                    <button class="text-xs bg-white border border-slate-300 text-slate-700 font-semibold py-1.5 px-3 rounded-lg shadow-sm hover:bg-slate-50">
-                        + Add Asset
+                    <button class="inline-flex items-center gap-1.5 text-xs bg-white border border-slate-300 text-slate-700 font-semibold py-1.5 px-3 rounded-lg shadow-sm hover:bg-slate-50">
+                        <svg class="ico w-3.5 h-3.5" aria-hidden="true"><use href="#i-plus"/></svg>Add asset
                     </button>
                 </div>
                 
@@ -312,13 +325,16 @@
         let boat2Tanks = [205, 189, 197, 210, 178];
         let boat1GearOk = true, boat2GearOk = true;
 
-        let weather = { temp: 12.4, wind: 14, humidity: 82, condition: "Fetching live...", icon: "🔄" };
+        let weather = { temp: 12.4, wind: 14, humidity: 82, condition: "Fetching live...", icon: "loader" };
         let tide = { sea: 2.1, river: 1.4, seaTrend: "rising", riverTrend: "stable", nextHigh: "14:42" };
         let map, markers = {};
         
         let usingRealTides = false;
         // Tide times need a paid API key. A key must never sit in this page (anyone can read it in view-source):
         // call Stormglass from the Apps Script backend instead and have the page ask the script.
+
+        // Line icons from the sprite at the top of the page
+        const ico = (n, c = 'w-5 h-5') => `<svg class="ico ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 
         // Everything shown with innerHTML goes through esc() first, so a name or fault report can never run as code.
         function esc(s) {
@@ -337,35 +353,37 @@
         ];
 
         // --- Advanced Gear Management Database ---
+        // Sample service dates are set relative to today so the demo always shows a mix of states.
+        const daysFromNow = d => { const t = new Date(); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
         let advancedGear = [
             { 
                 id: "DRN-01", name: "DJI Matrice 300 RTK", category: "Drone", assignedTo: "Declan Kelly",
-                value: 12500, cycleTrack: "Battery: 185/200 cycles", nextService: "2026-03-20", 
+                value: 12500, cycleTrack: "Battery: 185/200 cycles", nextService: daysFromNow(-21), 
                 status: "red", statusMsg: "Overdue Service", fault: "Propeller vibration reported at high alt."
             },
             { 
                 id: "ENG-02", name: "Yamaha 150hp Outboard", category: "Engine", assignedTo: "RIB Rescue 1",
-                value: 16000, cycleTrack: "Hours: 210/300", nextService: "2026-06-01", 
+                value: 16000, cycleTrack: "Hours: 210/300", nextService: daysFromNow(160), 
                 status: "green", statusMsg: "Operational", fault: "None"
             },
             { 
                 id: "MED-01", name: "Defibrillator (AED) Alpha", category: "Medical", assignedTo: "Niamh Walsh",
-                value: 1200, cycleTrack: "Pads Exp: 01/2027", nextService: "2026-12-01", 
+                value: 1200, cycleTrack: "Pads Exp: 01/2027", nextService: daysFromNow(300), 
                 status: "green", statusMsg: "Operational", fault: "None"
             },
             { 
                 id: "RAD-04", name: "VHF Handhelds (x4 Kit)", category: "Comms", assignedTo: "Base Ops",
-                value: 850, cycleTrack: "Battery Health: 82%", nextService: "2026-05-10", 
+                value: 850, cycleTrack: "Battery Health: 82%", nextService: daysFromNow(45), 
                 status: "yellow", statusMsg: "Fault Logged", fault: "Unit 3 (Callsign C-3) not holding charge over 4hrs."
             },
             { 
                 id: "SNR-01", name: "Garmin SideVü Sonar", category: "Tech", assignedTo: "Coastal Guardian",
-                value: 4500, cycleTrack: "Firmware: v12.4", nextService: "2026-04-15", 
+                value: 4500, cycleTrack: "Firmware: v12.4", nextService: daysFromNow(70), 
                 status: "yellow", statusMsg: "Service Due Soon", fault: "None"
             },
             { 
                 id: "DVE-09", name: "Scuba Regulators Set C", category: "Dive", assignedTo: "Unassigned (Store)",
-                value: 950, cycleTrack: "Dives: 45/100", nextService: "2027-01-10", 
+                value: 950, cycleTrack: "Dives: 45/100", nextService: daysFromNow(400), 
                 status: "green", statusMsg: "Clean & Inspected", fault: "None"
             }
         ];
@@ -374,8 +392,8 @@
 
         function switchTab(tabId) {
             // Toggle Views and Tab Styles
-            const on = "border-b-2 border-brand-800 py-3 px-2 text-sm font-bold text-brand-800 focus:outline-none transition-colors";
-            const off = "border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors";
+            const on = "tab-btn border-b-[3px] border-accent py-3 px-1 text-sm font-bold text-brand-800 focus:outline-none transition-colors";
+            const off = "tab-btn border-b-[3px] border-transparent py-3 px-1 text-sm font-semibold text-slate-500 hover:text-brand-800 hover:border-brand-200 focus:outline-none transition-colors";
             ['live', 'manage', 'po'].forEach(id => {
                 document.getElementById('view-' + id).classList.toggle('hidden', tabId !== id);
                 document.getElementById('tab-' + id).className = tabId === id ? on : off;
@@ -394,7 +412,7 @@
         }
 
         function updateTimestamp() {
-            document.getElementById("liveTimestamp").innerHTML = `Last update: ${new Date().toLocaleTimeString()}`;
+            document.getElementById("liveTimestamp").textContent = `Last update ${new Date().toLocaleTimeString('en-IE', { hour12: false })}`;
         }
 
         // ======================== TAB 2: MANAGEMENT RENDERERS ========================
@@ -442,7 +460,7 @@
             const rosterList = document.getElementById('team-roster-list');
             
             resultsContainer.classList.remove('hidden');
-            rosterList.innerHTML = "<li class='text-brand-500 flex items-center justify-center py-2'>⚙️ Analyzing database...</li>";
+            rosterList.innerHTML = `<li class='text-brand-500 flex items-center justify-center gap-2 py-2'>${ico('loader', 'w-4 h-4 ico-spin')} Checking who is free...</li>`;
 
             // Small delay for "calculating" feel
             setTimeout(() => {
@@ -485,7 +503,7 @@
                     <li class="flex justify-between items-center bg-white p-2 rounded border border-brand-100 shadow-sm">
                         <div>
                             <span class="font-bold text-sm text-brand-900">${esc(member.name)}</span>
-                            <span class="text-[10px] text-brand-500 block">📞 ${esc(member.phone)}</span>
+                            <span class="text-[10px] text-brand-500 flex items-center gap-1 mt-0.5">${ico('phone', 'w-3 h-3')}${esc(member.phone)}</span>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] uppercase font-bold text-white bg-brand-600 px-2 py-0.5 rounded">${esc(member.assignedRole)}</span>
@@ -497,13 +515,13 @@
                 }).join('');
 
                 if(missing.length > 0) {
-                    html += `<li class="text-xs text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200 mt-2">
-                        ⚠️ Shortfall: Could not find available personnel for: ${missing.join(', ')}
+                    html += `<li class="text-xs text-red-700 font-semibold bg-red-50 p-2 rounded-lg border border-red-200 mt-2 flex items-start gap-2">
+                        ${ico('warn', 'w-4 h-4 text-red-600 mt-px')}<span>Shortfall: nobody available for ${missing.join(', ')}</span>
                     </li>`;
                 }
                 
                 // Dispatch is not connected to any SMS service, so the button must not look like it sends anything
-                html += `<button disabled class="w-full mt-2 bg-slate-200 text-slate-500 text-xs font-bold py-2 rounded cursor-not-allowed" title="Not connected to an SMS service yet">📱 SMS dispatch not connected yet: phone the team directly</button>`;
+                html += `<button disabled class="w-full mt-2 bg-slate-200 text-slate-500 text-xs font-bold py-2 rounded cursor-not-allowed" title="Not connected to an SMS service yet"><span class="inline-flex items-center gap-1.5">${ico('mobile', 'w-3.5 h-3.5')}SMS dispatch not connected yet: phone the team directly</span></button>`;
 
                 rosterList.innerHTML = html;
             }, 600);
@@ -526,17 +544,17 @@
                 let nextDate = new Date(gear.nextService);
                 let visualStatusClass = "border-l-green-500";
                 let badgeClass = "bg-green-100 text-green-800";
-                let icon = "✅";
+                let icon = "ok";
 
                 if (gear.status === 'red' || nextDate < now) {
                     visualStatusClass = "border-l-red-500 bg-red-50/30";
                     badgeClass = "bg-red-100 text-red-800";
-                    icon = "🔴";
+                    icon = "stop";
                     overdue++;
                 } else if (gear.status === 'yellow' || (nextDate >= now && nextDate <= threeMonthsFromNow)) {
-                    visualStatusClass = "border-l-yellow-500 bg-yellow-50/30";
-                    badgeClass = "bg-yellow-100 text-yellow-800";
-                    icon = "⚠️";
+                    visualStatusClass = "border-l-amber-400 bg-amber-50/30";
+                    badgeClass = "bg-amber-100 text-amber-800";
+                    icon = "warn";
                     nearDue++;
                 } else {
                     compliant++;
@@ -551,12 +569,12 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-brand-900">${esc(gear.name)}</span>
-                                <span class="text-[10px] bg-slate-100 text-slate-500 font-mono px-1.5 py-0.5 rounded">${esc(gear.id)}</span>
+                                <span class="text-[10px] bg-slate-100 text-slate-500 tabular-nums px-1.5 py-0.5 rounded">${esc(gear.id)}</span>
                             </div>
                             <span class="text-xs text-slate-500 mt-0.5 block">Category: ${esc(gear.category)}</span>
                         </div>
                         <div class="text-right">
-                            <span class="${badgeClass} text-[10px] font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">${icon} ${esc(gear.statusMsg)}</span>
+                            <span class="${badgeClass} text-[10px] font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">${ico(icon, 'w-3.5 h-3.5')}${esc(gear.statusMsg)}</span>
                         </div>
                     </div>
                     
@@ -571,17 +589,17 @@
                         </div>
                         <div>
                             <span class="block text-[10px] uppercase font-bold text-slate-400">Next Service</span>
-                            <span class="font-medium ${icon !== '✅' ? 'text-red-600 font-bold' : 'text-slate-700'}">${new Date(gear.nextService).toLocaleDateString('en-IE')}</span>
+                            <span class="font-medium ${icon !== 'ok' ? 'text-red-600 font-bold' : 'text-slate-700'}">${new Date(gear.nextService).toLocaleDateString('en-IE')}</span>
                         </div>
                         <div>
                             <span class="block text-[10px] uppercase font-bold text-slate-400">Asset Value</span>
-                            <span class="font-mono text-slate-600">${formattedValue}</span>
+                            <span class="tabular-nums text-slate-600">${formattedValue}</span>
                         </div>
                     </div>
 
                     ${gear.fault !== 'None' ? `
                     <div class="mt-3 bg-red-50 border border-red-100 rounded-lg p-2 text-xs text-red-800 flex items-start gap-2">
-                        <span>💬</span>
+                        ${ico('message', 'w-4 h-4 mt-px text-red-500')}
                         <div><strong>Active Fault Report:</strong> ${esc(gear.fault)}</div>
                     </div>` : ''}
                 </div>`;
@@ -612,13 +630,16 @@
                 weather.humidity = data.current.relative_humidity_2m;
                 
                 const code = data.current.weather_code;
-                if (code === 0) { weather.condition = "Clear sky"; weather.icon = "☀️"; }
-                else if (code <= 3) { weather.condition = "Cloudy / Overcast"; weather.icon = "☁️"; }
-                else if (code <= 48) { weather.condition = "Fog / Low vis"; weather.icon = "🌫️"; }
-                else if (code <= 55) { weather.condition = "Drizzle"; weather.icon = "🌧️"; }
-                else if (code <= 65) { weather.condition = "Rain"; weather.icon = "🌧️"; }
-                else if (code <= 77) { weather.condition = "Snow"; weather.icon = "❄️"; }
-                else { weather.condition = "Stormy / Showers"; weather.icon = "⛈️"; }
+                if (code === 0) { weather.condition = "Clear sky"; weather.icon = "sun"; }
+                else if (code <= 2) { weather.condition = "Partly cloudy"; weather.icon = "cloud-sun"; }
+                else if (code <= 3) { weather.condition = "Overcast"; weather.icon = "cloud"; }
+                else if (code <= 48) { weather.condition = "Fog / low visibility"; weather.icon = "fog"; }
+                else if (code <= 57) { weather.condition = "Drizzle"; weather.icon = "drizzle"; }
+                else if (code <= 67) { weather.condition = "Rain"; weather.icon = "rain"; }
+                else if (code <= 77) { weather.condition = "Snow"; weather.icon = "snow"; }
+                else if (code <= 82) { weather.condition = "Showers"; weather.icon = "rain"; }
+                else if (code <= 86) { weather.condition = "Snow showers"; weather.icon = "snow"; }
+                else { weather.condition = "Thunderstorm"; weather.icon = "storm"; }
                 
                 updateWeatherTideUI();
             } catch (error) {
@@ -650,10 +671,10 @@
             document.getElementById("weatherWind").innerHTML = weather.wind !== undefined ? Math.round(weather.wind) + " km/h" : "-- km/h";
             document.getElementById("weatherHumidity").innerHTML = weather.humidity !== undefined ? Math.round(weather.humidity) + "%" : "--%";
             document.getElementById("weatherCond").textContent = weather.condition;
-            document.getElementById("weatherIcon").textContent = weather.icon;
+            document.getElementById("weatherIcon").innerHTML = ico(weather.icon, 'w-8 h-8' + (weather.icon === 'loader' ? ' ico-spin' : ''));
             document.getElementById("seaTide").textContent = tide.sea.toFixed(1) + " m";
             document.getElementById("riverLevel").textContent = tide.river.toFixed(1) + " m";
-            document.getElementById("seaTrend").textContent = (tide.seaTrend === "rising" ? "⬆️ rising" : "⬇️ falling") + (usingRealTides ? "" : " · estimated");
+            document.getElementById("seaTrend").innerHTML = `<span class="inline-flex items-center gap-1 ${tide.seaTrend === "rising" ? 'text-emerald-700' : 'text-brand-600'}">${ico(tide.seaTrend === "rising" ? 'up' : 'down', 'w-3.5 h-3.5')}${tide.seaTrend}</span>` + (usingRealTides ? "" : '<span class="text-slate-400"> · estimated</span>');
             document.getElementById("riverTrend").textContent = tide.riverTrend + (usingRealTides ? "" : " · estimated");
             document.getElementById("nextHighTide").textContent = tide.nextHigh + " (sample)";
         }
@@ -662,18 +683,21 @@
             const boat1Container = document.getElementById("boat1Tanks");
             const boat2Container = document.getElementById("boat2Tanks");
             
-            const createTankHTML = (bar) => `<div class="bg-slate-100 rounded-lg text-center p-1 text-xs font-mono"><span class="block font-bold">${bar}</span><span class="text-[10px]">bar</span><div class="h-1 w-full bg-gray-200 rounded-full mt-1"><div class="h-1 rounded-full ${bar < 150 ? 'bg-red-500' : bar < 180 ? 'bg-yellow-500' : 'bg-green-500'}" style="width: ${Math.min(100, (bar/232)*100)}%"></div></div></div>`;
+            const createTankHTML = (bar) => `<div class="bg-slate-50 ring-1 ring-inset ring-slate-200/80 rounded-lg text-center p-1.5 text-xs tabular-nums"><span class="block font-bold">${bar}</span><span class="text-[10px]">bar</span><div class="h-1 w-full bg-gray-200 rounded-full mt-1"><div class="h-1 rounded-full ${bar < 150 ? 'bg-red-500' : bar < 180 ? 'bg-amber-400' : 'bg-emerald-500'}" style="width: ${Math.min(100, (bar/232)*100)}%"></div></div></div>`;
 
             if(boat1Container) boat1Container.innerHTML = boat1Tanks.map(createTankHTML).join('');
             if(boat2Container) boat2Container.innerHTML = boat2Tanks.map(createTankHTML).join('');
             
             const boat1GearSpan = document.getElementById("boat1GearStatus");
             const boat2GearSpan = document.getElementById("boat2GearStatus");
-            if(boat1GearSpan) boat1GearSpan.innerHTML = boat1GearOk ? "✅ all good" : "⚠️ service needed";
-            if(boat2GearSpan) boat2GearSpan.innerHTML = boat2GearOk ? "✅ operational" : "⚠️ regulator check";
+            const gearState = (ok, good, bad) => ok
+                ? `<span class="inline-flex items-center gap-1 text-emerald-700">${ico('ok', 'w-3.5 h-3.5')}${good}</span>`
+                : `<span class="inline-flex items-center gap-1 text-amber-700">${ico('warn', 'w-3.5 h-3.5')}${bad}</span>`;
+            if(boat1GearSpan) boat1GearSpan.innerHTML = gearState(boat1GearOk, 'All good', 'Service needed');
+            if(boat2GearSpan) boat2GearSpan.innerHTML = gearState(boat2GearOk, 'Operational', 'Regulator check');
             
-            document.getElementById("boat1LastCheck").innerHTML = `check: ${new Date().toLocaleTimeString('en-IE', {hour12: false})}`;
-            document.getElementById("boat2LastCheck").innerHTML = `check: ${new Date().toLocaleTimeString('en-IE', {hour12: false})}`;
+            document.getElementById("boat1LastCheck").textContent = new Date().toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById("boat2LastCheck").textContent = new Date().toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
         }
 
         function simulateHardwareData() {
@@ -697,10 +721,16 @@
             updateTimestamp();
         }
 
+        function popup(name, where, tanks, gear, note) {
+            const row = (i, t) => `<div class="flex items-center gap-2 text-slate-600 mt-1">${ico(i, 'w-3.5 h-3.5 text-brand-400')}<span>${t}</span></div>`;
+            return `<div class="font-sans text-xs min-w-[190px]"><div class="font-bold text-sm text-brand-800 mb-1">${esc(name)}</div>` +
+                row('pin', esc(where)) + row('tank', 'Tanks ' + tanks.join(' · ') + ' bar') + row('wrench', 'Gear: ' + esc(gear)) + row('clock', esc(note)) + '</div>';
+        }
+
         function updateMapPopupContent() {
             if(!map) return;
-            if(markers.boat1) markers.boat1.setPopupContent(`<div class="font-sans text-sm"><b>⚓ RIB Rescue 1</b><br/>📍 River Lee<br/>🎯 Tanks: ${boat1Tanks.join(', ')} bar<br/>🛠️ Gear: ${boat1GearOk ? 'Operational' : 'Service Needed'}<br/>🔄 Live check: ${new Date().toLocaleTimeString('en-IE')}</div>`);
-            if(markers.boat2) markers.boat2.setPopupContent(`<div class="font-sans text-sm"><b>🛥️ Coastal Guardian</b><br/>📍 Cork Harbour<br/>🎯 Tanks: ${boat2Tanks.join(', ')} bar<br/>🛠️ Gear: ${boat2GearOk ? 'All good' : 'Inspection due'}<br/>🌊 On water active</div>`);
+            if(markers.boat1) markers.boat1.setPopupContent(popup('RIB Rescue 1', 'River Lee', boat1Tanks, boat1GearOk ? 'Operational' : 'Service needed', 'Checked ' + new Date().toLocaleTimeString('en-IE')));
+            if(markers.boat2) markers.boat2.setPopupContent(popup('Coastal Guardian', 'Cork Harbour', boat2Tanks, boat2GearOk ? 'All good' : 'Inspection due', 'On the water'));
         }
 
         function initMap() {
@@ -710,9 +740,10 @@
                 maxZoom: 19
             }).addTo(map);
             
-            const boatIcon = L.divIcon({ html: '🚤', className: 'text-2xl bg-white/80 rounded-full p-1 shadow-md', iconSize: [30,30] });
+            const pinIcon = (n, two) => L.divIcon({ html: `<div class="boat-pin${two ? ' two' : ''}">${ico(n, 'w-[18px] h-[18px]')}</div>`, className: '', iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -20] });
+            const boatIcon = pinIcon('anchor');
             markers.boat1 = L.marker([boatPositions[0].lat, boatPositions[0].lng], { icon: boatIcon }).addTo(map).bindPopup(`Loading...`);
-            markers.boat2 = L.marker([boatPositions[1].lat, boatPositions[1].lng], { icon: L.divIcon({ html: '⛵', className: 'text-2xl bg-white/80 rounded-full p-1 shadow-md', iconSize: [30,30] }) }).addTo(map).bindPopup(`Loading...`);
+            markers.boat2 = L.marker([boatPositions[1].lat, boatPositions[1].lng], { icon: pinIcon('ship', true) }).addTo(map).bindPopup(`Loading...`);
             
             L.circle([51.8985, -8.4756], { radius: 300, color: '#52718D', weight: 1, fillOpacity: 0.05 }).addTo(map);
             updateMapPopupContent();
@@ -843,10 +874,10 @@
                 const head = `
                 <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>🧾</span> Purchase Orders</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-3"><span class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-800 text-accent ring-1 ring-inset ring-brand-100 shrink-0"><svg class="ico w-5 h-5" aria-hidden="true"><use href="#i-file"/></svg></span> Purchase Orders</h1>
                         <p class="text-slate-500 text-sm mt-1">Request, approve and track team spending${boot && boot.approver ? ` · approved by ${esc(boot.approver)} through a secure email link` : ''}</p>
                     </div>
-                    ${loaded ? `<button onclick="PO.newRequest()" class="bg-brand-800 hover:bg-brand-900 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition">+ New purchase request</button>` : ''}
+                    ${loaded ? `<button onclick="PO.newRequest()" class="bg-brand-800 hover:bg-brand-900 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition inline-flex items-center gap-2"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-plus"/></svg>New purchase request</button>` : ''}
                 </div>
                 ${DEMO ? `<div class="mb-6 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl px-4 py-3"><b>Demo.</b> These are sample orders and placeholder names. Nothing is saved or emailed. It goes live when the Apps Script link is pasted into <code>BACKEND_URL</code>.</div>` : ''}`;
 
@@ -916,7 +947,7 @@
                             <div class="mt-4 space-y-3">
                                 ${cats.length ? cats.map(([c, v]) => `
                                     <div>
-                                        <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-slate-600">${esc(c)}</span><span class="font-mono text-slate-500">${euro0(v)}</span></div>
+                                        <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-slate-600">${esc(c)}</span><span class="tabular-nums text-slate-500">${euro0(v)}</span></div>
                                         <div class="h-2 bg-slate-100 rounded-full"><div class="h-2 rounded-full bg-brand-600" style="width:${Math.max(3, v / maxCat * 100)}%"></div></div>
                                     </div>`).join('') : '<p class="text-sm text-slate-400">No approved spending yet this year.</p>'}
                             </div>
@@ -951,17 +982,17 @@
                         <th class="px-2 py-2 font-bold text-right">Total</th><th class="px-4 py-2 font-bold">Status</th></tr></thead>
                     <tbody>${list.map(o => `
                         <tr onclick="PO.view('${esc(o.po)}')" class="border-b border-slate-50 hover:bg-brand-50/50 cursor-pointer">
-                            <td class="px-4 py-3"><span class="font-mono font-semibold text-brand-800">${esc(o.po)}</span><span class="block text-[11px] text-slate-400">${dmyLocal(o.submitted)}</span></td>
+                            <td class="px-4 py-3"><span class="tabular-nums font-semibold text-brand-800">${esc(o.po)}</span><span class="block text-[11px] text-slate-400">${dmyLocal(o.submitted)}</span></td>
                             <td class="px-2 py-3"><span class="font-semibold text-slate-700">${esc(o.supplier)}</span><span class="block text-[11px] text-slate-400">${esc(o.category)}</span></td>
                             <td class="px-2 py-3 text-slate-600">${esc(o.requester)}</td>
-                            <td class="px-2 py-3 text-right font-mono font-semibold text-slate-700">${euro(o.total)}</td>
+                            <td class="px-2 py-3 text-right tabular-nums font-semibold text-slate-700">${euro(o.total)}</td>
                             <td class="px-4 py-3">${badge(o.status)}${o.urgency === 'Operational - urgent' && OPEN.includes(o.status) ? '<span class="block text-[10px] font-bold text-red-600 mt-1">URGENT</span>' : ''}</td>
                         </tr>`).join('')}</tbody>
                 </table>
                 <div class="md:hidden divide-y divide-slate-100">${list.map(o => `
                     <button onclick="PO.view('${esc(o.po)}')" class="w-full text-left px-4 py-3 hover:bg-brand-50/50">
-                        <div class="flex justify-between items-center"><span class="font-mono font-semibold text-brand-800 text-sm">${esc(o.po)}</span>${badge(o.status)}</div>
-                        <div class="flex justify-between mt-1 text-sm"><span class="font-semibold text-slate-700">${esc(o.supplier)}</span><span class="font-mono font-semibold">${euro(o.total)}</span></div>
+                        <div class="flex justify-between items-center"><span class="tabular-nums font-semibold text-brand-800 text-sm">${esc(o.po)}</span>${badge(o.status)}</div>
+                        <div class="flex justify-between mt-1 text-sm"><span class="font-semibold text-slate-700">${esc(o.supplier)}</span><span class="tabular-nums font-semibold">${euro(o.total)}</span></div>
                         <div class="text-[11px] text-slate-400 mt-0.5">${esc(o.requester)} · ${dmyLocal(o.submitted)}</div>
                     </button>`).join('')}</div>`;
             }
@@ -1036,8 +1067,8 @@
                                 <span class="col-span-6">Description</span><span class="col-span-2 text-right">Qty</span><span class="col-span-3 text-right">Each (€)</span><span></span></div>
                             <div id="f-lines" class="space-y-2"></div>
                             <div class="flex justify-between items-center mt-3">
-                                <button onclick="PO.addLine()" class="text-sm font-semibold text-brand-700 hover:text-brand-900">+ Add another item</button>
-                                <div class="text-right"><span class="text-xs uppercase font-bold text-slate-400 mr-2">Total</span><span id="f-total" class="text-xl font-bold font-mono text-brand-800">€0.00</span></div>
+                                <button onclick="PO.addLine()" class="text-sm font-semibold text-brand-700 hover:text-brand-900 inline-flex items-center gap-1.5"><svg class="ico w-4 h-4" aria-hidden="true"><use href="#i-plus"/></svg>Add another item</button>
+                                <div class="text-right"><span class="text-xs uppercase font-bold text-slate-400 mr-2">Total</span><span id="f-total" class="text-xl font-bold tabular-nums text-brand-800">€0.00</span></div>
                             </div>
                         </div>
 
@@ -1084,7 +1115,7 @@
                     <div data-line class="grid grid-cols-12 gap-2 items-center">
                         <input data-k="desc" class="po-input col-span-12 sm:col-span-6" maxlength="200" placeholder="Item ${i + 1}" value="${esc(l.desc)}">
                         <input data-k="qty" class="po-input col-span-4 sm:col-span-2 text-right" inputmode="decimal" maxlength="6" value="${esc(l.qty)}" aria-label="Quantity">
-                        <input data-k="price" class="po-input col-span-6 sm:col-span-3 text-right font-mono" inputmode="decimal" maxlength="12" placeholder="0.00" value="${esc(l.price)}" aria-label="Price each">
+                        <input data-k="price" class="po-input col-span-6 sm:col-span-3 text-right tabular-nums" inputmode="decimal" maxlength="12" placeholder="0.00" value="${esc(l.price)}" aria-label="Price each">
                         <button onclick="PO.removeLine(${i})" class="col-span-2 sm:col-span-1 text-slate-300 hover:text-red-500 text-xl ${form.lines.length === 1 ? 'invisible' : ''}" aria-label="Remove item">×</button>
                     </div>`).join('');
                 document.querySelectorAll('#f-lines [data-k=price]').forEach(el => el.addEventListener('input', () => { groupInPlace(el); total(); }));
@@ -1176,7 +1207,7 @@
                         <div>${poLogo()}</div>
                         <div class="sm:text-right">
                             <div style="font-size:1.6rem;font-weight:800;color:#2C3E50;letter-spacing:.08em">PURCHASE ORDER</div>
-                            <div class="font-mono" style="font-size:1.05rem;font-weight:700;color:#52718D">${esc(o.po)}</div>
+                            <div class="tabular-nums" style="font-size:1.05rem;font-weight:700;color:#52718D">${esc(o.po)}</div>
                             <div style="font-size:.8rem;color:#64748b;margin-top:.2rem">Raised ${dmyLocal(o.submitted)}</div>
                         </div>
                     </div>
@@ -1192,7 +1223,7 @@
                         <tbody>${rows}</tbody></table>
                     <div class="flex justify-end mt-3"><table style="width:auto">
                         <tr><td style="padding:.6rem 1.5rem .6rem 0;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#52718D;border-top:2px solid #2C3E50">Total incl. VAT</td>
-                            <td class="num font-mono" style="padding:.6rem 0;font-weight:800;font-size:1.25rem;color:#2C3E50;border-top:2px solid #2C3E50">${euro(o.total)}</td></tr></table></div>
+                            <td class="num tabular-nums" style="padding:.6rem 0;font-weight:800;font-size:1.25rem;color:#2C3E50;border-top:2px solid #2C3E50">${euro(o.total)}</td></tr></table></div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 pt-5 border-t border-slate-200">
                         <table>${fact('Requested by', o.requester)}${fact('Category', o.category)}${fact('For', o.asset)}${fact('Quote ref.', o.quote)}${fact('Urgency', o.urgency)}</table>
                         <div class="rounded-xl p-4" style="background:${approved ? '#f0fdf4' : '#f8fafc'};border:1px solid ${approved ? '#bbf7d0' : '#e2e8f0'}">
