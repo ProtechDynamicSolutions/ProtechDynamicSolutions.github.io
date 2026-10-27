@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>Cork SAR Ops · Asset & Readiness Dashboard</title>
+    <!-- Fonts & Tailwind (version pinned) -->
+    <link href="assets/fonts/fonts.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <!-- Leaflet CSS & JS (integrity checked) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Simple animated icons style -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f5f7fc; font-family: 'Montserrat', sans-serif; }
+        .glass-panel { background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); }
+        .status-badge { transition: all 0.2s ease; }
+        .tank-cell { transition: background 0.2s; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4,0,0.6,1) infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+        .leaflet-popup-content-wrapper { border-radius: 1rem; font-family: 'Montserrat', sans-serif; }
+        .dashboard-card { border-radius: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s ease; }
+        .tide-gradient { background: linear-gradient(135deg, #eef2ff 0%, #e6e9f0 100%); }
+        hr { border-color: #e2e8f0; }
+        header .ccm-logo { display: block; height: 5.5rem; width: auto; }
+        @media (max-width: 640px) { header .ccm-logo { height: 4.5rem; } }
+        
+        /* Custom scrollbar for gear list */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Montserrat', 'sans-serif'], serif: ['Playfair Display', 'serif'] },
+                    colors: {
+                        brand: { 50: '#f0f4f8', 100: '#d9e2ec', 200: '#bcccdc', 300: '#9fb3c8', 400: '#829ab1', 500: '#627d98', 600: '#52718D', 700: '#334e68', 800: '#2C3E50', 900: '#102a43' },
+                        accent: { light: '#FFF2B2', DEFAULT: '#FFD700', dark: '#E6C200' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <!-- Emergency / banner -->
+    <div class="bg-brand-800 text-white text-sm py-2 px-4 text-center font-medium tracking-wide">
+        🚨 OPERATIONAL DASHBOARD · CORK CITY SEARCH & RECOVERY
+    </div>
+    <div class="bg-amber-100 text-amber-900 text-xs py-1.5 px-4 text-center font-semibold border-b border-amber-200">
+        Boat positions, tank pressures, roster and gear are SAMPLE figures until they are connected to real sources. Weather is live.
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-30 glass-panel border-b border-slate-200/70 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-28">
+                <a href="index.html" class="flex-shrink-0 flex items-center h-full py-2" title="Public website">
+                    <!-- LOGO:start --><svg class="ccm-logo" viewBox="130 22 540 292" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cork City Missing Persons Search and Recovery"><style>.ccm-beam rect{animation:ccmSweep 7s linear infinite}.ccm-beam.ccm-two rect{animation-duration:8s}@keyframes ccmSweep{0%{transform:translateX(0)}40%{transform:translateX(1100px)}50%{transform:translateX(1100px)}90%{transform:translateX(0)}100%{transform:translateX(0)}}.ccm-static .ccm-beam{display:none}@media (prefers-reduced-motion:reduce){.ccm-beam{display:none}}</style><defs><linearGradient id="ccm-bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".25" stop-color="#FFF2B2"/><stop offset=".75" stop-color="#FFF2B2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="ccm-light" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFD700" stop-opacity="0"/><stop offset=".5" stop-color="#FFD700" stop-opacity=".9"/><stop offset="1" stop-color="#FFD700" stop-opacity="0"/></linearGradient><clipPath id="ccm-top"><rect x="180" y="30" width="440" height="30" rx="4"/></clipPath><clipPath id="ccm-bottom"><rect x="180" y="275" width="440" height="30" rx="4"/></clipPath></defs><rect x="180" y="30" width="440" height="30" rx="4" fill="url(#ccm-bar)"/><g class="ccm-beam" clip-path="url(#ccm-top)"><rect x="-300" y="30" width="300" height="30" fill="url(#ccm-light)"/></g><text x="400" y="52" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-weight="700" font-size="34" fill="#2C3E50" letter-spacing="2">Cork City</text><g font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="92" fill="#52718D" text-anchor="middle"><text x="184" y="155">M</text><image href="data:image/png;base64,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" x="223" y="52" width="66" height="103" preserveAspectRatio="xMidYMax meet"/><text x="328" y="155">S</text><text x="400" y="155">S</text><image href="data:image/png;base64,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" x="439" y="52" width="66" height="103" preserveAspectRatio="xMidYMax meet"/><text x="544" y="155">N</text><text x="616" y="155">G</text></g><g font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="88" fill="#52718D" text-anchor="middle"><text x="184" y="245">P</text><text x="256" y="245">E</text><text x="328" y="245">R</text><text x="400" y="245">S</text><text x="472" y="245">O</text><text x="544" y="245">N</text><text x="616" y="245">S</text></g><rect x="180" y="275" width="440" height="30" rx="4" fill="url(#ccm-bar)"/><g class="ccm-beam ccm-two" clip-path="url(#ccm-bottom)"><rect x="-300" y="275" width="300" height="30" fill="url(#ccm-light)"/></g><text x="400" y="298" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-style="italic" font-weight="700" font-size="34" fill="#2C3E50" letter-spacing="1">Search &amp; Recovery</text></svg><!-- LOGO:end -->
+                </a>
+                <div class="flex items-center gap-4">
+                <a href="index.html" class="text-sm font-semibold text-brand-800 hover:underline whitespace-nowrap">Public website</a>
+                <div class="hidden md:flex items-center gap-3 bg-brand-100/60 px-4 py-2 rounded-full">
+                    <span class="text-xs font-bold text-brand-800" id="headerStatusText">⚙️ COMMAND DASHBOARD</span>
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs text-brand-700">active session</span>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+            <nav class="flex space-x-6">
+                <button onclick="switchTab('live')" id="tab-live" class="border-b-2 border-brand-800 py-3 px-2 text-sm font-bold text-brand-800 focus:outline-none transition-colors">
+                    📡 Live Operations
+                </button>
+                <button onclick="switchTab('manage')" id="tab-manage" class="border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors">
+                    👥 Readiness & Gear Management
+                </button>
+                <button onclick="switchTab('po')" id="tab-po" class="border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors">
+                    🧾 Purchase Orders
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==================== TAB 1: LIVE OPERATIONS ==================== -->
+    <main id="view-live" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dashboard header -->
+        <div class="flex flex-wrap justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>📊</span> Marine & Asset Operations</h1>
+                <p class="text-slate-500 text-sm mt-1">Live asset tracking · river & sea conditions</p>
+            </div>
+            <div class="text-right text-xs text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm" id="liveTimestamp">Last update: --:--:--</div>
+        </div>
+
+        <!-- Row: Weather & Tides -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 dashboard-card">
+                <div class="flex justify-between items-start">
+                    <div><h3 class="font-bold text-lg text-brand-700">🌦️ Cork Harbour Weather</h3><p class="text-xs text-slate-400">Live data (Open-Meteo API)</p></div>
+                    <div class="bg-brand-50 p-2 rounded-xl"><span class="text-2xl" id="weatherIcon">☁️</span></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div><span class="text-slate-500 text-sm">Temperature</span><div class="text-2xl font-bold" id="weatherTemp">--°C</div></div>
+                    <div><span class="text-slate-500 text-sm">Wind</span><div class="text-2xl font-bold" id="weatherWind">-- km/h</div></div>
+                    <div><span class="text-slate-500 text-sm">Humidity</span><div id="weatherHumidity" class="font-semibold text-2xl font-bold">--%</div></div>
+                    <div><span class="text-slate-500 text-sm">Condition</span><div id="weatherCond" class="font-semibold">Loading...</div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 dashboard-card tide-gradient">
+                <h3 class="font-bold text-lg text-brand-700">🌊 Tides · River Lee & Sea (Cork Harbour)</h3>
+                <div class="flex flex-wrap gap-5 mt-3 justify-between">
+                    <div><span class="text-xs text-slate-500 uppercase">Sea Level (Cobh)</span><div class="text-2xl font-mono font-bold" id="seaTide">-- m</div><span class="text-xs" id="seaTrend">--</span></div>
+                    <div><span class="text-xs text-slate-500 uppercase">River Lee (City)</span><div class="text-2xl font-mono font-bold" id="riverLevel">-- m</div><span class="text-xs" id="riverTrend">--</span></div>
+                    <div><span class="text-xs text-slate-500">Next High Tide</span><div class="font-semibold" id="nextHighTide">--:--</div></div>
+                </div>
+                <div class="mt-3 text-xs text-slate-400">🌊 tidal coefficient: moderate spring</div>
+            </div>
+        </div>
+
+        <!-- Map + Boats live section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-3 border-b border-slate-100 bg-brand-50/30 flex justify-between items-center">
+                    <span class="font-semibold text-brand-800">🗺️ ASSET POSITIONS (Boats on water)</span>
+                    <span class="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">sample positions</span>
+                </div>
+                <div id="map" style="height: 420px; width: 100%; z-index: 1;"></div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Boat 1 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 dashboard-card" id="boat1Card">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <div><span class="font-bold text-brand-800">⚓ RIB RESCUE 1</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">ON WATER</span></div>
+                        <div class="text-xs text-brand-500" id="boat1LastCheck">check: --:--</div>
+                    </div>
+                    <div class="mt-3"><span class="text-sm font-semibold">🔧 5 x Dive Tanks · Pressure</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
+                    <div id="boat1Tanks" class="grid grid-cols-5 gap-2 mt-2"></div>
+                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span>🛠️ Gear: BCD, Regulators</span><span id="boat1GearStatus" class="font-medium text-green-600">--</span></div>
+                </div>
+                <!-- Boat 2 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 dashboard-card" id="boat2Card">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <div><span class="font-bold text-brand-800">🛥️ COASTAL GUARDIAN</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">AT SEA</span></div>
+                        <div class="text-xs text-brand-500" id="boat2LastCheck">check: --:--</div>
+                    </div>
+                    <div class="mt-3"><span class="text-sm font-semibold">🧯 5 x Tanks (Steel/Alu)</span> <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">SAMPLE</span></div>
+                    <div id="boat2Tanks" class="grid grid-cols-5 gap-2 mt-2"></div>
+                    <div class="mt-3 text-xs text-slate-500 flex justify-between"><span>🛠️ Dive gear set + SMB</span><span id="boat2GearStatus" class="font-medium text-green-600">--</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-green-500 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Compliant Gear</p>
+                    <p class="text-2xl font-bold text-brand-800 mt-1" id="countCompliant">0</p>
+                </div>
+                <div class="text-3xl">✅</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-yellow-500 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Services Due &lt; 3 Months</p>
+                    <p class="text-2xl font-bold text-brand-800 mt-1" id="countNearDue">0</p>
+                </div>
+                <div class="text-3xl">⚠️</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 border-l-red-500 dashboard-card flex items-center justify-between cursor-pointer" onclick="switchTab('manage')">
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Overdue / Action Reqd</p>
+                    <p class="text-2xl font-bold text-brand-800 mt-1" id="countOverdue">0</p>
+                </div>
+                <div class="text-3xl">🔴</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== TAB 2: READINESS & GEAR MANAGEMENT ==================== -->
+    <main id="view-manage" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="flex flex-wrap justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>👥</span> Readiness & Asset Management</h1>
+                <p class="text-slate-500 text-sm mt-1">Smart team deployment · advanced gear tracking & maintenance records</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT COLUMN: Personnel & Auto Team Builder -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Smart Team Builder Widget -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card">
+                    <h3 class="font-bold text-lg text-brand-800 flex items-center gap-2">⚡ Smart Team Builder</h3>
+                    <p class="text-xs text-slate-500 mb-4">Auto-suggests fastest available personnel based on required skills.</p>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="text-center">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Divers Req.</label>
+                            <input type="number" id="req-diver" min="0" max="5" value="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-center text-brand-800 font-bold focus:outline-brand-500">
+                        </div>
+                        <div class="text-center">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Medics Req.</label>
+                            <input type="number" id="req-medic" min="0" max="3" value="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-center text-brand-800 font-bold focus:outline-brand-500">
+                        </div>
+                        <div class="text-center">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Sonar/Tech</label>
+                            <input type="number" id="req-sonar" min="0" max="3" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-center text-brand-800 font-bold focus:outline-brand-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="assembleTeam()" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-2 px-4 rounded-xl transition-colors mb-4 flex justify-center items-center gap-2 shadow-sm">
+                        <span>🔍 Find Available Team</span>
+                    </button>
+                    
+                    <!-- Team Results -->
+                    <div id="team-results" class="hidden border border-brand-200 bg-brand-50 rounded-xl p-3">
+                        <h4 class="text-xs font-bold text-brand-800 uppercase tracking-wide border-b border-brand-200 pb-2 mb-2">Suggested Roster</h4>
+                        <ul id="team-roster-list" class="space-y-2 text-sm">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Volunteer Live Roster -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card h-[450px] flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg text-brand-800">📋 Active Roster</h3>
+                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full border border-slate-200" id="total-volunteers">Loading...</span>
+                    </div>
+                    
+                    <div class="overflow-y-auto custom-scrollbar pr-2 flex-grow" id="volunteer-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Advanced Gear Management -->
+            <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 dashboard-card flex flex-col h-[750px] overflow-hidden">
+                <div class="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-brand-800">🧰 Advanced Equipment Tracking</h3>
+                        <p class="text-xs text-slate-500 mt-1">Lifecycle monitoring, assignments & faults.</p>
+                    </div>
+                    <button class="text-xs bg-white border border-slate-300 text-slate-700 font-semibold py-1.5 px-3 rounded-lg shadow-sm hover:bg-slate-50">
+                        + Add Asset
+                    </button>
+                </div>
+                
+                <div class="overflow-y-auto custom-scrollbar flex-grow p-5" id="gear-detailed-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== TAB 3: PURCHASE ORDERS ==================== -->
+    <main id="view-po" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="po-root"></div>
+    </main>
+
+    <!-- Request form and purchase order pop-ups -->
+    <div id="po-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div id="po-modal-body" class="min-h-full flex items-start justify-center p-3 sm:p-8"></div>
+    </div>
+    <div id="po-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-brand-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg max-w-[90vw]"></div>
+    <div id="po-print"></div>
+
+    <style>
+        .po-input { width: 100%; background: #fff; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .55rem .75rem; font-size: .9rem; color: #1e293b; }
+        .po-input:focus { outline: 2px solid #52718D; outline-offset: 0; border-color: #52718D; }
+        .po-label { display: block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #52718D; margin-bottom: .3rem; }
+        .po-doc { font-family: 'Montserrat', sans-serif; color: #1e293b; }
+        .po-doc table { width: 100%; border-collapse: collapse; }
+        .po-doc .lines th { text-align: left; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: #52718D; border-bottom: 2px solid #2C3E50; padding: .45rem .4rem; }
+        .po-doc .lines td { border-bottom: 1px solid #e2e8f0; padding: .55rem .4rem; font-size: .85rem; vertical-align: top; }
+        .po-doc .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .po-stamp { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg); font-size: clamp(1.4rem, 6vw, 3.2rem); font-weight: 800; letter-spacing: .08em; color: rgba(220, 38, 38, .13); border: 6px solid rgba(220, 38, 38, .13); padding: .2rem 1.2rem; border-radius: 1rem; pointer-events: none; white-space: nowrap; }
+        #po-print { display: none; }
+        @media print {
+            @page { size: A4; margin: 14mm; }
+            body > *:not(#po-print) { display: none !important; }
+            body { background: #fff !important; }
+            #po-print { display: block; }
+            #po-print .po-sheet { box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+        }
+    </style>
+
+    <script>
+        // ======================== STATE & MOCK DATA ========================
+        
+        const boatPositions = [
+            { name: "RIB Rescue 1", lat: 51.8983, lng: -8.4730, id: "boat1" },
+            { name: "Coastal Guardian", lat: 51.8460, lng: -8.3130, id: "boat2" }
+        ];
+
+        let boat1Tanks = [210, 195, 203, 188, 212];
+        let boat2Tanks = [205, 189, 197, 210, 178];
+        let boat1GearOk = true, boat2GearOk = true;
+
+        let weather = { temp: 12.4, wind: 14, humidity: 82, condition: "Fetching live...", icon: "🔄" };
+        let tide = { sea: 2.1, river: 1.4, seaTrend: "rising", riverTrend: "stable", nextHigh: "14:42" };
+        let map, markers = {};
+        
+        let usingRealTides = false;
+        // Tide times need a paid API key. A key must never sit in this page (anyone can read it in view-source):
+        // call Stormglass from the Apps Script backend instead and have the page ask the script.
+
+        // Everything shown with innerHTML goes through esc() first, so a name or fault report can never run as code.
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // --- Volunteer Personnel Data (Irish Context) ---
+        const volunteers = [
+            { id: "v1", name: "Sarah O'Connor", skills: ["Diver", "Sonar"], status: "responding", eta: 12, phone: "087 123 4567" },
+            { id: "v2", name: "Liam Murphy", skills: ["Medic", "Coxswain"], status: "available", eta: null, phone: "086 987 6543" },
+            { id: "v3", name: "Declan Kelly", skills: ["Diver", "Drone"], status: "offline", eta: null, phone: "085 111 2222" },
+            { id: "v4", name: "Niamh Walsh", skills: ["Medic", "Diver"], status: "responding", eta: 5, phone: "087 555 3333" },
+            { id: "v5", name: "Eoin McCarthy", skills: ["Diver"], status: "available", eta: null, phone: "083 444 7777" },
+            { id: "v6", name: "Sinead Murphy", skills: ["Sonar", "Drone"], status: "available", eta: null, phone: "086 222 9999" },
+            { id: "v7", name: "Cian O'Brien", skills: ["Medic"], status: "offline", eta: null, phone: "085 333 1111" }
+        ];
+
+        // --- Advanced Gear Management Database ---
+        let advancedGear = [
+            { 
+                id: "DRN-01", name: "DJI Matrice 300 RTK", category: "Drone", assignedTo: "Declan Kelly",
+                value: 12500, cycleTrack: "Battery: 185/200 cycles", nextService: "2026-03-20", 
+                status: "red", statusMsg: "Overdue Service", fault: "Propeller vibration reported at high alt."
+            },
+            { 
+                id: "ENG-02", name: "Yamaha 150hp Outboard", category: "Engine", assignedTo: "RIB Rescue 1",
+                value: 16000, cycleTrack: "Hours: 210/300", nextService: "2026-06-01", 
+                status: "green", statusMsg: "Operational", fault: "None"
+            },
+            { 
+                id: "MED-01", name: "Defibrillator (AED) Alpha", category: "Medical", assignedTo: "Niamh Walsh",
+                value: 1200, cycleTrack: "Pads Exp: 01/2027", nextService: "2026-12-01", 
+                status: "green", statusMsg: "Operational", fault: "None"
+            },
+            { 
+                id: "RAD-04", name: "VHF Handhelds (x4 Kit)", category: "Comms", assignedTo: "Base Ops",
+                value: 850, cycleTrack: "Battery Health: 82%", nextService: "2026-05-10", 
+                status: "yellow", statusMsg: "Fault Logged", fault: "Unit 3 (Callsign C-3) not holding charge over 4hrs."
+            },
+            { 
+                id: "SNR-01", name: "Garmin SideVü Sonar", category: "Tech", assignedTo: "Coastal Guardian",
+                value: 4500, cycleTrack: "Firmware: v12.4", nextService: "2026-04-15", 
+                status: "yellow", statusMsg: "Service Due Soon", fault: "None"
+            },
+            { 
+                id: "DVE-09", name: "Scuba Regulators Set C", category: "Dive", assignedTo: "Unassigned (Store)",
+                value: 950, cycleTrack: "Dives: 45/100", nextService: "2027-01-10", 
+                status: "green", statusMsg: "Clean & Inspected", fault: "None"
+            }
+        ];
+
+        // ======================== UI CONTROLS & LOGIC ========================
+
+        function switchTab(tabId) {
+            // Toggle Views and Tab Styles
+            const on = "border-b-2 border-brand-800 py-3 px-2 text-sm font-bold text-brand-800 focus:outline-none transition-colors";
+            const off = "border-b-2 border-transparent py-3 px-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none transition-colors";
+            ['live', 'manage', 'po'].forEach(id => {
+                document.getElementById('view-' + id).classList.toggle('hidden', tabId !== id);
+                document.getElementById('tab-' + id).className = tabId === id ? on : off;
+            });
+
+            if (tabId === 'live') {
+                // Fix map rendering issue when unhidden
+                if(map) { setTimeout(() => { map.invalidateSize(); }, 50); }
+            } else if (tabId === 'manage') {
+                // Render management tab dynamic data
+                renderVolunteers();
+                renderDetailedGear();
+            } else {
+                PO.open();
+            }
+        }
+
+        function updateTimestamp() {
+            document.getElementById("liveTimestamp").innerHTML = `Last update: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // ======================== TAB 2: MANAGEMENT RENDERERS ========================
+
+        function renderVolunteers() {
+            const list = document.getElementById('volunteer-list');
+            document.getElementById('total-volunteers').innerText = `Total: ${volunteers.length} | Available: ${volunteers.filter(v=>v.status==='available').length}`;
+            
+            // Sort: Responding first, then available, then offline
+            const sorted = [...volunteers].sort((a,b) => {
+                const ranks = { 'responding': 1, 'available': 2, 'offline': 3 };
+                return ranks[a.status] - ranks[b.status];
+            });
+
+            list.innerHTML = sorted.map(v => {
+                let statusBadge = "";
+                if(v.status === 'responding') statusBadge = `<span class="bg-green-100 text-green-700 border border-green-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>ETA: ${v.eta} min</span>`;
+                else if(v.status === 'available') statusBadge = `<span class="bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Available</span>`;
+                else statusBadge = `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Offline</span>`;
+
+                const skillBadges = v.skills.map(s => {
+                    const colors = { 'Diver': 'bg-cyan-100 text-cyan-800', 'Medic': 'bg-red-100 text-red-800', 'Sonar': 'bg-indigo-100 text-indigo-800', 'Drone': 'bg-purple-100 text-purple-800', 'Coxswain': 'bg-orange-100 text-orange-800' };
+                    return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-md ${colors[s] || 'bg-gray-100 text-gray-800'}">${esc(s)}</span>`;
+                }).join('');
+
+                return `
+                <div class="border-b border-slate-100 py-3 last:border-0 hover:bg-slate-50 transition px-2 rounded-lg">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <span class="font-bold text-slate-800 block">${esc(v.name)}</span>
+                            <div class="flex gap-1 mt-1">${skillBadges}</div>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function assembleTeam() {
+            const reqDiver = parseInt(document.getElementById('req-diver').value) || 0;
+            const reqMedic = parseInt(document.getElementById('req-medic').value) || 0;
+            const reqSonar = parseInt(document.getElementById('req-sonar').value) || 0;
+
+            const resultsContainer = document.getElementById('team-results');
+            const rosterList = document.getElementById('team-roster-list');
+            
+            resultsContainer.classList.remove('hidden');
+            rosterList.innerHTML = "<li class='text-brand-500 flex items-center justify-center py-2'>⚙️ Analyzing database...</li>";
+
+            // Small delay for "calculating" feel
+            setTimeout(() => {
+                // Filter pool (Responding or Available)
+                let availablePool = volunteers.filter(v => v.status === 'responding' || v.status === 'available');
+                
+                // Sort by ETA (Responding first, lowest ETA first)
+                availablePool.sort((a, b) => {
+                    let etaA = a.eta !== null ? a.eta : 999;
+                    let etaB = b.eta !== null ? b.eta : 999;
+                    return etaA - etaB;
+                });
+
+                let selectedTeam = [];
+                let missing = [];
+
+                // Simple greedy matching
+                const pickMembers = (skill, count) => {
+                    for(let i=0; i<count; i++) {
+                        let candidateIndex = availablePool.findIndex(v => v.skills.includes(skill) && !selectedTeam.includes(v));
+                        if(candidateIndex !== -1) {
+                            selectedTeam.push({...availablePool[candidateIndex], assignedRole: skill});
+                        } else {
+                            missing.push(skill);
+                        }
+                    }
+                };
+
+                pickMembers('Diver', reqDiver);
+                pickMembers('Medic', reqMedic);
+                pickMembers('Sonar', reqSonar);
+
+                if (selectedTeam.length === 0 && missing.length === 0) {
+                    rosterList.innerHTML = "<li class='text-slate-500 italic'>No specific roles requested. Adjust numbers above.</li>";
+                    return;
+                }
+
+                let html = selectedTeam.map(member => {
+                    return `
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-brand-100 shadow-sm">
+                        <div>
+                            <span class="font-bold text-sm text-brand-900">${esc(member.name)}</span>
+                            <span class="text-[10px] text-brand-500 block">📞 ${esc(member.phone)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-bold text-white bg-brand-600 px-2 py-0.5 rounded">${esc(member.assignedRole)}</span>
+                            <span class="text-[10px] block mt-1 ${member.status === 'responding' ? 'text-green-600 font-bold' : 'text-slate-500'}">
+                                ${member.status === 'responding' ? 'ETA: '+member.eta+'m' : 'Available on call'}
+                            </span>
+                        </div>
+                    </li>`;
+                }).join('');
+
+                if(missing.length > 0) {
+                    html += `<li class="text-xs text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200 mt-2">
+                        ⚠️ Shortfall: Could not find available personnel for: ${missing.join(', ')}
+                    </li>`;
+                }
+                
+                // Dispatch is not connected to any SMS service, so the button must not look like it sends anything
+                html += `<button disabled class="w-full mt-2 bg-slate-200 text-slate-500 text-xs font-bold py-2 rounded cursor-not-allowed" title="Not connected to an SMS service yet">📱 SMS dispatch not connected yet: phone the team directly</button>`;
+
+                rosterList.innerHTML = html;
+            }, 600);
+        }
+
+        function renderDetailedGear() {
+            const list = document.getElementById('gear-detailed-list');
+            
+            // Calculate overview numbers
+            let compliant = 0;
+            let nearDue = 0;
+            let overdue = 0;
+
+            const now = new Date();
+            const threeMonthsFromNow = new Date();
+            threeMonthsFromNow.setMonth(now.getMonth() + 3);
+
+            let html = advancedGear.map(gear => {
+                // Determine date-based compliance on the fly
+                let nextDate = new Date(gear.nextService);
+                let visualStatusClass = "border-l-green-500";
+                let badgeClass = "bg-green-100 text-green-800";
+                let icon = "✅";
+
+                if (gear.status === 'red' || nextDate < now) {
+                    visualStatusClass = "border-l-red-500 bg-red-50/30";
+                    badgeClass = "bg-red-100 text-red-800";
+                    icon = "🔴";
+                    overdue++;
+                } else if (gear.status === 'yellow' || (nextDate >= now && nextDate <= threeMonthsFromNow)) {
+                    visualStatusClass = "border-l-yellow-500 bg-yellow-50/30";
+                    badgeClass = "bg-yellow-100 text-yellow-800";
+                    icon = "⚠️";
+                    nearDue++;
+                } else {
+                    compliant++;
+                }
+
+                // Format Euros nicely
+                const formattedValue = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(gear.value);
+
+                return `
+                <div class="bg-white border border-slate-200 border-l-4 ${visualStatusClass} rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-2 border-b border-slate-100 pb-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-brand-900">${esc(gear.name)}</span>
+                                <span class="text-[10px] bg-slate-100 text-slate-500 font-mono px-1.5 py-0.5 rounded">${esc(gear.id)}</span>
+                            </div>
+                            <span class="text-xs text-slate-500 mt-0.5 block">Category: ${esc(gear.category)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="${badgeClass} text-[10px] font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">${icon} ${esc(gear.statusMsg)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Assigned To</span>
+                            <span class="font-medium text-slate-700">${esc(gear.assignedTo)}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Lifecycle / Usage</span>
+                            <span class="font-medium text-slate-700">${esc(gear.cycleTrack)}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Next Service</span>
+                            <span class="font-medium ${icon !== '✅' ? 'text-red-600 font-bold' : 'text-slate-700'}">${new Date(gear.nextService).toLocaleDateString('en-IE')}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Asset Value</span>
+                            <span class="font-mono text-slate-600">${formattedValue}</span>
+                        </div>
+                    </div>
+
+                    ${gear.fault !== 'None' ? `
+                    <div class="mt-3 bg-red-50 border border-red-100 rounded-lg p-2 text-xs text-red-800 flex items-start gap-2">
+                        <span>💬</span>
+                        <div><strong>Active Fault Report:</strong> ${esc(gear.fault)}</div>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+
+            list.innerHTML = html;
+
+            // Update main tab dashboard counters
+            const countCompliantEl = document.getElementById('countCompliant');
+            const countNearDueEl = document.getElementById('countNearDue');
+            const countOverdueEl = document.getElementById('countOverdue');
+            
+            if(countCompliantEl) countCompliantEl.innerText = compliant;
+            if(countNearDueEl) countNearDueEl.innerText = nearDue;
+            if(countOverdueEl) countOverdueEl.innerText = overdue;
+        }
+
+        // ======================== TAB 1: LIVE API & SENSORS ========================
+        
+        async function fetchLiveWeather() {
+            try {
+                // Open-Meteo for Irish coords (Cork City)
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.8985&longitude=-8.4756&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=Europe%2FLondon');
+                const data = await res.json();
+                
+                weather.temp = data.current.temperature_2m;
+                weather.wind = data.current.wind_speed_10m;
+                weather.humidity = data.current.relative_humidity_2m;
+                
+                const code = data.current.weather_code;
+                if (code === 0) { weather.condition = "Clear sky"; weather.icon = "☀️"; }
+                else if (code <= 3) { weather.condition = "Cloudy / Overcast"; weather.icon = "☁️"; }
+                else if (code <= 48) { weather.condition = "Fog / Low vis"; weather.icon = "🌫️"; }
+                else if (code <= 55) { weather.condition = "Drizzle"; weather.icon = "🌧️"; }
+                else if (code <= 65) { weather.condition = "Rain"; weather.icon = "🌧️"; }
+                else if (code <= 77) { weather.condition = "Snow"; weather.icon = "❄️"; }
+                else { weather.condition = "Stormy / Showers"; weather.icon = "⛈️"; }
+                
+                updateWeatherTideUI();
+            } catch (error) {
+                console.warn("Live Weather API failed", error);
+            }
+        }
+
+        async function fetchLiveTidesAndRiver() {
+            // OPW Waterlevel API for River Lee (South Channel Station 19069)
+            try {
+                const res = await fetch('https://waterlevel.ie/data/month/19069_0001.json');
+                if (res.ok) {
+                    const data = await res.json();
+                    const latest = data[data.length - 1]; // Last reading
+                    if (latest && latest.value) {
+                        tide.river = parseFloat(latest.value);
+                        usingRealTides = true;
+                    }
+                }
+            } catch(e) {
+                console.warn("OPW API CORS blocked or unavailable. Falling back to simulation for river.");
+            }
+            
+            updateWeatherTideUI();
+        }
+
+        function updateWeatherTideUI() {
+            document.getElementById("weatherTemp").innerHTML = weather.temp !== undefined ? weather.temp.toFixed(1) + "°C" : "--°C";
+            document.getElementById("weatherWind").innerHTML = weather.wind !== undefined ? Math.round(weather.wind) + " km/h" : "-- km/h";
+            document.getElementById("weatherHumidity").innerHTML = weather.humidity !== undefined ? Math.round(weather.humidity) + "%" : "--%";
+            document.getElementById("weatherCond").textContent = weather.condition;
+            document.getElementById("weatherIcon").textContent = weather.icon;
+            document.getElementById("seaTide").textContent = tide.sea.toFixed(1) + " m";
+            document.getElementById("riverLevel").textContent = tide.river.toFixed(1) + " m";
+            document.getElementById("seaTrend").textContent = (tide.seaTrend === "rising" ? "⬆️ rising" : "⬇️ falling") + (usingRealTides ? "" : " · estimated");
+            document.getElementById("riverTrend").textContent = tide.riverTrend + (usingRealTides ? "" : " · estimated");
+            document.getElementById("nextHighTide").textContent = tide.nextHigh + " (sample)";
+        }
+
+        function renderTanks() {
+            const boat1Container = document.getElementById("boat1Tanks");
+            const boat2Container = document.getElementById("boat2Tanks");
+            
+            const createTankHTML = (bar) => `<div class="bg-slate-100 rounded-lg text-center p-1 text-xs font-mono"><span class="block font-bold">${bar}</span><span class="text-[10px]">bar</span><div class="h-1 w-full bg-gray-200 rounded-full mt-1"><div class="h-1 rounded-full ${bar < 150 ? 'bg-red-500' : bar < 180 ? 'bg-yellow-500' : 'bg-green-500'}" style="width: ${Math.min(100, (bar/232)*100)}%"></div></div></div>`;
+
+            if(boat1Container) boat1Container.innerHTML = boat1Tanks.map(createTankHTML).join('');
+            if(boat2Container) boat2Container.innerHTML = boat2Tanks.map(createTankHTML).join('');
+            
+            const boat1GearSpan = document.getElementById("boat1GearStatus");
+            const boat2GearSpan = document.getElementById("boat2GearStatus");
+            if(boat1GearSpan) boat1GearSpan.innerHTML = boat1GearOk ? "✅ all good" : "⚠️ service needed";
+            if(boat2GearSpan) boat2GearSpan.innerHTML = boat2GearOk ? "✅ operational" : "⚠️ regulator check";
+            
+            document.getElementById("boat1LastCheck").innerHTML = `check: ${new Date().toLocaleTimeString('en-IE', {hour12: false})}`;
+            document.getElementById("boat2LastCheck").innerHTML = `check: ${new Date().toLocaleTimeString('en-IE', {hour12: false})}`;
+        }
+
+        function simulateHardwareData() {
+            // Only simulate tides if the real API isn't supplying data
+            if (!usingRealTides) {
+                let tidePhase = (Date.now() / 3600000) % 12.4;
+                tide.sea = parseFloat((1.2 + 1.3 * Math.sin(tidePhase * 0.5)).toFixed(2));
+                tide.seaTrend = Math.sin(tidePhase * 0.5 + 0.1) > 0 ? "rising" : "falling";
+                tide.riverTrend = tide.seaTrend === "rising" ? "inflow" : "ebb";
+            }
+            
+            // Tanks mock (still simulates hardware)
+            boat1Tanks = boat1Tanks.map(p => Math.max(80, Math.min(232, Math.round(p + (Math.random() - 0.45) * 4.2))));
+            boat2Tanks = boat2Tanks.map(p => Math.max(80, Math.min(232, Math.round(p + (Math.random() - 0.45) * 4.5))));
+            
+            // Gear status used to flip at random here. It stays as set until a real check changes it.
+
+            renderTanks();
+            updateWeatherTideUI();
+            updateMapPopupContent();
+            updateTimestamp();
+        }
+
+        function updateMapPopupContent() {
+            if(!map) return;
+            if(markers.boat1) markers.boat1.setPopupContent(`<div class="font-sans text-sm"><b>⚓ RIB Rescue 1</b><br/>📍 River Lee<br/>🎯 Tanks: ${boat1Tanks.join(', ')} bar<br/>🛠️ Gear: ${boat1GearOk ? 'Operational' : 'Service Needed'}<br/>🔄 Live check: ${new Date().toLocaleTimeString('en-IE')}</div>`);
+            if(markers.boat2) markers.boat2.setPopupContent(`<div class="font-sans text-sm"><b>🛥️ Coastal Guardian</b><br/>📍 Cork Harbour<br/>🎯 Tanks: ${boat2Tanks.join(', ')} bar<br/>🛠️ Gear: ${boat2GearOk ? 'All good' : 'Inspection due'}<br/>🌊 On water active</div>`);
+        }
+
+        function initMap() {
+            map = L.map('map').setView([51.88, -8.42], 11);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            const boatIcon = L.divIcon({ html: '🚤', className: 'text-2xl bg-white/80 rounded-full p-1 shadow-md', iconSize: [30,30] });
+            markers.boat1 = L.marker([boatPositions[0].lat, boatPositions[0].lng], { icon: boatIcon }).addTo(map).bindPopup(`Loading...`);
+            markers.boat2 = L.marker([boatPositions[1].lat, boatPositions[1].lng], { icon: L.divIcon({ html: '⛵', className: 'text-2xl bg-white/80 rounded-full p-1 shadow-md', iconSize: [30,30] }) }).addTo(map).bindPopup(`Loading...`);
+            
+            L.circle([51.8985, -8.4756], { radius: 300, color: '#52718D', weight: 1, fillOpacity: 0.05 }).addTo(map);
+            updateMapPopupContent();
+        }
+
+        window.addEventListener('load', async () => {
+            initMap();
+            
+            // Render hidden tab data instantly so summaries are accurate
+            renderDetailedGear(); 
+            
+            simulateHardwareData();
+            await fetchLiveWeather();
+            await fetchLiveTidesAndRiver();
+
+            setInterval(() => {
+                fetchLiveWeather();
+                fetchLiveTidesAndRiver();
+            }, 300000); 
+
+            setInterval(simulateHardwareData, 12000);
+        });
+    </script>
+
+    <script>
+        // ======================== PURCHASE ORDERS ========================
+        // The page holds no names, emails or orders. They come from the Apps Script backend (Code.gs)
+        // after the team access code is entered once on each device. Approval happens only through
+        // the signed link emailed to the approver, so nobody can approve from this page.
+
+        const PO = (() => {
+            const BACKEND_URL = '';   // paste the Apps Script /exec link here after deploying Code.gs. Empty = demo.
+            const DEMO = !BACKEND_URL;
+            const KEY_CODE = 'ccmpsar.po.code', KEY_ME = 'ccmpsar.po.me';
+            const store = {
+                get(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+                set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} }
+            };
+            const STATUS_STYLE = {
+                'Awaiting approval': 'bg-amber-100 text-amber-800 border-amber-200',
+                'Approved': 'bg-sky-100 text-sky-800 border-sky-200',
+                'Ordered': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                'Received': 'bg-green-100 text-green-800 border-green-200',
+                'Sent back': 'bg-orange-100 text-orange-800 border-orange-200',
+                'Declined': 'bg-red-100 text-red-800 border-red-200',
+                'Cancelled': 'bg-slate-100 text-slate-500 border-slate-200'
+            };
+            const OPEN = ['Awaiting approval', 'Approved', 'Ordered', 'Sent back'];
+            const SPENT = ['Approved', 'Ordered', 'Received'];
+
+            let boot = null, orders = [], loaded = false, loading = false, error = '';
+            let filter = { status: 'Open', q: '' };
+            let form = null;   // the request being written
+
+            const $ = id => document.getElementById(id);
+            const euro = n => '€' + Number(n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const euro0 = n => '€' + Math.round(Number(n || 0)).toLocaleString('en-IE');
+            const dmy = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || '')); if (!m) return ''; return `${m[3]}/${m[2]}/${m[1]}`; };
+            const dmyLocal = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d.toLocaleDateString('en-IE'); };
+            const dmyTime = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d.toLocaleDateString('en-IE') + ' ' + d.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' }); };
+            const badge = s => `<span class="inline-block whitespace-nowrap text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${STATUS_STYLE[s] || STATUS_STYLE.Cancelled}">${esc(s)}</span>`;
+            const money = s => Number(String(s || '').replace(/[^0-9.]/g, '')) || 0;
+
+            function toast(msg) {
+                const t = $('po-toast');
+                t.textContent = msg;
+                t.classList.remove('hidden');
+                clearTimeout(toast.timer);
+                toast.timer = setTimeout(() => t.classList.add('hidden'), 4500);
+            }
+
+            // ---------- talking to the backend ----------
+            async function api(action, extra) {
+                if (DEMO) return Demo.handle(action, extra || {});
+                const res = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(Object.assign({ action, code: store.get(KEY_CODE) }, extra || {}))
+                });
+                const out = await res.json();
+                if (out.auth) store.set(KEY_CODE, '');
+                return out;
+            }
+
+            async function load() {
+                if (loading) return;
+                loading = true; error = '';
+                render();
+                try {
+                    if (!boot) {
+                        const b = await api('bootstrap');
+                        if (!b.ok) throw b;
+                        boot = b;
+                    }
+                    const l = await api('list');
+                    if (!l.ok) throw l;
+                    orders = l.orders || [];
+                    loaded = true;
+                } catch (e) {
+                    error = (e && e.error) || 'Could not reach the purchase order system. Check the connection and try again.';
+                }
+                loading = false;
+                render();
+            }
+
+            function open() {
+                if (!loaded && (DEMO || store.get(KEY_CODE))) load(); else render();
+            }
+
+            async function connect() {
+                const code = $('po-code').value.trim();
+                if (!code) return;
+                $('po-connect-btn').disabled = true;
+                try {
+                    const r = await fetch(BACKEND_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'ping', code }) }).then(r => r.json());
+                    if (!r.ok) { $('po-code-msg').textContent = r.error || 'Code not accepted.'; $('po-connect-btn').disabled = false; return; }
+                    store.set(KEY_CODE, code);
+                    load();
+                } catch (e) {
+                    $('po-code-msg').textContent = 'Could not reach the purchase order system.';
+                    $('po-connect-btn').disabled = false;
+                }
+            }
+
+            // ---------- main screen ----------
+            function render() {
+                const root = $('po-root');
+                const head = `
+                <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-brand-800 flex items-center gap-2"><span>🧾</span> Purchase Orders</h1>
+                        <p class="text-slate-500 text-sm mt-1">Request, approve and track team spending${boot && boot.approver ? ` · approved by ${esc(boot.approver)} through a secure email link` : ''}</p>
+                    </div>
+                    ${loaded ? `<button onclick="PO.newRequest()" class="bg-brand-800 hover:bg-brand-900 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition">+ New purchase request</button>` : ''}
+                </div>
+                ${DEMO ? `<div class="mb-6 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl px-4 py-3"><b>Demo.</b> These are sample orders and placeholder names. Nothing is saved or emailed. It goes live when the Apps Script link is pasted into <code>BACKEND_URL</code>.</div>` : ''}`;
+
+                if (!DEMO && !store.get(KEY_CODE)) {
+                    root.innerHTML = head + `
+                    <div class="max-w-md mx-auto bg-white rounded-2xl p-6 shadow-sm border border-slate-200 dashboard-card">
+                        <h3 class="font-bold text-lg text-brand-800">Enter the team access code</h3>
+                        <p class="text-sm text-slate-500 mt-1 mb-4">You only need to do this once on this phone or computer. Ask the coordinator if you don't have it.</p>
+                        <input id="po-code" class="po-input font-mono tracking-widest uppercase" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" onkeydown="if(event.key==='Enter')PO.connect()">
+                        <button id="po-connect-btn" onclick="PO.connect()" class="w-full mt-3 bg-brand-800 hover:bg-brand-900 text-white font-bold py-2.5 rounded-xl">Connect</button>
+                        <p id="po-code-msg" class="text-sm text-red-600 font-semibold mt-2" role="status"></p>
+                    </div>`;
+                    return;
+                }
+                if (!loaded) {
+                    root.innerHTML = head + (error
+                        ? `<div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 text-sm">${esc(error)} <button onclick="PO.reload()" class="underline font-bold ml-2">Try again</button></div>`
+                        : `<div class="text-center text-brand-500 py-16">Loading purchase orders…</div>`);
+                    if (error && !store.get(KEY_CODE) && !DEMO) render();
+                    return;
+                }
+
+                const year = String(new Date().getFullYear());
+                const thisYear = orders.filter(o => String(o.submitted).slice(0, 4) === year);
+                const waiting = orders.filter(o => o.status === 'Awaiting approval');
+                const toOrder = orders.filter(o => o.status === 'Approved');
+                const spend = thisYear.filter(o => SPENT.includes(o.status));
+                const sum = list => list.reduce((s, o) => s + (Number(o.total) || 0), 0);
+                const kpi = (label, value, sub, colour) => `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-l-4 border-slate-100 ${colour} dashboard-card">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">${label}</p>
+                        <p class="text-2xl font-bold text-brand-800 mt-1">${value}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">${sub}</p>
+                    </div>`;
+
+                const byCat = {};
+                spend.forEach(o => { byCat[o.category] = (byCat[o.category] || 0) + (Number(o.total) || 0); });
+                const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+                const maxCat = cats.length ? cats[0][1] : 1;
+
+                const chips = ['Open', 'All', 'Awaiting approval', 'Approved', 'Ordered', 'Received', 'Sent back', 'Declined'].map(s =>
+                    `<button onclick="PO.setFilter('${s}')" class="text-xs font-semibold px-3 py-1.5 rounded-full border transition ${filter.status === s ? 'bg-brand-800 text-white border-brand-800' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-300'}">${s}</button>`).join('');
+
+                root.innerHTML = head + `
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    ${kpi('Awaiting approval', waiting.length, waiting.length ? euro0(sum(waiting)) + ' requested' : 'Nothing waiting', 'border-l-amber-400')}
+                    ${kpi('Approved, to order', toOrder.length, toOrder.length ? euro0(sum(toOrder)) + ' to place' : 'All placed', 'border-l-sky-500')}
+                    ${kpi('Committed ' + year, euro0(sum(spend)), spend.length + ' approved order' + (spend.length === 1 ? '' : 's'), 'border-l-brand-600')}
+                    ${kpi('Orders this year', thisYear.length, thisYear.filter(o => o.status === 'Received').length + ' received', 'border-l-green-500')}
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 dashboard-card overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50 flex flex-col gap-3">
+                            <div class="flex flex-wrap justify-between items-center gap-2">
+                                <h3 class="font-bold text-lg text-brand-800">Order register</h3>
+                                <input id="po-search" value="${esc(filter.q)}" oninput="PO.search(this.value)" placeholder="Search PO, supplier, person…" class="po-input !w-56 !py-1.5 text-sm">
+                            </div>
+                            <div class="flex flex-wrap gap-2">${chips}</div>
+                        </div>
+                        <div id="po-list">${listHtml()}</div>
+                    </div>
+
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card">
+                            <h3 class="font-bold text-brand-800">Committed by category · ${year}</h3>
+                            <div class="mt-4 space-y-3">
+                                ${cats.length ? cats.map(([c, v]) => `
+                                    <div>
+                                        <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-slate-600">${esc(c)}</span><span class="font-mono text-slate-500">${euro0(v)}</span></div>
+                                        <div class="h-2 bg-slate-100 rounded-full"><div class="h-2 rounded-full bg-brand-600" style="width:${Math.max(3, v / maxCat * 100)}%"></div></div>
+                                    </div>`).join('') : '<p class="text-sm text-slate-400">No approved spending yet this year.</p>'}
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 dashboard-card">
+                            <h3 class="font-bold text-brand-800">How it works</h3>
+                            <ol class="mt-3 space-y-3 text-sm text-slate-600">
+                                <li class="flex gap-3"><span class="flex-none w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold text-xs flex items-center justify-center">1</span><span>A member raises a request with the supplier, items and prices.</span></li>
+                                <li class="flex gap-3"><span class="flex-none w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold text-xs flex items-center justify-center">2</span><span>${esc(boot.approver || 'The approver')} gets a secure email link to approve, send back or decline. Nobody approves their own request.</span></li>
+                                <li class="flex gap-3"><span class="flex-none w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold text-xs flex items-center justify-center">3</span><span>Once approved, the person who asked places the order, quoting the PO number, and marks it ordered and then received from the link in their approval email.</span></li>
+                                <li class="flex gap-3"><span class="flex-none w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold text-xs flex items-center justify-center">4</span><span>The requester is emailed at every step.</span></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function visible() {
+                const q = filter.q.trim().toLowerCase();
+                return orders.filter(o =>
+                    (filter.status === 'All' || (filter.status === 'Open' ? OPEN.includes(o.status) : o.status === filter.status)) &&
+                    (!q || [o.po, o.supplier, o.requester, o.category, o.asset, o.reason].join(' ').toLowerCase().includes(q)));
+            }
+
+            function listHtml() {
+                const list = visible();
+                if (!list.length) return `<div class="text-center text-slate-400 text-sm py-12">No orders here.</div>`;
+                return `
+                <table class="w-full text-sm hidden md:table">
+                    <thead><tr class="text-left text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                        <th class="px-4 py-2 font-bold">PO</th><th class="px-2 py-2 font-bold">Supplier</th><th class="px-2 py-2 font-bold">Requested by</th>
+                        <th class="px-2 py-2 font-bold text-right">Total</th><th class="px-4 py-2 font-bold">Status</th></tr></thead>
+                    <tbody>${list.map(o => `
+                        <tr onclick="PO.view('${esc(o.po)}')" class="border-b border-slate-50 hover:bg-brand-50/50 cursor-pointer">
+                            <td class="px-4 py-3"><span class="font-mono font-semibold text-brand-800">${esc(o.po)}</span><span class="block text-[11px] text-slate-400">${dmyLocal(o.submitted)}</span></td>
+                            <td class="px-2 py-3"><span class="font-semibold text-slate-700">${esc(o.supplier)}</span><span class="block text-[11px] text-slate-400">${esc(o.category)}</span></td>
+                            <td class="px-2 py-3 text-slate-600">${esc(o.requester)}</td>
+                            <td class="px-2 py-3 text-right font-mono font-semibold text-slate-700">${euro(o.total)}</td>
+                            <td class="px-4 py-3">${badge(o.status)}${o.urgency === 'Operational - urgent' && OPEN.includes(o.status) ? '<span class="block text-[10px] font-bold text-red-600 mt-1">URGENT</span>' : ''}</td>
+                        </tr>`).join('')}</tbody>
+                </table>
+                <div class="md:hidden divide-y divide-slate-100">${list.map(o => `
+                    <button onclick="PO.view('${esc(o.po)}')" class="w-full text-left px-4 py-3 hover:bg-brand-50/50">
+                        <div class="flex justify-between items-center"><span class="font-mono font-semibold text-brand-800 text-sm">${esc(o.po)}</span>${badge(o.status)}</div>
+                        <div class="flex justify-between mt-1 text-sm"><span class="font-semibold text-slate-700">${esc(o.supplier)}</span><span class="font-mono font-semibold">${euro(o.total)}</span></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">${esc(o.requester)} · ${dmyLocal(o.submitted)}</div>
+                    </button>`).join('')}</div>`;
+            }
+
+            function setFilter(s) { filter.status = s; render(); }
+            function search(q) { filter.q = q; $('po-list').innerHTML = listHtml(); }
+
+            // ---------- pop-up ----------
+            function modal(html) {
+                $('po-modal-body').innerHTML = html;
+                $('po-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+            function close() {
+                $('po-modal').classList.add('hidden');
+                $('po-modal-body').innerHTML = '';
+                document.body.style.overflow = '';
+                form = null;
+            }
+
+            // ---------- request form ----------
+            function assetOptions() {
+                const opts = ['General: not for one asset'];
+                try { boatPositions.forEach(b => opts.push('Boat: ' + b.name)); } catch (e) {}
+                try { advancedGear.forEach(g => opts.push(g.id + ': ' + g.name)); } catch (e) {}
+                return opts;
+            }
+
+            function newRequest(fromPo) {
+                const src = fromPo ? orders.find(o => o.po === fromPo) : null;
+                form = src ? {
+                    po: src.po, requester: src.requester, category: src.category, urgency: src.urgency, neededBy: src.neededBy,
+                    supplier: src.supplier, supplierContact: src.supplierContact, asset: src.asset, reason: src.reason, quote: src.quote,
+                    deliverTo: src.deliverTo, lines: src.lines.map(l => ({ desc: l.desc, qty: String(l.qty), price: groupMoney(String(l.price)) }))
+                } : {
+                    requester: store.get(KEY_ME), category: '', urgency: 'Routine', neededBy: '', supplier: '', supplierContact: '',
+                    asset: '', reason: '', quote: '', deliverTo: boot.deliverTo || '', lines: [{ desc: '', qty: '1', price: '' }]
+                };
+                const sel = (id, list, val, blank) => `<select id="${id}" class="po-input">${blank ? `<option value="">${blank}</option>` : ''}${list.map(v => `<option ${v === val ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`;
+                modal(`
+                <div class="bg-white w-full max-w-3xl rounded-2xl shadow-xl">
+                    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-brand-500">${src ? 'Change and resend · ' + esc(src.po) : 'New purchase request'}</p>
+                            <h2 class="text-xl font-bold text-brand-800">What do you need?</h2>
+                        </div>
+                        <button onclick="PO.close()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none" aria-label="Close">×</button>
+                    </div>
+                    <div class="px-6 py-5 space-y-5">
+                        ${src && src.decisionNote ? `<div class="bg-orange-50 border border-orange-200 rounded-xl p-3 text-sm text-orange-900"><b>${esc(src.approver)} said:</b> ${esc(src.decisionNote)}</div>` : ''}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label class="po-label" for="f-requester">Your name</label>${sel('f-requester', boot.people, form.requester, 'Pick your name')}
+                                <p id="f-route" class="text-[11px] text-slate-500 mt-1"></p></div>
+                            <div><label class="po-label" for="f-category">Category</label>${sel('f-category', boot.categories, form.category, 'Pick a category')}</div>
+                            <div><label class="po-label" for="f-supplier">Supplier</label>
+                                <input id="f-supplier" class="po-input" list="f-suppliers" maxlength="120" value="${esc(form.supplier)}" autocomplete="off">
+                                <datalist id="f-suppliers">${(boot.suppliers || []).map(s => `<option value="${esc(s.name)}">`).join('')}</datalist></div>
+                            <div><label class="po-label" for="f-contact">Supplier phone or email <span class="normal-case font-normal text-slate-400">(optional)</span></label>
+                                <input id="f-contact" class="po-input" maxlength="200" value="${esc(form.supplierContact)}"></div>
+                            <div><label class="po-label" for="f-asset">For which asset</label>${sel('f-asset', assetOptions(), form.asset || 'General: not for one asset')}</div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="po-label" for="f-urgency">Urgency</label>${sel('f-urgency', boot.urgency, form.urgency)}</div>
+                                <div><label class="po-label" for="f-needed">Needed by</label><input id="f-needed" type="date" class="po-input" value="${esc(form.neededBy)}"></div>
+                            </div>
+                        </div>
+                        <div><label class="po-label" for="f-reason">What it is for</label>
+                            <textarea id="f-reason" rows="2" maxlength="1500" class="po-input" placeholder="e.g. Replace regulator set C, failed annual service">${esc(form.reason)}</textarea></div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-2"><span class="po-label !mb-0">Items <span class="normal-case font-normal text-slate-400">(prices including VAT)</span></span></div>
+                            <div class="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1 mb-1">
+                                <span class="col-span-6">Description</span><span class="col-span-2 text-right">Qty</span><span class="col-span-3 text-right">Each (€)</span><span></span></div>
+                            <div id="f-lines" class="space-y-2"></div>
+                            <div class="flex justify-between items-center mt-3">
+                                <button onclick="PO.addLine()" class="text-sm font-semibold text-brand-700 hover:text-brand-900">+ Add another item</button>
+                                <div class="text-right"><span class="text-xs uppercase font-bold text-slate-400 mr-2">Total</span><span id="f-total" class="text-xl font-bold font-mono text-brand-800">€0.00</span></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label class="po-label" for="f-quote">Quote reference <span class="normal-case font-normal text-slate-400">(optional)</span></label>
+                                <input id="f-quote" class="po-input" maxlength="200" value="${esc(form.quote)}" placeholder="Quote number or date"></div>
+                            <div><label class="po-label" for="f-deliver">Deliver to</label>
+                                <input id="f-deliver" class="po-input" maxlength="200" value="${esc(form.deliverTo)}"></div>
+                        </div>
+                        <p id="f-msg" class="text-sm font-semibold text-red-600" role="status"></p>
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+                        <button onclick="PO.close()" class="px-4 py-2 rounded-xl font-semibold text-slate-600 hover:bg-slate-200">Cancel</button>
+                        <button id="f-send" onclick="PO.send()" class="px-5 py-2 rounded-xl font-bold bg-brand-800 hover:bg-brand-900 text-white shadow-sm">${src ? 'Resend for approval' : 'Send for approval'}</button>
+                    </div>
+                </div>`);
+                drawLines();
+                $('f-requester').onchange = route;
+                $('f-supplier').onchange = () => {
+                    const s = (boot.suppliers || []).find(x => x.name.toLowerCase() === $('f-supplier').value.trim().toLowerCase());
+                    if (s && !$('f-contact').value) $('f-contact').value = s.contact || '';
+                };
+                route();
+            }
+
+            function route() {
+                const me = $('f-requester').value;
+                $('f-route').textContent = !me ? '' : me === boot.approver
+                    ? 'Your own requests go to the deputy approver.'
+                    : `Goes to ${boot.approver || 'the approver'} for approval.`;
+            }
+
+            function readLines() {
+                if (!form) return;
+                form.lines = [...document.querySelectorAll('#f-lines [data-line]')].map(row => ({
+                    desc: row.querySelector('[data-k=desc]').value,
+                    qty: row.querySelector('[data-k=qty]').value,
+                    price: row.querySelector('[data-k=price]').value
+                }));
+            }
+
+            function drawLines() {
+                $('f-lines').innerHTML = form.lines.map((l, i) => `
+                    <div data-line class="grid grid-cols-12 gap-2 items-center">
+                        <input data-k="desc" class="po-input col-span-12 sm:col-span-6" maxlength="200" placeholder="Item ${i + 1}" value="${esc(l.desc)}">
+                        <input data-k="qty" class="po-input col-span-4 sm:col-span-2 text-right" inputmode="decimal" maxlength="6" value="${esc(l.qty)}" aria-label="Quantity">
+                        <input data-k="price" class="po-input col-span-6 sm:col-span-3 text-right font-mono" inputmode="decimal" maxlength="12" placeholder="0.00" value="${esc(l.price)}" aria-label="Price each">
+                        <button onclick="PO.removeLine(${i})" class="col-span-2 sm:col-span-1 text-slate-300 hover:text-red-500 text-xl ${form.lines.length === 1 ? 'invisible' : ''}" aria-label="Remove item">×</button>
+                    </div>`).join('');
+                document.querySelectorAll('#f-lines [data-k=price]').forEach(el => el.addEventListener('input', () => { groupInPlace(el); total(); }));
+                document.querySelectorAll('#f-lines [data-k=qty]').forEach(el => el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9.]/g, ''); total(); }));
+                total();
+            }
+
+            function addLine() { readLines(); if (form.lines.length >= 12) return; form.lines.push({ desc: '', qty: '1', price: '' }); drawLines(); document.querySelector('#f-lines [data-line]:last-child [data-k=desc]').focus(); }
+            function removeLine(i) { readLines(); form.lines.splice(i, 1); drawLines(); }
+
+            function total() {
+                readLines();
+                const t = form.lines.reduce((s, l) => s + (Number(l.qty) || 0) * money(l.price), 0);
+                $('f-total').textContent = euro(t);
+                return t;
+            }
+
+            // Money fields show thousands commas while typing, keeping the cursor in place.
+            function groupMoney(v) {
+                v = String(v).replace(/[^0-9.]/g, '');
+                const dot = v.indexOf('.');
+                let int = dot >= 0 ? v.slice(0, dot) : v;
+                const dec = dot >= 0 ? '.' + v.slice(dot + 1).replace(/\./g, '').slice(0, 2) : '';
+                int = int.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return int + dec;
+            }
+            function groupInPlace(el) {
+                const before = el.value.slice(0, el.selectionStart).replace(/[^0-9.]/g, '').length;
+                el.value = groupMoney(el.value);
+                let pos = 0, seen = 0;
+                while (pos < el.value.length && seen < before) { if (/[0-9.]/.test(el.value[pos])) seen++; pos++; }
+                el.setSelectionRange(pos, pos);
+            }
+
+            async function send() {
+                readLines();
+                const o = {
+                    requester: $('f-requester').value, category: $('f-category').value, urgency: $('f-urgency').value,
+                    neededBy: $('f-needed').value, supplier: $('f-supplier').value.trim(), supplierContact: $('f-contact').value.trim(),
+                    asset: $('f-asset').value, reason: $('f-reason').value.trim(), quote: $('f-quote').value.trim(), deliverTo: $('f-deliver').value.trim(),
+                    lines: form.lines.filter(l => l.desc.trim() || money(l.price)).map(l => ({ desc: l.desc.trim(), qty: Number(l.qty) || 0, price: money(l.price) }))
+                };
+                const problem = !o.requester ? 'Pick your name.' : !o.category ? 'Pick a category.' : !o.supplier ? 'Enter the supplier.'
+                    : o.reason.length < 5 ? 'Say what it is for.' : !o.lines.length ? 'Add at least one item.'
+                    : o.lines.some(l => !l.desc) ? 'Every item needs a description.' : o.lines.some(l => !(l.qty > 0)) ? 'Every item needs a quantity.'
+                    : !(o.lines.reduce((s, l) => s + l.qty * l.price, 0) > 0) ? 'Add the prices.' : '';
+                if (problem) { $('f-msg').textContent = problem; return; }
+                store.set(KEY_ME, o.requester);
+                const resend = form.po;
+                $('f-send').disabled = true; $('f-send').textContent = 'Sending…'; $('f-msg').textContent = '';
+                try {
+                    const r = resend ? await api('resubmit', { po: resend, order: o }) : await api('submit', { order: o });
+                    if (!r.ok) throw r;
+                    close();
+                    toast(resend ? `${r.po} resent for approval.` : `${r.po} sent to ${r.approver} for approval.`);
+                    await refresh();
+                } catch (e) {
+                    $('f-msg').textContent = (e && e.error) || 'Not sent. Check the connection and try again.';
+                    $('f-send').disabled = false; $('f-send').textContent = resend ? 'Resend for approval' : 'Send for approval';
+                }
+            }
+
+            async function refresh() {
+                const l = await api('list');
+                if (l.ok) { orders = l.orders; render(); }
+            }
+
+            // ---------- the purchase order document ----------
+            // The header logo for paper: the moving lights taken off, ids renamed so print never leans on the header's defs.
+            let logoCache = '';
+            function poLogo() {
+                if (logoCache) return logoCache;
+                const svg = document.querySelector('header .ccm-logo').cloneNode(true);
+                svg.querySelectorAll('.ccm-beam, style').forEach(g => g.remove());
+                svg.removeAttribute('class');
+                svg.setAttribute('style', 'height:5.2rem;width:auto;display:block');
+                svg.setAttribute('aria-label', 'Cork City Missing Persons Search and Recovery');
+                return (logoCache = svg.outerHTML.replace(/id="([\w-]+)"/g, 'id="po-$1"').replace(/url\(#/g, 'url(#po-'));
+            }
+
+            function docHtml(o) {
+                const approved = SPENT.includes(o.status);
+                const rows = o.lines.map((l, i) => `<tr><td style="width:2rem;color:#94a3b8">${i + 1}</td><td>${esc(l.desc)}</td><td class="num">${esc(l.qty)}</td><td class="num">${euro(l.price)}</td><td class="num">${euro(l.qty * l.price)}</td></tr>`).join('');
+                const fact = (k, v) => v ? `<tr><td style="color:#64748b;padding:.2rem 1rem .2rem 0;white-space:nowrap;font-size:.8rem">${k}</td><td style="font-size:.85rem;font-weight:600">${esc(v)}</td></tr>` : '';
+                return `
+                <div class="po-sheet po-doc relative bg-white rounded-2xl shadow-xl border border-slate-200 p-8 sm:p-10 w-full max-w-[52rem] overflow-hidden">
+                    ${approved ? '' : `<div class="po-stamp">${o.status === 'Awaiting approval' ? 'NOT YET APPROVED' : esc(o.status.toUpperCase())}</div>`}
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-6 pb-5 border-b-4" style="border-color:#2C3E50">
+                        <div>${poLogo()}</div>
+                        <div class="sm:text-right">
+                            <div style="font-size:1.6rem;font-weight:800;color:#2C3E50;letter-spacing:.08em">PURCHASE ORDER</div>
+                            <div class="font-mono" style="font-size:1.05rem;font-weight:700;color:#52718D">${esc(o.po)}</div>
+                            <div style="font-size:.8rem;color:#64748b;margin-top:.2rem">Raised ${dmyLocal(o.submitted)}</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 py-5">
+                        <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52718D">Supplier</div>
+                            <div style="font-weight:700;font-size:1rem;margin-top:.2rem">${esc(o.supplier)}</div>
+                            <div style="font-size:.85rem;color:#475569">${esc(o.supplierContact)}</div></div>
+                        <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52718D">Deliver to</div>
+                            <div style="font-weight:700;font-size:1rem;margin-top:.2rem">${esc(o.deliverTo)}</div>
+                            <div style="font-size:.85rem;color:#475569">${o.neededBy ? 'Needed by ' + dmy(o.neededBy) : ''}</div></div>
+                    </div>
+                    <table class="lines"><thead><tr><th></th><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+                        <tbody>${rows}</tbody></table>
+                    <div class="flex justify-end mt-3"><table style="width:auto">
+                        <tr><td style="padding:.6rem 1.5rem .6rem 0;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#52718D;border-top:2px solid #2C3E50">Total incl. VAT</td>
+                            <td class="num font-mono" style="padding:.6rem 0;font-weight:800;font-size:1.25rem;color:#2C3E50;border-top:2px solid #2C3E50">${euro(o.total)}</td></tr></table></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 pt-5 border-t border-slate-200">
+                        <table>${fact('Requested by', o.requester)}${fact('Category', o.category)}${fact('For', o.asset)}${fact('Quote ref.', o.quote)}${fact('Urgency', o.urgency)}</table>
+                        <div class="rounded-xl p-4" style="background:${approved ? '#f0fdf4' : '#f8fafc'};border:1px solid ${approved ? '#bbf7d0' : '#e2e8f0'}">
+                            <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52718D">Authorisation</div>
+                            ${approved ? `<div style="font-weight:700;margin-top:.3rem">Approved by ${esc(o.approver)}</div>
+                                <div style="font-size:.8rem;color:#475569">${dmyTime(o.decidedAt)} · confirmed through a signed email link</div>
+                                ${o.orderRef ? `<div style="font-size:.8rem;color:#475569;margin-top:.3rem">Supplier ref. ${esc(o.orderRef)}</div>` : ''}`
+                            : `<div style="font-weight:700;margin-top:.3rem;color:#b91c1c">${esc(o.status)}</div><div style="font-size:.8rem;color:#475569">${o.status === 'Awaiting approval' ? 'With ' + esc(o.approver) + ' for approval. Do not place this order yet.' : 'This is not an authorised order.'}</div>`}
+                        </div>
+                    </div>
+                    <div style="font-size:.85rem;color:#475569;margin-top:1.2rem"><b>Purpose:</b> ${esc(o.reason)}</div>
+                    <div style="font-size:.7rem;color:#94a3b8;margin-top:1.5rem;padding-top:.8rem;border-top:1px solid #e2e8f0">Cork City Missing Persons Search &amp; Recovery · Please quote ${esc(o.po)} on your invoice.</div>
+                </div>`;
+            }
+
+            function view(po) {
+                const o = orders.find(x => x.po === po);
+                if (!o) return;
+                const me = store.get(KEY_ME);
+                const timeline = [
+                    ['Requested', o.submitted, o.requester],
+                    o.decidedAt ? [o.status === 'Declined' ? 'Declined' : o.status === 'Sent back' ? 'Sent back' : 'Approved', o.decidedAt, o.approver] : null,
+                    o.orderedAt ? ['Ordered', o.orderedAt, o.orderRef ? 'Ref. ' + o.orderRef : ''] : null,
+                    o.receivedAt ? ['Received', o.receivedAt, o.receivedNote] : null
+                ].filter(Boolean);
+                const actions = [];
+                if (o.status === 'Sent back') actions.push(`<button onclick="PO.newRequest('${esc(o.po)}')" class="px-4 py-2 rounded-xl font-bold bg-brand-800 text-white">Change and resend</button>`);
+                if (['Awaiting approval', 'Sent back'].includes(o.status)) actions.push(`<button onclick="PO.withdraw('${esc(o.po)}')" class="px-4 py-2 rounded-xl font-semibold text-red-700 hover:bg-red-50">Withdraw</button>`);
+                if (DEMO) {
+                    if (o.status === 'Awaiting approval') actions.push(`<span class="text-[10px] font-bold uppercase text-amber-700 self-center">Demo, as approver:</span>`,
+                        `<button onclick="PO.demoAct('${esc(o.po)}','approve')" class="px-3 py-2 rounded-xl font-semibold bg-amber-100 text-amber-900">Approve</button>`,
+                        `<button onclick="PO.demoAct('${esc(o.po)}','back')" class="px-3 py-2 rounded-xl font-semibold bg-amber-100 text-amber-900">Send back</button>`);
+                    if (o.status === 'Approved') actions.push(`<button onclick="PO.demoAct('${esc(o.po)}','ordered')" class="px-3 py-2 rounded-xl font-semibold bg-amber-100 text-amber-900">Demo, as requester: mark ordered</button>`);
+                    if (o.status === 'Ordered') actions.push(`<button onclick="PO.demoAct('${esc(o.po)}','received')" class="px-3 py-2 rounded-xl font-semibold bg-amber-100 text-amber-900">Demo, as requester: mark received</button>`);
+                }
+                modal(`
+                <div class="w-full max-w-[52rem] space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2 bg-white rounded-2xl px-4 py-3 shadow-xl">
+                        <div class="flex items-center gap-3">${badge(o.status)}<span class="text-xs text-slate-500">${timeline.map(t => `${esc(t[0])} ${dmyLocal(t[1])}`).join(' → ')}</span></div>
+                        <div class="flex flex-wrap gap-2">
+                            ${actions.join('')}
+                            <button onclick="PO.print('${esc(o.po)}')" class="px-4 py-2 rounded-xl font-semibold border border-slate-300 hover:bg-slate-50">Print / save PDF</button>
+                            <button onclick="PO.close()" class="px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 text-xl leading-none" aria-label="Close">×</button>
+                        </div>
+                    </div>
+                    ${o.decisionNote ? `<div class="bg-white rounded-2xl px-4 py-3 shadow-xl text-sm"><b>${esc(o.approver)}:</b> ${esc(o.decisionNote)}</div>` : ''}
+                    ${o.status === 'Approved' ? `<div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 shadow-xl text-sm text-emerald-900"><b>Go ahead and order.</b> ${esc(o.requester)} places this order with ${esc(o.supplier)}, quoting ${esc(o.po)}, then marks it ordered and received from the link in the approval email.</div>` : ''}
+                    ${docHtml(o)}
+                </div>`);
+            }
+
+            function print(po) {
+                const o = orders.find(x => x.po === po);
+                $('po-print').innerHTML = docHtml(o);
+                const title = document.title;
+                document.title = o.po + ' ' + o.supplier;
+                window.print();
+                document.title = title;
+            }
+
+            async function withdraw(po) {
+                const o = orders.find(x => x.po === po);
+                const me = store.get(KEY_ME) || '';
+                if (me !== o.requester) { toast(`Only ${o.requester} can withdraw this request, from their own phone or computer.`); return; }
+                if (!confirm(`Withdraw ${po}? ${o.approver} will be told.`)) return;
+                const r = await api('cancel', { po, requester: me });
+                if (!r.ok) { toast(r.error || 'Not withdrawn.'); return; }
+                close(); toast(po + ' withdrawn.'); refresh();
+            }
+
+            async function demoAct(po, act) {
+                await Demo.act(po, act);
+                await refresh();
+                view(po);
+            }
+
+            // ---------- demo data: placeholders only ----------
+            const Demo = (() => {
+                const people = ['Approver Name', 'Deputy Name', 'Member One', 'Member Two', 'Member Three', 'Member Four'];
+                const daysAgo = n => new Date(Date.now() - n * 86400000).toISOString();
+                const year = new Date().getFullYear();
+                let seq = 7;
+                const mk = (n, status, d, requester, category, supplier, lines, extra) => Object.assign({
+                    po: `PO-${year}-000${n}`, status, round: 1, submitted: daysAgo(d), requester, category, urgency: 'Routine', neededBy: '',
+                    supplier, supplierContact: '', asset: 'General: not for one asset', reason: 'Example request for the demo.', quote: '',
+                    deliverTo: 'Base, Cork City', lines, total: lines.reduce((s, l) => s + l.qty * l.price, 0), approver: 'Approver Name',
+                    decidedAt: '', decisionNote: '', orderRef: '', orderedAt: '', receivedAt: '', receivedNote: ''
+                }, extra || {});
+                let list = [
+                    mk(1, 'Received', 60, 'Member One', 'Dive equipment', 'Dive Supplier Ltd', [{ desc: 'Regulator service kit', qty: 3, price: 145 }, { desc: 'O-ring set', qty: 2, price: 18.5 }],
+                        { asset: 'DVE-09: Scuba Regulators Set C', decidedAt: daysAgo(59), orderedAt: daysAgo(58), orderRef: 'SO-0000', receivedAt: daysAgo(50) }),
+                    mk(2, 'Ordered', 21, 'Member Two', 'Boats & engines', 'Marine Engineering Ltd', [{ desc: 'Outboard 300-hour service', qty: 1, price: 1240 }],
+                        { asset: 'ENG-02: Yamaha 150hp Outboard', decidedAt: daysAgo(20), orderedAt: daysAgo(19), orderRef: 'Q-0000' }),
+                    mk(3, 'Approved', 6, 'Member Three', 'Comms & radios', 'Radio Supplier Ltd', [{ desc: 'VHF handheld battery', qty: 4, price: 62 }],
+                        { asset: 'RAD-04: VHF Handhelds (x4 Kit)', urgency: 'Needed this week', decidedAt: daysAgo(5) }),
+                    mk(4, 'Awaiting approval', 2, 'Member Four', 'Drone', 'Drone Supplier Ltd', [{ desc: 'TB60 flight battery', qty: 2, price: 1150 }, { desc: 'Propeller set', qty: 2, price: 89 }],
+                        { asset: 'DRN-01: DJI Matrice 300 RTK', urgency: 'Operational - urgent', reason: 'Battery at 185 of 200 cycles and vibration reported. Needed before the next night search.' }),
+                    mk(5, 'Sent back', 9, 'Member One', 'Clothing & PPE', 'Workwear Supplier Ltd', [{ desc: 'Drysuit', qty: 2, price: 980 }],
+                        { decidedAt: daysAgo(8), decisionNote: 'Please get a second quote before we commit to two.' }),
+                    mk(6, 'Awaiting approval', 1, 'Member Two', 'Medical', 'Medical Supplies Ltd', [{ desc: 'AED adult pads', qty: 4, price: 48 }, { desc: 'Trauma dressing pack', qty: 10, price: 7.5 }],
+                        { asset: 'MED-01: Defibrillator (AED) Alpha' })
+                ];
+                async function handle(action, d) {
+                    await new Promise(r => setTimeout(r, 250));
+                    if (action === 'bootstrap') return {
+                        ok: true, people, approver: 'Approver Name', deliverTo: 'Base, Cork City',
+                        categories: ['Dive equipment', 'Boats & engines', 'Medical', 'Comms & radios', 'Drone', 'Sonar & tech', 'Clothing & PPE', 'Training', 'Fuel', 'Vehicle', 'Base & office', 'Other'],
+                        urgency: ['Routine', 'Needed this week', 'Operational - urgent'],
+                        suppliers: [...new Set(list.map(o => o.supplier))].sort().map(name => ({ name, contact: '' }))
+                    };
+                    if (action === 'list') return { ok: true, orders: JSON.parse(JSON.stringify(list)).reverse() };
+                    if (action === 'submit' || action === 'resubmit') {
+                        const o = d.order;
+                        const approver = o.requester === 'Approver Name' ? 'Deputy Name' : 'Approver Name';
+                        const total = Math.round(o.lines.reduce((s, l) => s + l.qty * l.price, 0) * 100) / 100;
+                        if (action === 'resubmit') {
+                            const rec = list.find(x => x.po === d.po);
+                            Object.assign(rec, o, { total, status: 'Awaiting approval', approver, decidedAt: '' });
+                            return { ok: true, po: rec.po, approver };
+                        }
+                        const rec = mk(seq++, 'Awaiting approval', 0, o.requester, o.category, o.supplier, o.lines, Object.assign({}, o, { total, approver }));
+                        rec.po = `PO-${year}-${String(seq - 1).padStart(4, '0')}`;
+                        list.push(rec);
+                        return { ok: true, po: rec.po, approver };
+                    }
+                    if (action === 'cancel') { const rec = list.find(x => x.po === d.po); rec.status = 'Cancelled'; return { ok: true }; }
+                    return { ok: false, error: 'Unknown action.' };
+                }
+                async function act(po, a) {
+                    const rec = list.find(x => x.po === po);
+                    const now = new Date().toISOString();
+                    if (a === 'approve') Object.assign(rec, { status: 'Approved', decidedAt: now });
+                    if (a === 'back') Object.assign(rec, { status: 'Sent back', decidedAt: now, decisionNote: 'Demo note: please add the quote reference.' });
+                    if (a === 'ordered') Object.assign(rec, { status: 'Ordered', orderedAt: now, orderRef: 'REF-0000' });
+                    if (a === 'received') Object.assign(rec, { status: 'Received', receivedAt: now });
+                }
+                return { handle, act };
+            })();
+
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('po-modal').classList.contains('hidden')) close(); });
+            $('po-modal').addEventListener('click', e => { if (e.target === $('po-modal') || e.target === $('po-modal-body')) close(); });
+
+            return { open, connect, reload: () => { boot = null; load(); }, newRequest, addLine, removeLine, send, close, view, print, withdraw, setFilter, search, demoAct };
+        })();
+    </script>
+</body>
+</html>
