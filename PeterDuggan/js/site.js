@@ -137,13 +137,13 @@
   }).join(''));
 
   // A stack of the latest stills, standing in for a showreel. Between stills
-  // the card bursts into TV static, like flicking channels. Clicking plays
-  // whichever project is showing.
+  // the card bursts into TV static, like flicking channels. Clicking scrolls
+  // down to the latest work.
   var cycle = $('[data-slot="heroCycle"]');
   if (cycle) {
     cycle.innerHTML = S.latest.map(function (p, i) {
-      return '<button class="cycle__item' + (i === 0 ? ' is-on' : '') + '" type="button" data-project="' + i + '"' +
-        (i === 0 ? '' : ' tabindex="-1"') + ' aria-label="Play ' + esc(p.client + ', ' + p.title) + '">' +
+      return '<button class="cycle__item' + (i === 0 ? ' is-on' : '') + '" type="button" data-scroll="#work"' +
+        (i === 0 ? '' : ' tabindex="-1"') + ' aria-label="See the latest work">' +
         '<img src="' + esc(p.poster) + '" alt=""' + (i === 0 ? '' : ' loading="lazy"') + '>' +
         '<span class="cycle__cap">' + esc(p.client) + '</span></button>';
     }).join('') + '<span class="cycle__static" aria-hidden="true"></span>';
@@ -306,6 +306,26 @@
 
     var on = cutsBox.querySelector('.is-on');
     if (on) cutsBox.scrollLeft = on.offsetLeft - (cutsBox.clientWidth - on.offsetWidth) / 2;
+
+    info.innerHTML = infoHtml(p, cut);
+  }
+
+  // The panel beside the picture: what it is, what Peter did, who it was with.
+  var info = $('#playerInfo');
+  function infoHtml(p, cut) {
+    var credits = (p.credits || []).filter(function (c) { return c && c[1]; });
+    var did = p.did || [];
+    return '<p class="info__type">' + esc(p.type) + (p.year ? ' · ' + esc(p.year) : '') + '</p>' +
+      '<h3 class="info__client">' + esc(p.client) + '</h3>' +
+      '<p class="info__title">' + esc(p.title) + (p.credit ? ' · ' + esc(p.credit) : '') + '</p>' +
+      (p.cuts.length > 1 ? '<p class="info__cut">Now playing <b>' + esc(cut.label) + '</b> · ' + p.cuts.length +
+        (/Episode/.test(p.cuts[0].label) ? ' episodes' : ' versions') + '</p>' : '') +
+      (p.blurb ? '<p class="info__blurb">' + esc(p.blurb) + '</p>' : '') +
+      (did.length ? '<p class="info__label">What I did</p><ul class="info__did">' +
+        did.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>' : '') +
+      (credits.length ? '<dl class="info__credits">' + credits.map(function (c) {
+        return '<div><dt>' + esc(c[0]) + '</dt><dd>' + esc(c[1]) + '</dd></div>';
+      }).join('') + '</dl>' : '');
   }
 
   function openPlayer(pi, from) {
@@ -328,6 +348,12 @@
   }
 
   document.addEventListener('click', function (e) {
+    var sc = e.target.closest('[data-scroll]');
+    if (sc) {
+      var target = $(sc.getAttribute('data-scroll'));
+      if (target) target.scrollIntoView({ behavior: still ? 'auto' : 'smooth' });
+      return;
+    }
     var t = e.target.closest('[data-project]');
     if (t) { openPlayer(+t.getAttribute('data-project'), t); return; }
     var latest = e.target.closest('[data-play-latest]');

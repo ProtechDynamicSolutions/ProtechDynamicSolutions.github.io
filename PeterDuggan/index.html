@@ -72,29 +72,13 @@
     <section class="hero" data-tone="paper" aria-labelledby="heroWord">
       <div class="hero__stage">
         <div class="cycle" data-slot="heroCycle"></div>
-        <h1 class="hero__word" id="heroWord" data-slot="heroLines"></h1>
+        <h1 class="hero__word hero__word--one" id="heroWord" data-bars="4,5">Colour</h1>
       </div>
       <ul class="laurels" data-slot="laurels" aria-label="Awards and festivals"></ul>
       <div class="intro">
         <p class="intro__text" data-slot="intro"></p>
         <p class="intro__tag"><span>Edit · Colour · DIT</span><span>Commercials · Trailers · Films</span></p>
       </div>
-    </section>
-
-    <div class="crawl" role="marquee" aria-label="Movie taglines Peter wishes he’d cut">
-      <span class="crawl__tag" aria-hidden="true">Taglines I wish I’d cut</span>
-      <div class="crawl__window"><div class="crawl__track" data-slot="crawl"></div></div>
-    </div>
-
-    <section class="shop" data-tone="paper" aria-labelledby="shopTitle">
-      <a class="ripple" href="#work">
-        <span class="ripple__dot">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
-        </span>
-        View latest work
-      </a>
-      <h2 class="shop__title" id="shopTitle" data-slot="heroTitle"></h2>
-      <p class="shop__small" data-slot="heroDisclaimer"></p>
     </section>
 
     <section class="band" data-tone="accent" aria-labelledby="bandTitle">
@@ -107,7 +91,7 @@
           </span>
         </button>
         <div class="band__text">
-          <h2 class="band__title" id="bandTitle">Edit. Colour.<br>DIT.</h2>
+          <h2 class="band__title" id="bandTitle">DIT. Edit.<br>Colour.</h2>
           <p>From the first assembly to the final grade, and on set making sure every frame gets home safe.</p>
           <a class="btn btn--dark" href="#work">View work <span aria-hidden="true">→</span></a>
         </div>
@@ -180,10 +164,13 @@
       <p class="player__title" id="playerTitle"></p>
       <button class="player__close" id="playerClose" aria-label="Close video">Close ✕</button>
     </div>
-    <div class="player__stage">
-      <button class="player__step" id="playerPrev" aria-label="Previous project">←</button>
-      <div class="player__frame" id="playerFrame"></div>
-      <button class="player__step" id="playerNext" aria-label="Next project">→</button>
+    <div class="player__body">
+      <div class="player__stage">
+        <button class="player__step" id="playerPrev" aria-label="Previous project">←</button>
+        <div class="player__frame" id="playerFrame"></div>
+        <button class="player__step" id="playerNext" aria-label="Next project">→</button>
+      </div>
+      <aside class="player__info" id="playerInfo" aria-label="About this project"></aside>
     </div>
     <div class="player__cuts" id="playerCuts"></div>
   </div>

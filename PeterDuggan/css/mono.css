@@ -1,6 +1,6 @@
 /* Peter J Duggan · Theme 1, black, white and yellow
    Loaded on top of colour.css. Every colour-bar letter turns black; the only
-   colour bars left are on the telly's screen in the corner. */
+   colour bars are on the telly's screen and under his name, in the test-card colours. */
 
 :root {
   --c1: var(--ink);
@@ -10,19 +10,40 @@
   --c5: var(--ink);
   --c6: var(--ink);
   --c7: var(--ink);
+  /* The test card, as on the telly's screen. */
+  --bars: linear-gradient(90deg, #fff 0 14.28%, #ff0 0 28.57%, #0ff 0 42.85%, #0f0 0 57.14%,
+    #f0f 0 71.42%, #f00 0 85.71%, #00f 0);
 }
 
-/* Black letters over the photo card get a paper outline so they stay crisp. */
-.t1 .hero__line {
-  -webkit-text-stroke: 0.024em var(--paper);
+/* ---------- Name: underlined with the telly's colour bars ---------- */
+
+.t1 .mark__bars {
+  height: 8px;
+  border: 2px solid currentColor;
+  box-sizing: content-box;
+  background: var(--bars);
+}
+.t1 .mark__bars i { background: none !important; }
+
+/* ---------- COLOUR: one big word over the bottom edge of the card ---------- */
+
+.t1 .hero__stage { display: block; }
+.t1 .hero__stage > .cycle { margin: 0 auto; }
+
+.t1 .hero__word--one {
+  display: block;
+  margin: clamp(-150px, -10.5vw, -40px) 0 0;
+  text-align: center;
+  font-size: clamp(84px, 21vw, 330px);
+  line-height: 0.82;
+  /* Black letters over the picture get a paper outline so they stay crisp. */
+  -webkit-text-stroke: 0.02em var(--paper);
   paint-order: stroke fill;
 }
 
-/* The one dash of colour in the big line: a yellow question mark. */
-.t1 .hero__line--2 > span[aria-hidden] > span:last-child {
-  color: var(--yellow);
-  -webkit-text-stroke: 0.026em var(--ink);
-}
+/* The card takes you down to the work rather than opening a video. */
+.t1 .cycle__item { cursor: s-resize; }
+.t1 .cycle__cap::before { content: '\25BC  Latest work \00B7  '; }
 
 /* The menu is black, so its hover can't be black too. */
 .t1 .menu__nav a:hover { color: var(--yellow); }
@@ -33,3 +54,115 @@
   padding: 0 4px;
 }
 .t1 .contact__mail:hover { color: var(--ink); background-size: 100% 100%; opacity: 0.7; }
+
+/* ---------- Work strips: taller on wide screens so heads aren't cut off ---------- */
+
+.t1 .tile__media img { object-position: 50% 28%; }
+
+@media (min-width: 641px) {
+  .t1 .bands .tile__media { height: clamp(320px, 46vw, 84vh); }
+  .t1 .bands--half .tile__media { height: clamp(260px, 26vw, 62vh); }
+}
+
+/* ---------- Player: the picture with a credits panel beside it ---------- */
+
+.player__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 22vw, 340px);
+  gap: 24px;
+  align-items: center;
+}
+.player__body .player__stage { height: 100%; min-width: 0; }
+
+.player__info {
+  position: relative;
+  max-height: 100%;
+  overflow: auto;
+  padding: 30px 24px 24px;
+  background: #161616;
+  color: var(--white);
+}
+.player__info::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  background: var(--bars);
+}
+.player__info:empty { display: none; }
+
+/* Each line slides in, one after another, every time a video opens. */
+.player__info > * { animation: infoIn 0.5s var(--ease) both; }
+.player__info > :nth-child(2) { animation-delay: 0.04s; }
+.player__info > :nth-child(3) { animation-delay: 0.08s; }
+.player__info > :nth-child(4) { animation-delay: 0.12s; }
+.player__info > :nth-child(5) { animation-delay: 0.16s; }
+.player__info > :nth-child(n+6) { animation-delay: 0.2s; }
+@keyframes infoIn { from { opacity: 0; transform: translateY(10px); } }
+
+.info__type {
+  margin: 0;
+  color: var(--yellow);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.info__client {
+  margin: 8px 0 6px;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(26px, 2.2vw, 36px);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+}
+.info__title { margin: 0; font-weight: 700; font-size: 16px; color: rgba(255, 255, 255, 0.8); }
+.info__cut {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+.info__cut b { color: var(--yellow); font-weight: 900; }
+.info__blurb { margin: 16px 0 0; font-size: 15px; font-weight: 600; line-height: 1.45; }
+.info__label {
+  margin: 18px 0 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.info__did { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.info__did li { position: relative; padding-left: 16px; font-weight: 800; font-size: 15px; }
+.info__did li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 7px;
+  height: 7px;
+  background: var(--yellow);
+}
+.info__credits { margin: 18px 0 0; display: grid; gap: 8px; }
+.info__credits div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: baseline; }
+.info__credits dt {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.info__credits dd { margin: 0; font-weight: 800; font-size: 15px; }
+
+@media (max-width: 900px) {
+  .player { overflow-y: auto; }
+  .player__body { flex: none; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+  .player__body .player__stage { height: auto; }
+  .player__info { max-height: none; overflow: visible; padding: 24px 18px 18px; }
+}
