@@ -305,55 +305,58 @@
    (The fuzzy TV-screen version is kept in _build/archive/good-tv-fuzz/.) */
 .tv-word > span { color: var(--yellow) !important; -webkit-text-stroke: 0.028em var(--ink) !important; paint-order: stroke fill; }
 
-/* ---------- Pac-Man: the full stop chomps right to left, leaving the line behind it ---------- */
+/* ---------- Pac-Man: scroll down and the full stop eats "the good bit." ----------
+   site.js sets --cut (how much of the line is left, 100% to 0%), --pac (0 to 1,
+   how far into the eat) and the ghost's state, all from the scroll position. */
 
-@property --cut { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
+@property --cut { syntax: '<percentage>'; inherits: true; initial-value: 100%; }
 
 .t1 .hero__line--2 { position: relative; }
-.t1 .hero__line--2 > span[aria-hidden]:not(.pac) { display: inline-block; clip-path: inset(-0.3em -0.3em -0.3em var(--cut)); }
+.t1 .hero__line--2 > span[aria-hidden]:not(.pac):not(.ghost) {
+  display: inline-block;
+  clip-path: inset(-0.3em calc(100% - var(--cut)) -0.3em -0.3em);
+}
+
+.pac, .ghost { position: absolute; top: 50%; pointer-events: none; }
+.pac svg, .ghost svg { display: block; width: 100%; height: 100%; overflow: visible; }
 
 .pac {
-  position: absolute;
   left: var(--cut);
-  top: 50%;
   width: 0.78em;
   height: 0.78em;
-  margin: -0.4em 0 0 -0.36em;
-  opacity: 0;
-  pointer-events: none;
-}
-.pac svg { display: block; width: 100%; height: 100%; overflow: visible; }
-
-/* Pellets waiting along the line, eaten as he goes. */
-.t1 .hero__line--2.is-chomp::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: var(--cut);
-  height: 0.1em;
-  margin-top: -0.02em;
-  background: radial-gradient(circle, var(--ink) 0 34%, transparent 38%) 0 0 / 0.42em 100% repeat-x;
+  margin: -0.4em 0 0 -0.42em;
+  transform: scale(var(--pac-size, 0));
+  transform-origin: 70% 50%;
 }
 
-.t1 .hero__line--2.is-chomp { animation: chompPath 2.4s linear both; }
-.t1 .hero__line--2.is-chomp .pac { animation: pacShow 2.4s linear both; }
-.t1 .hero__line--2.is-chomp > span[aria-hidden] > span:last-child { animation: dotBack 2.4s linear both; }
+/* Once he's out, the full stop has become him. */
+.t1 .hero__line--2.is-eating > span[aria-hidden]:not(.pac):not(.ghost) > span:last-child { visibility: hidden; }
 
-@keyframes chompPath { from { --cut: 100%; } to { --cut: 0%; } }
-@keyframes pacShow {
-  0% { opacity: 1; transform: scale(1); }
-  92% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.2); }
+/* Blinky, waiting to the left of the line. */
+.ghost {
+  right: calc(100% + 0.14em);
+  width: 0.66em;
+  height: 0.7em;
+  margin-top: -0.38em;
+  opacity: var(--ghost, 0);
+  transform: translateY(calc((1 - var(--ghost, 0)) * 0.3em));
 }
-/* The full stop pops back once he has gone. */
-@keyframes dotBack {
-  0%, 94% { opacity: 0; transform: scale(0.2); }
-  97% { opacity: 1; transform: scale(1.4); }
-  100% { opacity: 1; transform: scale(1); }
+.ghost__body { fill: #f00; stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; transition: fill 0.25s; }
+.ghost__pupils { animation: nervous 1.1s steps(1) infinite; }
+.ghost.is-scared .ghost__body { fill: #2121ff; }
+.ghost.is-scared .ghost__pupils { animation-duration: 0.35s; }
+.ghost.is-scared .ghost__eye { fill: #ffd400; }
+
+/* Eyes flicking left and right, a bit too often. */
+@keyframes nervous {
+  0%   { transform: translateX(-5px); }
+  18%  { transform: translateX(5px); }
+  30%  { transform: translateX(-5px); }
+  52%  { transform: translateX(4px); }
+  60%  { transform: translateX(-4px); }
+  78%  { transform: translateX(5px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .t1 .hero__line--2.is-chomp, .t1 .hero__line--2.is-chomp .pac, .t1 .hero__line--2.is-chomp > span[aria-hidden] > span:last-child { animation: none !important; }
-  .pac { display: none; }
+  .pac, .ghost { display: none; }
 }

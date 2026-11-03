@@ -137,36 +137,60 @@
     el.innerHTML = '<span class="sr-only">' + esc(text) + '</span><span aria-hidden="true">' + html + '</span>';
   });
 
-  // Pac-Man: the full stop on the second landing line chomps right to left and
-  // leaves the words behind it. Runs on load, and again each time the line
-  // comes back into view.
+  // Pac-Man: scroll down and the full stop on the second landing line turns into
+  // Pac-Man and eats "the good bit." from right to left, while a ghost waits to
+  // the left with its eyes darting. It follows the scroll both ways, so scrolling
+  // back up brings the words back. His mouth only chomps while you scroll.
   var pacLine = $('.hero__line--2');
   if (pacLine && !still) {
-    var pac = document.createElement('span');
-    pac.className = 'pac';
-    pac.setAttribute('aria-hidden', 'true');
-    // Mouth facing left; the path flips between open and nearly shut.
+    var mk = function (cls, svg) {
+      var el = document.createElement('span');
+      el.className = cls;
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = svg;
+      pacLine.appendChild(el);
+      return el;
+    };
     var open = 'M50 50 L14.8 20.4 A46 46 0 1 1 14.8 79.6 Z';
     var shut = 'M50 50 L4.1 47.6 A46 46 0 1 1 4.1 52.4 Z';
-    pac.innerHTML = '<svg viewBox="0 0 100 100"><path d="' + open + '" fill="#ffd400" stroke="#0d0d0d" stroke-width="5" stroke-linejoin="round">' +
+    var pac = mk('pac', '<svg viewBox="0 0 100 100"><path d="' + open + '" fill="#ffd400" stroke="#0d0d0d" stroke-width="5" stroke-linejoin="round">' +
       '<animate attributeName="d" values="' + open + ';' + shut + ';' + open + '" dur="0.26s" repeatCount="indefinite"/></path>' +
-      '<circle cx="50" cy="24" r="6.5" fill="#0d0d0d"/></svg>';
-    pacLine.appendChild(pac);
-    var chomp = function () {
-      pacLine.classList.remove('is-chomp');
-      void pacLine.offsetWidth;   // restart the animation
-      pacLine.classList.add('is-chomp');
+      '<circle cx="50" cy="24" r="6.5" fill="#0d0d0d"/></svg>');
+    var ghost = mk('ghost', '<svg viewBox="0 0 100 106">' +
+      '<path class="ghost__body" d="M6 100 V48 A44 44 0 0 1 94 48 V100 L80 88 L65 100 L50 88 L35 100 L20 88 Z"/>' +
+      '<circle class="ghost__eye" cx="33" cy="46" r="13" fill="#fff"/><circle class="ghost__eye" cx="67" cy="46" r="13" fill="#fff"/>' +
+      '<g class="ghost__pupils"><circle cx="33" cy="48" r="6.5" fill="#2121ff"/><circle cx="67" cy="48" r="6.5" fill="#2121ff"/></g></svg>');
+    var pacSvg = pac.querySelector('svg');
+    pacSvg.pauseAnimations();
+
+    var idle = null, lastP = -1;
+    var update = function () {
+      // The eat runs over the first ~45% of a screen of scrolling.
+      var range = Math.max(240, window.innerHeight * 0.45);
+      var p = Math.max(0, Math.min(1, (window.scrollY - 10) / range));
+      if (p === lastP) return;
+      var moving = lastP >= 0;
+      lastP = p;
+      pacLine.style.setProperty('--cut', ((1 - p) * 100).toFixed(2) + '%');
+      pacLine.style.setProperty('--pac-size', Math.min(1, p * 10).toFixed(3));
+      pacLine.style.setProperty('--ghost', Math.max(0, Math.min(1, (p - 0.04) * 6)).toFixed(3));
+      pacLine.classList.toggle('is-eating', p > 0.002);
+      ghost.classList.toggle('is-scared', p > 0.72);
+      // Chomp only while the page is moving.
+      if (moving && p > 0 && p < 1) {
+        pacSvg.unpauseAnimations();
+        clearTimeout(idle);
+        idle = setTimeout(function () { pacSvg.pauseAnimations(); }, 160);
+      }
     };
-    setTimeout(chomp, 500);
-    if ('IntersectionObserver' in window) {
-      var seen = true;
-      new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting && !seen) chomp();
-          seen = e.isIntersecting;
-        });
-      }).observe(pacLine);
-    }
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; update(); });
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
   }
 
   // ---------- Work tiles ----------
