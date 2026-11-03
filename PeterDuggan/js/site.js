@@ -153,8 +153,8 @@
     };
     var open = 'M50 50 L14.8 20.4 A46 46 0 1 1 14.8 79.6 Z';
     var shut = 'M50 50 L4.1 47.6 A46 46 0 1 1 4.1 52.4 Z';
-    var pac = mk('pac', '<svg viewBox="0 0 100 100"><path d="' + open + '" fill="#ffd400" stroke="#0d0d0d" stroke-width="5" stroke-linejoin="round">' +
-      '<animate attributeName="d" values="' + open + ';' + shut + ';' + open + '" dur="0.26s" repeatCount="indefinite"/></path>' +
+    var pac = mk('pac', '<svg viewBox="0 0 100 100"><path d="' + shut + '" fill="#ffd400" stroke="#0d0d0d" stroke-width="5" stroke-linejoin="round">' +
+      '<animate attributeName="d" values="' + shut + ';' + open + ';' + shut + '" dur="0.26s" repeatCount="indefinite"/></path>' +
       '<circle cx="50" cy="24" r="6.5" fill="#0d0d0d"/></svg>');
     var ghost = mk('ghost', '<svg viewBox="0 0 100 106">' +
       '<path class="ghost__body" d="M6 100 V48 A44 44 0 0 1 94 48 V100 L80 88 L65 100 L50 88 L35 100 L20 88 Z"/>' +
@@ -162,20 +162,57 @@
       '<g class="ghost__pupils"><circle cx="33" cy="48" r="6.5" fill="#2121ff"/><circle cx="67" cy="48" r="6.5" fill="#2121ff"/></g></svg>');
     var pacSvg = pac.querySelector('svg');
     pacSvg.pauseAnimations();
+    var words = pacLine.querySelector('span[aria-hidden]:not(.pac):not(.ghost)');
+
+    // Where the full stop sits, measured fresh on every resize.
+    var m = null;
+    var measure = function () {
+      var dots = words.querySelectorAll('span');
+      var dot = dots[dots.length - 1];
+      var L = pacLine.getBoundingClientRect(), D = dot.getBoundingClientRect();
+      var fs = parseFloat(getComputedStyle(pacLine).fontSize);
+      // The period's ink is a small disc near the baseline of its glyph box.
+      m = {
+        fs: fs, size: 0.78 * fs,
+        dotX: D.left + D.width / 2 - L.left,
+        dotY: D.top - L.top + D.height * 0.78,
+        midY: L.height / 2,
+        ghostX: -(0.14 + 0.33) * fs   // centre of the ghost, left of the line
+      };
+    };
 
     var idle = null, lastP = -1;
+    var clamp = function (v) { return Math.max(0, Math.min(1, v)); };
     var update = function () {
-      // The eat runs over the first ~45% of a screen of scrolling.
-      var range = Math.max(240, window.innerHeight * 0.45);
-      var p = Math.max(0, Math.min(1, (window.scrollY - 10) / range));
+      if (!m) measure();
+      // The whole chase runs over about half a screen of scrolling.
+      var range = Math.max(260, window.innerHeight * 0.5);
+      var p = clamp((window.scrollY - 10) / range);
       if (p === lastP) return;
       var moving = lastP >= 0;
       lastP = p;
-      pacLine.style.setProperty('--cut', ((1 - p) * 100).toFixed(2) + '%');
-      pacLine.style.setProperty('--pac-size', Math.min(1, p * 10).toFixed(3));
-      pacLine.style.setProperty('--ghost', Math.max(0, Math.min(1, (p - 0.04) * 6)).toFixed(3));
+
+      // 0 to 0.1: the dot swells into Pac-Man where it stands.
+      // 0.1 to 0.85: he eats right to left along the line.
+      // 0.85 to 1: he carries on and eats the ghost.
+      var grow = clamp(p / 0.1);
+      var travel = clamp((p - 0.1) / 0.75);
+      var chase = clamp((p - 0.85) / 0.15);
+      var x = m.dotX + (0 - m.dotX) * travel + (m.ghostX - 0) * chase;
+      var y = m.dotY + (m.midY - m.dotY) * grow;
+      var scale = 0.26 + 0.74 * grow;
+
+      pac.style.transform = 'translate(' + (x - m.size / 2).toFixed(1) + 'px,' + (y - m.size / 2).toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+      pacLine.style.setProperty('--edge', Math.max(0, x).toFixed(1) + 'px');
       pacLine.classList.toggle('is-eating', p > 0.002);
-      ghost.classList.toggle('is-scared', p > 0.72);
+
+      // The ghost rises once he's on the move, panics, then is eaten.
+      var show = clamp((p - 0.06) * 6);
+      var eaten = clamp((p - 0.93) / 0.07);
+      pacLine.style.setProperty('--ghost', (show * (1 - eaten)).toFixed(3));
+      pacLine.style.setProperty('--ghost-size', (1 - 0.8 * eaten).toFixed(3));
+      ghost.classList.toggle('is-scared', p > 0.7);
+
       // Chomp only while the page is moving.
       if (moving && p > 0 && p < 1) {
         pacSvg.unpauseAnimations();
@@ -189,7 +226,8 @@
       ticking = true;
       requestAnimationFrame(function () { ticking = false; update(); });
     }, { passive: true });
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', function () { measure(); lastP = -1; update(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { measure(); lastP = -1; update(); });
     update();
   }
 

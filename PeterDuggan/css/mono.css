@@ -312,22 +312,26 @@
 @property --cut { syntax: '<percentage>'; inherits: true; initial-value: 100%; }
 
 .t1 .hero__line--2 { position: relative; }
-.t1 .hero__line--2 > span[aria-hidden]:not(.pac):not(.ghost) {
-  display: inline-block;
-  clip-path: inset(-0.3em calc(100% - var(--cut)) -0.3em -0.3em);
+.t1 .hero__line--2 > span[aria-hidden]:not(.pac):not(.ghost) { display: inline-block; }
+/* Only clip while eating, so nothing (the full stop included) is cut at rest. */
+.t1 .hero__line--2.is-eating > span[aria-hidden]:not(.pac):not(.ghost) {
+  clip-path: inset(-0.3em calc(100% - var(--edge, 100%) - 0.22em) -0.3em -0.3em);
 }
 
 .pac, .ghost { position: absolute; top: 50%; pointer-events: none; }
 .pac svg, .ghost svg { display: block; width: 100%; height: 100%; overflow: visible; }
 
+/* Placed and sized by site.js: starts as the full stop, grows into Pac-Man. */
 .pac {
-  left: var(--cut);
+  left: 0;
+  top: 0;
   width: 0.78em;
   height: 0.78em;
-  margin: -0.4em 0 0 -0.42em;
-  transform: scale(var(--pac-size, 0));
-  transform-origin: 70% 50%;
+  transform-origin: 50% 50%;
+  visibility: hidden;
+  will-change: transform;
 }
+.t1 .hero__line--2.is-eating .pac { visibility: visible; }
 
 /* Once he's out, the full stop has become him. */
 .t1 .hero__line--2.is-eating > span[aria-hidden]:not(.pac):not(.ghost) > span:last-child { visibility: hidden; }
@@ -339,7 +343,7 @@
   height: 0.7em;
   margin-top: -0.38em;
   opacity: var(--ghost, 0);
-  transform: translateY(calc((1 - var(--ghost, 0)) * 0.3em));
+  transform: translateY(calc((1 - var(--ghost, 0)) * 0.3em)) scale(var(--ghost-size, 1));
 }
 .ghost__body { fill: #f00; stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; transition: fill 0.25s; }
 .ghost__pupils { animation: nervous 1.1s steps(1) infinite; }
