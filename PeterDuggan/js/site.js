@@ -203,7 +203,10 @@
       var scale = 0.26 + 0.74 * grow;
 
       pac.style.transform = 'translate(' + (x - m.size / 2).toFixed(1) + 'px,' + (y - m.size / 2).toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
-      pacLine.style.setProperty('--edge', Math.max(0, x).toFixed(1) + 'px');
+      // Keep the letters just ahead of his mouth until he reaches the start of the line,
+      // then nothing at all, so no sliver of the first letter is left behind.
+      var keep = x > 0 ? x + 0.22 * m.fs * Math.min(1, x / (0.5 * m.fs)) : 0;
+      pacLine.style.setProperty('--keep', keep.toFixed(1) + 'px');
       pacLine.classList.toggle('is-eating', p > 0.002);
 
       // The ghost rises once he's on the move, panics, then is eaten.

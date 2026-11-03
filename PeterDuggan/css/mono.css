@@ -315,7 +315,7 @@
 .t1 .hero__line--2 > span[aria-hidden]:not(.pac):not(.ghost) { display: inline-block; }
 /* Only clip while eating, so nothing (the full stop included) is cut at rest. */
 .t1 .hero__line--2.is-eating > span[aria-hidden]:not(.pac):not(.ghost) {
-  clip-path: inset(-0.3em calc(100% - var(--edge, 100%) - 0.22em) -0.3em -0.3em);
+  clip-path: inset(-0.3em calc(100% - var(--keep, 100%)) -0.3em -0.05em);
 }
 
 .pac, .ghost { position: absolute; top: 50%; pointer-events: none; }
