@@ -301,13 +301,51 @@
   .feature__play { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
 }
 
-/* A word in [brackets] in heroLines: filled with the test card, like the telly's screen,
-   with a black outline so the white and yellow bars still read on paper. */
+/* A word in [brackets] in heroLines: drawn like the telly's screen. Test-card bars with
+   the bottom strip, scanlines, moving fuzz and a rolling hum bar, and every few seconds a
+   burst of snow with a glitch. A black outline keeps the white and yellow bars readable. */
 .tv-word {
-  background: var(--bars);
+  --tv-strip: linear-gradient(90deg, #00f 0 14.28%, #f0f 0 28.57%, #ff0 0 42.85%, #f00 0 57.14%,
+    #0ff 0 71.42%, #000 0 85.71%, #fff 0);
+  display: inline-block;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, transparent 0, rgba(255, 255, 255, 0.45) 50%, transparent 100%),
+    var(--static),
+    var(--bars),
+    var(--tv-strip);
+  background-size: 100% 100%, 100% 35%, 180px 180px, 100% 76%, 100% 24%;
+  background-position: 0 0, 0 -60%, 0 0, 0 0, 0 100%;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat, no-repeat;
+  background-blend-mode: normal, screen, overlay, normal, normal;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-stroke: 0.028em var(--ink) !important;
   paint-order: stroke fill;
+  animation: tvFuzz 0.32s steps(4) infinite, tvHum 3.4s linear infinite, tvBurst 6.5s steps(1) infinite;
 }
 .tv-word > span { color: transparent !important; -webkit-text-stroke: inherit !important; }
+
+/* The fuzz never sits still. */
+@keyframes tvFuzz {
+  0%   { background-position: 0 0, var(--hum, 0 -60%), 0 0, 0 0, 0 100%; }
+  25%  { background-position: 0 1px, var(--hum, 0 -60%), -37px 21px, 0 0, 0 100%; }
+  50%  { background-position: 0 0, var(--hum, 0 -60%), 19px -43px, 0 0, 0 100%; }
+  75%  { background-position: 0 1px, var(--hum, 0 -60%), -51px -9px, 0 0, 0 100%; }
+}
+
+/* The hum bar rolls down the screen. */
+@property --hum { syntax: '*'; inherits: false; }
+@keyframes tvHum {
+  0%   { --hum: 0 -60%; }
+  100% { --hum: 0 160%; }
+}
+
+/* Now and then: full snow and a jolt, like losing the signal. */
+@keyframes tvBurst {
+  0%    { background-blend-mode: normal, screen, overlay, normal, normal; transform: none; filter: none; }
+  88%   { background-blend-mode: normal, screen, normal, normal, normal; transform: translateX(-0.03em) skewX(-6deg); filter: contrast(1.2); }
+  90%   { background-blend-mode: normal, screen, normal, normal, normal; transform: translateX(0.02em); filter: none; }
+  92%   { background-blend-mode: normal, screen, overlay, normal, normal; transform: translateX(-0.01em) skewX(3deg); }
+  93%   { background-blend-mode: normal, screen, overlay, normal, normal; transform: none; }
+}
