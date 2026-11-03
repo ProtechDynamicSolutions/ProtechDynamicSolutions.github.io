@@ -137,6 +137,38 @@
     el.innerHTML = '<span class="sr-only">' + esc(text) + '</span><span aria-hidden="true">' + html + '</span>';
   });
 
+  // Pac-Man: the full stop on the second landing line chomps right to left and
+  // leaves the words behind it. Runs on load, and again each time the line
+  // comes back into view.
+  var pacLine = $('.hero__line--2');
+  if (pacLine && !still) {
+    var pac = document.createElement('span');
+    pac.className = 'pac';
+    pac.setAttribute('aria-hidden', 'true');
+    // Mouth facing left; the path flips between open and nearly shut.
+    var open = 'M50 50 L14.8 20.4 A46 46 0 1 1 14.8 79.6 Z';
+    var shut = 'M50 50 L4.1 47.6 A46 46 0 1 1 4.1 52.4 Z';
+    pac.innerHTML = '<svg viewBox="0 0 100 100"><path d="' + open + '" fill="#ffd400" stroke="#0d0d0d" stroke-width="5" stroke-linejoin="round">' +
+      '<animate attributeName="d" values="' + open + ';' + shut + ';' + open + '" dur="0.26s" repeatCount="indefinite"/></path>' +
+      '<circle cx="50" cy="24" r="6.5" fill="#0d0d0d"/></svg>';
+    pacLine.appendChild(pac);
+    var chomp = function () {
+      pacLine.classList.remove('is-chomp');
+      void pacLine.offsetWidth;   // restart the animation
+      pacLine.classList.add('is-chomp');
+    };
+    setTimeout(chomp, 500);
+    if ('IntersectionObserver' in window) {
+      var seen = true;
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting && !seen) chomp();
+          seen = e.isIntersecting;
+        });
+      }).observe(pacLine);
+    }
+  }
+
   // ---------- Work tiles ----------
 
   function tiles(list, offset) {
