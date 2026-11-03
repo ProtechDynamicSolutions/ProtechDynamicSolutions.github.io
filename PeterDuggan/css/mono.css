@@ -166,3 +166,132 @@
   .player__body .player__stage { height: auto; }
   .player__info { max-height: none; overflow: visible; padding: 24px 18px 18px; }
 }
+
+/* ---------- The way into the archive: a quiet line under Latest work ---------- */
+
+.t1 .older { padding-bottom: clamp(48px, 6vw, 80px); }
+
+.older__link {
+  display: inline-block;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--muted);
+}
+.older__link span { color: var(--ink); background: linear-gradient(transparent 60%, var(--yellow) 0); padding: 0 2px; }
+.older__link:hover { color: var(--ink); }
+
+/* ---------- Archive page ---------- */
+
+.archive { max-width: 1440px; margin: 0 auto; padding: clamp(96px, 11vw, 140px) var(--gutter) clamp(64px, 8vw, 110px); }
+
+.archive__back { margin: 0 0 18px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+.archive__back a { text-decoration: none; color: var(--muted); }
+.archive__back a:hover { color: var(--ink); }
+
+.archive__title {
+  margin: 0;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(64px, 13vw, 210px);
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+}
+.archive__title::after {
+  content: '';
+  display: block;
+  width: min(420px, 60%);
+  height: 10px;
+  margin-top: clamp(14px, 1.6vw, 22px);
+  border: 2px solid var(--ink);
+  background: var(--bars);
+}
+.archive__intro { margin: 22px 0 0; max-width: 620px; font-weight: 800; font-size: clamp(15px, 1.3vw, 18px); line-height: 1.35; text-transform: uppercase; }
+
+.archive__jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.archive__jump a {
+  border: 2px solid var(--ink); border-radius: 999px; padding: 7px 14px 6px;
+  text-decoration: none; font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.archive__jump a b { opacity: 0.55; margin-left: 4px; }
+.archive__jump a:hover { background: var(--ink); color: var(--white); }
+
+.arch { margin-top: clamp(48px, 6vw, 84px); scroll-margin-top: 90px; }
+.arch__head {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 20px; flex-wrap: wrap;
+  padding-bottom: 12px; border-bottom: 3px solid var(--ink);
+}
+.arch__title { margin: 0; font-weight: 900; text-transform: uppercase; font-size: clamp(34px, 4.6vw, 70px); line-height: 0.86; letter-spacing: -0.04em; }
+.arch__count { margin: 0 0 4px; font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 14px; }
+
+.arch__list { list-style: none; margin: 0; padding: 0; }
+.arch__list li { border-bottom: 1px solid var(--line); }
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px clamp(150px, 15vw, 220px) minmax(0, 1fr) 64px 44px;
+  align-items: center;
+  gap: 0 clamp(14px, 2vw, 28px);
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  isolation: isolate;
+}
+/* A yellow highlight sweeps in behind the row on hover. */
+.row::before {
+  content: '';
+  position: absolute; inset: 0 -12px; z-index: -1;
+  background: var(--yellow);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.35s var(--ease);
+}
+.row:hover::before, .row:focus-visible::before { transform: scaleX(1); }
+
+.row__num { font: 700 13px/1 var(--mono, ui-monospace, Menlo, Consolas, monospace); color: var(--muted); }
+.row__thumb { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink); }
+.row__thumb img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transition: transform 0.6s var(--ease); }
+.row:hover .row__thumb img { transform: scale(1.06); }
+.row__text { display: grid; gap: 4px; min-width: 0; }
+.row__client { font-weight: 900; text-transform: uppercase; font-size: clamp(20px, 2vw, 30px); line-height: 0.95; letter-spacing: -0.025em; }
+.row__title { font-weight: 700; font-size: 15px; color: var(--ink); opacity: 0.75; }
+.row__title i { font-style: normal; font-weight: 900; font-size: 12px; margin-left: 6px; opacity: 0.7; }
+.row__len { font: 700 14px/1 var(--mono, ui-monospace, Menlo, Consolas, monospace); text-align: right; }
+.row__play {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink);
+  transition: background-color 0.2s, color 0.2s;
+}
+.row__play svg { width: 14px; height: 14px; fill: currentColor; margin-left: 2px; }
+.row:hover .row__play { background: var(--ink); color: var(--yellow); }
+
+/* The old showreel: one wide card. */
+.feature { display: block; width: 100%; max-width: 1100px; margin-top: 18px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.feature__media { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink); }
+.feature__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+.feature:hover .feature__media img { transform: scale(1.03); }
+.feature__play {
+  position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%;
+  background: var(--yellow); color: var(--ink); display: grid; place-items: center;
+  transition: transform 0.3s var(--ease);
+}
+.feature__play svg { width: 28px; height: 28px; fill: currentColor; margin-left: 4px; }
+.feature:hover .feature__play { transform: scale(1.08); }
+.feature__cap { display: flex; align-items: baseline; gap: 14px; padding-top: 12px; }
+.feature__cap b { font-weight: 900; text-transform: uppercase; font-size: clamp(22px, 2.4vw, 34px); letter-spacing: -0.02em; }
+.feature__cap span { font: 700 14px var(--mono, ui-monospace, Menlo, Consolas, monospace); }
+
+@media (max-width: 640px) {
+  .row { grid-template-columns: 112px minmax(0, 1fr) 36px; gap: 0 12px; padding: 10px 0; }
+  .row__num, .row__len { display: none; }
+  .row__play { width: 34px; height: 34px; }
+  .row__client { font-size: 18px; }
+  .row__title { font-size: 13px; }
+  .feature__play { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+}

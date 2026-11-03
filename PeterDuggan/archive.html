@@ -1,0 +1,112 @@
+<!doctype html>
+<!-- Made from _build/page.html + archive_main.html by _build/make_themes.py. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Archive · Peter J Duggan</title>
+  <meta name="description" content="Peter J Duggan is an editor, colourist and DIT. Commercials, trailers, spots and films for Michelob ULTRA, Samsung, Lynx, Enterprise x UEFA and more.">
+  <meta name="theme-color" content="#f1f0ec">
+  <link rel="canonical" href="https://peterjduggan.com/archive.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Peter J Duggan · Editor, Colourist &amp; DIT">
+  <meta property="og:description" content="Edit, colour and DIT for commercials, trailers, spots and films.">
+  <meta property="og:url" content="https://peterjduggan.com/">
+  <meta property="og:image" content="https://peterjduggan.com/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,500..900;1,800..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/colour.css">
+  <link rel="stylesheet" href="css/mono.css">
+</head>
+<body class="t2 t1 is-archive">
+  <a class="skip" href="#archiveTitle">Skip to the archive</a>
+
+  <header class="bar" id="bar">
+    <a class="mark" href="#top" aria-label="Peter J Duggan, back to the top">
+      <span class="mark__name">peter j duggan</span>
+      <span class="mark__bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    </a>
+    <button class="menu-btn" id="menuOpen" aria-label="Open menu" aria-controls="menu" aria-expanded="false">
+      <svg class="tv" viewBox="0 0 64 60" aria-hidden="true">
+        <g class="tv__aerial"><path d="M32 17 21 4M32 17 45 3"/><circle cx="21" cy="4" r="2.2"/><circle cx="45" cy="3" r="2.2"/></g>
+        <rect class="tv__body" x="3" y="16" width="58" height="37" rx="8"/>
+        <svg class="tv__screen" x="8.5" y="21.5" width="38" height="26" viewBox="0 0 38 26">
+          <clipPath id="tvScreen"><rect width="38" height="26" rx="5"/></clipPath>
+          <g clip-path="url(#tvScreen)">
+            <rect width="5.43" height="20" fill="#fff"/><rect x="5.43" width="5.43" height="20" fill="#ff0"/>
+            <rect x="10.86" width="5.43" height="20" fill="#0ff"/><rect x="16.29" width="5.43" height="20" fill="#0f0"/>
+            <rect x="21.72" width="5.43" height="20" fill="#f0f"/><rect x="27.15" width="5.43" height="20" fill="#f00"/>
+            <rect x="32.58" width="5.42" height="20" fill="#00f"/>
+            <rect y="20" width="5.43" height="6" fill="#00f"/><rect x="5.43" y="20" width="5.43" height="6" fill="#f0f"/>
+            <rect x="10.86" y="20" width="5.43" height="6" fill="#ff0"/><rect x="16.29" y="20" width="5.43" height="6" fill="#f00"/>
+            <rect x="21.72" y="20" width="5.43" height="6" fill="#0ff"/><rect x="27.15" y="20" width="5.43" height="6" fill="#000"/>
+            <rect x="32.58" y="20" width="5.42" height="6" fill="#fff"/>
+          </g>
+          <rect class="tv__glass" width="38" height="26" rx="5"/>
+        </svg>
+        <circle class="tv__knob" cx="54" cy="27" r="3"/><circle class="tv__knob" cx="54" cy="36" r="3"/>
+        <path class="tv__grill" d="M50.5 43h7M50.5 46.5h7"/>
+        <path class="tv__feet" d="M13 53v5M51 53v5"/>
+      </svg>
+      <span class="tv-snow" aria-hidden="true"></span>
+    </button>
+  </header>
+
+  <div class="menu" id="menu" hidden>
+    <button class="menu__close" id="menuClose" aria-label="Close menu">Close ✕</button>
+    <nav class="menu__nav" aria-label="Menu">
+      <a href="index.html">Home</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#films">Films</a>
+      <a href="index.html#about">About</a>
+      <a href="#top">Archive</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="menu__foot" data-slot="menuLinks"></div>
+  </div>
+
+  <main id="top">
+    <section class="archive" data-tone="paper" aria-labelledby="archiveTitle">
+      <header class="archive__head">
+        <p class="archive__back"><a href="index.html">&larr; Back to the main site</a></p>
+        <h1 class="archive__title" id="archiveTitle">Archive</h1>
+        <p class="archive__intro" data-slot="archiveIntro"></p>
+        <nav class="archive__jump" aria-label="Archive sections" data-slot="archiveJump"></nav>
+      </header>
+      <div data-slot="archive"></div>
+    </section>
+  </main>
+
+  <footer class="foot" data-tone="ink">
+    <span data-slot="copyright"></span>
+    <span class="foot__role" data-site="role"></span>
+    <a href="index.html">Main site</a>
+    <a href="#top">Back to top ↑</a>
+  </footer>
+
+  <div class="player" id="player" role="dialog" aria-modal="true" aria-labelledby="playerTitle" hidden>
+    <div class="player__top">
+      <p class="player__title" id="playerTitle"></p>
+      <button class="player__close" id="playerClose" aria-label="Close video">Close ✕</button>
+    </div>
+    <div class="player__body">
+      <div class="player__stage">
+        <button class="player__step" id="playerPrev" aria-label="Previous project">←</button>
+        <div class="player__frame" id="playerFrame"></div>
+        <button class="player__step" id="playerNext" aria-label="Next project">→</button>
+      </div>
+      <aside class="player__info" id="playerInfo" aria-label="About this project"></aside>
+    </div>
+    <div class="player__cuts" id="playerCuts"></div>
+  </div>
+
+  <script src="js/content.js"></script>
+  <script src="js/logo-ratios.js"></script>
+  <script src="js/archive.js"></script>
+  <script src="js/site.js"></script>
+</body>
+</html>

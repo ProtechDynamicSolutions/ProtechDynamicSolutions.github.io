@@ -30,6 +30,30 @@
   var firstFilm = S.latest.length;
   var firstMusic = firstFilm + S.films.length;
 
+  // On the Archive page the player steps through the archive instead.
+  var A = window.ARCHIVE;
+  var onArchive = !!(A && $('[data-slot="archive"]'));
+  if (onArchive) {
+    projects = [];
+    A.sections.forEach(function (sec) {
+      sec.items.forEach(function (it) {
+        projects.push({
+          client: it.client, title: it.title, type: sec.title, year: it.year || '', length: it.length || 0,
+          section: sec.id,
+          // No still of our own yet: Drive's thumbnail stands in.
+          poster: it.poster || 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(it.drive) + '&sz=w960',
+          blurb: it.blurb || '', did: it.did || [], credits: it.credits || [],
+          cuts: [{ label: 'Film', drive: it.drive, vimeo: it.vimeo, youtube: it.youtube }]
+        });
+      });
+    });
+  }
+
+  function mins(sec) {
+    if (!(sec > 0)) return '';
+    return Math.floor(sec / 60) + ':' + ('0' + Math.round(sec % 60)).slice(-2);
+  }
+
   // ---------- Text ----------
 
   $$('[data-site="role"]').forEach(function (el) { el.textContent = S.role; });
@@ -84,7 +108,10 @@
   fill('copyright', '© ' + new Date().getFullYear() + ' ' + esc(S.name));
 
   if (S.olderWorkUrl) {
-    fill('older', '<a class="btn btn--dark" href="' + esc(S.olderWorkUrl) + '" target="_blank" rel="noopener">Older work →</a>');
+    // A quiet line, not a button: the archive is there for those who look.
+    var internal = !/^https?:/i.test(S.olderWorkUrl);
+    fill('older', '<a class="older__link" href="' + esc(S.olderWorkUrl) + '"' + (internal ? '' : ' target="_blank" rel="noopener"') +
+      '>Older work, the old reel and music videos are in the <span>archive</span> →</a>');
   }
 
   // Letters in colour-bar colours: <h2 data-bars>Colour</h2>. Spaces keep their place
@@ -171,6 +198,44 @@
         }, 3600);
       }
     }
+  }
+
+  // ---------- Archive ----------
+
+  // A quiet list made for talking through: number, still, who, what, length.
+  // A section with one item (the showreel) gets a wide card instead.
+  if (onArchive) {
+    fill('archiveIntro', esc(A.intro || ''));
+    var at0 = 0;
+    fill('archive', A.sections.map(function (sec) {
+      var first = at0;
+      at0 += sec.items.length;
+      if (!sec.items.length) return '';
+      var head = '<header class="arch__head"><h2 class="arch__title">' + esc(sec.title) + '</h2>' +
+        '<p class="arch__count">' + sec.items.length + (sec.items.length === 1 ? ' film' : ' films') + '</p></header>';
+      if (sec.items.length === 1) {
+        var p = projects[first];
+        return '<section class="arch arch--feature" id="arch-' + esc(sec.id) + '" data-tone="paper">' + head +
+          '<button class="feature" type="button" data-project="' + first + '" aria-label="Play ' + esc(p.client + ', ' + p.title) + '">' +
+          '<span class="feature__media"><img src="' + esc(p.poster) + '" alt="" loading="lazy"><span class="feature__play">' + PLAY + '</span></span>' +
+          '<span class="feature__cap"><b>' + esc(p.title) + '</b>' + (p.length ? '<span>' + mins(p.length) + '</span>' : '') + '</span>' +
+          '</button></section>';
+      }
+      return '<section class="arch" id="arch-' + esc(sec.id) + '" data-tone="paper">' + head + '<ol class="arch__list">' +
+        sec.items.map(function (it, k) {
+          var i = first + k, p = projects[i];
+          return '<li><button class="row" type="button" data-project="' + i + '" aria-label="Play ' + esc(p.client + ', ' + p.title) + '">' +
+            '<span class="row__num">' + ('0' + (k + 1)).slice(-2) + '</span>' +
+            '<span class="row__thumb"><img src="' + esc(p.poster) + '" alt="" loading="lazy"></span>' +
+            '<span class="row__text"><span class="row__client">' + esc(p.client) + '</span>' +
+            '<span class="row__title">' + esc(p.title) + (p.year ? ' <i>' + esc(p.year) + '</i>' : '') + '</span></span>' +
+            '<span class="row__len">' + mins(p.length) + '</span>' +
+            '<span class="row__play">' + PLAY + '</span></button></li>';
+        }).join('') + '</ol></section>';
+    }).join(''));
+    fill('archiveJump', A.sections.filter(function (s) { return s.items.length; }).map(function (s) {
+      return '<a href="#arch-' + esc(s.id) + '">' + esc(s.title) + ' <b>' + s.items.length + '</b></a>';
+    }).join(''));
   }
 
   // ---------- Logos ----------
@@ -315,7 +380,7 @@
   function infoHtml(p, cut) {
     var credits = (p.credits || []).filter(function (c) { return c && c[1]; });
     var did = p.did || [];
-    return '<p class="info__type">' + esc(p.type) + (p.year ? ' · ' + esc(p.year) : '') + '</p>' +
+    return '<p class="info__type">' + esc(p.type) + (p.year ? ' · ' + esc(p.year) : '') + (p.length ? ' · ' + mins(p.length) : '') + '</p>' +
       '<h3 class="info__client">' + esc(p.client) + '</h3>' +
       '<p class="info__title">' + esc(p.title) + (p.credit ? ' · ' + esc(p.credit) : '') + '</p>' +
       (p.cuts.length > 1 ? '<p class="info__cut">Now playing <b>' + esc(cut.label) + '</b> · ' + p.cuts.length +

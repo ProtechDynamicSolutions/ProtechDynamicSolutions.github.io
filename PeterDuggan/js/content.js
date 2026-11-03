@@ -25,7 +25,7 @@ window.SITE = {
     linkedin: ''
   },
   // Where the "Older work" button goes. Blank hides the button.
-  olderWorkUrl: '',
+  olderWorkUrl: 'archive.html',
 
   hero: {
     image: 'img/hero.jpg',
