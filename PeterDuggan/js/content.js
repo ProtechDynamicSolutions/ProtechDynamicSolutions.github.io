@@ -29,7 +29,8 @@ window.SITE = {
 
   // The giant line on the landing page, one entry per line: the first sits over the
   // top edge of the photo card, the second over the bottom. One entry = one big word.
-  heroLines: ['Cut to', 'the good bit.'],
+  // Put a word in [square brackets] to fill it with the TV's colour bars.
+  heroLines: ['Cut to', 'the [good] bit.'],   // [word] = filled with the TV colour bars
 
   hero: {
     image: 'img/hero.jpg',

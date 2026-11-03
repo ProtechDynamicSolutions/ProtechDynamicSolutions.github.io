@@ -117,14 +117,24 @@
   // Letters in colour-bar colours: <h2 data-bars>Colour</h2>. Spaces keep their place
   // in the cycle so a phrase reads as one strip of colour.
   // Screen readers get the plain text; the per-letter copy is hidden from them.
+  // A word in [square brackets] is filled with the TV's colour bars ("the [good] bit.").
   $$('[data-bars]').forEach(function (el) {
-    var text = el.textContent;
+    var raw = el.textContent;
+    var text = raw.replace(/[\[\]]/g, '');
     var attr = el.getAttribute('data-bars') || '';
     var italic = attr ? attr.split(',').map(Number) : [];
-    el.innerHTML = '<span class="sr-only">' + esc(text) + '</span><span aria-hidden="true">' + text.split('').map(function (ch, i) {
-      if (ch === ' ') return ' ';
-      return '<span class="bar-c' + (i % 7 + 1) + (italic.indexOf(i) > -1 ? ' bar-i' : '') + '">' + esc(ch) + '</span>';
-    }).join('') + '</span>';
+    var i = 0;
+    var letters = function (s) {
+      return s.split('').map(function (ch) {
+        var k = i++;
+        if (ch === ' ') return ' ';
+        return '<span class="bar-c' + (k % 7 + 1) + (italic.indexOf(k) > -1 ? ' bar-i' : '') + '">' + esc(ch) + '</span>';
+      }).join('');
+    };
+    var html = raw.split(/(\[[^\]]*\])/).map(function (part) {
+      return /^\[.*\]$/.test(part) ? '<span class="tv-word">' + letters(part.slice(1, -1)) + '</span>' : letters(part);
+    }).join('');
+    el.innerHTML = '<span class="sr-only">' + esc(text) + '</span><span aria-hidden="true">' + html + '</span>';
   });
 
   // ---------- Work tiles ----------

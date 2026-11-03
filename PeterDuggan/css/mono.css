@@ -300,3 +300,14 @@
   .row__title { font-size: 13px; }
   .feature__play { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
 }
+
+/* A word in [brackets] in heroLines: filled with the test card, like the telly's screen,
+   with a black outline so the white and yellow bars still read on paper. */
+.tv-word {
+  background: var(--bars);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.028em var(--ink) !important;
+  paint-order: stroke fill;
+}
+.tv-word > span { color: transparent !important; -webkit-text-stroke: inherit !important; }
