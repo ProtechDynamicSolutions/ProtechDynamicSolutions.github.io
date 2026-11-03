@@ -27,8 +27,13 @@
 
 /* ---------- COLOUR: one big word over the bottom edge of the card ---------- */
 
-.t1 .hero__stage { display: block; }
-.t1 .hero__stage > .cycle { margin: 0 auto; }
+.t1 .hero__stage:has(.hero__word--one) { display: block; }
+.t1 .hero__stage:has(.hero__word--one) > .cycle { margin: 0 auto; }
+
+/* Two-line landing line (heroLines in content.js): paper outline so black letters
+   stay crisp over the picture, and a yellow full stop. */
+.t1 .hero__line { -webkit-text-stroke: 0.024em var(--paper); paint-order: stroke fill; }
+.t1 .hero__line--2 > span[aria-hidden] > span:last-child { color: var(--yellow); -webkit-text-stroke: 0.03em var(--ink); }
 
 .t1 .hero__word--one {
   display: block;

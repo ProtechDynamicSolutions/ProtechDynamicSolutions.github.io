@@ -27,6 +27,10 @@ window.SITE = {
   // Where the "Older work" button goes. Blank hides the button.
   olderWorkUrl: 'archive.html',
 
+  // The giant line on the landing page, one entry per line: the first sits over the
+  // top edge of the photo card, the second over the bottom. One entry = one big word.
+  heroLines: ['Cut to', 'the good bit.'],
+
   hero: {
     image: 'img/hero.jpg',
     headline: 'I cut things up for a living*',
