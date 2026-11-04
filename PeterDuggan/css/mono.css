@@ -165,11 +165,41 @@
 }
 .info__credits dd { margin: 0; font-weight: 800; font-size: 15px; }
 
+/* The button only matters on phones; on a PC the whole panel sits beside the picture. */
+.info__more { display: none; }
+
 @media (max-width: 900px) {
   .player { overflow-y: auto; }
-  .player__body { flex: none; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+  .player__top { min-height: 40px; }
+  .player__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .player__body { flex: none; grid-template-columns: 1fr; gap: 12px; align-items: start; }
   .player__body .player__stage { height: auto; }
-  .player__info { max-height: none; overflow: visible; padding: 24px 18px 18px; }
+  .player__step { display: none; }
+  /* As big as the screen allows, sideways too. */
+  .player__frame { width: min(100%, calc((100svh - 92px) * 16 / 9)); }
+  .player__frame.is-vertical { width: auto; height: min(calc(100svh - 150px), 640px); }
+
+  /* Folded: one slim bar under the picture. */
+  .player__info { max-height: none; overflow: visible; padding: 14px 16px 12px; }
+  .player__info::before { height: 5px; }
+  .info__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .info__type { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .info__more {
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    border: 0; padding: 9px 12px; background: var(--yellow); color: var(--ink);
+    font: inherit; font-size: 12px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  .info__more i { position: relative; width: 10px; height: 10px; }
+  .info__more i::before, .info__more i::after {
+    content: ''; position: absolute; left: 0; top: 4px; width: 10px; height: 2px; background: currentColor;
+    transition: transform 0.25s var(--ease);
+  }
+  .info__more i::after { transform: rotate(90deg); }
+  .player__info.is-open .info__more i::after { transform: rotate(0deg); }
+  .info__rest { display: none; padding-top: 4px; }
+  .player__info.is-open .info__rest { display: block; animation: infoIn 0.35s var(--ease) both; }
+  .info__client { font-size: 26px; margin-top: 12px; }
 }
 
 /* ---------- The way into the archive: a quiet line under Latest work ---------- */

@@ -479,6 +479,7 @@
     var on = cutsBox.querySelector('.is-on');
     if (on) cutsBox.scrollLeft = on.offsetLeft - (cutsBox.clientWidth - on.offsetWidth) / 2;
 
+    info.classList.remove('is-open');
     info.innerHTML = infoHtml(p, cut);
   }
 
@@ -487,7 +488,10 @@
   function infoHtml(p, cut) {
     var credits = (p.credits || []).filter(function (c) { return c && c[1]; });
     var did = p.did || [];
-    return '<p class="info__type">' + esc(p.type) + (p.year ? ' · ' + esc(p.year) : '') + (p.length ? ' · ' + mins(p.length) : '') + '</p>' +
+    // On phones only the first line and the button show, so the picture gets the room.
+    return '<div class="info__head"><p class="info__type">' + esc(p.type) + (p.year ? ' · ' + esc(p.year) : '') + (p.length ? ' · ' + mins(p.length) : '') + '</p>' +
+      '<button class="info__more" type="button" aria-expanded="false"><span>About this film</span><i aria-hidden="true"></i></button></div>' +
+      '<div class="info__rest">' +
       '<h3 class="info__client">' + esc(p.client) + '</h3>' +
       '<p class="info__title">' + esc(p.title) + (p.credit ? ' · ' + esc(p.credit) : '') + '</p>' +
       (p.cuts.length > 1 ? '<p class="info__cut">Now playing <b>' + esc(cut.label) + '</b> · ' + p.cuts.length +
@@ -497,8 +501,17 @@
         did.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>' : '') +
       (credits.length ? '<dl class="info__credits">' + credits.map(function (c) {
         return '<div><dt>' + esc(c[0]) + '</dt><dd>' + esc(c[1]) + '</dd></div>';
-      }).join('') + '</dl>' : '');
+      }).join('') + '</dl>' : '') + '</div>';
   }
+
+  info.addEventListener('click', function (e) {
+    var b = e.target.closest('.info__more');
+    if (!b) return;
+    var open = info.classList.toggle('is-open');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    b.firstChild.textContent = open ? 'Hide details' : 'About this film';
+    if (open) setTimeout(function () { info.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'nearest' }); }, 30);
+  });
 
   function openPlayer(pi, from) {
     opener = from || null;
