@@ -356,19 +356,38 @@
       ' width="' + Math.round(r * 100) + '" height="100" style="--s:' + Math.pow(r, 0.6).toFixed(3) + '">';
   }
 
-  fill('broadcasters', S.broadcasters.map(function (b) {
-    return '<li>' + logo('broadcasters', b, b[0]) + '</li>';
-  }).join(''));
-
-  // Three rows that scroll in a loop. Each row holds its logos twice so the
-  // loop is seamless; the second copy is hidden from screen readers.
-  var rows = [[], [], []];
-  S.brands.forEach(function (b, i) { rows[i % 3].push(b); });
+  // Every logo, broadcasters and brands together, on two rows that scroll in
+  // a loop: the top one to the right, the bottom one to the left. Broadcasters
+  // are spread through both rows (one in every five) so the big names keep
+  // coming round. Each row holds its logos twice so the loop is seamless; the
+  // second copy is hidden from screen readers.
+  var rows = [[], []];
+  var bc = S.broadcasters.map(function (b) { return ['broadcasters', b]; });
+  var br = S.brands.map(function (b) { return ['brands', b]; });
+  [0, 1].forEach(function (r) {
+    var mineBc = bc.filter(function (_, i) { return i % 2 === r; });
+    var mineBr = br.filter(function (_, i) { return i % 2 === r; });
+    while (mineBc.length || mineBr.length) {
+      if (mineBc.length) rows[r].push(mineBc.shift());
+      for (var k = 0; k < 4 && mineBr.length; k++) rows[r].push(mineBr.shift());
+    }
+  });
   fill('brands', rows.map(function (row) {
-    var one = row.map(function (b) { return '<span class="logo">' + logo('brands', b, b[0]) + '</span>'; }).join('');
-    var two = row.map(function (b) { return '<span class="logo" aria-hidden="true">' + logo('brands', b, '') + '</span>'; }).join('');
+    var one = row.map(function (x) { return '<span class="logo">' + logo(x[0], x[1], x[1][0]) + '</span>'; }).join('');
+    var two = row.map(function (x) { return '<span class="logo" aria-hidden="true">' + logo(x[0], x[1], '') + '</span>'; }).join('');
     return '<div class="brands__row">' + one + two + '</div>';
   }).join(''));
+
+  // Same speed on both rows and on every screen, whatever each row's length.
+  function logoSpeed() {
+    var pxPerSec = innerWidth < 641 ? 34 : 48;
+    $$('.brands__row').forEach(function (row) {
+      row.style.animationDuration = Math.round(row.scrollWidth / 2 / pxPerSec) + 's';
+    });
+  }
+  logoSpeed();
+  addEventListener('load', logoSpeed);
+  addEventListener('resize', logoSpeed);
 
   // ---------- Header ----------
 
