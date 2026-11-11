@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Peter Duggan – CV</title>
+<meta name="description" content="Peter Duggan: Producer, DIT, Editor, Colourist. London, UK.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,500..900;1,800..900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f1f0ec; --ink: #0d0d0d; --ink-2: #1b1b1b; --yellow: #ffd400; --white: #fff; --muted: #55524c; --line: rgba(13,13,13,.14);
+  --c1: #f5c800; --c2: #00b3e3; --c3: #22c22e; --c4: #e8137f; --c5: #f2321e; --c6: #2343e0; --c7: #7b33e8;
+  --gutter: clamp(16px, 4vw, 64px);
+  --ease: cubic-bezier(.2,.7,.1,1);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.1 -0.38'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Figtree', 'Helvetica Neue', Arial, system-ui, sans-serif; font-weight: 500; overflow-x: hidden; }
+body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background-image: var(--grain); opacity: .32; mix-blend-mode: multiply; }
+a { color: inherit; }
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+svg { width: 1em; height: 1em; flex: none; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; box-shadow: 0 0 0 3px var(--yellow); }
+
+/* ---------- Top bar ---------- */
+.bar { position: absolute; inset: 0 0 auto; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 18px var(--gutter); }
+.mark { text-decoration: none; display: inline-flex; flex-direction: column; gap: 5px; }
+.mark b { font-weight: 900; font-size: clamp(22px, 2.3vw, 30px); letter-spacing: -.035em; line-height: .9; }
+.bars { display: flex; height: 6px; outline: 2px solid var(--ink); }
+.bars i { flex: 1; }
+.bars i:nth-child(1) { background: #fff; } .bars i:nth-child(2) { background: var(--c1); } .bars i:nth-child(3) { background: var(--c2); }
+.bars i:nth-child(4) { background: var(--c3); } .bars i:nth-child(5) { background: var(--c4); } .bars i:nth-child(6) { background: var(--c5); }
+.bars i:nth-child(7) { background: var(--c6); }
+.bar__cv { font-weight: 900; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+
+/* ---------- Hero ---------- */
+.hero { position: relative; background: var(--yellow); padding: clamp(110px, 14vw, 170px) var(--gutter) clamp(36px, 5vw, 64px); overflow: hidden; }
+.eyebrow { font-weight: 900; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; display: flex; align-items: center; gap: 12px; }
+.eyebrow::before { content: ''; width: 34px; height: 3px; background: var(--ink); }
+.name { margin-top: 18px; font-weight: 900; text-transform: uppercase; font-size: clamp(64px, 15.5vw, 236px); line-height: .8; letter-spacing: -.055em; }
+.name span { display: block; opacity: 0; transform: translateY(40%); animation: rise .8s var(--ease) forwards; }
+.name span + span { animation-delay: .12s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.roles { margin-top: clamp(22px, 3vw, 34px); display: flex; flex-wrap: wrap; gap: 6px 22px; font-weight: 900; text-transform: uppercase; font-size: clamp(18px, 2.3vw, 30px); letter-spacing: -.02em; }
+.roles li { position: relative; padding-bottom: 7px; opacity: 0; animation: rise .6s var(--ease) forwards; animation-delay: calc(.35s + var(--i) * .1s); }
+.roles li::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--c); transform: scaleX(0); transform-origin: left; animation: wipe .5s var(--ease) forwards; animation-delay: calc(.6s + var(--i) * .1s); }
+@keyframes wipe { to { transform: none; } }
+.hero__where { margin-top: 18px; font-weight: 800; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; }
+.actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 20px; background: var(--ink); color: var(--white); text-decoration: none; font-weight: 900; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; transition: transform .2s var(--ease), background .2s; }
+.btn:hover { transform: translateY(-2px); }
+.btn--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--ink); }
+.btn--ghost:hover { background: var(--ink); color: var(--yellow); }
+.stats { margin-top: clamp(40px, 6vw, 72px); display: grid; grid-template-columns: repeat(4, 1fr); border-top: 3px solid var(--ink); }
+.stats div { padding: 16px 16px 0 0; }
+.stats b { display: block; font-weight: 900; font-size: clamp(34px, 5vw, 68px); letter-spacing: -.04em; line-height: 1; }
+.stats span { display: block; margin-top: 6px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+
+/* ---------- Profile ---------- */
+.profile { padding: clamp(64px, 9vw, 130px) var(--gutter); display: grid; grid-template-columns: minmax(160px, 1fr) 3fr; gap: 24px 48px; }
+.label { font-weight: 900; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; }
+.label::before { content: ''; display: inline-block; width: 12px; height: 12px; background: var(--yellow); box-shadow: 0 0 0 2px var(--ink); margin-right: 10px; vertical-align: -1px; }
+.profile p:not(.label) { font-weight: 800; font-size: clamp(22px, 2.6vw, 38px); line-height: 1.22; letter-spacing: -.015em; }
+.profile p mark { background: linear-gradient(transparent 60%, var(--yellow) 60%); color: inherit; }
+
+/* ---------- Timeline ---------- */
+.road { background: var(--ink); color: var(--white); padding: clamp(70px, 9vw, 130px) var(--gutter); }
+.road .label::before { box-shadow: none; }
+.big { margin-top: 14px; font-weight: 900; text-transform: uppercase; font-size: clamp(44px, 8vw, 120px); line-height: .86; letter-spacing: -.05em; }
+.line { position: relative; margin-top: clamp(40px, 6vw, 80px); padding-left: 0; --p: 0; }
+.line::before, .line::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; background: rgba(255,255,255,.14); }
+.line::after { background: var(--yellow); transform-origin: top; transform: scaleY(var(--p)); }
+.stop { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0 72px; margin-bottom: clamp(36px, 5vw, 64px); }
+.stop__year { grid-column: 1; justify-self: end; text-align: right; font-weight: 900; font-size: clamp(40px, 6vw, 88px); line-height: .9; letter-spacing: -.05em; color: var(--yellow); }
+.stop__card { grid-column: 2; }
+.stop:nth-child(even) .stop__year { grid-column: 2; grid-row: 1; justify-self: start; text-align: left; }
+.stop:nth-child(even) .stop__card { grid-column: 1; grid-row: 1; text-align: right; }
+.stop:nth-child(even) .chips, .stop:nth-child(even) .awards { justify-content: flex-end; }
+.stop::before { content: ''; position: absolute; left: 50%; top: 18px; width: 22px; height: 22px; margin-left: -11px; background: var(--ink); border: 4px solid var(--yellow); border-radius: 50%; z-index: 1; transform: scale(0); transition: transform .5s var(--ease) .15s; }
+.stop.in::before { transform: none; }
+.stop__tag { font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--yellow); }
+.stop h3 { margin-top: 8px; font-weight: 900; font-size: clamp(24px, 2.6vw, 38px); line-height: 1; letter-spacing: -.03em; text-transform: uppercase; }
+.stop__at { margin-top: 8px; font-weight: 800; font-size: 15px; color: rgba(255,255,255,.7); }
+.stop__body { margin-top: 14px; font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.88); max-width: 52ch; }
+.stop:nth-child(even) .stop__body { margin-left: auto; }
+.chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+.chips li { padding: 6px 10px; font-weight: 800; font-size: 13px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); }
+.awards { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+.awards li { padding: 10px 14px; background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 15px; text-transform: uppercase; letter-spacing: -.01em; }
+.awards span { display: block; font-weight: 700; font-size: 12px; text-transform: none; letter-spacing: 0; margin-top: 2px; }
+
+/* ---------- Credits ---------- */
+.credits { padding: clamp(70px, 9vw, 130px) var(--gutter); }
+.filters { margin-top: clamp(28px, 4vw, 44px); display: grid; gap: 14px; position: sticky; top: 0; z-index: 4; background: var(--paper); padding: 14px 0; margin-left: calc(var(--gutter) * -1); margin-right: calc(var(--gutter) * -1); padding-left: var(--gutter); padding-right: var(--gutter); box-shadow: 0 1px 0 var(--line); }
+.tabs, .rolebar { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .rolebar::-webkit-scrollbar { display: none; }
+.tab, .role { flex: none; border: 0; cursor: pointer; font: inherit; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.tab { padding: 11px 14px; font-size: 14px; background: transparent; box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+.tab sup { font-size: 11px; margin-left: 4px; opacity: .6; }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--yellow); }
+.role { padding: 8px 12px 8px 10px; font-size: 12px; background: transparent; color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
+.role i { width: 14px; height: 14px; box-shadow: inset 0 0 0 2px var(--ink); }
+.role[aria-pressed="true"] i { background: var(--c); box-shadow: inset 0 0 0 2px var(--ink); }
+.rolebar span { flex: none; align-self: center; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-right: 4px; }
+.count { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+.feats { margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.feat { background: var(--white); padding: 26px 24px 24px; border-top: 6px solid var(--yellow); }
+.feat__kicker { font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.feat h3 { margin-top: 10px; font-weight: 900; font-size: 28px; line-height: .98; letter-spacing: -.03em; text-transform: uppercase; }
+.feat__role { margin-top: 10px; display: inline-block; background: var(--ink); color: var(--yellow); font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 5px 8px; }
+.feat__text { margin-top: 14px; font-size: 15px; line-height: 1.5; }
+.feat__meta { margin-top: 14px; font-size: 13px; line-height: 1.5; font-weight: 700; color: var(--muted); }
+
+.list { margin-top: 26px; border-top: 3px solid var(--ink); }
+.row { display: grid; grid-template-columns: minmax(170px, 1.4fr) minmax(150px, 1.2fr) 100px minmax(110px, .9fr) 2.4fr; gap: 6px 18px; align-items: baseline; padding: 14px 10px; border-bottom: 1px solid var(--line); transition: background .2s; }
+.row:hover { background: var(--yellow); }
+.row__title { font-weight: 900; font-size: 18px; letter-spacing: -.01em; }
+.row__role { font-weight: 800; font-size: 14px; }
+.row__len, .row__prod { font-size: 14px; font-weight: 700; color: var(--muted); }
+.row:hover .row__len, .row:hover .row__prod { color: var(--ink); }
+.row__crew { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 13px; color: var(--muted); }
+.row__crew b { font-weight: 900; text-transform: uppercase; font-size: 10px; letter-spacing: .1em; margin-right: 4px; color: var(--ink); }
+.is-hidden { display: none !important; }
+.feats.is-empty { display: none; }
+
+/* ---------- Skills ---------- */
+.skills { padding: 0 var(--gutter) clamp(70px, 9vw, 130px); display: grid; grid-template-columns: minmax(160px, 1fr) 3fr; gap: 24px 48px; }
+.skills dl { margin: 0; display: grid; gap: 22px; }
+.skills dt { font-weight: 900; text-transform: uppercase; font-size: 14px; letter-spacing: .04em; }
+.skills dd { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.skills dd span { padding: 9px 13px; background: var(--white); font-weight: 800; font-size: 15px; box-shadow: inset 0 0 0 2px var(--ink); }
+
+/* ---------- Footer ---------- */
+.foot { background: var(--yellow); padding: clamp(60px, 8vw, 110px) var(--gutter) 34px; }
+.foot__mail { display: inline-block; margin-top: 16px; font-weight: 900; font-size: clamp(30px, 6.4vw, 96px); letter-spacing: -.045em; line-height: .95; text-decoration: none; word-break: break-word; background: linear-gradient(var(--ink), var(--ink)) 0 100% / 0 6px no-repeat; transition: background-size .35s var(--ease); }
+.foot__mail:hover { background-size: 100% 6px; }
+.foot .actions { margin-top: 34px; }
+.foot__small { margin-top: 48px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.foot__small a { text-decoration: none; }
+
+/* ---------- Scroll reveals ---------- */
+.js .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.js .reveal.in { opacity: 1; transform: none; }
+
+/* ---------- Phones ---------- */
+@media (max-width: 760px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats div:nth-child(n+3) { border-top: 1px solid rgba(13,13,13,.25); margin-top: 14px; }
+  .profile, .skills { grid-template-columns: 1fr; }
+  .line::before, .line::after { left: 9px; }
+  .stop, .stop:nth-child(even) { grid-template-columns: 1fr; padding-left: 40px; }
+  .stop__year, .stop:nth-child(even) .stop__year { grid-column: 1; grid-row: 1; justify-self: start; text-align: left; margin-bottom: 10px; }
+  .stop__card, .stop:nth-child(even) .stop__card { grid-column: 1; grid-row: 2; text-align: left; }
+  .stop:nth-child(even) .chips, .stop:nth-child(even) .awards { justify-content: flex-start; }
+  .stop:nth-child(even) .stop__body { margin-left: 0; }
+  .stop::before { left: 11px; top: 8px; }
+  .row { grid-template-columns: 1fr auto; padding: 14px 4px; }
+  .row__title { grid-column: 1; }
+  .row__len { grid-column: 2; grid-row: 1; text-align: right; }
+  .row__role, .row__prod, .row__crew { grid-column: 1 / -1; }
+  .row__prod { margin-top: -2px; }
+  .btn { padding: 13px 16px; font-size: 13px; }
+  .filters { gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .tab { padding: 9px 11px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .name span, .roles li { opacity: 1; transform: none; }
+  .roles li::after { transform: none; }
+  .js .reveal { opacity: 1; transform: none; }
+  .line::after { transform: none; }
+}
+@media print { .filters, .actions, body::after { display: none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="mark" href="/" aria-label="peterjduggan.com home"><b>peter j duggan</b><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></a>
+  <span class="bar__cv">CV</span>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="name">
+    <p class="eyebrow">Curriculum vitae</p>
+    <h1 class="name" id="name"><span>Peter</span><span>Duggan</span></h1>
+    <ul class="roles"><li style="--i:0;--c:var(--c2)">Producer</li><li style="--i:1;--c:var(--c3)">DIT</li><li style="--i:2;--c:var(--c4)">Editor</li><li style="--i:3;--c:var(--c5)">Colourist</li></ul>
+    <p class="hero__where">London, UK · Since 2014</p>
+    <div class="actions">
+      <a class="btn" href="Peter-Duggan-CV.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg><span>Download PDF</span></a>
+      <a class="btn btn--ghost" href="Peter-Duggan-CV.docx" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg><span>Word</span></a>
+      <a class="btn btn--ghost" href="mailto:pduggan89@gmail.com"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><span>Email</span></a>
+      <a class="btn btn--ghost" href="https://www.imdb.com/name/nm15512832/" target="_blank" rel="noopener">IMDb<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></a><a class="btn btn--ghost" href="https://www.linkedin.com/in/peter-duggan-1996b5100/" target="_blank" rel="noopener">LinkedIn<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></a>
+    </div>
+    <div class="stats">
+      <div><b data-count="47">47</b><span>Credits</span></div>
+      <div><b data-count="29">29</b><span>Commercials</span></div>
+      <div><b data-count="2">2</b><span>Animated features</span></div>
+      <div><b>12+</b><span>Years in post</span></div>
+    </div>
+  </section>
+
+  <section class="profile reveal" aria-label="Profile">
+    <p class="label">Profile</p>
+    <p><mark>Award-winning</mark> film producer, editor, DIT, and colourist with extensive experience across animation, commercials, and long-form content. Highly skilled in leading complex post-production pipelines, collaborating with top-tier directors, and delivering high-quality projects on time and on budget. Experienced in <mark>BAFTA- and Emmy-winning studios</mark>, combining a strong creative eye with deep technical expertise in editing, colour grading, digital imaging workflows, and industry-standard post-production software.</p>
+  </section>
+
+  <section class="road" aria-labelledby="roadTitle">
+    <p class="label">Timeline</p>
+    <h2 class="big" id="roadTitle">The road<br>so far.</h2>
+    <ol class="line" id="line">
+      <li class="stop reveal" style="--i:0">
+        <span class="stop__year">2014</span>
+        <div class="stop__card">
+          <p class="stop__tag">2014 – 2021</p>
+          <h3>Producer / Head of Post Production</h3>
+          <p class="stop__at">SALT.TV, London</p>
+          <p class="stop__body">Producer and Senior Editor; producing and running post production for commercials for digital campaigns, and long-form projects, overseeing scheduling, budgeting, staffing, and all production processes.</p>
+          <ul class="chips"><li>Antony Gormley series</li><li>Chili’s</li><li>Orange</li><li>Verizon</li><li>Greenpeace</li><li>Knight Frank</li><li>Value Retail</li><li>Temperley</li><li>Vo5</li><li>Tate Britain</li><li>Pretty Little Things</li></ul>
+        </div>
+      </li>
+      <li class="stop reveal" style="--i:1">
+        <span class="stop__year">2021</span>
+        <div class="stop__card">
+          <p class="stop__tag">2021 – 2024</p>
+          <h3>Post Producer</h3>
+          <p class="stop__at">Lupus Films, London</p>
+          <p class="stop__body">Senior Editor at Lupus Films. Worked on a 25-episode preschool series and Associate Editor on two feature films, a Christmas special, and a short, managing post-production workflows and liaising with external post houses.</p>
+          <ul class="chips"><li>NDA – kids series</li><li>Mog’s Christmas</li><li>Three Hares</li></ul>
+        </div>
+      </li>
+      <li class="stop reveal" style="--i:2">
+        <span class="stop__year">2023</span>
+        <div class="stop__card">
+          <p class="stop__tag">85 minutes + trailer</p>
+          <h3>Kensuke’s Kingdom</h3>
+          <p class="stop__at">Associate Editor · Universal Studios / Lupus Films</p>
+          <p class="stop__body">Award-winning animated feature; Best Feature (British Animation Awards), Grand Prize (New York International Children’s Film Festival); BAFTA &amp; Annie Award nominee. Starring Cillian Murphy and Sally Hawkins.</p>
+          <ul class="awards"><li>Best Feature<span>British Animation Awards</span></li><li>Grand Prize<span>NY International Children’s Film Festival</span></li><li>Nominee<span>BAFTA &amp; Annie Awards</span></li></ul>
+        </div>
+      </li>
+      <li class="stop reveal" style="--i:3">
+        <span class="stop__year">2024</span>
+        <div class="stop__card">
+          <p class="stop__tag">84 minutes + socials</p>
+          <h3>The Night Before Christmas in Wonderland</h3>
+          <p class="stop__at">Associate Editor · Sky / Lupus Films</p>
+          <p class="stop__body">Animated musical feature blending Alice in Wonderland with ’Twas the Night Before Christmas. Released on Prime Video/Hulu (US) and Sky Cinema (UK). Starring Gerard Butler, Emilia Clarke, and Simone Ashley.</p>
+          
+        </div>
+      </li>
+      <li class="stop reveal" style="--i:4">
+        <span class="stop__year">Lately</span>
+        <div class="stop__card">
+          <p class="stop__tag">Theatre · commercials</p>
+          <h3>Dracula, the West End, and big brands</h3>
+          <p class="stop__at">Post Production Producer / Senior VFX Editor</p>
+          <p class="stop__body">Cine-theatre stage production adapted and directed by Kip Williams and produced by Sydney Theatre Company; West End transfer (London), starring Cynthia Erivo. Created and edited pre-recorded and integrated video/VFX elements for live theatrical performance.</p>
+          <ul class="chips"><li>Samsung</li><li>Michelob Ultra</li><li>Bibliotheque NY</li><li>Lynx – Anthony Joshua</li></ul>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="credits" aria-labelledby="creditsTitle">
+    <p class="label">Credits</p>
+    <h2 class="big" id="creditsTitle">Every<br>credit.</h2>
+    <div class="filters">
+      <div class="tabs" role="group" aria-label="Section">
+        <button class="tab" type="button" data-cat="all" aria-pressed="true">Everything<sup>47</sup></button><button class="tab" type="button" data-cat="animation" aria-pressed="false">Animation<sup>5</sup></button><button class="tab" type="button" data-cat="theatre" aria-pressed="false">Theatre<sup>1</sup></button><button class="tab" type="button" data-cat="documentary" aria-pressed="false">Documentary<sup>5</sup></button><button class="tab" type="button" data-cat="commercials" aria-pressed="false">Commercials<sup>29</sup></button><button class="tab" type="button" data-cat="shorts" aria-pressed="false">Shorts &amp; music videos<sup>7</sup></button>
+      </div>
+      <div class="rolebar" role="group" aria-label="Role">
+        <span>Role</span>
+        <button class="role" type="button" data-role="producer" aria-pressed="false" style="--c:var(--c2)"><i></i>Producer</button><button class="role" type="button" data-role="editor" aria-pressed="false" style="--c:var(--c3)"><i></i>Editor</button><button class="role" type="button" data-role="dit" aria-pressed="false" style="--c:var(--c4)"><i></i>DIT</button><button class="role" type="button" data-role="colourist" aria-pressed="false" style="--c:var(--c5)"><i></i>Colourist</button>
+      </div>
+      <p class="count" id="count" aria-live="polite">Showing all 47</p>
+    </div>
+    <div class="feats">
+      <article class="feat reveal" data-cat="animation" data-roles="editor">
+        <p class="feat__kicker">Animation · 2023</p>
+        <h3>Kensuke’s Kingdom</h3>
+        <p class="feat__role">Associate Editor</p>
+        <p class="feat__text">Award-winning animated feature; Best Feature (British Animation Awards), Grand Prize (New York International Children’s Film Festival); BAFTA &amp; Annie Award nominee. Starring Cillian Murphy and Sally Hawkins.</p>
+        <p class="feat__meta">85 minutes + trailer · Universal Studios / Lupus Films<br>Directors: Neil Boyle, Kirk Hendry · Producers: Camilla Deakin, Ruth Fielding</p>
+      </article>
+      <article class="feat reveal" data-cat="animation" data-roles="editor">
+        <p class="feat__kicker">Animation · 2024</p>
+        <h3>The Night Before Christmas in Wonderland</h3>
+        <p class="feat__role">Associate Editor</p>
+        <p class="feat__text">Animated musical feature blending Alice in Wonderland with ’Twas the Night Before Christmas. Released on Prime Video/Hulu (US) and Sky Cinema (UK). Starring Gerard Butler, Emilia Clarke, and Simone Ashley.</p>
+        <p class="feat__meta">84 minutes + socials · Sky / Lupus Films<br>Director: Peter Baynton · Producers: Camilla Deakin, Ruth Fielding</p>
+      </article>
+      <article class="feat reveal" data-cat="theatre" data-roles="producer editor">
+        <p class="feat__kicker">Theatre</p>
+        <h3>Dracula</h3>
+        <p class="feat__role">Post Production Producer / Senior VFX Editor</p>
+        <p class="feat__text">Cine-theatre stage production adapted and directed by Kip Williams and produced by Sydney Theatre Company; West End transfer (London), starring Cynthia Erivo. Created and edited pre-recorded and integrated video/VFX elements for live theatrical performance.</p>
+        <p class="feat__meta">Theatrical production · Sydney Theatre Company · West End</p>
+      </article>
+      <article class="feat reveal" data-cat="documentary" data-roles="producer editor">
+        <p class="feat__kicker">Documentary</p>
+        <h3>Maverick</h3>
+        <p class="feat__role">Shooting Producer / Editor</p>
+        <p class="feat__text">A documentary on singer-songwriter Maverick Sabre following the release of his third album, mixing footage and live performance to tell the London performer’s story in his own words.</p>
+        <p class="feat__meta">Music documentary · Twelve A.M.<br>Director: OJ Deady · Producer: Twelve A.M.</p>
+      </article>
+      <article class="feat reveal" data-cat="documentary" data-roles="producer">
+        <p class="feat__kicker">Documentary</p>
+        <h3>Sobri</h3>
+        <p class="feat__role">Post Producer</p>
+        <p class="feat__text">Fly-on-the-wall documentary exploring rehabilitation in Wales, made for S4C.</p>
+        <p class="feat__meta">Feature-length documentary · ITV / S4C<br>Director: Joe Morgan · Producers: Sant Films</p>
+      </article>
+      <article class="feat reveal" data-cat="documentary" data-roles="editor">
+        <p class="feat__kicker">Documentary</p>
+        <h3>Dinner is Scrapped</h3>
+        <p class="feat__role">Editor</p>
+        <p class="feat__text">Pilot for a cooking show: famous contestants cook off against each other for a Michelin-star chef, using renewable products, innovation and zero waste.</p>
+        <p class="feat__meta">Pilot · Park Village / WaterBear<br>Director: Colin Steele · Producers: Adam Booth, Ollie Allgrove, Jo-Jo Ellison</p>
+      </article>
+    </div>
+    <ul class="list">
+      <li class="row" data-cat="animation" data-roles="editor">
+        <span class="row__title">NDA – kids series</span>
+        <span class="row__role"><span class="pills">Editor</span></span>
+        <span class="row__len">13 × 30 min</span>
+        <span class="row__prod">(NDA) / Lupus Films</span>
+        <span class="row__crew"><span><b>Director</b> Matt Hood</span></span>
+      </li>
+      <li class="row" data-cat="animation" data-roles="editor">
+        <span class="row__title">Mog’s Christmas</span>
+        <span class="row__role"><span class="pills">Associate Editor</span></span>
+        <span class="row__len">1 × 30 min</span>
+        <span class="row__prod">Channel 4 / Lupus Films</span>
+        <span class="row__crew"><span><b>Director</b> Robin Shaw</span></span>
+      </li>
+      <li class="row" data-cat="animation" data-roles="editor">
+        <span class="row__title">Three Hares</span>
+        <span class="row__role"><span class="pills">Associate Editor</span></span>
+        <span class="row__len">1 × 8 min</span>
+        <span class="row__prod">Lupus Films</span>
+        <span class="row__crew"><span><b>Director</b> Paloma Baeza</span></span>
+      </li>
+      <li class="row" data-cat="documentary" data-roles="editor colourist">
+        <span class="row__title">GRID</span>
+        <span class="row__role"><span class="pills">Editor / Colourist</span></span>
+        <span class="row__len">8 × 11 min</span>
+        <span class="row__prod">ITV / S4C</span>
+        <span class="row__crew"><span><b>Camera</b> EOS C400</span><span><b>DOP</b> Joe Morgan</span><span><b>Director</b> Joe Morgan</span></span>
+      </li>
+      <li class="row" data-cat="documentary" data-roles="editor dit colourist">
+        <span class="row__title">Antony Gormley series</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">5 × 5 min</span>
+        <span class="row__prod">The RA / SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Daniel Fagerson</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer">
+        <span class="row__title">Samsung</span>
+        <span class="row__role"><span class="pills">Post Producer</span></span>
+        <span class="row__len">4 × 30 sec</span>
+        <span class="row__prod">Time Based Arts</span>
+        <span class="row__crew"><span><b>Camera</b> Arri LF</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer">
+        <span class="row__title">Michelob Ultra</span>
+        <span class="row__role"><span class="pills">Post Producer</span></span>
+        <span class="row__len">1 × 3 min</span>
+        <span class="row__prod"></span>
+        <span class="row__crew"><span><b>Camera</b> Arri LF</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer">
+        <span class="row__title">Chili’s</span>
+        <span class="row__role"><span class="pills">Producer</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Director</b> Danny Fagerson</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer editor colourist">
+        <span class="row__title">Bibliotheque NY</span>
+        <span class="row__role"><span class="pills">Producer / Editor / Colourist</span></span>
+        <span class="row__len">4 × 30 sec</span>
+        <span class="row__prod">Twelve A.M.</span>
+        <span class="row__crew"><span><b>Camera</b> Arri LF</span><span><b>Director</b> OJ Deady</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="dit">
+        <span class="row__title">Victoria Beckham</span>
+        <span class="row__role"><span class="pills">DIT</span></span>
+        <span class="row__len">1 × 5 min</span>
+        <span class="row__prod">Somesuch</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Mini</span><span><b>DOP</b> Jeremy Valender</span><span><b>Director</b> Isaac Lock</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="dit colourist">
+        <span class="row__title">Simple Skincare</span>
+        <span class="row__role"><span class="pills">DIT / Colourist</span></span>
+        <span class="row__len">2 × 30 sec</span>
+        <span class="row__prod">TMW</span>
+        <span class="row__crew"><span><b>Director</b> Serena Corvaglia</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Raffaello</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">4 × 15 sec</span>
+        <span class="row__prod">TMW</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Amira</span><span><b>Director</b> John Bentham</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Co-op</span>
+        <span class="row__role"><span class="pills">Editor / DIT / Colourist</span></span>
+        <span class="row__len">Many</span>
+        <span class="row__prod">Psona</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7/A7S</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Snazaroo</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 90 sec</span>
+        <span class="row__prod">Publicis</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Military Mutual</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">Psona</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer editor">
+        <span class="row__title">Kinder – Christmas</span>
+        <span class="row__role"><span class="pills">Producer / Editor</span></span>
+        <span class="row__len">2 × 30 sec</span>
+        <span class="row__prod">Pablo</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Vue Cinema – Simon Pegg</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 60 sec</span>
+        <span class="row__prod">Joint London</span>
+        <span class="row__crew"><span><b>Camera</b> Sony Venice</span><span><b>DOP</b> Mark Lee Cobb</span><span><b>Director</b> Jonathan Harris</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer dit">
+        <span class="row__title">GoDaddy – Freddie Flintoff</span>
+        <span class="row__role"><span class="pills">Producer / DIT</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">M&amp;C Saatchi</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Amira</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> Nick Collett</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Lynx – Anthony Joshua</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">3 × 30 sec</span>
+        <span class="row__prod">Crush FFF</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Mini LF</span><span><b>Director</b> James Henry</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer">
+        <span class="row__title">EDF</span>
+        <span class="row__role"><span class="pills">Producer / Post Producer</span></span>
+        <span class="row__len">Many</span>
+        <span class="row__prod"></span>
+        <span class="row__crew"><span><b>DOP</b> Many</span><span><b>Director</b> Many</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Candy Crush</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">WCRS</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> John Bentham</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer editor">
+        <span class="row__title">Fujitsu</span>
+        <span class="row__role"><span class="pills">Producer / Editor</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">Gyro / Fujitsu</span>
+        <span class="row__crew"><span><b>Camera</b> Blackmagic URSA</span><span><b>DOP</b> Andrew Fleming</span><span><b>Director</b> Pedro Suarez</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Gaviscon</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">M&amp;C Saatchi</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Mini</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> Nick Collett</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer dit">
+        <span class="row__title">Bobby Moore – Ray Winstone</span>
+        <span class="row__role"><span class="pills">Producer / DIT</span></span>
+        <span class="row__len">1 × 3 min</span>
+        <span class="row__prod">Psona</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Interflora</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">2 × 30 sec</span>
+        <span class="row__prod">MBA</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> Daniel Fagerson</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer editor dit colourist">
+        <span class="row__title">Osprey London</span>
+        <span class="row__role"><span class="pills">End-to-end</span></span>
+        <span class="row__len">2 × 60 sec</span>
+        <span class="row__prod">Osprey</span>
+        <span class="row__crew"><span><b>Camera</b> Sony FS7</span><span><b>DOP</b> Self</span><span><b>Director</b> Self</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Orange</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">Many</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7/A7S</span><span><b>DOP</b> Many</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor colourist">
+        <span class="row__title">Verizon</span>
+        <span class="row__role"><span class="pills">Editor / Colourist</span></span>
+        <span class="row__len">1 × 50 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Animation</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Greenpeace</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony A7S / GoPro</span><span><b>DOP</b> Mark Lee Cobb</span><span><b>Director</b> Jonathan Harris</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Knight Frank</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">Many</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7/A7S</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit colourist">
+        <span class="row__title">Value Retail</span>
+        <span class="row__role"><span class="pills">DIT / Editor / Colourist</span></span>
+        <span class="row__len">Many</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7/A7S</span><span><b>DOP</b> Beni Kempf-Siemens</span><span><b>Director</b> Rudolf and Ragnar</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer dit colourist">
+        <span class="row__title">Temperley</span>
+        <span class="row__role"><span class="pills">Producer / DIT / Colourist</span></span>
+        <span class="row__len">2 × 30 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Arri</span><span><b>Director</b> Christopher Fenner</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="editor dit">
+        <span class="row__title">Vo5</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Director</b> Cassidy Burcher</span></span>
+      </li>
+      <li class="row" data-cat="commercials" data-roles="producer dit">
+        <span class="row__title">Tate Britain</span>
+        <span class="row__role"><span class="pills">Producer / DIT</span></span>
+        <span class="row__len">1 × 30 sec</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Sony F5/FS7/A7S</span><span><b>DOP</b> Shaun Harley-Lee</span><span><b>Director</b> James Henry</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="dit colourist">
+        <span class="row__title">A Cross to Bear</span>
+        <span class="row__role"><span class="pills">DIT / Colourist</span></span>
+        <span class="row__len">1 × 9 min</span>
+        <span class="row__prod">Sant Films</span>
+        <span class="row__crew"><span><b>Camera</b> EOS C400</span><span><b>DOP</b> Joe Morgan</span><span><b>Director</b> Joe Morgan</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="producer editor">
+        <span class="row__title">Pretty Little Things</span>
+        <span class="row__role"><span class="pills">Producer / Editor</span></span>
+        <span class="row__len">1 × 17 min</span>
+        <span class="row__prod">SALT.TV</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Mini LF</span><span><b>DOP</b> Andrew Fleming</span><span><b>Director</b> Pedro Suarez</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="editor dit">
+        <span class="row__title">Hamsbury Book Club</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 14 min</span>
+        <span class="row__prod">Blink Productions</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Amira</span><span><b>DOP</b> Benedict Spence</span><span><b>Director</b> Nick Collett</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="editor dit">
+        <span class="row__title">Into Hope</span>
+        <span class="row__role"><span class="pills">DIT / Editor</span></span>
+        <span class="row__len">1 × 5 min</span>
+        <span class="row__prod">Maverick Sabre</span>
+        <span class="row__crew"><span><b>Camera</b> Blackmagic URSA</span><span><b>DOP</b> Mark Warmington</span><span><b>Director</b> OJ Deady</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="producer editor">
+        <span class="row__title">Fatboy Slim</span>
+        <span class="row__role"><span class="pills">Producer / Editor</span></span>
+        <span class="row__len">1 × 5 min</span>
+        <span class="row__prod">The Snuts</span>
+        <span class="row__crew"><span><b>Camera</b> Sony FX6</span><span><b>Director</b> Cassidy Burcher</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="producer editor">
+        <span class="row__title">Dance in the Sunshine</span>
+        <span class="row__role"><span class="pills">Producer / Editor</span></span>
+        <span class="row__len">1 × 5 min</span>
+        <span class="row__prod">Holly Cooke</span>
+        <span class="row__crew"><span><b>Camera</b> Arri Mini LF</span><span><b>DOP</b> Mark Warmington</span><span><b>Director</b> OJ Deady</span></span>
+      </li>
+      <li class="row" data-cat="shorts" data-roles="dit">
+        <span class="row__title">Nightmares</span>
+        <span class="row__role"><span class="pills">DIT</span></span>
+        <span class="row__len">1 × 5 min</span>
+        <span class="row__prod">Easy Life</span>
+        <span class="row__crew"><span><b>Camera</b> Arri</span><span><b>DOP</b> Adam J. Merry</span><span><b>Director</b> Greg Barth</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="skills reveal" aria-label="Technical skills">
+    <p class="label">Technical skills</p>
+    <dl><div><dt>Software</dt><dd><span>Avid Media Composer</span><span>Premiere Pro</span><span>Storyboard Pro</span><span>DaVinci Resolve</span><span>Silverstack</span><span>Yoyotta</span><span>ShotPut</span></dd></div><div><dt>Motion graphics &amp; design</dt><dd><span>After Effects</span><span>Photoshop</span></dd></div><div><dt>Other tools</dt><dd><span>Google Suite</span><span>Slack</span><span>ShotGrid</span><span>Parsec</span><span>ChatGPT</span><span>Claude</span><span>Gemini</span></dd></div><div><dt>Pipelines</dt><dd><span>Various production-to-post pipelines</span></dd></div></dl>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="label">Get in touch</p>
+  <a class="foot__mail" href="mailto:pduggan89@gmail.com">pduggan89@gmail.com</a>
+  <div class="actions">
+    <a class="btn" href="Peter-Duggan-CV.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg><span>Download PDF</span></a>
+    <a class="btn btn--ghost" href="Peter-Duggan-CV.docx" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg><span>Word</span></a>
+  </div>
+  <div class="foot__small"><a href="/">peterjduggan.com <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></a><span>Peter Duggan · London, UK</span></div>
+</footer>
+
+<script>
+(function () {
+  document.documentElement.className += ' js';
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Things fade up as they come into view.
+  var items = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !still) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -12% 0px' });
+    items.forEach(function (el) { io.observe(el); });
+  } else items.forEach(function (el) { el.classList.add('in'); });
+
+  // The yellow line draws down the timeline as you scroll through it.
+  var line = document.getElementById('line');
+  var tick = false;
+  function draw() {
+    tick = false;
+    var r = line.getBoundingClientRect(), mid = innerHeight * 0.6;
+    var p = Math.max(0, Math.min(1, (mid - r.top) / r.height));
+    line.style.setProperty('--p', p.toFixed(3));
+  }
+  addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(draw); } }, { passive: true });
+  addEventListener('resize', draw); draw();
+
+  // Numbers count up the first time the hero is seen.
+  if (!still) document.querySelectorAll('[data-count]').forEach(function (b) {
+    var end = +b.dataset.count, t0 = null;
+    b.textContent = '0';
+    function step(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 1100); b.textContent = Math.round(end * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); }
+    setTimeout(function () { requestAnimationFrame(step); }, 500);
+  });
+
+  // Filters: one section at a time (or everything), and any mix of roles.
+  var cat = 'all', roles = [];
+  var things = document.querySelectorAll('.feat, .row');
+  var count = document.getElementById('count');
+  function apply() {
+    var shown = 0;
+    things.forEach(function (el) {
+      var ok = (cat === 'all' || el.dataset.cat === cat) &&
+        (!roles.length || roles.some(function (r) { return (' ' + el.dataset.roles + ' ').indexOf(' ' + r + ' ') > -1; }));
+      el.classList.toggle('is-hidden', !ok);
+      if (ok) { shown++; el.classList.add('in'); }
+    });
+    var feats = document.querySelector('.feats');
+    feats.classList.toggle('is-empty', !feats.querySelector('.feat:not(.is-hidden)'));
+    count.textContent = shown === things.length ? 'Showing all ' + shown : 'Showing ' + shown + ' of ' + things.length;
+  }
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.addEventListener('click', function () {
+      cat = b.dataset.cat;
+      document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      apply();
+    });
+  });
+  document.querySelectorAll('.role').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      roles = Array.prototype.filter.call(document.querySelectorAll('.role'), function (x) { return x.getAttribute('aria-pressed') === 'true'; })
+        .map(function (x) { return x.dataset.role; });
+      apply();
+    });
+  });
+})();
+</script>
+</body>
+</html>
