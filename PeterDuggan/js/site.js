@@ -141,9 +141,11 @@
   // Pac-Man and eats "the good bit." from right to left, while a ghost waits to
   // the left with its eyes darting. It follows the scroll both ways, so scrolling
   // back up brings the words back. His mouth only chomps while you scroll.
-  // On phones your eyes are already below the line by the time half a screen
-  // has gone by, so there the first nudge down sets off the whole run on its
-  // own (about a second), and going back to the top runs it in reverse.
+  // On phones a flick carries the line up under the header faster than he can
+  // eat, so there he sets off the moment a finger touches the screen (before the
+  // page has moved) and runs on his own in under a second. If nobody touches
+  // anything he goes anyway after a few seconds. Scrolling back to the top runs
+  // it in reverse, and the next touch plays it again.
   var pacLine = $('.hero__line--2');
   if (pacLine && !still) {
     var mk = function (cls, svg) {
@@ -225,24 +227,33 @@
       }
     };
 
-    // Phones: a timed run towards the end (scrolled) or the start (back at the top).
-    var runP = 0, runAt = 0, runOn = false;
+    // Phones: a timed run towards the end (want = 1) or back to the start (want = 0).
+    var runP = 0, runAt = 0, runOn = false, want = 0, wentDown = false;
     var run = function (now) {
-      var target = window.scrollY > 2 ? 1 : 0;
-      var step = Math.min(0.1, (now - runAt) / 1000) / 1.1;
+      var step = Math.min(0.1, (now - runAt) / 1000) / 0.8;
       runAt = now;
-      runP = target > runP ? Math.min(target, runP + step) : Math.max(target, runP - step);
+      runP = want > runP ? Math.min(want, runP + step) : Math.max(want, runP - step);
       draw(runP);
-      if (runP !== target) requestAnimationFrame(run);
+      if (runP !== want) requestAnimationFrame(run);
       else runOn = false;
     };
+    var kick = function () {
+      if (runOn) return;
+      runOn = true;
+      runAt = performance.now();
+      requestAnimationFrame(run);
+    };
+    var go = function () { if (phone() && !want) { want = 1; kick(); } };
+    window.addEventListener('touchstart', go, { passive: true });
+    setTimeout(go, 3000);
 
     var update = function () {
       if (phone()) {
-        if (runOn) return;
-        runOn = true;
-        runAt = performance.now();
-        requestAnimationFrame(run);
+        var y = window.scrollY;
+        if (y > 2) want = 1;
+        if (y > 40) wentDown = true;
+        else if (y <= 2 && wentDown) { want = 0; wentDown = false; }
+        kick();
         return;
       }
       // PC: the whole chase runs over about half a screen of scrolling.
