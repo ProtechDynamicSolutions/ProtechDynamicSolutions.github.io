@@ -141,6 +141,9 @@
   // Pac-Man and eats "the good bit." from right to left, while a ghost waits to
   // the left with its eyes darting. It follows the scroll both ways, so scrolling
   // back up brings the words back. His mouth only chomps while you scroll.
+  // On phones your eyes are already below the line by the time half a screen
+  // has gone by, so there the first nudge down sets off the whole run on its
+  // own (about two seconds), and going back to the top runs it in reverse.
   var pacLine = $('.hero__line--2');
   if (pacLine && !still) {
     var mk = function (cls, svg) {
@@ -183,11 +186,9 @@
 
     var idle = null, lastP = -1;
     var clamp = function (v) { return Math.max(0, Math.min(1, v)); };
-    var update = function () {
+    var phone = function () { return window.innerWidth < 900; };
+    var draw = function (p) {
       if (!m) measure();
-      // The whole chase runs over about half a screen of scrolling.
-      var range = Math.max(260, window.innerHeight * 0.5);
-      var p = clamp((window.scrollY - 10) / range);
       if (p === lastP) return;
       var moving = lastP >= 0;
       lastP = p;
@@ -222,6 +223,32 @@
         clearTimeout(idle);
         idle = setTimeout(function () { pacSvg.pauseAnimations(); }, 160);
       }
+    };
+
+    // Phones: a timed run towards the end (scrolled) or the start (back at the top).
+    var runP = 0, runAt = 0, runOn = false;
+    var run = function (now) {
+      var target = window.scrollY > 10 ? 1 : 0;
+      var step = Math.min(0.1, (now - runAt) / 1000) / 2.2;
+      runAt = now;
+      runP = target > runP ? Math.min(target, runP + step) : Math.max(target, runP - step);
+      draw(runP);
+      if (runP !== target) requestAnimationFrame(run);
+      else runOn = false;
+    };
+
+    var update = function () {
+      if (phone()) {
+        if (runOn) return;
+        runOn = true;
+        runAt = performance.now();
+        requestAnimationFrame(run);
+        return;
+      }
+      // PC: the whole chase runs over about half a screen of scrolling.
+      var range = Math.max(260, window.innerHeight * 0.5);
+      runP = clamp((window.scrollY - 10) / range);
+      draw(runP);
     };
     var ticking = false;
     window.addEventListener('scroll', function () {
