@@ -137,6 +137,15 @@ svg { width: 1em; height: 1em; flex: none; }
 .skills dd { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .skills dd span { padding: 9px 13px; background: var(--white); font-weight: 800; font-size: 15px; box-shadow: inset 0 0 0 2px var(--ink); }
 
+/* ---------- References ---------- */
+.refs { padding: 0 var(--gutter) clamp(70px, 9vw, 130px); display: grid; grid-template-columns: minmax(160px, 1fr) 3fr; gap: 24px 48px; }
+.refs ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; }
+.refs li { background: var(--white); padding: 22px 22px 20px; border-top: 6px solid var(--yellow); }
+.refs h3 { font-weight: 900; font-size: 22px; line-height: 1.05; letter-spacing: -.02em; }
+.refs li p { margin-top: 8px; font-weight: 700; font-size: 14px; color: var(--muted); }
+.refs__note { grid-column: 2; font-weight: 800; font-size: 15px; }
+.refs__note a { text-decoration: none; background: linear-gradient(transparent 62%, var(--yellow) 62%); }
+
 /* ---------- Footer ---------- */
 .foot { background: var(--yellow); padding: clamp(60px, 8vw, 110px) var(--gutter) 34px; }
 .foot__mail { display: inline-block; margin-top: 16px; font-weight: 900; font-size: clamp(30px, 6.4vw, 96px); letter-spacing: -.045em; line-height: .95; text-decoration: none; word-break: break-word; background: linear-gradient(var(--ink), var(--ink)) 0 100% / 0 6px no-repeat; transition: background-size .35s var(--ease); }
@@ -153,7 +162,8 @@ svg { width: 1em; height: 1em; flex: none; }
 @media (max-width: 760px) {
   .stats { grid-template-columns: 1fr 1fr; }
   .stats div:nth-child(n+3) { border-top: 1px solid rgba(13,13,13,.25); margin-top: 14px; }
-  .profile, .skills { grid-template-columns: 1fr; }
+  .profile, .skills, .refs { grid-template-columns: 1fr; }
+  .refs__note { grid-column: 1; }
   .line::before, .line::after { left: 9px; }
   .stop, .stop:nth-child(even) { grid-template-columns: 1fr; padding-left: 40px; }
   .stop__year, .stop:nth-child(even) .stop__year { grid-column: 1; grid-row: 1; justify-self: start; text-align: left; margin-bottom: 10px; }
@@ -618,7 +628,12 @@ svg { width: 1em; height: 1em; flex: none; }
 
   <section class="skills reveal" aria-label="Technical skills">
     <p class="label">Technical skills</p>
-    <dl><div><dt>Software</dt><dd><span>Avid Media Composer</span><span>Premiere Pro</span><span>Storyboard Pro</span><span>DaVinci Resolve</span><span>Silverstack</span><span>Yoyotta</span><span>ShotPut</span></dd></div><div><dt>Motion graphics &amp; design</dt><dd><span>After Effects</span><span>Photoshop</span></dd></div><div><dt>Other tools</dt><dd><span>Google Suite</span><span>Slack</span><span>ShotGrid</span><span>Parsec</span><span>ChatGPT</span><span>Claude</span><span>Gemini</span></dd></div><div><dt>Pipelines</dt><dd><span>Various production-to-post pipelines</span></dd></div></dl>
+    <dl><div><dt>Software</dt><dd><span>Avid Media Composer</span><span>Premiere Pro</span><span>Storyboard Pro</span><span>DaVinci Resolve</span><span>Silverstack</span><span>Yoyotta</span><span>ShotPut</span><span>Google Suite</span></dd></div><div><dt>Motion graphics &amp; design</dt><dd><span>After Effects</span><span>Photoshop</span></dd></div><div><dt>Other tools</dt><dd><span>Slack</span><span>ShotGrid</span><span>Parsec</span><span>ChatGPT</span><span>Claude</span><span>Gemini</span></dd></div></dl>
+  </section>
+  <section class="refs reveal" aria-label="References">
+    <p class="label">References</p>
+    <ul><li><h3>Adam Jackson-Nocher</h3><p>Head of Production, Lupus Films</p></li><li><h3>Aziza Bhatia &amp; Danny Fagerson</h3><p>Managing Directors, SALT.TV</p></li><li><h3>OJ Deady</h3><p>Managing Director, Twelve A.M.</p></li></ul>
+    <p class="refs__note">Contact details on request. <a href="mailto:pduggan89@gmail.com?subject=References">Ask Peter</a></p>
   </section>
 </main>
 
