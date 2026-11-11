@@ -218,10 +218,10 @@ window.SITE = {
   aboutLine: ['One man’s struggle to take it easy.', 'Ferris Bueller’s Day Off'],
 
   // One line under the laurels. The name is set in bold.
-  intro: 'Peter J Duggan is an editor, colourist and DIT for commercials, trailers, spots and films, working with brands, agencies and broadcasters.',
+  intro: 'Peter J Duggan is a producer and editor for commercials, trailers, spots and films, working with brands, agencies and broadcasters.',
 
   about: [
-    'Peter J Duggan is an editor, colourist and DIT. He cuts and grades commercials, trailers, spots and films for brands, agencies and broadcasters, and on set he looks after the camera data and the look.',
-    'Recent work includes Michelob ULTRA, Samsung Galaxy Z Fold8, Lynx with Anthony Joshua and Calfreezy, and Enterprise x UEFA.'
+    'Peter J Duggan is an editor and producer. He produces and cuts commercials, trailers, spots, and films for brands, agencies, and broadcasters, overseeing projects from production through to final delivery.',
+    'Recent work includes Michelob Ultra, Samsung Galaxy Z Fold8, Lynx with Anthony Joshua and Calfreezy, and Enterprise x UEFA.'
   ]
 };
