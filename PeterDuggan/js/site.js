@@ -143,7 +143,7 @@
   // back up brings the words back. His mouth only chomps while you scroll.
   // On phones your eyes are already below the line by the time half a screen
   // has gone by, so there the first nudge down sets off the whole run on its
-  // own (about two seconds), and going back to the top runs it in reverse.
+  // own (about a second), and going back to the top runs it in reverse.
   var pacLine = $('.hero__line--2');
   if (pacLine && !still) {
     var mk = function (cls, svg) {
@@ -228,8 +228,8 @@
     // Phones: a timed run towards the end (scrolled) or the start (back at the top).
     var runP = 0, runAt = 0, runOn = false;
     var run = function (now) {
-      var target = window.scrollY > 10 ? 1 : 0;
-      var step = Math.min(0.1, (now - runAt) / 1000) / 2.2;
+      var target = window.scrollY > 2 ? 1 : 0;
+      var step = Math.min(0.1, (now - runAt) / 1000) / 1.1;
       runAt = now;
       runP = target > runP ? Math.min(target, runP + step) : Math.max(target, runP - step);
       draw(runP);
