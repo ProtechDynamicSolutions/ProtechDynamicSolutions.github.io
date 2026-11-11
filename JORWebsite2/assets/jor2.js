@@ -47,7 +47,7 @@
   if ('IntersectionObserver' in window && !reduce) {
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    }, { rootMargin: '0px 0px 12% 0px', threshold: 0 });
     rvs.forEach(function (el) { if (el.getBoundingClientRect().top < innerHeight * 0.95) el.classList.add('in'); else io.observe(el); });
   } else rvs.forEach(function (el) { el.classList.add('in'); });
 
@@ -68,7 +68,8 @@
       drift(frs[k]); i = k; load((k + 1) % frs.length);
       if (cap) { cap.style.opacity = 0; setTimeout(function () { cap.innerHTML = frs[k].getAttribute('data-cap') || ''; cap.style.opacity = cap.innerHTML ? 1 : 0; }, 350); }
     }
-    function tick() { clearTimeout(timer); if (playing && seen) timer = setTimeout(function () { show((i + 1) % frs.length); tick(); }, 6500); }
+    function ready(k) { var im = $('img', frs[k]); return im && !im.getAttribute('data-src') && im.complete && im.naturalWidth > 0; }
+    function tick() { clearTimeout(timer); if (playing && seen) timer = setTimeout(function () { var k = (i + 1) % frs.length; load(k); if (ready(k)) { show(k); load((k + 1) % frs.length); } tick(); }, 6500); }
     show(0); load(1); tick();
     whenSeen(film.parentElement, function () { seen = true; tick(); }, function () { seen = false; clearTimeout(timer); });
     if (pp) pp.addEventListener('click', function () {
@@ -323,19 +324,9 @@
     whenSeen(card, function () { if (!seen) { seen = true; clearTimeout(t); t = setTimeout(next, 1500); } }, function () { seen = false; clearTimeout(t); });
   });
 
-  /* counting up to the years in service */
-  $$('[data-count]').forEach(function (el) {
-    if (reduce) return;
-    var to = +el.getAttribute('data-count'), done = false;
-    whenSeen(el, function () {
-      if (done) return; done = true;
-      var t0 = performance.now(), ms = 1600;
-      var step = function (now) { var u = Math.min(1, (now - t0) / ms); el.textContent = Math.round(to * (1 - Math.pow(1 - u, 3))); if (u < 1) requestAnimationFrame(step); };
-      requestAnimationFrame(step);
-    });
-  });
   onScroll();
 })();
+;
 
 /* ════════════ the slick layer (after jor2.js) ════════════ */
 (function () {
@@ -364,17 +355,11 @@
   }
   if (!reduce) {
     $$('.hero .rt h1, .hero .rt h2').forEach(function (h, k) {
-      split(h); h.style.setProperty('--d', (k * 160 + 650) + 'ms');
+      split(h); h.style.setProperty('--d', (k * 120 + 150) + 'ms');
       setTimeout(function () { h.classList.add('words-in'); }, 40);
     });
-    var hs = $$('.lead-in h2, .grid.feature .rt h2, .cta .rt h2, .route .rt h2, .sec.head .rt h2, .sec.head .rt h1');
-    hs.forEach(split);
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('words-in'); io.unobserve(e.target); } }); }, { threshold: 0.2 });
-      hs.forEach(function (h) { io.observe(h); });
-    } else hs.forEach(function (h) { h.classList.add('words-in'); });
   }
-  /* scrolling: the hero's words drift up and fade, the film eases closer, pictures beside words drift slower, the line fills */
+  /* the thin line along the top fills as the page is read */
   var hero = d.querySelector('.hero'), hw = hero && hero.querySelector('.wrap'), film = hero && hero.querySelector('.film');
   var feats = $$('.grid.feature .pic:not(.graphic) img');
   var bar = d.querySelector('.readbar');
@@ -383,24 +368,9 @@
     ticking = false;
     var y = scrollY, vh = innerHeight;
     if (bar) { var h = d.documentElement.scrollHeight - vh; bar.style.setProperty('--p', h > 0 ? (y / h).toFixed(4) : 0); }
-    if (reduce) return;
-    if (hero && y < vh * 1.3) {
-      var u = Math.min(1, y / (vh * 0.9));
-      if (hw) { hw.style.transform = 'translate3d(0,' + (y * 0.35).toFixed(1) + 'px,0)'; hw.style.opacity = Math.max(0, 1 - u * 1.15).toFixed(3); }
-      if (film) film.style.transform = 'scale(' + (1 + u * 0.08).toFixed(4) + ')';
-    }
-    feats.forEach(function (im) {
-      var r = im.parentElement.getBoundingClientRect();
-      if (r.bottom < -100 || r.top > vh + 100) return;
-      var p = (r.top + r.height / 2 - vh / 2) / vh;
-      im.style.translate = '0 ' + (p * -6).toFixed(2) + '%';
-      im.style.scale = '1.12';
-    });
   }
   addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
   addEventListener('resize', frame);
   frame();
-  /* the curtain: gone once it has lifted, so it never sits over anything */
-  var c = d.querySelector('.curtain');
-  if (c) { c.addEventListener('animationend', function () { c.remove(); }); setTimeout(function () { if (c.parentNode) c.remove(); }, 2500); }
 })();
+;
