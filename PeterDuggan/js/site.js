@@ -145,7 +145,8 @@
   // eat, so there he sets off the moment a finger touches the screen (before the
   // page has moved) and runs on his own in under a second. If nobody touches
   // anything he goes anyway after a few seconds. Scrolling back to the top runs
-  // it in reverse, and the next touch plays it again.
+  // it in reverse and the words stay put; he only goes again when a finger
+  // pushes the page down (a touch that pulls it back up never sets him off).
   var pacLine = $('.hero__line--2');
   if (pacLine && !still) {
     var mk = function (cls, svg) {
@@ -243,14 +244,24 @@
       runAt = performance.now();
       requestAnimationFrame(run);
     };
-    var go = function () { if (phone() && !want) { want = 1; kick(); } };
-    window.addEventListener('touchstart', go, { passive: true });
-    setTimeout(go, 3000);
+    var played = false, fingerY = null;
+    var go = function () { if (phone() && !want) { want = 1; played = true; kick(); } };
+    // First visit: any touch, or a few seconds of nothing.
+    window.addEventListener('touchstart', function (e) {
+      fingerY = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+      if (!played) go();
+    }, { passive: true });
+    // After that: only a finger moving up the screen, which scrolls the page down.
+    window.addEventListener('touchmove', function (e) {
+      if (fingerY === null || !e.touches || !e.touches[0]) return;
+      if (fingerY - e.touches[0].clientY > 6) go();
+    }, { passive: true });
+    setTimeout(function () { if (!played) go(); }, 3000);
 
     var update = function () {
       if (phone()) {
         var y = window.scrollY;
-        if (y > 2) want = 1;
+        if (y > 2) { want = 1; played = true; }
         if (y > 40) wentDown = true;
         else if (y <= 2 && wentDown) { want = 0; wentDown = false; }
         kick();
