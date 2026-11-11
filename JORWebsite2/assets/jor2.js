@@ -373,4 +373,19 @@
   addEventListener('resize', frame);
   frame();
 })();
+/* photos open out once a fifth of them is on screen, so the movement is seen, and happens once */
+(function () {
+  'use strict';
+  var ps = Array.prototype.slice.call(document.querySelectorAll('.pic:not(.graphic):not(.logo-pic), .box .ph, article.day .ph'));
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) { ps.forEach(function (p) { p.classList.add('open'); }); return; }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('open'); io.unobserve(e.target); } });
+  }, { threshold: 0.2 });
+  ps.forEach(function (p) {
+    // anything already on screen when the page opens is shown at once, so the first view never looks unfinished
+    var r = p.getBoundingClientRect();
+    if (r.top < innerHeight * 0.85 && r.bottom > 0) p.classList.add('open'); else io.observe(p);
+  });
+})();
 ;

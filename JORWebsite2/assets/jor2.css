@@ -541,3 +541,12 @@ body{font-size:17px}
 /* pictures: a short fade and a slight settle, nothing that crops or slides them */
 .js .rv .pic img,.js .pic.rv img{transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
 .js .pic.rv:not(.in) img{transform:scale(1.04)}
+
+/* ── photos open out to full size as they come into view (on their own: no parallax or slide alongside) ── */
+.js .pic:not(.graphic):not(.logo-pic),.js .box .ph,.js article.day .ph{clip-path:inset(9% 7% 9% 7% round 26px);transition:clip-path 1s cubic-bezier(.22,.8,.24,1)}
+.js .pic:not(.graphic):not(.logo-pic) img,.js .box .ph img,.js article.day .ph img{transform:scale(1.12);transition:transform 1.3s cubic-bezier(.22,.8,.24,1)}
+.js .pic.open,.js .box .ph.open,.js article.day .ph.open{clip-path:inset(0 0 0 0 round 0)}
+.js .pic.open img,.js .box .ph.open img,.js article.day .ph.open img{transform:scale(1)}
+.js .box .ph.open{border-radius:0}
+.box:hover .ph.open img{transform:scale(1.05)}
+@media (prefers-reduced-motion:reduce){.js .pic,.js .box .ph,.js article.day .ph{clip-path:none!important}.js .pic img,.js .box .ph img,.js article.day .ph img{transform:none!important}}
