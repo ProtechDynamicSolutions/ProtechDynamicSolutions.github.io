@@ -1,0 +1,43 @@
+{
+ "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+ "landingPage": "/",
+ "preferredVersions": {
+  "php": "8.3",
+  "wp": "latest"
+ },
+ "features": {
+  "networking": true
+ },
+ "meta": {
+  "title": "JOR Ireland 2 (brochure look)",
+  "author": "Protech Dynamic Solutions",
+  "description": "JOR Ireland on WordPress"
+ },
+ "steps": [
+  {
+   "step": "login",
+   "username": "admin"
+  },
+  {
+   "step": "installTheme",
+   "themeData": {
+    "resource": "url",
+    "url": "https://protechdynamicsolutions.github.io/JORWordPress/2wp/jor-2.zip"
+   },
+   "options": {
+    "activate": true
+   }
+  },
+  {
+   "step": "importWxr",
+   "file": {
+    "resource": "url",
+    "url": "https://protechdynamicsolutions.github.io/JORWordPress/2wp/content.xml"
+   }
+  },
+  {
+   "step": "runPHP",
+   "code": "<?php require '/wordpress/wp-load.php'; update_option('permalink_structure','/%postname%/'); $h=get_posts(array('post_type'=>'page','name'=>'home','post_parent'=>0,'numberposts'=>1)); if($h){update_option('show_on_front','page');update_option('page_on_front',$h[0]->ID);} update_option('blogname',\"Joe O'Reilly Ireland DMC\"); foreach(array('hello-world','sample-page') as $s){$p=get_page_by_path($s,OBJECT,array('post','page')); if($p) wp_delete_post($p->ID,true);} flush_rewrite_rules(); echo 'ok';"
+  }
+ ]
+}
