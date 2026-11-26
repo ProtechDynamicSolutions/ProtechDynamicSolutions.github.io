@@ -1,6 +1,6 @@
 /* nude. service worker. Pages are network first, so a new version always reaches people
    who already installed the app; icons are cache first. */
-const C = 'nude-202611262314';
+const C = 'nude-202611262345';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(['./', './app/', './dashboard/']).catch(() => {}))); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
