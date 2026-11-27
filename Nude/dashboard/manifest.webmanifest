@@ -1,27 +1,27 @@
 {
-  "id": "./app/",
-  "name": "nude. Nail Spa",
-  "short_name": "nude.",
-  "description": "Book, check in and pick your look at nude. Nail Spa.",
-  "start_url": "./app/",
+  "id": "./",
+  "name": "nude. desk",
+  "short_name": "nude. desk",
+  "description": "Diary, floor, check-ins and reports for nude.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f7f1ea",
-  "theme_color": "#f7f1ea",
+  "orientation": "any",
+  "background_color": "#4a3530",
+  "theme_color": "#4a3530",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "../desk-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "../desk-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "icon-mask-512.png",
+      "src": "../desk-mask-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
