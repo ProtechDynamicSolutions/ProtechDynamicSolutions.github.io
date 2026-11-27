@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nóirín Deady Coaching &amp; Support</title>
+<meta name="description" content="Life coaching and support, in person or online. Support that meets you where you are.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FAF7F0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+ --moss:#3D4A35;--moss-d:#2E3828;--sage:#7D8F6E;--sage-l:#A3AF91;--lichen:#C9D1B8;--lichen-l:#E4E8D8;
+ --oat:#EFE7D6;--oat-d:#E6DCC6;--paper:#FAF7F0;--card:#FFFDF8;--clay:#C1704E;--clay-d:#A65838;--ink:#2B3326;--muted:#5D6755;
+ --serif:'Fraunces',Georgia,'Times New Roman',serif;--sans:'Work Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+ --ease:cubic-bezier(.2,.7,.2,1);--r:14px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px;overflow-x:clip}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:500;color:var(--moss);margin:0;letter-spacing:-.015em;text-wrap:balance;font-variation-settings:"opsz" 144}
+h3{font-variation-settings:"opsz" 48}
+p{margin:0;text-wrap:pretty}
+.wrap{width:min(1200px,100% - 48px);margin-inline:auto}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 26px;border-radius:8px;background:var(--clay-d);color:var(--paper);font:600 15px/1 var(--sans);letter-spacing:.01em;text-decoration:none;border:0;cursor:pointer;transition:transform .35s var(--ease),background .3s,box-shadow .35s var(--ease);box-shadow:0 10px 22px -12px rgba(166,88,56,.7)}
+.btn:hover{background:#934C2F;transform:translateY(-2px);box-shadow:0 16px 30px -14px rgba(166,88,56,.75)}
+.btn .ic{width:18px;height:18px;transition:transform .35s var(--ease)}
+.btn:hover .ic{transform:translateX(3px)}
+.btn.ghost{background:transparent;color:var(--moss);box-shadow:inset 0 0 0 1.5px rgba(61,74,53,.3)}
+.btn.ghost:hover{background:rgba(61,74,53,.06);box-shadow:inset 0 0 0 1.5px rgba(61,74,53,.55)}
+.btn.oat{background:var(--oat);color:var(--moss);box-shadow:none}
+.btn.oat:hover{background:#fff}
+
+/* header */
+.hdr{position:fixed;inset:0 0 auto;z-index:50;transition:background .4s,box-shadow .4s}
+.hdr .wrap{display:flex;align-items:center;gap:30px;height:84px;transition:height .4s var(--ease)}
+.hdr.scrolled{background:rgba(250,247,240,.84);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:0 1px 0 rgba(43,51,38,.08)}
+.hdr.scrolled .wrap{height:68px}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--moss)}
+.logo svg{width:44px;height:44px;margin-top:-6px}
+.logo b{display:block;font:500 26px/1 var(--serif);letter-spacing:-.015em;font-variation-settings:"opsz" 72}
+.logo small{display:block;font:italic 400 15px/1 var(--serif);color:var(--clay);margin-top:4px;padding-left:1px}
+.nav{display:flex;gap:30px;margin-left:auto}
+.nav a{position:relative;text-decoration:none;font:500 15px/1 var(--sans);color:var(--ink);padding:8px 0}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:1px;height:1.5px;background:var(--clay);transform:scaleX(0);transform-origin:right;transition:transform .4s var(--ease)}
+.nav a:hover::after{transform:scaleX(1);transform-origin:left}
+.hdr .btn{padding:13px 20px;font-size:14px}
+.burger{display:none;margin-left:auto;width:44px;height:44px;border:0;border-radius:10px;background:rgba(61,74,53,.08);color:var(--moss);cursor:pointer;place-items:center}
+.burger span,.burger span::before,.burger span::after{display:block;width:20px;height:1.8px;background:currentColor;border-radius:2px;position:relative;transition:transform .35s var(--ease),opacity .2s}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0}
+.burger span::before{top:-6px}.burger span::after{top:6px}
+.hdr.open .burger span{background:transparent}
+.hdr.open .burger span::before{transform:translateY(6px) rotate(45deg)}
+.hdr.open .burger span::after{transform:translateY(-6px) rotate(-45deg)}
+.mnav{display:none}
+
+/* hero */
+.hero{position:relative;padding:132px 0 70px;background:linear-gradient(180deg,var(--paper) 0%,var(--oat) 100%)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center}
+.kicker{display:inline-flex;align-items:center;gap:10px;font:500 14.5px/1 var(--sans);color:var(--sage);margin-bottom:26px;letter-spacing:.01em}
+.kicker svg{width:22px;height:22px}
+.hero h1{font-size:clamp(48px,6.4vw,92px);line-height:1;font-weight:400;letter-spacing:-.025em}
+.hero h1 em{font-style:italic;color:var(--clay);font-weight:400}
+.lede{max-width:31em;margin-top:28px;font-size:clamp(17px,1.45vw,19px);color:#46503F}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:38px}
+.trust{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:40px;padding:0;list-style:none;font-size:14.5px;color:var(--muted)}
+.trust li{display:flex;align-items:center;gap:8px}
+.trust .ic{width:18px;height:18px;color:var(--sage)}
+.scene-wrap{position:relative}
+.scene{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:5/6;box-shadow:0 40px 80px -40px rgba(46,56,40,.55)}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.badge{position:absolute;left:-34px;top:60px;z-index:2;background:var(--card);border-radius:12px;padding:16px 20px 16px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 24px 44px -20px rgba(46,56,40,.45)}
+.badge .bi{width:44px;height:44px;border-radius:10px;background:var(--lichen-l);display:grid;place-items:center;color:var(--moss)}
+.badge b{display:block;font:500 19px/1.1 var(--serif);color:var(--moss)}
+.badge span{font-size:13.5px;color:var(--muted)}
+/* scene motion */
+.sunc{animation:rise 2.8s var(--ease) both}
+@keyframes rise{from{transform:translateY(90px);opacity:0}}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 7s ease-in-out infinite alternate}
+.sway.b{animation-duration:9s;animation-delay:-3s}
+.sway.c{animation-duration:8s;animation-delay:-5s}
+@keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.4deg)}}
+.stem{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.6s var(--ease) .5s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.lf{transform-box:fill-box;transform:scale(0);animation:pop .9s var(--ease) forwards}
+.lf.l{transform-origin:100% 100%}.lf.r{transform-origin:0 100%}
+@keyframes pop{to{transform:scale(1)}}
+.seed{animation:seed linear infinite;opacity:0}
+@keyframes seed{0%{transform:translate(0,0);opacity:0}10%{opacity:.85}90%{opacity:.7}100%{transform:translate(var(--dx,60px),-320px);opacity:0}}
+.birds{animation:birds 26s ease-in-out infinite alternate}
+@keyframes birds{to{transform:translate(70px,-14px)}}
+
+/* marquee */
+.marq{background:var(--moss);color:var(--oat);overflow:hidden;padding:20px 0;border-block:1px solid rgba(239,231,214,.08)}
+.marq-track{display:flex;width:max-content;animation:marq 46s linear infinite}
+.marq-track span{display:flex;align-items:center;gap:34px;padding-right:34px;font:italic 400 clamp(22px,2.2vw,30px)/1 var(--serif);white-space:nowrap}
+.marq-track svg{width:26px;height:26px;flex:none}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* intro */
+.intro{background:var(--moss);color:var(--oat);padding:96px 0 110px}
+.intro .wrap{display:grid;grid-template-columns:auto 1fr;gap:56px;align-items:start;max-width:1040px}
+.intro .big-sprig{width:110px;height:auto;margin-top:-6px}
+.intro blockquote{margin:0;font:italic 400 clamp(30px,3.6vw,50px)/1.16 var(--serif);color:var(--oat);text-wrap:balance;letter-spacing:-.015em}
+.intro p{color:rgba(239,231,214,.74);font-size:17.5px;margin-top:28px;max-width:36em}
+.sig{font:italic 400 38px/1 var(--serif);color:#D9946F;margin-top:22px}
+
+/* sections */
+section{position:relative}
+.sec{padding:120px 0}
+.eyebrow{display:flex;align-items:center;gap:12px;font:600 12.5px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--clay-d);margin-bottom:22px}
+.eyebrow::before{content:"";width:28px;height:1.5px;background:currentColor}
+.center .eyebrow{justify-content:center}
+.h2{font-size:clamp(38px,4.6vw,60px);line-height:1.04}
+.h2 em{font-style:italic;color:var(--clay)}
+.sub{font-size:18px;color:var(--muted);max-width:36em;margin-top:18px}
+.center{text-align:center}.center .sub{margin-inline:auto}
+
+/* about */
+.about .wrap{display:grid;grid-template-columns:.92fr 1.08fr;gap:90px;align-items:center}
+.photo{position:relative;aspect-ratio:4/5;border-radius:var(--r);overflow:hidden;background:var(--lichen-l)}
+.photo svg{position:absolute;inset:0;width:100%;height:100%}
+.photo .cap{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font:500 13.5px/1.4 var(--sans);color:var(--moss);background:rgba(255,253,248,.88);padding:10px 16px;border-radius:8px;white-space:nowrap}
+.float{position:absolute;right:-30px;top:44px;background:var(--card);border-radius:12px;padding:16px 20px;box-shadow:0 22px 42px -20px rgba(46,56,40,.4);display:flex;gap:12px;align-items:center;font:500 14.5px/1.35 var(--sans);color:var(--moss)}
+.float .ic{color:var(--clay);width:26px;height:26px}
+.about-txt p{font-size:18px;color:#46503F;margin-top:20px}
+.about-txt p.big{font:400 clamp(24px,2.3vw,30px)/1.3 var(--serif);color:var(--moss);margin-top:26px;letter-spacing:-.01em}
+.ph{border:1.5px dashed rgba(166,88,56,.45);border-radius:10px;padding:14px 18px;font-size:15px!important;color:var(--clay-d)!important;background:rgba(193,112,78,.06)}
+.ticks{list-style:none;padding:0;margin:30px 0 0;display:grid;gap:12px}
+.ticks li{display:flex;gap:12px;align-items:flex-start;font-size:16.5px}
+.ticks .ic{color:var(--sage);margin-top:2px}
+
+/* help */
+.help{background:var(--oat)}
+.help .wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:80px;align-items:start}
+.help-side{position:sticky;top:120px}
+.help-side .sub{margin-top:20px}
+.help-side .btn{margin-top:34px}
+.list{border-top:1px solid rgba(43,51,38,.14)}
+.item{display:grid;grid-template-columns:70px 1fr 44px;gap:18px;align-items:start;padding:34px 18px 34px 8px;border-bottom:1px solid rgba(43,51,38,.14);position:relative;transition:background .5s var(--ease),padding .5s var(--ease);border-radius:2px}
+.item::before{content:"";position:absolute;inset:0;background:var(--paper);border-radius:var(--r);opacity:0;transform:scale(.98);transition:opacity .45s var(--ease),transform .45s var(--ease);z-index:0}
+.item:hover::before{opacity:1;transform:none}
+.item>*{position:relative;z-index:1}
+.item .num{font:italic 400 34px/1 var(--serif);color:var(--clay);padding-top:4px}
+.item h3{font-size:clamp(26px,2.4vw,32px);line-height:1.1}
+.item p{margin-top:10px;color:var(--muted);font-size:16.5px;max-width:30em}
+.item .go{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--moss);box-shadow:inset 0 0 0 1.5px rgba(61,74,53,.22);transition:background .4s,color .4s,transform .5s var(--ease)}
+.item:hover .go{background:var(--moss);color:var(--oat);transform:rotate(-45deg)}
+.item .go .ic{width:18px;height:18px}
+
+/* how */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:74px;position:relative}
+.vine{position:absolute;left:0;right:0;top:0;height:84px;width:100%;pointer-events:none;overflow:visible}
+.vine .v{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.4s var(--ease) .2s}
+.vine .vl{transform-box:fill-box;transform:scale(0);transition:transform .9s var(--ease)}
+.vine .vl.l{transform-origin:100% 100%}.vine .vl.r{transform-origin:0 100%}
+.steps.in .v{stroke-dashoffset:0}
+.steps.in .vl{transform:scale(1)}
+.step{position:relative;text-align:center;padding:0 10px}
+.step .n{width:84px;height:84px;margin:0 auto 28px;border-radius:50%;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--lichen),0 0 0 10px var(--paper);display:grid;place-items:center;font:italic 400 38px/1 var(--serif);color:var(--clay);position:relative;z-index:1}
+.step h3{font-size:30px}
+.step p{margin:12px auto 0;max-width:20em;color:var(--muted);font-size:16px}
+.how .cta{justify-content:center;margin-top:62px}
+
+/* question deck */
+.ask{background:var(--moss);color:var(--oat);overflow:hidden}
+.ask .wrap{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.ask .h2{color:var(--oat)}
+.ask .h2 em{color:#D9946F}
+.ask .eyebrow{color:#D9946F}
+.ask .sub{color:rgba(239,231,214,.74)}
+.ask .btn{margin-top:34px}
+.deck{position:relative;width:min(440px,100%);aspect-ratio:4/3.3;margin-inline:auto}
+.deck .back{position:absolute;inset:0;border-radius:var(--r);background:var(--sage);transform:rotate(-5deg) translate(-10px,8px)}
+.deck .back.two{background:var(--lichen);transform:rotate(3.5deg) translate(10px,4px)}
+.qcard{position:absolute;inset:0;border-radius:var(--r);background:var(--card);color:var(--moss);padding:34px 34px 30px;display:flex;flex-direction:column;box-shadow:0 34px 60px -30px rgba(0,0,0,.55)}
+.qcard .qtop{display:flex;justify-content:space-between;align-items:center;font:500 13px/1 var(--sans);color:var(--muted);letter-spacing:.04em}
+.qcard .qtop svg{width:30px;height:30px}
+.qcard q{display:block;margin-top:auto;margin-bottom:auto;padding:20px 0;font:400 clamp(24px,2.4vw,31px)/1.2 var(--serif);letter-spacing:-.012em;quotes:none;text-wrap:balance}
+.qcard .qfoot{font:italic 400 15px/1 var(--serif);color:var(--clay)}
+.qcard.out{animation:out .42s cubic-bezier(.5,0,.75,0) forwards}
+.qcard.in{animation:in .6s var(--ease)}
+@keyframes out{to{transform:translate(70px,-10px) rotate(9deg);opacity:0}}
+@keyframes in{from{transform:translate(-16px,18px) rotate(-4deg);opacity:0}}
+
+/* sessions */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:62px;align-items:stretch}
+.plan{position:relative;background:var(--card);border-radius:var(--r);padding:38px 32px 34px;display:flex;flex-direction:column;box-shadow:inset 0 0 0 1px rgba(43,51,38,.09);transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.plan:hover{transform:translateY(-5px);box-shadow:inset 0 0 0 1px rgba(43,51,38,.09),0 26px 50px -30px rgba(46,56,40,.4)}
+.plan .pi{width:52px;height:52px;border-radius:12px;background:var(--lichen-l);display:grid;place-items:center;color:var(--moss)}
+.plan .pi .ic{width:26px;height:26px}
+.plan h3{font-size:32px;margin-top:24px}
+.plan p{color:var(--muted);font-size:15.5px;margin-top:10px}
+.plan .price{margin-top:auto;padding-top:30px;display:flex;align-items:baseline;gap:10px}
+.plan .price b{font:400 46px/1 var(--serif);color:var(--moss);letter-spacing:-.02em}
+.plan .price span{font-size:14px;color:var(--muted)}
+.plan .line{height:1px;background:rgba(43,51,38,.1);margin-top:28px}
+.plan.feature{background:var(--moss);color:var(--oat);box-shadow:none}
+.plan.feature h3,.plan.feature .price b{color:var(--oat)}
+.plan.feature p,.plan.feature .price span{color:rgba(239,231,214,.72)}
+.plan.feature .pi{background:rgba(239,231,214,.1);color:#D9946F}
+.plan.feature .line{background:rgba(239,231,214,.14)}
+.tag{position:absolute;top:22px;right:22px;font:600 12px/1 var(--sans);background:var(--clay);color:var(--paper);padding:7px 11px;border-radius:6px;letter-spacing:.02em}
+.note{margin-top:28px;color:var(--muted);font-size:15px;text-align:center}
+
+/* faq */
+.faq{background:var(--oat)}
+.faq .wrap{display:grid;grid-template-columns:.8fr 1.2fr;gap:80px;align-items:start}
+.qs{border-top:1px solid rgba(43,51,38,.14)}
+details{border-bottom:1px solid rgba(43,51,38,.14)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:26px 0;font:400 clamp(21px,1.9vw,25px)/1.25 var(--serif);color:var(--moss);letter-spacing:-.01em}
+summary::-webkit-details-marker{display:none}
+summary .pm{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--paper);color:var(--moss);transition:transform .45s var(--ease),background .3s,color .3s}
+summary .pm .ic{width:18px;height:18px}
+details[open] summary .pm{transform:rotate(45deg);background:var(--clay-d);color:var(--paper)}
+.ans{color:#4A5443;font-size:16.5px;max-width:38em}
+.ans p{padding:0 0 26px}
+
+/* contact */
+.contact{background:var(--moss);color:var(--oat);padding:120px 0}
+.contact .wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:70px;align-items:start}
+.contact .h2{color:var(--oat)}
+.contact .h2 em{color:#D9946F}
+.contact .eyebrow{color:#D9946F}
+.contact .sub{color:rgba(239,231,214,.75)}
+.ways{list-style:none;padding:0;margin:40px 0 0;display:grid;gap:14px}
+.ways li{display:flex;align-items:center;gap:16px;font-size:17px}
+.ways .icb{width:46px;height:46px;border-radius:10px;background:rgba(239,231,214,.08);display:grid;place-items:center;color:#D9946F}
+.ways a{text-decoration:none}
+.ways a:hover{text-decoration:underline;text-underline-offset:4px}
+form{background:var(--paper);color:var(--ink);border-radius:18px;padding:40px;box-shadow:0 40px 80px -40px rgba(0,0,0,.55)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{display:block;font:600 13.5px/1 var(--sans);color:var(--moss);margin-bottom:9px}
+.fld{margin-bottom:18px}
+input,textarea{width:100%;font:400 16px/1.4 var(--sans);color:var(--ink);background:var(--card);border:1.5px solid rgba(43,51,38,.14);border-radius:10px;padding:14px 16px;transition:border-color .25s,box-shadow .25s;outline:none}
+input:focus,textarea:focus{border-color:var(--sage);box-shadow:0 0 0 4px rgba(125,143,110,.18)}
+textarea{min-height:130px;resize:vertical}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips input{position:absolute;opacity:0;width:1px;height:1px}
+.chips label{margin:0;font:500 14.5px/1 var(--sans);color:var(--ink);padding:11px 16px;border-radius:8px;background:var(--card);box-shadow:inset 0 0 0 1.5px rgba(43,51,38,.14);cursor:pointer;transition:background .25s,color .25s,box-shadow .25s}
+.chips input:checked+label{background:var(--moss);color:var(--oat);box-shadow:none}
+.chips input:focus-visible+label{outline:2px solid var(--sage);outline-offset:2px}
+form .btn{width:100%;justify-content:center;margin-top:8px;padding:17px}
+.fnote{font-size:13.5px;color:var(--muted);text-align:center;margin-top:14px}
+.sent{display:none;margin-top:14px;padding:14px 16px;border-radius:10px;background:var(--lichen-l);color:var(--moss);font-size:15px}
+.sent.on{display:block}
+
+/* footer */
+.ftr{background:var(--moss-d);color:rgba(239,231,214,.7);padding:60px 0 40px;font-size:14.5px}
+.ftr .wrap{display:flex;flex-wrap:wrap;gap:30px;align-items:center;justify-content:space-between}
+.ftr .logo{color:var(--oat)}
+.ftr .logo small{color:#D9946F}
+.ftr nav{display:flex;gap:24px;flex-wrap:wrap}
+.ftr nav a{text-decoration:none}
+.ftr nav a:hover{color:var(--oat)}
+.fine{width:100%;border-top:1px solid rgba(239,231,214,.1);padding-top:24px;margin-top:6px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:rgba(239,231,214,.5)}
+
+/* reveal */
+.js .hero .rv{opacity:1;transform:none;transition:none;animation:up 1.1s var(--ease) both;animation-delay:calc(.2s + var(--d,0s))}
+@keyframes up{from{opacity:0;transform:translateY(28px)}}
+.js .rv{opacity:0;transform:translateY(28px);transition:opacity 1s var(--ease),transform 1s var(--ease);transition-delay:var(--d,0s)}
+.js .rv.in{opacity:1;transform:none}
+
+/* responsive */
+@media (max-width:1040px){
+ .nav,.hdr .wrap>.btn{display:none}
+ .burger{display:grid}
+ .mnav{display:grid;gap:4px;position:absolute;left:12px;right:12px;top:100%;background:rgba(255,253,248,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:16px;padding:14px;box-shadow:0 30px 60px -30px rgba(46,56,40,.45);opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .3s,transform .4s var(--ease)}
+ .hdr.open .mnav{opacity:1;transform:none;pointer-events:auto}
+ .hdr.open{background:rgba(250,247,240,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+ .mnav a{text-decoration:none;font:400 23px/1 var(--serif);color:var(--moss);padding:14px 12px;border-radius:10px}
+ .mnav a:hover{background:var(--oat)}
+ .mnav .btn{font:600 15px/1 var(--sans);color:var(--paper);justify-content:center;margin-top:6px}
+ .hero-grid{grid-template-columns:1fr;gap:56px}
+ .scene-wrap{max-width:560px;width:100%;margin-inline:auto}
+ .scene{aspect-ratio:6/5}
+ .about .wrap,.help .wrap,.ask .wrap,.faq .wrap,.contact .wrap{grid-template-columns:1fr;gap:52px}
+ .help-side{position:static}
+ .about .photo-wrap{max-width:440px}
+ .float{right:12px}
+ .plans{grid-template-columns:1fr;max-width:520px;margin-inline:auto}
+}
+@media (max-width:700px){
+ body{font-size:16px}
+ .wrap{width:min(1200px,100% - 36px)}
+ .hdr .wrap{height:70px}
+ .logo svg{width:38px;height:38px}.logo b{font-size:22px}.logo small{font-size:13.5px}
+ .hero{padding:112px 0 56px}
+ .scene{aspect-ratio:1/1}
+ .badge{left:12px;top:auto;bottom:-26px;padding:12px 16px 12px 12px}
+ .badge .bi{width:38px;height:38px}.badge b{font-size:17px}
+ .sec{padding:84px 0}
+ .intro{padding:72px 0 80px}
+ .intro .wrap{grid-template-columns:1fr;gap:20px}
+ .intro .big-sprig{width:70px}
+ .item{grid-template-columns:48px 1fr;padding:28px 6px}
+ .item .go{display:none}
+ .item .num{font-size:28px}
+ .steps{grid-template-columns:1fr;gap:46px}
+ .vine{display:none}
+ .row{grid-template-columns:1fr;gap:0}
+ form{padding:26px 20px}
+ .float{position:relative;right:auto;top:auto;margin:-36px 16px 0}
+ .qcard{padding:26px 24px 24px}
+ .deck{aspect-ratio:4/3.8}
+}
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important}
+ html{scroll-behavior:auto}
+ .js .rv{opacity:1;transform:none}
+ .stem,.v{stroke-dashoffset:0!important}
+ .lf,.vl{transform:none!important}
+ .seed{opacity:0!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="sprig" viewBox="0 0 100 100"><path d="M50 90C49 70 47 50 53 14" fill="none" style="stroke:var(--sk,#3D4A35)" stroke-width="3.6" stroke-linecap="round"/><path d="M49.2 72C40 72 30 66 27 57C37 57 45 63 49.2 72Z" style="fill:var(--sl,#7D8F6E)"/><path d="M48.8 58C57 58 67 52 71 43C61 42 52 49 48.8 58Z" style="fill:var(--sl,#7D8F6E)"/><path d="M49 44C40 43 32 37 30 28C39 29 46 36 49 44Z" style="fill:var(--sl,#7D8F6E)"/><path d="M51.2 28C58 27 64 21 66 13C58 13 52 20 51.2 28Z" style="fill:var(--st,#C1704E)"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+ <symbol id="i-ne" viewBox="0 0 24 24"><path d="M12 5h7v7M19 5 5 19" transform="rotate(45 12 12)"/></symbol>
+ <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10H10l-4.5 3.5v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+ <symbol id="i-people" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M3 19c.5-3 2.8-5 5.5-5s5 2 5.5 5M14.2 14.3c.7-.2 1.4-.3 2.3-.3 2.3 0 4.1 1.7 4.6 4.5"/></symbol>
+ <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol>
+ <symbol id="i-path" viewBox="0 0 24 24"><path d="M4 20c3.5 0 3.5-4.5 7.5-4.5S15 11 19 11"/><circle cx="19" cy="6.5" r="2"/><path d="M3 20h3"/></symbol>
+ <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5.5 4h3.5l1.8 4.6-2.3 1.4a11 11 0 0 0 5.5 5.5l1.4-2.3 4.6 1.8v3.5a1.5 1.5 0 0 1-1.6 1.5A16 16 0 0 1 4 5.6 1.5 1.5 0 0 1 5.5 4z"/></symbol>
+ <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.7L16 9.5"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+ <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.6 0 2.8-1.6 3.8-3.5M13.7 10.5C14.7 8.6 15 7 16.5 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></symbol>
+</svg>
+
+<header class="hdr" id="hdr">
+ <div class="wrap">
+  <a class="logo" href="#top" aria-label="Nóirín Deady Coaching and Support, home"><svg><use href="#sprig"/></svg><span><b>Nóirín Deady</b><small>coaching &amp; support</small></span></a>
+  <nav class="nav" aria-label="Main">
+   <a href="#about">About</a><a href="#help">How I help</a><a href="#how">How it works</a><a href="#sessions">Sessions</a><a href="#faq">Questions</a>
+  </nav>
+  <a class="btn" href="#contact">Book a free chat</a>
+  <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mnav"><span></span></button>
+  <nav class="mnav" id="mnav" aria-label="Mobile">
+   <a href="#about">About</a><a href="#help">How I help</a><a href="#how">How it works</a><a href="#sessions">Sessions</a><a href="#faq">Questions</a>
+   <a class="btn" href="#contact">Book a free chat</a>
+  </nav>
+ </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+ <div class="wrap hero-grid">
+  <div>
+   <p class="kicker rv"><svg><use href="#sprig"/></svg>Life coaching and support</p>
+   <h1 class="rv" style="--d:.08s">Support that meets you <em>where you are.</em></h1>
+   <p class="lede rv" style="--d:.18s">Coaching for people who want to make a change but aren’t sure where to start. We take it a step at a time, at a pace that suits you.</p>
+   <div class="cta rv" style="--d:.28s">
+    <a class="btn" href="#contact">Book a free chat <svg class="ic"><use href="#i-arrow"/></svg></a>
+    <a class="btn ghost" href="#how">How it works</a>
+   </div>
+   <ul class="trust rv" style="--d:.38s">
+    <li><svg class="ic"><use href="#i-check"/></svg>Free first chat</li>
+    <li><svg class="ic"><use href="#i-check"/></svg>One to one</li>
+    <li><svg class="ic"><use href="#i-check"/></svg>In person or online</li>
+   </ul>
+  </div>
+  <div class="scene-wrap rv" style="--d:.15s">
+   <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 600 720" preserveAspectRatio="xMidYMid slice">
+     <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5EEDF"/><stop offset=".55" stop-color="#EFE3CF"/><stop offset="1" stop-color="#E2E3CE"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#E7A27C" stop-opacity=".5"/><stop offset="1" stop-color="#E7A27C" stop-opacity="0"/></radialGradient>
+     </defs>
+     <rect width="600" height="720" fill="url(#sky)"/>
+     <g data-depth=".12"><g class="sunc"><circle cx="395" cy="318" r="170" fill="url(#glow)"/><circle cx="395" cy="318" r="74" fill="#D98A62"/></g></g>
+     <g class="birds" fill="none" stroke="#3D4A35" stroke-width="2.2" stroke-linecap="round" opacity=".55"><path d="M140 196q7-7 14 0q7-7 14 0"/><path d="M178 176q5-5 10 0q5-5 10 0"/></g>
+     <g data-depth=".08"><path d="M-20 410C100 348 230 368 330 388S520 340 620 360V720H-20Z" fill="#C9D1B8"/></g>
+     <g data-depth=".05">
+      <path d="M-20 478C100 438 220 446 300 466S470 424 620 444V720H-20Z" fill="#A3AF91"/>
+      <g fill="#6E7F5F"><circle cx="318" cy="462" r="13"/><circle cx="340" cy="455" r="17"/><circle cx="366" cy="449" r="14"/><circle cx="390" cy="444" r="18"/><circle cx="416" cy="439" r="14"/><circle cx="440" cy="436" r="17"/><circle cx="466" cy="433" r="13"/><circle cx="490" cy="432" r="17"/><circle cx="516" cy="433" r="13"/><circle cx="540" cy="436" r="16"/><circle cx="566" cy="439" r="13"/><circle cx="592" cy="442" r="17"/></g>
+      <g fill="#C1704E"><circle cx="336" cy="448" r="2.6"/><circle cx="372" cy="442" r="2.2"/><circle cx="394" cy="433" r="2.6"/><circle cx="432" cy="428" r="2.2"/><circle cx="470" cy="425" r="2.6"/><circle cx="498" cy="421" r="2.2"/><circle cx="536" cy="426" r="2.6"/><circle cx="580" cy="430" r="2.2"/></g>
+     </g>
+     <g data-depth=".025">
+      <path d="M-20 572C130 526 250 540 360 560S530 524 620 536V720H-20Z" fill="#7D8F6E"/>
+      <path d="M318 720C300 664 362 640 352 604S384 560 410 548L420 549C398 566 380 586 384 610S332 670 372 720Z" fill="#EFE7D6" opacity=".75"/>
+     </g>
+     <path d="M-20 650C120 616 230 636 330 652S520 616 620 628V720H-20Z" fill="#3D4A35"/>
+     <g transform="translate(-4 452) scale(2.7)"><g class="sway"><path class="stem" pathLength="1" d="M50 90C49 70 47 50 53 14" fill="none" stroke="#EFE7D6" stroke-width="2.4" stroke-linecap="round"/><path class="lf l" style="animation-delay:1s" d="M49.2 72C40 72 30 66 27 57C37 57 45 63 49.2 72Z" fill="#C9D1B8"/><path class="lf r" style="animation-delay:1.2s" d="M48.8 58C57 58 67 52 71 43C61 42 52 49 48.8 58Z" fill="#C9D1B8"/><path class="lf l" style="animation-delay:1.4s" d="M49 44C40 43 32 37 30 28C39 29 46 36 49 44Z" fill="#C9D1B8"/><path class="lf r" style="animation-delay:1.65s" d="M51.2 28C58 27 64 21 66 13C58 13 52 20 51.2 28Z" fill="#D98A62"/></g></g>
+     <g transform="translate(96 560) scale(1.55)"><g class="sway b"><path class="stem" pathLength="1" style="animation-delay:.8s" d="M50 90C49 70 47 50 53 14" fill="none" stroke="#EFE7D6" stroke-width="2.6" stroke-linecap="round"/><path class="lf l" style="animation-delay:1.35s" d="M49.2 72C40 72 30 66 27 57C37 57 45 63 49.2 72Z" fill="#A3AF91"/><path class="lf r" style="animation-delay:1.55s" d="M48.8 58C57 58 67 52 71 43C61 42 52 49 48.8 58Z" fill="#A3AF91"/><path class="lf l" style="animation-delay:1.75s" d="M49 44C40 43 32 37 30 28C39 29 46 36 49 44Z" fill="#A3AF91"/><path class="lf r" style="animation-delay:1.95s" d="M51.2 28C58 27 64 21 66 13C58 13 52 20 51.2 28Z" fill="#C9D1B8"/></g></g>
+     <g transform="translate(470 520) scale(2.1)"><g class="sway c"><path class="stem" pathLength="1" style="animation-delay:1.1s" d="M50 90C49 70 47 50 53 14" fill="none" stroke="#EFE7D6" stroke-width="2.4" stroke-linecap="round"/><path class="lf l" style="animation-delay:1.6s" d="M49.2 72C40 72 30 66 27 57C37 57 45 63 49.2 72Z" fill="#C9D1B8"/><path class="lf r" style="animation-delay:1.8s" d="M48.8 58C57 58 67 52 71 43C61 42 52 49 48.8 58Z" fill="#C9D1B8"/><path class="lf l" style="animation-delay:2s" d="M49 44C40 43 32 37 30 28C39 29 46 36 49 44Z" fill="#C9D1B8"/><path class="lf r" style="animation-delay:2.2s" d="M51.2 28C58 27 64 21 66 13C58 13 52 20 51.2 28Z" fill="#D98A62"/></g></g>
+     <g fill="#FAF7F0">
+      <circle class="seed" cx="150" cy="560" r="2.4" style="animation-duration:11s;animation-delay:2s;--dx:70px"/>
+      <circle class="seed" cx="300" cy="610" r="2" style="animation-duration:14s;animation-delay:4.5s;--dx:110px"/>
+      <circle class="seed" cx="520" cy="590" r="2.6" style="animation-duration:12s;animation-delay:3s;--dx:-60px"/>
+      <circle class="seed" cx="230" cy="640" r="1.8" style="animation-duration:16s;animation-delay:7s;--dx:90px"/>
+      <circle class="seed" cx="420" cy="650" r="2.2" style="animation-duration:13s;animation-delay:9s;--dx:40px"/>
+     </g>
+    </svg>
+   </div>
+   <div class="badge"><span class="bi"><svg class="ic"><use href="#i-chat"/></svg></span><span><b>Free first chat</b><span>Twenty minutes, no pressure</span></span></div>
+  </div>
+ </div>
+</section>
+
+<div class="marq" aria-hidden="true">
+ <div class="marq-track">
+  <span>At your own pace <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> One step at a time <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> No judgement <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> In person or online <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> Room to grow <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg></span>
+  <span>At your own pace <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> One step at a time <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> No judgement <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> In person or online <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg> Room to grow <svg style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg></span>
+ </div>
+</div>
+
+<section class="intro">
+ <div class="wrap">
+  <svg class="big-sprig rv" viewBox="0 0 100 100" style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><use href="#sprig"/></svg>
+  <div>
+   <blockquote class="rv">“Most change doesn’t happen in one big leap. It happens a bit at a time, when you have the right support around you.”</blockquote>
+   <p class="rv" style="--d:.12s">That’s what I’m here for. Time that’s just for you, with someone who listens properly, asks good questions and helps you work out what comes next.</p>
+   <div class="sig rv" style="--d:.2s">Nóirín</div>
+  </div>
+ </div>
+</section>
+
+<section class="sec about" id="about">
+ <div class="wrap">
+  <div class="photo-wrap rv" style="position:relative">
+   <div class="photo">
+    <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="500" fill="#E4E8D8"/><circle cx="292" cy="150" r="46" fill="#D98A62" opacity=".85"/><path d="M0 350C70 318 160 330 230 340S340 316 400 322V500H0Z" fill="#C9D1B8"/><path d="M0 410C90 382 190 398 270 404S360 388 400 392V500H0Z" fill="#A3AF91"/><path d="M0 456C90 438 200 452 290 458S370 446 400 448V500H0Z" fill="#3D4A35"/><g transform="translate(14 286) scale(1.9)"><path d="M50 90C49 70 47 50 53 14" fill="none" stroke="#3D4A35" stroke-width="2.6" stroke-linecap="round"/><path d="M49.2 72C40 72 30 66 27 57C37 57 45 63 49.2 72Z" fill="#7D8F6E"/><path d="M48.8 58C57 58 67 52 71 43C61 42 52 49 48.8 58Z" fill="#7D8F6E"/><path d="M49 44C40 43 32 37 30 28C39 29 46 36 49 44Z" fill="#7D8F6E"/><path d="M51.2 28C58 27 64 21 66 13C58 13 52 20 51.2 28Z" fill="#C1704E"/></g></svg>
+    <span class="cap">Photo of Nóirín goes here</span>
+   </div>
+   <div class="float"><svg class="ic"><use href="#i-pin"/></svg><span>In person locally<br>or online anywhere</span></div>
+  </div>
+  <div class="about-txt">
+   <p class="eyebrow rv">About me</p>
+   <h2 class="h2 rv">Hello, I’m <em>Nóirín.</em></h2>
+   <p class="big rv">I help people get unstuck, find their footing and make changes that actually last.</p>
+   <p class="rv">I keep it simple and practical. You do most of the talking. I ask the questions that help you hear what you already know, and we finish each session with one small thing you can do before we meet again.</p>
+   <p class="ph rv">A few lines about your background, training and why you got into coaching go here.</p>
+   <ul class="ticks rv">
+    <li><svg class="ic"><use href="#i-check"/></svg>One to one, at your own pace</li>
+    <li><svg class="ic"><use href="#i-check"/></svg>Confidential and judgement free</li>
+    <li><svg class="ic"><use href="#i-check"/></svg>In person, online or out walking</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<section class="sec help" id="help">
+ <div class="wrap">
+  <div class="help-side">
+   <p class="eyebrow rv">How I help</p>
+   <h2 class="h2 rv">When something has to <em>change.</em></h2>
+   <p class="sub rv">People usually get in touch when they know things can’t stay as they are, but can’t see where to start. These are some of the things we work on together.</p>
+   <a class="btn rv" href="#contact">Talk it through <svg class="ic"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="list">
+   <article class="item rv"><span class="num">01</span><div><h3>Feeling stuck</h3><p>Same job, same worries, same week on repeat. Working out what you want and taking the first step towards it.</p></div><span class="go"><svg class="ic"><use href="#i-arrow"/></svg></span></article>
+   <article class="item rv"><span class="num">02</span><div><h3>Big life changes</h3><p>A new job, a move, a loss, the kids leaving home. Finding your feet again when the ground has shifted.</p></div><span class="go"><svg class="ic"><use href="#i-arrow"/></svg></span></article>
+   <article class="item rv"><span class="num">03</span><div><h3>Confidence and self belief</h3><p>Quietening the inner critic, setting boundaries and starting to back yourself.</p></div><span class="go"><svg class="ic"><use href="#i-arrow"/></svg></span></article>
+   <article class="item rv"><span class="num">04</span><div><h3>Stress and balance</h3><p>When there’s too much on and not enough of you to go round. Making room for what matters.</p></div><span class="go"><svg class="ic"><use href="#i-arrow"/></svg></span></article>
+  </div>
+ </div>
+</section>
+
+<section class="sec how" id="how">
+ <div class="wrap center">
+  <p class="eyebrow rv">How it works</p>
+  <h2 class="h2 rv">Three steps, <em>no rush.</em></h2>
+  <p class="sub rv">No forms to fill in and no commitment until you’re ready.</p>
+  <div class="steps grow">
+   <svg class="vine" viewBox="0 0 1000 84" preserveAspectRatio="none" aria-hidden="true">
+    <path class="v" pathLength="1" d="M60 42C180 12 260 72 333 42S500 12 500 42S620 72 667 42S820 12 940 42" fill="none" stroke="#A3AF91" stroke-width="2" stroke-linecap="round"/>
+    <path class="vl l" style="transition-delay:.9s" d="M250 46C240 46 230 40 227 31C237 31 245 37 250 46Z" fill="#7D8F6E"/>
+    <path class="vl r" style="transition-delay:1.1s" d="M418 30C426 30 436 24 440 15C430 14 421 21 418 30Z" fill="#7D8F6E"/>
+    <path class="vl l" style="transition-delay:1.5s" d="M584 58C574 58 564 52 561 43C571 43 579 49 584 58Z" fill="#7D8F6E"/>
+    <path class="vl r" style="transition-delay:1.8s" d="M752 30C760 30 770 24 774 15C764 14 755 21 752 30Z" fill="#C1704E"/>
+   </svg>
+   <div class="step rv"><div class="n">1</div><h3>A free chat</h3><p>Twenty minutes on the phone or by video. A chance to see if we’re a good fit, with no pressure either way.</p></div>
+   <div class="step rv" style="--d:.12s"><div class="n">2</div><h3>Your first session</h3><p>We look at where you are now, what’s weighing on you, and what you’d like to be different.</p></div>
+   <div class="step rv" style="--d:.24s"><div class="n">3</div><h3>Keep growing</h3><p>Usually every two weeks. Each session ends with one small, doable next step.</p></div>
+  </div>
+  <div class="cta rv"><a class="btn" href="#contact">Book your free chat <svg class="ic"><use href="#i-arrow"/></svg></a></div>
+ </div>
+</section>
+
+<section class="sec ask" id="ask">
+ <div class="wrap">
+  <div>
+   <p class="eyebrow rv">Try it now</p>
+   <h2 class="h2 rv">A question to <em>sit with.</em></h2>
+   <p class="sub rv">Coaching is mostly good questions. Draw one, then give it a minute before you answer. You might be surprised what comes up.</p>
+   <button class="btn oat rv" id="draw" type="button"><svg class="ic"><use href="#i-shuffle"/></svg> Draw another question</button>
+  </div>
+  <div class="deck rv" style="--d:.12s">
+   <span class="back"></span><span class="back two"></span>
+   <div class="qcard" id="qcard" aria-live="polite">
+    <div class="qtop"><span id="qn">1 of 12</span><svg viewBox="0 0 100 100"><use href="#sprig"/></svg></div>
+    <q id="qtext">What would you try this week if you weren’t worried about getting it wrong?</q>
+    <span class="qfoot">Nóirín Deady, coaching &amp; support</span>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="sec sessions" id="sessions">
+ <div class="wrap">
+  <div class="center">
+   <p class="eyebrow rv">Sessions</p>
+   <h2 class="h2 rv">Whatever feels <em>easiest.</em></h2>
+   <p class="sub rv">All sessions are one to one and last about an hour.</p>
+  </div>
+  <div class="plans">
+   <article class="plan rv"><span class="pi"><svg class="ic"><use href="#i-people"/></svg></span><h3>In person</h3><p>A quiet, private room. Tea on the table and no rush.</p><div class="line"></div><div class="price"><b>€00</b><span>per session</span></div></article>
+   <article class="plan feature rv" style="--d:.1s"><span class="tag">Most flexible</span><span class="pi"><svg class="ic"><use href="#i-laptop"/></svg></span><h3>Online</h3><p>By video from wherever you are. Just as personal, with no travel.</p><div class="line"></div><div class="price"><b>€00</b><span>per session</span></div></article>
+   <article class="plan rv" style="--d:.2s"><span class="pi"><svg class="ic"><use href="#i-path"/></svg></span><h3>Walk and talk</h3><p>Outdoors, side by side. Some people find it easier to talk when they’re moving.</p><div class="line"></div><div class="price"><b>€00</b><span>per session</span></div></article>
+  </div>
+  <p class="note rv">Packages of six sessions are available. Ask about them on your free chat.</p>
+ </div>
+</section>
+
+<section class="sec faq" id="faq">
+ <div class="wrap">
+  <div>
+   <p class="eyebrow rv">Questions</p>
+   <h2 class="h2 rv">Things people <em>ask me.</em></h2>
+   <p class="sub rv">Anything else, just ask. There’s no such thing as a silly question.</p>
+  </div>
+  <div class="qs rv">
+   <details><summary>Is coaching the same as counselling?<span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span></summary><div class="ans"><p>No. Coaching mostly looks forward, at where you are now and what you want to change. If something comes up that needs a counsellor or therapist, I’ll tell you straight and help you find the right person.</p></div></details>
+   <details><summary>How many sessions will I need?<span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span></summary><div class="ans"><p>It depends on you. Some people come for a few sessions to work through one thing, others stay longer. We’ll talk about it at the start and you’re never locked in.</p></div></details>
+   <details><summary>Is it confidential?<span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span></summary><div class="ans"><p>Yes. What you say stays between us. The only exception is the rare case where someone’s safety is at risk, and I’d always talk to you first.</p></div></details>
+   <details><summary>Does online work as well as in person?<span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span></summary><div class="ans"><p>For most people, yes. You’re in your own space, there’s no travel, and it’s easier to fit around work and family. All you need is a quiet room and a phone or laptop.</p></div></details>
+   <details><summary>What happens on the free chat?<span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span></summary><div class="ans"><p>We talk for about twenty minutes. You tell me a bit about what’s going on and I explain how I work. If it feels right, we book a first session. If not, no hard feelings.</p></div></details>
+  </div>
+ </div>
+</section>
+
+<section class="contact" id="contact">
+ <div class="wrap">
+  <div>
+   <p class="eyebrow rv">Get in touch</p>
+   <h2 class="h2 rv">Let’s have <em>a chat.</em></h2>
+   <p class="sub rv">The first chat is free and there’s no pressure. Tell me a little about what’s going on and I’ll get back to you within a day or two.</p>
+   <ul class="ways rv">
+    <li><span class="icb"><svg class="ic"><use href="#i-phone"/></svg></span><a href="tel:+353870000000">087 000 0000</a></li>
+    <li><span class="icb"><svg class="ic"><use href="#i-mail"/></svg></span><a href="mailto:hello@website.ie">hello@website.ie</a></li>
+    <li><span class="icb"><svg class="ic"><use href="#i-pin"/></svg></span><span>Address line 1, Town, County</span></li>
+    <li><span class="icb"><svg class="ic"><use href="#i-clock"/></svg></span><span>Weekdays and some evenings</span></li>
+   </ul>
+  </div>
+  <form id="form" class="rv" style="--d:.1s" novalidate>
+   <div class="row">
+    <div class="fld"><label for="f-name">Your name</label><input id="f-name" name="name" autocomplete="name" required></div>
+    <div class="fld"><label for="f-phone">Phone <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel"></div>
+   </div>
+   <div class="fld"><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
+   <div class="fld"><label>How would you like to meet?</label>
+    <div class="chips">
+     <input type="radio" name="how" id="h1" value="In person"><label for="h1">In person</label>
+     <input type="radio" name="how" id="h2" value="Online"><label for="h2">Online</label>
+     <input type="radio" name="how" id="h3" value="Walk and talk"><label for="h3">Walk and talk</label>
+     <input type="radio" name="how" id="h4" value="Not sure yet" checked><label for="h4">Not sure yet</label>
+    </div>
+   </div>
+   <div class="fld"><label for="f-msg">A little about what’s going on</label><textarea id="f-msg" name="msg" placeholder="As much or as little as you like."></textarea></div>
+   <button class="btn" type="submit">Send message <svg class="ic"><use href="#i-arrow"/></svg></button>
+   <p class="fnote"><svg class="ic" style="display:inline;width:15px;height:15px;vertical-align:-2px;margin-right:4px"><use href="#i-lock"/></svg>Everything you send is kept private.</p>
+   <p class="sent" id="sent" role="status"></p>
+  </form>
+ </div>
+</section>
+</main>
+
+<footer class="ftr">
+ <div class="wrap">
+  <a class="logo" href="#top" style="--sk:#EFE7D6;--sl:#A3AF91;--st:#D98A62"><svg><use href="#sprig"/></svg><span><b>Nóirín Deady</b><small>coaching &amp; support</small></span></a>
+  <nav aria-label="Footer"><a href="#about">About</a><a href="#help">How I help</a><a href="#how">How it works</a><a href="#sessions">Sessions</a><a href="#contact">Contact</a></nav>
+  <div class="fine"><span>© <span id="yr">2026</span> Nóirín Deady Coaching &amp; Support</span><span>Demo site. Text, prices and contact details are placeholders.</span></div>
+ </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+const hdr=document.getElementById('hdr'),burger=document.getElementById('burger');
+const onScroll=()=>hdr.classList.toggle('scrolled',scrollY>20);
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+burger.onclick=()=>{const o=hdr.classList.toggle('open');burger.setAttribute('aria-expanded',o);burger.setAttribute('aria-label',o?'Close menu':'Open menu')};
+document.querySelectorAll('#mnav a').forEach(a=>a.addEventListener('click',()=>{hdr.classList.remove('open');burger.setAttribute('aria-expanded',false)}));
+
+/* reveal on scroll; the vine in How it works grows when it comes into view */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{rootMargin:'0px 0px -8% 0px',threshold:.08});
+document.querySelectorAll('.rv,.grow').forEach(el=>{if(!el.closest('.hero'))io.observe(el)});
+
+/* gentle parallax on the hero hills */
+(()=>{
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const layers=[...document.querySelectorAll('[data-depth]')];let busy=false;
+ addEventListener('scroll',()=>{if(busy||scrollY>1100)return;busy=true;requestAnimationFrame(()=>{layers.forEach(l=>l.style.transform=`translateY(${(scrollY*l.dataset.depth).toFixed(1)}px)`);busy=false})},{passive:true});
+})();
+
+/* only one FAQ open at a time */
+document.querySelectorAll('.qs details').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('.qs details').forEach(o=>{if(o!==d)o.open=false})}));
+
+/* question deck */
+(()=>{
+ const Q=[
+  'What would you try this week if you weren’t worried about getting it wrong?',
+  'What are you carrying at the moment that isn’t yours to carry?',
+  'When did you last feel like yourself? What was different then?',
+  'What’s one thing you keep putting off, and what is it costing you?',
+  'If a good friend were in your shoes, what would you tell them?',
+  'What does a good day look like for you, honestly?',
+  'What do you need more of right now? And less of?',
+  'Which small step would make the biggest difference?',
+  'Who do you lean on when things are hard? Do they know?',
+  'What are you proud of that nobody else sees?',
+  'What would “enough” look like for you?',
+  'What’s worth saying no to, so you can say yes to something else?'
+ ];
+ const card=document.getElementById('qcard'),txt=document.getElementById('qtext'),num=document.getElementById('qn'),btn=document.getElementById('draw');
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let i=0,busy=false;
+ const show=()=>{txt.textContent=Q[i];num.textContent=`${i+1} of ${Q.length}`};
+ btn.onclick=()=>{
+  if(busy)return;i=(i+1)%Q.length;
+  if(still){show();return}
+  busy=true;card.classList.add('out');
+  setTimeout(()=>{show();card.classList.remove('out');card.classList.add('in');
+   setTimeout(()=>{card.classList.remove('in');busy=false},600)},420);
+ };
+})();
+
+/* form opens the visitor's email app with the message filled in */
+document.getElementById('form').addEventListener('submit',e=>{
+ e.preventDefault();
+ const f=e.target,v=n=>(f.elements[n].value||'').trim(),sent=document.getElementById('sent');
+ if(!v('name')||!v('email')){sent.textContent='Please add your name and email so I can get back to you.';sent.classList.add('on');return}
+ const body=`Name: ${v('name')}\nEmail: ${v('email')}\nPhone: ${v('phone')||'-'}\nMeet: ${f.elements.how.value}\n\n${v('msg')}`;
+ location.href=`mailto:hello@website.ie?subject=${encodeURIComponent('Free chat request from '+v('name'))}&body=${encodeURIComponent(body)}`;
+ sent.textContent='Your email app should open with the message ready to send.';sent.classList.add('on');
+});
+document.getElementById('yr').textContent=new Date().getFullYear();
+</script>
+</body>
+</html>
